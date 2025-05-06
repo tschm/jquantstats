@@ -3,7 +3,7 @@
 import numpy as np
 import pandas as pd
 
-from quantstats.api import build_data
+from jquantstats.api import build_data
 
 
 def test_with_constant_rf(returns):

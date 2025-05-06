@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from quantstats.api import build_data
+from jquantstats.api import build_data
 
 
 @pytest.fixture
