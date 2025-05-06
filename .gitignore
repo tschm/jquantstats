@@ -1,0 +1,11 @@
+*.pyc
+.idea
+__pycache__/*
+src/quantstats/__pycache__/*
+dist
+Icon
+.vscode
+.venv
+Icon
+.output.txt
+src/.coverage
