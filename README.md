@@ -11,20 +11,20 @@
 
 ## Overview
 
-**jQuantStats** is a Python library for portfolio analytics 
-that helps quants and portfolio managers understand 
-their performance through in-depth analytics and risk metrics. 
-It provides tools for calculating various performance metrics 
+**jQuantStats** is a Python library for portfolio analytics
+that helps quants and portfolio managers understand
+their performance through in-depth analytics and risk metrics.
+It provides tools for calculating various performance metrics
 and visualizing portfolio performance.
 
-The library is inspired by and currently exposes a subset of the 
-functionality of [QuantStats](https://github.com/ranaroussi/quantstats), 
-focusing on providing a clean, modern API with enhanced 
+The library is inspired by and currently exposes a subset of the
+functionality of [QuantStats](https://github.com/ranaroussi/quantstats),
+focusing on providing a clean, modern API with enhanced
 visualization capabilities using Plotly.
 
 We have made the following changes when compared to quantstats:
 
-- added tests (based on pytest), pre-commit hooks and 
+- added tests (based on pytest), pre-commit hooks and
   github ci/cd workflows
 - removed a direct dependency on yfinance to inject data
 - moved all graphical output to plotly and removed the matplotlib dependency
@@ -34,22 +34,25 @@ We have made the following changes when compared to quantstats:
 
 Along the way we broke downwards compatibility with quantstats but the
 underlying usage pattern is too different. Users familiar with
-Dataclasses may find the chosen path appealing. 
+Dataclasses may find the chosen path appealing.
 A data class is
-constructed using the `build_data` function. 
+constructed using the `build_data` function.
 This function is essentially
-the only viable entry point into jquantstats. 
+the only viable entry point into jquantstats.
 It constructs and returns
 a `_Data` object which exposes plots and stats via its member attributes.
 
-At this early stage the user would have to define a benchmark 
+At this early stage the user would have to define a benchmark
 and set the underlying risk-free rate.
 
 ## Features
 
-- **Performance Metrics**: Calculate key metrics like Sharpe ratio, Sortino ratio, drawdowns, volatility, and many more
-- **Risk Analysis**: Analyze risk through metrics like Value at Risk (VaR), Conditional VaR, and drawdown analysis
-- **Visualization**: Create interactive plots for portfolio performance, drawdowns, return distributions, and monthly heatmaps
+- **Performance Metrics**: Calculate key metrics like Sharpe ratio, Sortino ratio,
+  drawdowns, volatility, and many more
+- **Risk Analysis**: Analyze risk through metrics like Value at Risk (VaR),
+  Conditional VaR, and drawdown analysis
+- **Visualization**: Create interactive plots for portfolio performance, drawdowns,
+  return distributions, and monthly heatmaps
 - **Benchmark Comparison**: Compare your portfolio performance against benchmarks
 
 ## Installation
@@ -100,7 +103,7 @@ fig.show()
 
 ## Documentation
 
-For detailed documentation, 
+For detailed documentation,
 visit [jQuantStats Documentation](https://tschm.github.io/jquantstats/book).
 
 ## Requirements
@@ -124,5 +127,5 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the 
+This project is licensed under the
 Apache License 2.0 - see the [LICENSE.txt](LICENSE.txt) file for details.
