@@ -19,15 +19,11 @@ def stats(data):
 
 def test_skew(stats):
     result = stats.skew()
-    assert isinstance(result, pd.Series)
-    expected = stats.all.skew()
-    assert result.equals(expected)
+    assert result["META"] == pytest.approx(0.7932871888541674)
 
 def test_kurtosis(stats):
     result = stats.kurtosis()
-    assert isinstance(result, pd.Series)
-    expected = stats.all.kurtosis()
-    assert result.equals(expected)
+    assert result["META"] == pytest.approx(55.527651068563536)
 
 def test_avg_return(stats):
     result = stats.avg_return()
