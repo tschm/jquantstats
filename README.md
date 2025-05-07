@@ -1,7 +1,7 @@
 # [jQuantStats](https://tschm.github.io/jquantstats/book): Portfolio analytics for quants
 
 [![PyPI version](https://badge.fury.io/py/jquantstats.svg)](https://badge.fury.io/py/jquantstats)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.txt)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE.txt)
 [![CI](https://github.com/tschm/jquantstats/actions/workflows/ci.yml/badge.svg)](https://github.com/tschm/jquantstats/actions/workflows/ci.yml)
 [![Coverage Status](https://coveralls.io/repos/github/tschm/jquantstats/badge.svg?branch=main)](https://coveralls.io/github/tschm/jquantstats?branch=main)
 [![CodeFactor](https://www.codefactor.io/repository/github/tschm/jquantstats/badge)](https://www.codefactor.io/repository/github/tschm/quantstats)
@@ -9,141 +9,120 @@
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/tschm/jquantstats)
 
-**QuantStats** Python library that performs portfolio profiling,
-allowing quants and portfolio managers to understand
-their performance better by providing them with in-depth analytics and risk metrics.
+## Overview
 
-QuantStats is comprised of 3 main modules:
+**jQuantStats** is a Python library for portfolio analytics 
+that helps quants and portfolio managers understand 
+their performance through in-depth analytics and risk metrics. 
+It provides tools for calculating various performance metrics 
+and visualizing portfolio performance.
 
-1. ``quantstats.stats`` - for calculating various performance metrics,
-                          like Sharpe ratio, Win rate, Volatility, etc.
-2. ``quantstats.plots`` - for visualizing performance, drawdowns,
-                          rolling statistics, monthly returns, etc.
+The library is inspired by and currently exposes a subset of the 
+functionality of [QuantStats](https://github.com/ranaroussi/quantstats), 
+focusing on providing a clean, modern API with enhanced 
+visualization capabilities using Plotly.
 
-Here's an example of a simple tear sheet analyzing a strategy:
+We have made the following changes when compared to quantstats:
+
+- added tests (based on pytest), pre-commit hooks and 
+  github ci/cd workflows
+- removed a direct dependency on yfinance to inject data
+- moved all graphical output to plotly and removed the matplotlib dependency
+- removed some statistical metrics but intend to bring them back
+- moved to Marimo for demos
+- gave up on the very tight coupling with pandas
+
+Along the way we broke downwards compatibility with quantstats but the
+underlying usage pattern is too different. Users familiar with
+Dataclasses may find the chosen path appealing. 
+A data class is
+constructed using the `build_data` function. 
+This function is essentially
+the only viable entry point into jquantstats. 
+It constructs and returns
+a `_Data` object which exposes plots and stats via its member attributes.
+
+At this early stage the user would have to define a benchmark 
+and set the underlying risk-free rate.
+
+## Features
+
+- **Performance Metrics**: Calculate key metrics like Sharpe ratio, Sortino ratio, drawdowns, volatility, and many more
+- **Risk Analysis**: Analyze risk through metrics like Value at Risk (VaR), Conditional VaR, and drawdown analysis
+- **Visualization**: Create interactive plots for portfolio performance, drawdowns, return distributions, and monthly heatmaps
+- **Benchmark Comparison**: Compare your portfolio performance against benchmarks
+
+## Installation
+
+```bash
+pip install jquantstats
+```
+
+For development:
+
+```bash
+pip install jquantstats[dev]
+```
 
 ## Quick Start
 
 ```python
-%matplotlib inline
-from src import quantstats as qs
+import pandas as pd
+from jquantstats.api import build_data
 
-# extend pandas functionality with metrics, etc.
-qs.extend_pandas()
+# Create a Data object from returns
+returns = pd.DataFrame(...)  # Your returns data
 
-# fetch the daily returns for a stock
-stock = src.quantstats.utils.download_returns('META')
+# Basic usage
+data = build_data(returns=returns)
 
-# show sharpe ratio
-qs.stats.sharpe(stock)
+# With benchmark and risk-free rate
+benchmark = pd.Series(...)  # Your benchmark returns
+data = build_data(
+    returns=returns,
+    benchmark=benchmark,
+    rf=0.02,      # risk-free rate (e.g., 2% annual rate)
+    nperiods=252  # number of trading days per year
+)
 
-# or using extend_pandas() :)
-stock.sharpe()
+# Calculate statistics
+sharpe = data.stats.sharpe()
+volatility = data.stats.volatility()
+
+# Create visualizations
+fig = data.plots.plot_snapshot(title="Portfolio Performance")
+fig.show()
+
+# Monthly returns heatmap
+fig = data.plots.monthly_heatmap()
+fig.show()
 ```
 
-Output:
+## Documentation
 
-```bash
-    0.8135304438803402
-```
+For detailed documentation, 
+visit [jQuantStats Documentation](https://tschm.github.io/jquantstats/book).
 
-## Visualize stock performance
+## Requirements
 
-```python
+- Python 3.10+
+- numpy
+- pandas
+- scipy
+- plotly
+- kaleido (for static image export)
 
-    qs.plots.snapshot(stock, title='Facebook Performance', show=True)
+## Contributing
 
-    # can also be called via:
-    # stock.plot_snapshot(title='Facebook Performance', show=True)
-```
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-Output:
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-[Snapshot](https://github.com/ranaroussi/quantstats/blob/main/docs/snapshot.jpg?raw=true)
+## License
 
-To view a complete list of available methods, run
-
-```python
-[f for f in dir(qs.stats) if f[0] != '_']
-
-['avg_loss',
- 'avg_return',
- 'avg_win',
- 'best',
- 'cagr',
- 'calmar',
- 'common_sense_ratio',
- 'comp',
- 'compare',
- 'compsum',
- 'conditional_value_at_risk',
- 'consecutive_losses',
- 'consecutive_wins',
- 'cpc_index',
- 'cvar',
- 'drawdown_details',
- 'expected_return',
- 'expected_shortfall',
- 'exposure',
- 'gain_to_pain_ratio',
- 'geometric_mean',
- 'ghpr',
- 'greeks',
- 'implied_volatility',
- 'information_ratio',
- 'kelly_criterion',
- 'kurtosis',
- 'max_drawdown',
- 'monthly_returns',
- 'outlier_loss_ratio',
- 'outlier_win_ratio',
- 'outliers',
- 'payoff_ratio',
- 'profit_factor',
- 'profit_ratio',
- 'r2',
- 'r_squared',
- 'rar',
- 'recovery_factor',
- 'remove_outliers',
- 'risk_of_ruin',
- 'risk_return_ratio',
- 'rolling_greeks',
- 'ror',
- 'sharpe',
- 'skew',
- 'sortino',
- 'adjusted_sortino',
- 'tail_ratio',
- 'to_drawdown_series',
- 'ulcer_index',
- 'ulcer_performance_index',
- 'upi',
- 'utils',
- 'value_at_risk',
- 'var',
- 'volatility',
- 'win_loss_ratio',
- 'win_rate',
- 'worst']
-```
-
-```python
-[f for f in dir(qs.plots) if f[0] != '_']
-
-['daily_returns',
- 'distribution',
- 'drawdown',
- 'drawdowns_periods',
- 'earnings',
- 'histogram',
- 'log_returns',
- 'monthly_heatmap',
- 'returns',
- 'rolling_beta',
- 'rolling_sharpe',
- 'rolling_sortino',
- 'rolling_volatility',
- 'snapshot',
- 'yearly_returns']
-```
+This project is licensed under the 
+Apache License 2.0 - see the [LICENSE.txt](LICENSE.txt) file for details.

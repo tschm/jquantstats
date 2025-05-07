@@ -18,7 +18,7 @@ def test_with_constant_rf(returns):
         2. The returns in the Data object match the input returns minus the risk-free rate.
         3. The benchmark is None when not provided.
     """
-    # Test with a small constant risk-free rate
+    # Test with a small constant and daily risk-free rate
     rf = 0.001
     result = build_data(returns=returns, rf=rf)
 
