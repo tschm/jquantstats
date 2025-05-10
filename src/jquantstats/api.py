@@ -135,7 +135,16 @@ class _Data:
             pd.DataFrame: A DataFrame containing all returns data and benchmark (if available),
                          with NaN values filled with 0.0.
         """
-        return pl.concat([self.index, self.returns, self.benchmark], how="horizontal")
+        if self.benchmark is None:
+            return pl.concat([self.index, self.returns], how="horizontal")
+        else:
+            return pl.concat([self.index, self.returns, self.benchmark], how="horizontal")
+
+    @property
+    def active(self):
+        active = self.returns.select([pl.col(col) - self.benchmark for col in self.returns.columns])
+        # print(active)
+        return pl.concat([self.index, active], how="horizontal")
 
     def prices(self, compounded: bool = False, initial_value: float = 100.0) -> pl.DataFrame:
         """
@@ -758,15 +767,18 @@ class _Stats:
         Calculates the information ratio
         (basically the risk return ratio of the net profits)
         """
-        active = series - self.data.benchmark
+        active = self.data.active
         print(active)
+
+        # active = series - self.data.benchmark
+        # print(active)
 
         mean_active = active.mean()
         std_active = active.std()
 
         print(mean_active, std_active)
 
-        returns = self.all  # [self.data.names]
+        returns = self.data.all  # [self.data.names]
         diff = returns.sub(self.data.benchmark, axis=0)
 
         return diff.mean() / returns.std()
