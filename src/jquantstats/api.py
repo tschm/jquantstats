@@ -26,99 +26,68 @@ for handling financial returns data and benchmarks.
 
 import calendar
 import dataclasses
-from collections.abc import Callable
+from functools import wraps
 from math import ceil as _ceil
-from typing import Any
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+import polars as pl
 from plotly.subplots import make_subplots
-from scipy.stats import linregress, norm
+from scipy.stats import linregress
 
 
-def build_data(returns: pd.DataFrame | pd.Series, rf=0.0, benchmark=None, nperiods=None) -> "_Data":
+def build_data(
+    returns: pl.DataFrame, rf: float | pl.DataFrame = 0.0, benchmark: pl.DataFrame = None, date_col: str = "Date"
+) -> "_Data":
     """
-    Build a Data object from returns and benchmark data.
+    Build a _Data object from returns and optional benchmark using Polars.
 
-    This function processes financial returns data and an optional benchmark,
-    calculating excess returns by subtracting a risk-free rate. It ensures that
-    returns and benchmark data are properly aligned by date.
-
-    Args:
-        returns (pd.DataFrame | pd.Series): Financial returns data. If a Series is provided,
-            it will be converted to a DataFrame.
-        rf (float | pd.Series, optional): Risk-free rate. Can be a constant float value
-            or a Series with the same index as returns. Defaults to 0.0.
-        benchmark (pd.Series, optional): Benchmark returns data. If provided, will be
-            aligned with the 'returns' data. Defaults to None.
-        nperiods (int, optional): Number of periods per year, used to deannualize
-            the risk-free rate if it's an annual rate. Defaults to None.
+    Parameters:
+        returns (pl.DataFrame): Financial returns.
+        rf (float | pl.DataFrame): Risk-free rate (scalar or time series).
+        benchmark (pl.DataFrame, optional): Benchmark returns.
+        date_col (str): Name of the date column.
 
     Returns:
-        _Data: A Data object containing processed returns and benchmark data.
-
-    Examples:
-        >>> import pandas as pd
-        >>> from quantstats.api import build_data
-        >>>
-        >>> # With a constant risk-free rate
-        >>> data = build_data(returns=df, rf=0.02/252)
-        >>>
-        >>> # With a Series as risk-free rate
-        >>> rf_series = pd.Series(index=df.index, data=0.001)
-        >>> data = build_data(returns=df, rf=rf_series)
-        >>>
-        >>> # With a benchmark
-        >>> data = build_data(returns=df, benchmark=benchmark_series)
+        _Data: Object containing excess returns and benchmark (if any).
     """
 
-    def _calculate_excess_returns(data, rf=0.0, nperiods=None):
-        """
-        Calculate excess returns by subtracting the risk-free rate.
+    def subtract_risk_free(df: pl.DataFrame, rf: float | pl.DataFrame, date_col: str) -> pl.DataFrame:
+        if df is None:
+            return None
 
-        Args:
-            data (pd.DataFrame | pd.Series): Returns data.
-            rf (float | pd.Series): Risk-free rate.
-            nperiods (int, optional): Number of periods for deannualization.
+        # Handle scalar rf case
+        if isinstance(rf, float):
+            rf_df = df.select([pl.col(date_col), pl.lit(rf).alias("rf")])
+        else:
+            rf_df = rf.rename({rf.columns[1]: "rf"}) if rf.columns[1] != "rf" else rf
 
-        Returns:
-            pd.DataFrame | pd.Series: Excess returns.
-        """
-        # If rf is a Series, filter it to match data's index
-        if not isinstance(rf, float):
-            rf = rf[rf.index.isin(data.index)]
+        # Join and subtract
+        df = df.join(rf_df, on=date_col, how="inner")
+        return df.select(
+            [pl.col(date_col)]
+            + [
+                (pl.col(col) - pl.col("rf")).alias(col)
+                for col in df.columns
+                if col not in {date_col, "rf"} and df.schema[col] in pl.NUMERIC_DTYPES
+            ]
+        )
 
-        # Deannualize risk-free rate if nperiods is provided
-        if nperiods is not None:
-            rf = np.power(1 + rf, 1.0 / nperiods) - 1.0
+    # Align returns and benchmark if both provided
+    if benchmark is not None:
+        joined_dates = returns.join(benchmark, on=date_col, how="inner").select(date_col)
+        if joined_dates.is_empty():
+            raise ValueError("No overlapping dates between returns and benchmark.")
+        returns = returns.join(joined_dates, on=date_col, how="inner")
+        benchmark = benchmark.join(joined_dates, on=date_col, how="inner")
 
-        # Calculate excess returns and remove timezone info
-        excess_returns = data - rf
-        excess_returns = excess_returns.tz_localize(None)
+    # Subtract risk-free rate
+    index = returns.select(date_col)
+    excess_returns = subtract_risk_free(returns, rf, date_col).drop(date_col)
+    excess_benchmark = subtract_risk_free(benchmark, rf, date_col).drop(date_col) if benchmark is not None else None
 
-        return excess_returns
-
-    # Convert Series to DataFrame if necessary
-    if isinstance(returns, pd.Series):
-        returns_df = returns.copy().to_frame(name="returns")
-    else:
-        returns_df = returns.copy()
-
-    # Process returns without benchmark
-    if benchmark is None:
-        return _Data(returns=_calculate_excess_returns(returns_df, rf, nperiods=nperiods))
-
-    # Process returns with benchmark
-    else:
-        # Find common dates between returns and benchmark
-        common_dates = sorted(list(set(returns_df.index) & set(benchmark.index)))
-
-        # Calculate excess returns for both returns and benchmark
-        excess_returns = _calculate_excess_returns(returns_df.loc[common_dates], rf, nperiods=nperiods)
-        excess_benchmark = _calculate_excess_returns(benchmark.loc[common_dates], rf, nperiods=nperiods)
-
-        return _Data(returns=excess_returns, benchmark=excess_benchmark)
+    return _Data(returns=excess_returns, benchmark=excess_benchmark, index=index)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -133,12 +102,13 @@ class _Data:
     Attributes:
         returns (pd.DataFrame): DataFrame containing returns data, typically with dates as index
                                and assets as columns.
-        benchmark (pd.Series, optional): Series containing benchmark returns data with the same
-                                        index as returns. Defaults to None.
+        #benchmark (pd.Series, optional): Series containing benchmark returns data with the same
+        #                                index as returns. Defaults to None.
     """
 
-    returns: pd.DataFrame
-    benchmark: pd.Series | None = None
+    returns: pl.DataFrame
+    benchmark: pl.DataFrame | None = None
+    index: pd.DataFrame | None = None
 
     @property
     def plots(self):
@@ -155,10 +125,9 @@ class _Data:
         Raises:
             AssertionError: If benchmark is provided and its index doesn't match returns index.
         """
-        if self.benchmark is not None:
-            pd.testing.assert_index_equal(self.benchmark.index, self.returns.index)
 
-    def all(self) -> pd.DataFrame:
+    @property
+    def all(self) -> pl.DataFrame:
         """
         Combines returns and benchmark data into a single DataFrame.
 
@@ -166,92 +135,93 @@ class _Data:
             pd.DataFrame: A DataFrame containing all returns data and benchmark (if available),
                          with NaN values filled with 0.0.
         """
-        # Copy to avoid mutating the original returns
-        result = self.returns.copy()
+        return pl.concat([self.index, self.returns, self.benchmark], how="horizontal")
 
-        # Only add 'Benchmark' column if benchmark data is available
-        if self.benchmark is not None:
-            result["Benchmark"] = self.benchmark
-
-        # Return the combined DataFrame with NaN values filled with 0.0
-        return result.fillna(0.0)
-
-    @property
-    def index(self) -> pd.Index:
-        """
-        Returns the index of the returns DataFrame.
-
-        Returns:
-            pd.Index: The index of the returns DataFrame, typically dates.
-        """
-        return self.returns.index
-
-    @property
-    def names(self) -> pd.Index:
-        """
-        Returns the column names of the returns DataFrame.
-
-        Returns:
-            pd.Index: The column names of the returns DataFrame, typically asset names.
-        """
-        return self.returns.columns
-
-    def prices(self, compounded: bool = False) -> pd.DataFrame:
+    def prices(self, compounded: bool = False, initial_value: float = 100.0) -> pl.DataFrame:
         """
         Converts returns to prices.
 
         Args:
             compounded (bool, optional): If True, uses compounded returns (cumprod).
-                                        If False, uses simple returns (cumsum).
-                                        Defaults to False.
+                                         If False, uses simple returns (cumsum).
+            initial_value (float, optional): Starting price value. Defaults to 100.0.
 
         Returns:
-            pd.DataFrame: A DataFrame containing price data derived from returns.
+            pl.DataFrame: Price data derived from returns.
         """
-        if compounded:
-            return self.all().fillna(0.0).add(1).cumprod(axis=0)
-        else:
-            return self.all().fillna(0.0).cumsum()
 
-    def resample(self, resample: str = "YE", compounded: bool = False) -> "_Data":
+        def to_prices(data: pl.DataFrame) -> pl.DataFrame:
+            if data is None:
+                return None
+            df = data.fill_null(0.0)
+            if compounded:
+                return df.select(
+                    [(pl.lit(initial_value) * (pl.col(col) + 1).cumprod()).alias(col) for col in df.columns]
+                )
+            else:
+                return df.select([(pl.lit(initial_value) + pl.col(col).cum_sum()).alias(col) for col in df.columns])
+
+        parts = [self.index, to_prices(self.returns)]
+        if self.benchmark is not None:
+            parts.append(to_prices(self.benchmark))
+
+        return pl.concat(parts, how="horizontal")
+
+    def resample(self, every: str = "1mo", compounded: bool = False) -> "_Data":
         """
-        Resamples returns data to a different frequency.
+        Resamples returns and benchmark to a different frequency using Polars.
 
         Args:
-            resample (str, optional): Pandas resample rule (e.g., 'YE' for year-end,
-                                     'ME' for month-end). Defaults to "YE".
-            compounded (bool, optional): If True, compounds returns when resampling.
-                                        If False, sums returns. Defaults to False.
+            every (str, optional): Resampling frequency (e.g., '1mo', '1y'). Defaults to '1mo'.
+            compounded (bool, optional): Whether to compound returns. Defaults to False.
 
         Returns:
-            _Data: A new Data object containing the resampled returns.
+            _Data: Resampled data.
         """
 
-        def comp(x: pd.Series) -> float:
-            """Compounds returns: (1 + r1) * (1 + r2) * ... * (1 + rn) - 1"""
-            return (1 + x).prod() - 1.0
+        def resample_frame(df: pl.DataFrame) -> pl.DataFrame:
+            if df is None:
+                return None
 
-        frame = self.all().fillna(0.0)
+            df = self.index.hstack(df)  # Add the date column for resampling
+            # agg_fn = (
+            #    (pl.col(col) + 1.0).product() - 1.0 if compounded else pl.col(col).sum()
+            #    for col in df.columns
+            #    if col != self.index.columns[0]
+            # )
 
-        if compounded:
-            frame = frame.resample(resample).apply(comp)
-        else:
-            frame = frame.resample(resample).sum()
+            return df.group_by_dynamic(
+                index_column=self.index.columns[0], every=every, period=every, closed="right", label="right"
+            ).agg(
+                [
+                    pl.col(col).sum().alias(col) if not compounded else (pl.col(col) + 1.0).product().alias(col)
+                    for col in df.columns
+                    if col != self.index.columns[0]
+                ]
+            )
 
-        return _Data(returns=frame[self.names], benchmark=frame.get("Benchmark", None))
+        resampled_returns = resample_frame(self.returns)
+        resampled_benchmark = resample_frame(self.benchmark) if self.benchmark is not None else None
+        resampled_index = resampled_returns.select(self.index.columns[0])
 
-    def apply(self, fct: Callable, **kwargs: Any) -> Any:
-        """
-        Applies a function to the returns DataFrame.
+        return _Data(
+            returns=resampled_returns.drop(self.index.columns[0]),
+            benchmark=resampled_benchmark.drop(self.index.columns[0]) if resampled_benchmark is not None else None,
+            index=resampled_index,
+        )
 
-        Args:
-            fct (Callable): Function to apply to the returns DataFrame.
-            **kwargs: Additional keyword arguments to pass to the function.
-
-        Returns:
-            Any: The result of applying the function to the returns DataFrame.
-        """
-        return fct(self.returns, **kwargs)
+    # def apply(self, fct: Callable, **kwargs: Any) -> Any:
+    #     """
+    #     Applies a function to the returns DataFrame.
+    #
+    #     Args:
+    #         fct (Callable): Function to apply to the returns DataFrame.
+    #         **kwargs: Additional keyword arguments to pass to the function.
+    #
+    #     Returns:
+    #         Any: The result of applying the function to the returns DataFrame.
+    #     """
+    #     return fct(self.returns, **kwargs)
 
     def copy(self) -> "_Data":
         """
@@ -261,24 +231,45 @@ class _Data:
             _Data: A new Data object with copies of the returns and benchmark.
         """
         try:
-            return _Data(returns=self.returns.copy(), benchmark=self.benchmark.copy())
+            return _Data(returns=self.returns.clone(), benchmark=self.benchmark.clone(), index=self.index.clone())
         except AttributeError:
             # Handle case where benchmark is None
-            return _Data(returns=self.returns.copy())
+            return _Data(returns=self.returns.clone(), index=self.index.clone())
 
-    def highwater_mark(self, compounded: bool = False) -> pd.DataFrame:
-        """
-        Calculates the running maximum (high-water mark) of prices.
+    # def numeric(self):
+    #     return self.returns.select(pl.col(pl.NUMERIC_DTYPES))
 
-        Args:
-            compounded (bool, optional): If True, uses compounded returns to calculate prices.
-                                        If False, uses simple returns. Defaults to False.
-
-        Returns:
-            pd.DataFrame: A DataFrame containing the high-water mark for each asset.
-        """
-        prices = self.prices(compounded)
-        return prices.cummax()
+    # def highwater_mark(self, compounded: bool = False) -> pl.DataFrame:
+    #     """
+    #     Calculates the running maximum (high-water mark) of prices.
+    #
+    #     Args:
+    #         compounded (bool, optional): If True, uses compounded returns to calculate prices.
+    #                                     If False, uses simple returns. Defaults to False.
+    #
+    #     Returns:
+    #         pd.DataFrame: A DataFrame containing the high-water mark for each asset.
+    #     """
+    #     def to_highwater(data: pl.DataFrame) -> pl.DataFrame:
+    #         if compounded:
+    #             # Calculate cumulative product for compounded returns
+    #             return data.select([
+    #                 (1 + pl.col(col)).cum_prod().alias(col)
+    #                 for col in data.columns
+    #             ])
+    #         else:
+    #             # Calculate cumulative sum for simple returns
+    #             return data.select([
+    #                 pl.col(col).cum_sum().cum_max().alias(col)
+    #                 for col in data.columns
+    #             ])
+    #
+    #
+    #     parts = [self.index, to_highwater(self.returns)]
+    #     if self.benchmark is not None:
+    #         parts.append(to_highwater(self.benchmark))
+    #
+    #     return pl.concat(parts, how="horizontal")
 
     def head(self, n: int = 5) -> "_Data":
         """
@@ -290,8 +281,7 @@ class _Data:
         Returns:
             _Data: A new Data object containing the first n rows of the combined data.
         """
-        all_data = self.all().head(n=n)
-        return _Data(returns=all_data[self.names], benchmark=all_data.get("Benchmark", None))
+        return _Data(returns=self.returns.head(n), benchmark=self.benchmark.head(n), index=self.index.head(n))
 
     def tail(self, n: int = 5) -> "_Data":
         """
@@ -303,232 +293,337 @@ class _Data:
         Returns:
             _Data: A new Data object containing the last n rows of the combined data.
         """
-        all_data = self.all().tail(n=n)
-        return _Data(returns=all_data[self.names], benchmark=all_data.get("Benchmark", None))
+        return _Data(returns=self.returns.tail(n), benchmark=self.benchmark.tail(n), index=self.index.tail(n))
 
-    def drawdown(self, compounded: bool = False) -> pd.DataFrame:
-        """
-        Calculates drawdowns from prices.
-
-        Args:
-            compounded (bool, optional): If True, calculates drawdowns as percentage change
-                                        from high-water mark. If False, calculates drawdowns
-                                        as absolute difference from high-water mark.
-                                        Defaults to False.
-
-        Returns:
-            pd.DataFrame: A DataFrame containing drawdowns for each asset.
-        """
-        prices = self.prices(compounded)
-
-        if compounded:
-            # Percentage drawdown: (current_price / peak_price) - 1
-            drawdown = prices / prices.cummax() - 1.0
-        else:
-            # Absolute drawdown: peak_price - current_price
-            drawdown = prices.cummax() - prices
-
-        return drawdown
+    # def drawdown(self, compounded: bool = False) -> pl.DataFrame:
+    #     """
+    #     Calculates drawdowns from prices.
+    #
+    #     Args:
+    #         compounded (bool, optional): If True, calculates drawdowns as percentage change
+    #                                     from high-water mark. If False, calculates drawdowns
+    #                                     as absolute difference from high-water mark.
+    #                                     Defaults to False.
+    #
+    #     Returns:
+    #         pl.DataFrame: A DataFrame containing drawdowns for each asset (and benchmark if available).
+    #     """
+    #     prices = self.prices(compounded)
+    #
+    #     # def calculate_drawdown(data: pl.DataFrame) -> pl.DataFrame:
+    #     #     if compounded:
+    #     #         # Calculate cumulative product for compounded returns
+    #     #         peak =
+    #     #         return data.select([
+    #     #             pl.col(col)).cum_prod().alias(col)
+    #     #             for col in data.columns
+    #     #         ])
+    #     #     else:
+    #     #         # Calculate cumulative sum for simple returns
+    #     #         return data.select([
+    #     #             pl.col(col).cum_sum().cum_max().alias(col)
+    #     #             for col in data.columns
+    #     #         ])
+    #
+    #     def calculate_drawdown(data: pl.DataFrame) -> pl.DataFrame:
+    #         peak = data.cum_max()
+    #         if compounded:
+    #             return data / peak - 1.0
+    #         return peak - data
+    #
+    #     parts = [self.index]
+    #     parts.append(calculate_drawdown(prices))
+    #
+    #     if self.benchmark is not None:
+    #         benchmark_prices = self.benchmark_prices(compounded)  # Assuming this method exists
+    #         parts.append(calculate_drawdown(benchmark_prices))
+    #
+    #     return pl.concat(parts, how="horizontal")
 
 
 @dataclasses.dataclass  # (frozen=True)
 class _Stats:
     data: _Data
+    numeric_columns: list[str] = None
     all: pd.DataFrame = None
+    all_pl: pl.DataFrame = None
 
     def __post_init__(self):
         self.all = self.data.all()
+        self.all_pl = self.data.all_pl()
+        numeric_dtypes = {pl.Float64, pl.Float32, pl.Int64, pl.Int32, pl.UInt32, pl.UInt64}
+        self.numeric_columns = [name for name, dtype in self.all_pl.schema.items() if dtype in numeric_dtypes]
 
-    def skew(self):
-        """
-        Calculates returns' skewness
-        (the degree of asymmetry of a distribution around its mean)
-        """
-        return self.all.skew()
+    @staticmethod
+    def _quantile_expr(series, q):
+        return series.quantile(q)
 
-    def kurtosis(self):
+    @staticmethod
+    def _mean_positive_expr(series):
+        return series.filter(series >= 0).mean()
+
+    @staticmethod
+    def _mean_negative_expr(series):
+        return series.filter(series < 0).mean()
+
+    @staticmethod
+    def _quantile_expr(series, cutoff):
+        return series.quantile(cutoff)
+
+    @staticmethod
+    def per_numeric_column(expr_func):
+        """Decorator: Apply a given column-wise expr_func across all numeric columns."""
+
+        @wraps(expr_func)
+        def wrapper(self, *args, **kwargs):
+            return [
+                # pl.col(name).drop_nans()
+                expr_func(self, pl.col(name).drop_nans(), *args, **kwargs).alias(name)
+                for name in self.numeric_columns
+            ]
+
+        return wrapper
+
+    @staticmethod
+    def to_dict(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            expressions = func(self, *args, **kwargs)
+            frame = self.all_pl.select(expressions)
+            return dict(zip(frame.columns, frame.row(0)))
+
+        return wrapper
+
+    @staticmethod
+    def to_frame(func):
+        """Decorator: Applies per-column expressions and evaluates with .with_columns(...)"""
+
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            expressions = func(self, *args, **kwargs)
+            return self.all_pl.with_columns(expressions)
+
+        return wrapper
+
+    @to_dict
+    @per_numeric_column
+    def skew(self, series):
+        """
+        Calculates skewness (asymmetry) for each numeric column.
+        """
+        return series.skew(bias=False)
+
+    @to_dict
+    @per_numeric_column
+    def kurtosis(self, series):
         """
         Calculates returns' kurtosis
         (the degree to which a distribution peak compared to a normal distribution)
         """
-        return self.all.kurtosis()
+        return series.kurtosis(bias=False)
 
-    def avg_return(self):
-        """Calculates the average return/trade return for a period"""
-        return self.all[self.all != 0].dropna().mean()
+    @to_dict
+    @per_numeric_column
+    def avg_return(self, series):
+        """Average return per non-zero, non-null value."""
+        return series.filter(series.is_not_null() & (series != 0)).mean()
 
-    def avg_win(self):
+    @to_dict
+    @per_numeric_column
+    def avg_win(self, series):
         """
         Calculates the average winning
-        return/trade return for a period
+        return/trade for an asset
         """
-        return self.all[self.all > 0].dropna().mean()
+        return self._mean_positive_expr(series)
 
-    def avg_loss(self):
+    @to_dict
+    @per_numeric_column
+    def avg_loss(self, series):
         """
         Calculates the average low if
         return/trade return for a period
         """
-        return self.all[self.all < 0].dropna().mean()
+        return self._mean_negative_expr(series)
 
-    def volatility(self, periods=252, annualize=True):
-        """Calculates the volatility of returns for a period"""
-        std = self.all.std()
+    @to_dict
+    @per_numeric_column
+    def volatility(self, series, periods=252, annualize=True):
+        """
+        Calculates the volatility of returns:
+        - Std dev of returns
+        - Annualized by sqrt(periods) if `annualize` is True
+        """
         factor = np.sqrt(periods) if annualize else 1
-        return std * factor
+        return (series.std() * factor).cast(pl.Float64)
 
     def rolling_volatility(self, rolling_period=126, periods_per_year=252):
         return self.all.rolling(rolling_period).std() * np.sqrt(periods_per_year)
 
-    def log_returns(self):
-        """Shorthand for to_log_returns"""
-        return self.to_log_returns()
+    # def log_returns(self):
+    #     """Shorthand for to_log_returns"""
+    #     return self.to_log_returns()
+    #
+    # def to_log_returns(self):
+    #     """Converts returns series to log returns"""
+    #     return np.log(self.all + 1).replace([np.inf, np.inf], float("NaN"))
+    #
+    # def implied_volatility(self, periods=252):
+    #     """Calculates the implied volatility of returns for a period"""
+    #     logret = self.log_returns()
+    #     factor = periods or 1
+    #     return logret.std() * np.sqrt(factor)
 
-    def to_log_returns(self):
-        """Converts returns series to log returns"""
-        return np.log(self.all + 1).replace([np.inf, np.inf], float("NaN"))
+    @to_dict
+    @per_numeric_column
+    def autocorr(self, series: pl.Series):
+        """
+        Metric to account for autocorrelation.
+        Applies autocorrelation penalty to each numeric series (column).
+        """
+        corr = pl.corr(series, series.shift(1)).cast(pl.Float64)
+        return corr
 
-    def implied_volatility(self, periods=252):
-        """Calculates the implied volatility of returns for a period"""
-        logret = self.log_returns()
-        factor = periods or 1
-        return logret.std() * np.sqrt(factor)
-
-    def autocorr_penalty(self):
-        """Metric to account for auto correlation"""
-
-        # if isinstance(returns, pd.DataFrame):
-        #    returns = returns[returns.columns[0]]
-        def f(series):
-            num = len(series)
-            coef = np.abs(np.corrcoef(series[:-1], series[1:])[0, 1])
-            corr = [((num - x) / num) * coef**x for x in range(1, num)]
-            return np.sqrt(1 + 2 * np.sum(corr))
-
-        return self.all.apply(f)
-
-    def payoff_ratio(self):
-        """Measures the payoff ratio (average win/average loss)"""
-        return self.avg_win() / abs(self.avg_loss())
+    @to_dict
+    @per_numeric_column
+    def payoff_ratio(self, series):
+        """
+        Measures the payoff ratio: average win / abs(average loss).
+        """
+        avg_win = series.filter(series > 0).mean()
+        # avg_win = self.avg_win(series)
+        avg_loss = series.filter(series < 0).mean().abs()
+        return (avg_win / avg_loss).cast(pl.Float64)
 
     def win_loss_ratio(self):
         """Shorthand for payoff_ratio()"""
         return self.payoff_ratio()
 
-    def profit_ratio(self):
+    @to_dict
+    @per_numeric_column
+    def profit_ratio(self, series):
         """Measures the profit ratio (win ratio / loss ratio)"""
-        wins = self.all[self.all >= 0]
-        loss = self.all[self.all < 0]
+        wins = series.filter(series > 0)
+        losses = series.filter(series < 0)
 
-        win_ratio = abs(wins.mean() / wins.count())
-        loss_ratio = abs(loss.mean() / loss.count())
-        return win_ratio / loss_ratio
+        win_ratio = (wins.mean() / wins.count()).abs()
+        loss_ratio = (losses.mean() / losses.count()).abs()
 
-    def profit_factor(self):
-        """Measures the profit ratio (wins/loss)"""
-        return abs(self.all[self.all >= 0].sum() / self.all[self.all < 0].sum())
+        return (win_ratio / loss_ratio).fill_null(np.nan).cast(pl.Float64)
 
-    def cpc_index(self):
-        """
-        Measures the cpc ratio
-        (profit factor * win % * win loss ratio)
-        """
-        return self.profit_factor() * self.win_rate() * self.win_loss_ratio()
+    @to_dict
+    @per_numeric_column
+    def profit_factor(self, series):
+        """Measures the profit ratio (wins / loss)"""
+        wins = series.filter(series > 0)
+        losses = series.filter(series < 0)
+
+        return (wins.sum() / losses.sum()).abs()
 
     def common_sense_ratio(self):
         """Measures the common sense ratio (profit factor * tail ratio)"""
-        return self.profit_factor() * self.tail_ratio()
+        profit_factor = self.profit_factor()
+        tail_ratio = self.tail_ratio()
 
-    def value_at_risk(self, confidence=0.95):
+        return {name: profit_factor[name] * tail_ratio[name] for name in profit_factor.keys()}
+        # return profit_factor * tail_ratio
+
+    @to_dict
+    @per_numeric_column
+    def value_at_risk(self, series: pl.Series, alpha: float = 0.05):
         """
         Calculates the daily value-at-risk
-        (variance-covariance calculation with confidence n)
+        (variance-covariance calculation with confidence level)
         """
+        # Ensure returns are sorted and drop nulls
+        cleaned_returns = series.drop_nulls()
 
-        def f(series):
-            mu = series.mean()
-            sigma = series.std()
-            return norm.ppf(1 - confidence, mu, sigma)
+        # Compute VaR using quantile; note that VaR is typically a negative number (i.e. loss)
+        var = cleaned_returns.quantile(alpha, interpolation="nearest")
 
-        return self.all.apply(f)
+        return var.cast(pl.Float64)
 
-        # return _norm.ppf(1 - confidence, mu, sigma)
-
-    def var(self, confidence=0.95):
+    def var(self, alpha: float = 0.05):
         """Shorthand for value_at_risk()"""
-        return self.value_at_risk(confidence)
+        return self.value_at_risk(alpha)
 
-    def conditional_value_at_risk(self, confidence=0.95):
+    @to_dict
+    @per_numeric_column
+    def conditional_value_at_risk(self, series, alpha=0.05):
         """
-        Calculats the conditional daily value-at-risk (aka expected shortfall)
-        quantifies the amount of tail risk an investment
+        Calculates the conditional value-at-risk (CVaR / expected shortfall)
+        for each numeric column.
         """
-        var = self.value_at_risk(confidence)
-        c_var = self.all[self.all < var].mean()
-        return c_var  # if ~np.isnan(c_var) else var
+        # Ensure returns are sorted and drop nulls
+        cleaned_returns = series.drop_nulls()
 
-    def cvar(self, confidence=0.95):
+        # Compute VaR using quantile; note that VaR is typically a negative number (i.e. loss)
+        var = cleaned_returns.quantile(alpha, interpolation="nearest")
+
+        # Compute mean of returns less than or equal to VaR
+        cvar = cleaned_returns.filter(cleaned_returns <= var).mean()
+
+        return cvar
+
+        # Compute CVaR: mean of values less than the VaR threshold
+        # return pl.when(series < var_expr).then(series).otherwise(None).mean()
+
+    def cvar(self, alpha=0.05):
         """Shorthand for conditional_value_at_risk()"""
-        return self.conditional_value_at_risk(confidence)
+        return self.conditional_value_at_risk(alpha)
 
-    def expected_shortfall(self, confidence=0.95):
+    def expected_shortfall(self, alpha=0.05):
         """Shorthand for conditional_value_at_risk()"""
-        return self.conditional_value_at_risk(confidence)
+        return self.conditional_value_at_risk(alpha)
 
-    def tail_ratio(self, cutoff=0.95):
+    @to_dict
+    @per_numeric_column
+    def tail_ratio(self, series, cutoff=0.95):
+        """Calculates the ratio of the right (95%) and left (5%) tails."""
+        left_tail = self._quantile_expr(series, 1 - cutoff)
+        right_tail = self._quantile_expr(series, cutoff)
+        return abs(right_tail / left_tail)  # .alias(series.meta.output_name)
+
+    @to_dict
+    @per_numeric_column
+    def win_rate(self, series):
+        """Calculates the win ratio for a period."""
+        num_pos = series.filter(series > 0).count()
+        num_nonzero = series.filter(series != 0).count()
+        return (num_pos / num_nonzero).cast(pl.Float64)
+
+    @to_dict
+    @per_numeric_column
+    def gain_to_pain_ratio(self, series):
         """
-        Measures the ratio between the right
-        (95%) and left tail (5%).
+        Jack Schwager's Gain-to-Pain Ratio:
+        total return / sum of losses (in absolute value).
         """
-        return abs(self.all.quantile(cutoff) / self.all.quantile(1 - cutoff))
+        total_gain = series.sum()
+        total_pain = series.filter(series < 0).abs().sum()
+        return (total_gain / total_pain).cast(pl.Float64)
 
-    def win_rate(self):
-        """Calculates the win ratio for a period"""
-
-        def _win_rate(series):
-            try:
-                return len(series[series > 0]) / len(series[series != 0])
-            except ZeroDivisionError:
-                return np.nan
-
-        return self.all.apply(_win_rate)
-
-    def gain_to_pain_ratio(self):
+    @to_dict
+    @per_numeric_column
+    def outlier_win_ratio(self, series: pl.Series, quantile: float = 0.99):
         """
-        Jack Schwager's GPR. See here for more info:
-        https://archive.is/wip/2rwFW
-        """
-        # returns = returns.resample(resolution).sum()
-        downside = abs(self.all[self.all < 0].sum())
-        return self.all.sum() / downside
-
-    # def risk_of_ruin(self):
-    #     """
-    #     Calculates the risk of ruin
-    #     (the likelihood of losing all one's investment capital)
-    #     """
-    #     wins = self.win_rate()
-    #     return ((1 - wins) / (1 + wins)) ** len(returns)
-    #
-    #
-    # def ror(self):
-    #     """Shorthand for risk_of_ruin()"""
-    #     return self.risk_of_ruin()
-    #
-
-    def outlier_win_ratio(self, quantile=0.99):
-        """
-        Calculates the outlier winners ratio
+        Calculates the outlier winners ratio:
         99th percentile of returns / mean positive return
         """
-        return self.all.quantile(quantile).mean() / self.all[self.all >= 0].mean()
+        q = series.quantile(quantile, interpolation="nearest")
+        mean_positive = series.filter(series > 0).mean()
+        return q / mean_positive
 
-    def outlier_loss_ratio(self, quantile=0.01):
+    @to_dict
+    @per_numeric_column
+    def outlier_loss_ratio(self, series: pl.Series, quantile: float = 0.01):
         """
         Calculates the outlier losers ratio
         1st percentile of returns / mean negative return
         """
-        return self.all.quantile(quantile).mean() / self.all[self.all < 0].mean()
+        q = series.quantile(quantile, interpolation="nearest")
+        mean_negative = series.filter(series < 0).mean()
+        return q / mean_negative
 
     # def recovery_factor(self, rf=0.0):
     #    """Measures how fast the strategy recovers from drawdowns"""
@@ -536,66 +631,55 @@ class _Stats:
     #    max_dd = max_drawdown()
     #    return abs(total_returns) / abs(max_dd)
 
-    def risk_return_ratio(self):
+    @to_dict
+    @per_numeric_column
+    def risk_return_ratio(self, series):
         """
-        Calculates the return / risk ratio
-        (sharpe ratio without factoring in the risk-free rate)
+        Calculates the return/risk ratio (Sharpe ratio w/o risk-free rate).
         """
-        return self.all.mean() / self.all.std()
+        return (series.mean() / series.std()).cast(pl.Float64)
 
-    # def max_drawdown(self):
-    #    """Calculates the maximum drawdown"""
-    #    return prices / prices.cummax().min() - 1
+    # def kelly_criterion(self):
+    #     """
+    #     Calculates the recommended maximum amount of capital that
+    #     should be allocated to the given strategy, based on the
+    #     Kelly Criterion (http://en.wikipedia.org/wiki/Kelly_criterion)
+    #     """
+    #     win_loss_ratio = self.payoff_ratio()
+    #     win_prob = self.win_rate()
+    #     lose_prob = 1 - win_prob
+    #
+    #     return ((win_loss_ratio * win_prob) - lose_prob) / win_loss_ratio
 
     def kelly_criterion(self):
         """
-        Calculates the recommended maximum amount of capital that
-        should be allocated to the given strategy, based on the
-        Kelly Criterion (http://en.wikipedia.org/wiki/Kelly_criterion)
+        Calculates the optimal capital allocation (Kelly Criterion) per column:
+        f* = [(b * p) - q] / b
+        where:
+          - b = payoff ratio
+          - p = win rate
+          - q = 1 - p
         """
-        win_loss_ratio = self.payoff_ratio()
-        win_prob = self.win_rate()
-        lose_prob = 1 - win_prob
+        b = self.payoff_ratio()
+        p = self.win_rate()
 
-        return ((win_loss_ratio * win_prob) - lose_prob) / win_loss_ratio
+        return {
+            col: ((b[col] * p[col]) - (1 - p[col])) / b[col]
+            # if b[col] not in (None, 0) and p[col] is not None else None
+            for col in b
+        }
 
-    def expected_return(self):
-        """
-        Returns the expected return for a given period
-        by calculating the geometric holding period return
-        """
+    @to_dict
+    @per_numeric_column
+    def best(self, series):
+        """Returns the maximum return per column (best period)."""
+        return series.max()  # .alias(series.meta.output_name)
 
-        def f(series):
-            return np.prod(1 + series) ** (1 / len(series)) - 1
-
-        return self.all.apply(f)
-
-        # return np.prod(1 + returns, axis=0) ** (1 / len(returns)) - 1
-
-    def geometric_mean(self):
-        """Shorthand for expected_return()"""
-        return self.expected_return()
-
-    def ghpr(self):
-        """Shorthand for expected_return()"""
-        return self.expected_return()
-
-    def outliers(self, quantile=0.95):
-        """Returns a frame of outliers"""
-        return self.all[self.all > self.all.quantile(quantile)].dropna(how="all")
-
-    #
-    # def remove_outliers(returns, quantile=0.95):
-    #     """Returns series of returns without the outliers"""
-    #     return returns[returns < returns.quantile(quantile)]
-
-    def best(self):
-        """Returns the best day/month/week/quarter/year's return"""
-        return self.all.max()
-
-    def worst(self):
-        """Returns the worst day/month/week/quarter/year's return"""
-        return self.all.min()
+    @to_dict
+    @per_numeric_column
+    def worst(self, series):
+        """Returns the minimum return per column (worst period)."""
+        return series.min()  # .alias(series.meta.output_name)
 
     def exposure(self):
         """Returns the market exposure time (returns != 0)"""
@@ -606,25 +690,16 @@ class _Stats:
 
         return self.all.apply(_exposure)
 
-    def sharpe(self, periods=252, smart=False):
+    @to_dict
+    @per_numeric_column
+    def sharpe(self, series, periods=252):
         """
-        Calculates the sharpe ratio of access returns
-
-        If rf is non-zero, you must specify periods.
-        In this case, rf is assumed to be expressed in yearly (annualized) terms
-
-        Args:
-            * periods (int): Freq. of returns (252/365 for daily, 12 for monthly)
-            * annualize: return annualize sharpe?
-            * smart: return smart sharpe ratio
+        Calculates the Sharpe ratio of asset returns.
         """
-        divisor = self.all.std(ddof=1)
-        if smart:
-            # penalize sharpe with auto correlation
-            divisor = divisor * self.autocorr_penalty()
-        res = self.all.mean() / divisor
+        divisor = series.std(ddof=1)
+
+        res = series.mean() / divisor
         factor = periods or 1
-
         return res * np.sqrt(factor)
 
     def rolling_sharpe(self, rolling_period=126, periods_per_year=252):
@@ -632,31 +707,18 @@ class _Stats:
         factor = periods_per_year or 1
         return res * np.sqrt(factor)
 
-    def sortino(self, periods=252, smart=False):
+    @to_dict
+    @per_numeric_column
+    def sortino(self, series: pl.Series, periods=252):
         """
-        Calculates the sortino ratio of access returns
-
-        If rf is non-zero, you must specify periods.
-        In this case, rf is assumed to be expressed in yearly (annualized) terms
-
-        Calculation is based on this paper by Red Rock Capital
-        http://www.redrockcapital.com/Sortino__A__Sharper__Ratio_Red_Rock_Capital.pdf
+        Calculates the Sortino ratio: mean return divided by downside deviation.
+        Based on Red Rock Capital's Sortino ratio paper.
         """
 
-        def f(series):
-            return np.sqrt((series[series < 0] ** 2).sum() / len(series.dropna()))
+        downside_deviation = np.sqrt(((series.filter(series < 0)) ** 2).mean())
 
-        downside = self.all.apply(f)
-
-        #    np.sqrt((self.all[self.all < 0] ** 2).sum() / len(returns)))
-
-        if smart:
-            # penalize sortino with auto correlation
-            downside = downside * self.autocorr_penalty()
-
-        res = self.all.mean() / downside
-        factor = periods or 1
-        return res * np.sqrt(factor)
+        ratio = series.mean() / downside_deviation
+        return ratio * np.sqrt(periods)
 
     def rolling_sortino(self, rolling_period=126, periods_per_year=252):
         downside = (
@@ -667,14 +729,13 @@ class _Stats:
         factor = periods_per_year or 1
         return res * np.sqrt(factor)
 
-    def adjusted_sortino(self, periods=252, smart=False):
+    def adjusted_sortino(self, periods=252):
         """
-        Jack Schwager's version of the Sortino ratio allows for
-        direct comparisons to the Sharpe. See here for more info:
-        https://archive.is/wip/2rwFW
+        Jack Schwager's adjusted Sortino ratio for direct comparison to Sharpe.
+        See: https://archive.is/wip/2rwFW
         """
-        data = self.sortino(periods=periods, smart=smart)
-        return data / np.sqrt(2)
+        sortino_data = self.sortino(periods=periods)
+        return {k: v / np.sqrt(2) for k, v in sortino_data.items()}
 
     def r_squared(self):
         """Measures the straight line fit of the equity curve"""
@@ -692,11 +753,21 @@ class _Stats:
         """Shorthand for r_squared()"""
         return self.r_squared()
 
-    def information_ratio(self):
+    @to_dict
+    @per_numeric_column
+    def information_ratio(self, series):
         """
         Calculates the information ratio
         (basically the risk return ratio of the net profits)
         """
+        active = series - self.data.benchmark
+        print(active)
+
+        mean_active = active.mean()
+        std_active = active.std()
+
+        print(mean_active, std_active)
+
         returns = self.all  # [self.data.names]
         diff = returns.sub(self.data.benchmark, axis=0)
 
