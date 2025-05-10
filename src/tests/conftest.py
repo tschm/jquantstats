@@ -43,18 +43,10 @@ def portfolio(resource_dir):
 def data(portfolio, benchmark):
     return build_data(returns=portfolio, benchmark=benchmark)
 
-# @pytest.fixture
-# def edge(data):
-#     index = data.index
-#     returns = pl.DataFrame({"index": index, "returns": [0.0] * len(index)})
-#     benchmark = pl.DataFrame({"index": index, "benchmark": [0.0] * len(index)})
-#
-#     benchmark = benchmark.to_pandas().set_index("index")
-#     benchmark.index = benchmark.index.astype('datetime64[ns]')
-#
-#     returns = returns.to_pandas().set_index("index")
-#     returns.index = returns.index.astype('datetime64[ns]')
-#
-#     #returns = pd.Series(index=data.index, data=0.0)
-#     #benchmark = pd.Series(index=data.index, data=0.0)
-#     return build_data(returns=returns, benchmark=benchmark)
+@pytest.fixture
+def edge(data):
+    index = data.index["Date"]
+    returns = pl.DataFrame({"index": index, "returns": [0.0] * len(index)})
+    benchmark = pl.DataFrame({"index": index, "benchmark": [0.0] * len(index)})
+
+    return build_data(returns=returns, benchmark=benchmark, date_col="index")
