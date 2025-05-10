@@ -345,14 +345,12 @@ class _Data:
 class _Stats:
     data: _Data
     numeric_columns: list[str] = None
-    all: pd.DataFrame = None
-    all_pl: pl.DataFrame = None
+    all: pl.DataFrame = None
 
     def __post_init__(self):
-        self.all = self.data.all()
-        self.all_pl = self.data.all_pl()
+        self.all = self.data.all
         numeric_dtypes = {pl.Float64, pl.Float32, pl.Int64, pl.Int32, pl.UInt32, pl.UInt64}
-        self.numeric_columns = [name for name, dtype in self.all_pl.schema.items() if dtype in numeric_dtypes]
+        self.numeric_columns = [name for name, dtype in self.all.schema.items() if dtype in numeric_dtypes]
 
     @staticmethod
     def _quantile_expr(series, q):
@@ -389,7 +387,7 @@ class _Stats:
         @wraps(func)
         def wrapper(self, *args, **kwargs):
             expressions = func(self, *args, **kwargs)
-            frame = self.all_pl.select(expressions)
+            frame = self.all.select(expressions)
             return dict(zip(frame.columns, frame.row(0)))
 
         return wrapper
@@ -865,7 +863,7 @@ class _Plots:
         fig = go.Figure()
 
         # Add a bar trace for each asset
-        for idx, col in enumerate(self.data.names):
+        for idx, col in enumerate(self.data.returns.columns):
             fig.add_trace(
                 go.Bar(
                     x=self.data.index,
@@ -938,7 +936,7 @@ class _Plots:
         )
 
         # Plot cumulative returns for each asset
-        for col in self.data.names:
+        for col in self.returns.columns:
             cum_returns = 100 * ((1 + self.data.returns[col]).cumprod())  # Convert to percentage
             fig.add_trace(
                 go.Scatter(
@@ -952,7 +950,7 @@ class _Plots:
             )
 
         # Plot drawdowns for each asset
-        for col in self.data.names:
+        for col in self.data.returns.columns:
             fig.add_trace(
                 go.Scatter(
                     x=dd[col].index,
@@ -1039,14 +1037,14 @@ class _Plots:
         cmap = "RdYlGn"
 
         # Prepare monthly returns as percentage
-        returns = self.data.resample(resample="ME", compounded=compounded).returns * 100
+        returns = self.data.resample(every="1m", compounded=compounded).returns * 100
 
         # Extract returns for the first asset
-        returns = returns[self.data.names[0]]
-        returns.index = pd.to_datetime(returns.index)
+        returns = returns[self.data.returns.columns[0]]
+        # returns.index = pd.to_datetime(returns.index)
 
         # Convert to DataFrame for manipulation
-        returns = returns.to_frame()
+        # returns = returns.to_frame()
 
         # Add Year and Month columns
         returns["Year"] = returns.index.year
@@ -1148,7 +1146,7 @@ class _Plots:
         colors = _Plots._FLATUI_COLORS
 
         # Extract returns for the first asset and ensure DataFrame format
-        port = pd.DataFrame(self.data.returns[self.data.names[0]]).fillna(0)
+        port = pd.DataFrame(self.data.returns[self.data.returns.columns[0]]).fillna(0)
         port.columns = ["Daily"]
 
         # Define function to apply when resampling (compound or sum)
