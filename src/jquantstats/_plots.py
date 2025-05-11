@@ -2,8 +2,8 @@ import calendar
 import dataclasses
 
 import numpy as np
-import pandas as pd
 import plotly.graph_objects as go
+import polars as pl
 from plotly.subplots import make_subplots
 
 
@@ -134,7 +134,7 @@ class Plots:
             >>> fig.show()
         """
         # Calculate drawdowns
-        dd = self.data.drawdown(compounded=compounded)
+        dd = self.data.stats.drawdown(compounded=compounded, initial=100)
 
         # Create subplot structure
         fig = make_subplots(
@@ -147,11 +147,11 @@ class Plots:
         )
 
         # Plot cumulative returns for each asset
-        for col in self.returns.columns:
-            cum_returns = 100 * ((1 + self.data.returns[col]).cumprod())  # Convert to percentage
+        for col in self.data.returns.columns:
+            cum_returns = 100 * ((1 + self.data.returns[col]).cum_prod())  # Convert to percentage
             fig.add_trace(
                 go.Scatter(
-                    x=cum_returns.index,
+                    x=self.data.index[self.data.index.columns[0]],
                     y=cum_returns,
                     name=col,
                     mode="lines",
@@ -164,7 +164,7 @@ class Plots:
         for col in self.data.returns.columns:
             fig.add_trace(
                 go.Scatter(
-                    x=dd[col].index,
+                    x=self.data.index[self.data.index.columns[0]],
                     y=dd[col],
                     name=f"DD: {col}",
                     mode="lines",
@@ -174,11 +174,11 @@ class Plots:
             )
 
         # Plot daily returns for each asset
-        for col in self.data.names:
+        for col in self.data.assets:
             fig.add_trace(
                 go.Scatter(
-                    x=self.data.returns[col].index,
-                    y=self.data.returns[col] * 100,  # Convert to percentage
+                    x=self.data.index[self.data.index.columns[0]],
+                    y=self.data.all[col] * 100,  # Convert to percentage
                     name=f"{col} Return",
                     mode="lines",
                 ),
@@ -208,11 +208,11 @@ class Plots:
 
     def monthly_heatmap(
         self,
+        col,
         annot_size=13,
         cbar=True,
         returns_label="Strategy",
-        compounded=True,
-        eoy=False,
+        compounded=False,
         fontname="Arial",
         ylabel=True,
     ):
@@ -229,7 +229,6 @@ class Plots:
             cbar (bool, optional): Whether to show the color bar. Defaults to True.
             returns_label (str, optional): Label for the returns data. Defaults to "Strategy".
             compounded (bool, optional): Whether to use compounded returns. Defaults to True.
-            eoy (bool, optional): Whether to include end-of-year summary. Defaults to False.
             fontname (str, optional): Font family to use. Defaults to "Arial".
             ylabel (bool, optional): Whether to show y-axis label. Defaults to True.
 
@@ -244,49 +243,39 @@ class Plots:
             >>> fig = data.plots.monthly_heatmap(returns_label="My Portfolio")
             >>> fig.show()
         """
-        # Define color map (Red-Yellow-Green)
+
         cmap = "RdYlGn"
 
-        # Prepare monthly returns as percentage
-        data = self.data.resample(every="1m", compounded=compounded)
+        # Resample returns monthly
+        data = self.data.resample(every="1mo", compounded=compounded)
 
-        # Extract returns for the first asset
-        returns = data.returns[data.returns.columns[0]] * 100
-        # returns.index = pd.to_datetime(returns.index)
+        date_col = self.data.index.columns[0]
+        result = data.all.with_columns(
+            pl.col(date_col).dt.year().alias("Year"),
+            pl.col(date_col).dt.month().alias("Month"),
+            (pl.col(col) * 100).alias("Return"),
+        )
 
-        # Convert to DataFrame for manipulation
-        # returns = returns.to_frame()
-        print(data.index)
-        print(dir(data.index))
-        # Add Year and Month columns
-        returns["Year"] = returns.index.year
-        returns["Month"] = returns.index.month
+        # Convert to pandas for compatibility with pivot logic
+        df_pd = result.select(["Year", "Month", "Return"]).to_pandas()
+        pivot = df_pd.pivot(index="Year", columns="Month", values="Return").fillna(0)
 
-        # Create pivot table with years as rows and months as columns
-        returns = returns.pivot(index="Year", columns="Month", values=self.data.names[0]).fillna(0)
+        # Rename columns to month names
+        pivot.columns = [calendar.month_abbr[m] for m in pivot.columns]
+        pivot = pivot.iloc[::-1]  # Most recent year at the top
 
-        # Rename month numbers to month abbreviations
-        returns = returns.rename(columns=lambda x: calendar.month_abbr[x])
+        zmin = -np.max(np.abs(pivot.values))
+        zmax = np.max(np.abs(pivot.values))
 
-        # Calculate color scale limits to ensure symmetry around zero
-        zmin = -max(abs(returns.min().min()), abs(returns.max().max()))
-        zmax = max(abs(returns.min().min()), abs(returns.max().max()))
-
-        # Set index name and reverse order (most recent years on top)
-        returns.index.name = "Year"
-        returns.columns.name = None
-        returns = returns.iloc[::-1]
-
-        # Create heatmap
         fig = go.Figure(
             data=go.Heatmap(
-                z=returns.values,
-                x=[col for col in returns.columns],  # Month abbreviations
-                y=returns.index.astype(str),  # Years
-                text=np.round(returns.values, 2),
-                texttemplate="%{text:.2f}%",  # Annotate cells with return values
+                z=pivot.values,
+                x=pivot.columns,
+                y=pivot.index.astype(str),
+                text=np.round(pivot.values, 2),
+                texttemplate="%{text:.2f}%",
                 colorscale=cmap,
-                zmid=0,  # Center color scale at zero
+                zmid=0,
                 zmin=zmin,
                 zmax=zmax,
                 colorbar=dict(
@@ -300,7 +289,6 @@ class Plots:
             )
         )
 
-        # Configure layout
         fig.update_layout(
             title={
                 "text": f"{returns_label} - Monthly Returns (%)",
@@ -312,102 +300,19 @@ class Plots:
             },
             xaxis=dict(
                 title="",
-                side="top",  # Show months at the top
+                side="top",
                 showgrid=False,
                 tickfont=dict(family=fontname, size=annot_size),
             ),
             yaxis=dict(
                 title="Years" if ylabel else "",
-                autorange="reversed",  # Most recent years at the top
+                autorange="reversed",
                 showgrid=False,
                 tickfont=dict(family=fontname, size=annot_size),
             ),
             plot_bgcolor="white",
             paper_bgcolor="white",
             margin=dict(l=0, r=0, t=80, b=0),
-        )
-
-        return fig
-
-    def plot_distribution(self, fontname="Arial", compounded=True, title=None):
-        """
-        Creates a box plot showing the distribution of returns across different time periods.
-
-        This function visualizes the distribution of returns at daily, weekly, monthly,
-        quarterly, and yearly frequencies, making it easy to compare volatility and
-        central tendency across different time horizons.
-
-        Args:
-            data (_Data): A Data object containing returns data.
-            fontname (str, optional): Font family to use. Defaults to "Arial".
-            compounded (bool, optional): Whether to use compounded returns. Defaults to True.
-            title (str, optional): Title of the plot. If None, defaults to "Return Quantiles".
-
-        Returns:
-            plotly.graph_objects.Figure: A Plotly figure object containing the distribution plot.
-
-        Example:
-            >>> from jquantstats.api import _Data
-            >>> import pandas as pd
-            >>> returns = pd.DataFrame(...)
-            >>> data = _Data(returns=returns)
-            >>> fig = data.plots.plot_distribution(title="Portfolio Returns Distribution")
-            >>> fig.show()
-        """
-        # Get color palette
-        colors = Plots._FLATUI_COLORS
-
-        # Extract returns for the first asset and ensure DataFrame format
-        port = pd.DataFrame(self.data.returns[self.data.returns.columns[0]]).fillna(0)
-        port.columns = ["Daily"]
-
-        # Define function to apply when resampling (compound or sum)
-        apply_fnc = Plots._compsum if compounded else np.sum
-
-        # Resample returns to different frequencies
-        port["Weekly"] = port["Daily"].resample("W-MON").apply(apply_fnc).ffill()
-        port["Monthly"] = port["Daily"].resample("ME").apply(apply_fnc).ffill()
-        port["Quarterly"] = port["Daily"].resample("QE").apply(apply_fnc).ffill()
-        port["Yearly"] = port["Daily"].resample("YE").apply(apply_fnc).ffill()
-
-        # Create figure
-        fig = go.Figure()
-
-        # Add box plots for each time frequency
-        for i, col in enumerate(["Daily", "Weekly", "Monthly", "Quarterly", "Yearly"]):
-            fig.add_trace(
-                go.Box(
-                    y=port[col],
-                    name=col,
-                    marker_color=colors[i],
-                    boxmean="sd",  # Show mean and standard deviation
-                )
-            )
-
-        # Set title
-        if not title:
-            title = "Return Quantiles"
-        else:
-            title = f"{title} - Return Quantiles"
-
-        # Create date range string for subtitle
-        date_range = f"{self.data.index.min():%d %b '%y} - {self.data.returns.index.max():%d %b '%y}"
-
-        # Configure layout
-        fig.update_layout(
-            title={
-                "text": f"<b>{title}</b><br><sub>{date_range}</sub>",
-                "y": 0.9,
-                "x": 0.5,
-                "xanchor": "center",
-                "yanchor": "top",
-            },
-            font=dict(family=fontname, size=14),
-            yaxis_title="Returns (%)",
-            yaxis_tickformat=".0%",
-            boxmode="group",
-            plot_bgcolor="white",
-            paper_bgcolor="white",
         )
 
         return fig

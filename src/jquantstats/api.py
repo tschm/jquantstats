@@ -133,11 +133,6 @@ class _Data:
         """
 
     @property
-    def numeric_columns(self):
-        numeric_dtypes = {pl.Float64, pl.Float32, pl.Int64, pl.Int32, pl.UInt32, pl.UInt64}
-        return [name for name, dtype in self.all.schema.items() if dtype in numeric_dtypes]
-
-    @property
     def all(self) -> pl.DataFrame:
         """
         Combines returns and benchmark data into a single DataFrame.
@@ -203,7 +198,7 @@ class _Data:
                 index_column=self.index.columns[0], every=every, period=every, closed="right", label="right"
             ).agg(
                 [
-                    pl.col(col).sum().alias(col) if not compounded else (pl.col(col) + 1.0).product().alias(col)
+                    pl.col(col).sum().alias(col) if not compounded else ((pl.col(col) + 1.0).product() - 1.0).alias(col)
                     for col in df.columns
                     if col != self.index.columns[0]
                 ]
@@ -219,19 +214,6 @@ class _Data:
             index=resampled_index,
         )
 
-    # def apply(self, fct: Callable, **kwargs: Any) -> Any:
-    #     """
-    #     Applies a function to the returns DataFrame.
-    #
-    #     Args:
-    #         fct (Callable): Function to apply to the returns DataFrame.
-    #         **kwargs: Additional keyword arguments to pass to the function.
-    #
-    #     Returns:
-    #         Any: The result of applying the function to the returns DataFrame.
-    #     """
-    #     return fct(self.returns, **kwargs)
-
     def copy(self) -> "_Data":
         """
         Creates a deep copy of the Data object.
@@ -244,41 +226,6 @@ class _Data:
         except AttributeError:
             # Handle case where benchmark is None
             return _Data(returns=self.returns.clone(), index=self.index.clone())
-
-    # def numeric(self):
-    #     return self.returns.select(pl.col(pl.NUMERIC_DTYPES))
-
-    # def highwater_mark(self, compounded: bool = False) -> pl.DataFrame:
-    #     """
-    #     Calculates the running maximum (high-water mark) of prices.
-    #
-    #     Args:
-    #         compounded (bool, optional): If True, uses compounded returns to calculate prices.
-    #                                     If False, uses simple returns. Defaults to False.
-    #
-    #     Returns:
-    #         pd.DataFrame: A DataFrame containing the high-water mark for each asset.
-    #     """
-    #     def to_highwater(data: pl.DataFrame) -> pl.DataFrame:
-    #         if compounded:
-    #             # Calculate cumulative product for compounded returns
-    #             return data.select([
-    #                 (1 + pl.col(col)).cum_prod().alias(col)
-    #                 for col in data.columns
-    #             ])
-    #         else:
-    #             # Calculate cumulative sum for simple returns
-    #             return data.select([
-    #                 pl.col(col).cum_sum().cum_max().alias(col)
-    #                 for col in data.columns
-    #             ])
-    #
-    #
-    #     parts = [self.index, to_highwater(self.returns)]
-    #     if self.benchmark is not None:
-    #         parts.append(to_highwater(self.benchmark))
-    #
-    #     return pl.concat(parts, how="horizontal")
 
     def head(self, n: int = 5) -> "_Data":
         """
@@ -303,48 +250,3 @@ class _Data:
             _Data: A new Data object containing the last n rows of the combined data.
         """
         return _Data(returns=self.returns.tail(n), benchmark=self.benchmark.tail(n), index=self.index.tail(n))
-
-    # def drawdown(self, compounded: bool = False) -> pl.DataFrame:
-    #     """
-    #     Calculates drawdowns from prices.
-    #
-    #     Args:
-    #         compounded (bool, optional): If True, calculates drawdowns as percentage change
-    #                                     from high-water mark. If False, calculates drawdowns
-    #                                     as absolute difference from high-water mark.
-    #                                     Defaults to False.
-    #
-    #     Returns:
-    #         pl.DataFrame: A DataFrame containing drawdowns for each asset (and benchmark if available).
-    #     """
-    #     prices = self.prices(compounded)
-    #
-    #     # def calculate_drawdown(data: pl.DataFrame) -> pl.DataFrame:
-    #     #     if compounded:
-    #     #         # Calculate cumulative product for compounded returns
-    #     #         peak =
-    #     #         return data.select([
-    #     #             pl.col(col)).cum_prod().alias(col)
-    #     #             for col in data.columns
-    #     #         ])
-    #     #     else:
-    #     #         # Calculate cumulative sum for simple returns
-    #     #         return data.select([
-    #     #             pl.col(col).cum_sum().cum_max().alias(col)
-    #     #             for col in data.columns
-    #     #         ])
-    #
-    #     def calculate_drawdown(data: pl.DataFrame) -> pl.DataFrame:
-    #         peak = data.cum_max()
-    #         if compounded:
-    #             return data / peak - 1.0
-    #         return peak - data
-    #
-    #     parts = [self.index]
-    #     parts.append(calculate_drawdown(prices))
-    #
-    #     if self.benchmark is not None:
-    #         benchmark_prices = self.benchmark_prices(compounded)  # Assuming this method exists
-    #         parts.append(calculate_drawdown(benchmark_prices))
-    #
-    #     return pl.concat(parts, how="horizontal")

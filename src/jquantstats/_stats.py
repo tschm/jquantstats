@@ -12,11 +12,7 @@ class Stats:
     all: pl.DataFrame = None  # Default is None; will be set in __post_init__
 
     def __post_init__(self):
-        # Make sure to handle the scenario where `self.data.all` is not available
-        if self.data and hasattr(self.data, "all"):
-            object.__setattr__(self, "all", self.data.all)
-        else:
-            raise AttributeError("Data object does not contain the 'all' attribute.")
+        object.__setattr__(self, "all", self.data.all)
 
     @staticmethod
     def _quantile_expr(series, q):
@@ -109,6 +105,40 @@ class Stats:
     @to_frame
     def rolling_volatility(self, series: pl.Expr, rolling_period=126, periods_per_year=252) -> pl.Expr:
         return series.rolling_std(window_size=rolling_period) * np.sqrt(periods_per_year)
+
+    @to_frame
+    def price(self, series: pl.Expr, compounded=False, initial=1.0) -> pl.Expr:
+        if compounded:
+            # First compute cumulative compounded returns
+            cum = initial * (1 + series).cum_prod()
+        else:
+            # Simple cumulative sum of returns
+            cum = initial + series.cum_sum()
+
+        return cum
+
+    @to_frame
+    def drawdown(self, series: pl.Expr, compounded=False, initial=1.0) -> pl.Expr:
+        """
+        Computes drawdown from the high-water mark.
+
+        Args:
+            series (pl.Expr): Polars expression for the return series.
+            compounded (bool): Whether to use compounded returns.
+            initial (float): Initial portfolio value (default is 1).
+
+        Returns:
+            pl.Expr: A Polars expression representing the drawdown.
+        """
+        if compounded:
+            # First compute cumulative compounded returns
+            equity = initial * (1 + series).cum_prod()
+        else:
+            # Simple cumulative sum of returns
+            equity = initial + series.cum_sum()
+
+        # equity = self.price(series, compounded, initial=initial)
+        return -100 * ((equity / equity.cum_max()) - 1)
 
     @columnwise_stat
     def autocorr(self, series: pl.Series):
