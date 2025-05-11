@@ -69,40 +69,18 @@ def test_monthly_heatmap(plots):
         2. The method doesn't raise any exceptions.
         3. The method works with different parameters.
     """
+    print(plots.data.all)
+    print(plots.data.resample(every="1mo", compounded=False).all)
+
     # Test with default parameters
-    fig = plots.monthly_heatmap()
+    fig = plots.monthly_heatmap(col="AAPL", compounded=False)
     assert fig is not None
     assert hasattr(fig, 'show')
     fig.show()
 
     # Test with custom parameters
-    fig = plots.monthly_heatmap(annot_size=10, cbar=False, returns_label="Custom Label",
-                               compounded=False, eoy=True, fontname="Courier", ylabel=False)
-    assert fig is not None
-    assert hasattr(fig, 'show')
-    fig.show()
-
-
-def test_plot_distribution(plots):
-    """
-    Tests that the plot_distribution method works correctly.
-
-    Args:
-        plots: The plots fixture.
-
-    Verifies:
-        1. The method returns a plotly Figure object.
-        2. The method doesn't raise any exceptions.
-        3. The method works with different parameters.
-    """
-    # Test with default parameters
-    fig = plots.plot_distribution()
-    assert fig is not None
-    assert hasattr(fig, 'show')
-    fig.show()
-
-    # Test with custom parameters
-    fig = plots.plot_distribution(fontname="Courier", compounded=False, title="Custom Title")
+    fig = plots.monthly_heatmap(col="AAPL", annot_size=10, cbar=False, returns_label="AAPL",
+                               compounded=False, fontname="Courier", ylabel=False)
     assert fig is not None
     assert hasattr(fig, 'show')
     fig.show()

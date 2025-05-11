@@ -1,5 +1,5 @@
-import pandas as pd
 import pytest
+from polars.testing import assert_frame_equal
 
 from jquantstats.api import build_data
 
@@ -35,7 +35,7 @@ def test_copy_no_benchmark(data_no_benchmark):
     data_copy = data_no_benchmark.copy()
 
     # Verify the copy has the same returns as the original
-    pd.testing.assert_frame_equal(data_copy.returns, data_no_benchmark.returns)
+    assert_frame_equal(data_copy.returns, data_no_benchmark.returns)
 
     # Verify the benchmark is None in both the original and the copy
     assert data_no_benchmark.benchmark is None
