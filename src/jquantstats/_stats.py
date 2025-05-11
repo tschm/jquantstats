@@ -122,15 +122,6 @@ class Stats:
         return -100 * ((equity / equity.cum_max()) - 1)
 
     @columnwise_stat
-    def autocorr(self, series: pl.Series):
-        """
-        Metric to account for autocorrelation.
-        Applies autocorrelation penalty to each numeric series (column).
-        """
-        corr = pl.corr(series, series.shift(1)).cast(pl.Float64)
-        return corr
-
-    @columnwise_stat
     def payoff_ratio(self, series):
         """
         Measures the payoff ratio: average win / abs(average loss).
@@ -206,9 +197,6 @@ class Stats:
         cvar = cleaned_returns.filter(cleaned_returns <= var).mean()
 
         return cvar
-
-        # Compute CVaR: mean of values less than the VaR threshold
-        # return pl.when(series < var_expr).then(series).otherwise(None).mean()
 
     def cvar(self, alpha=0.05):
         """Shorthand for conditional_value_at_risk()"""
