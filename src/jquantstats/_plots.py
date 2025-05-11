@@ -26,7 +26,7 @@ class Plots:
         data: The _Data object containing returns and benchmark data to visualize.
     """
 
-    data: "_Data"  # type: ignore
+    data: "Data"  # type: ignore
 
     _FLATUI_COLORS = [
         "#FEDD78",  # Yellow
@@ -69,10 +69,10 @@ class Plots:
                 The figure shows returns for each asset with a horizontal line at y=0.
 
         Example:
-            >>> from jquantstats.api import _Data
+            >>> from jquantstats._data import Data
             >>> import polars as pl
             >>> returns = pl.DataFrame(...)
-            >>> data = _Data(returns=returns)
+            >>> data = Data(returns=returns)
             >>> fig = data.plots.plot_returns_bars()
             >>> fig.show()
         """
@@ -136,10 +136,10 @@ class Plots:
             go.Figure: A Plotly figure object containing the dashboard.
 
         Example:
-            >>> from jquantstats.api import _Data
+            >>> from jquantstats._data import Data
             >>> import polars as pl
             >>> returns = pl.DataFrame(...)
-            >>> data = _Data(returns=returns)
+            >>> data = Data(returns=returns)
             >>> fig = data.plots.plot_snapshot(title="My Portfolio Performance")
             >>> fig.show()
         """

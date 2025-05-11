@@ -29,7 +29,7 @@ class Stats:
         all: A DataFrame combining all data (index, returns, benchmark) for easy access.
     """
 
-    data: "_Data"  # type: ignore
+    data: "Data"  # type: ignore
     all: pl.DataFrame = None  # Default is None; will be set in __post_init__
 
     def __post_init__(self):
