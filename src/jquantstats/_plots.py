@@ -42,13 +42,13 @@ class Plots:
     ]
 
     @staticmethod
-    def _get_colors():
+    def _get_colors() -> tuple[list[str], str, float]:
         """
         Returns the default color palette and styling parameters for plots.
 
         Returns:
-            tuple: A tuple containing:
-                - colors (list): List of hex color codes
+            tuple[list[str], str, float]: A tuple containing:
+                - colors (list[str]): List of hex color codes
                 - ls (str): Line style ("-" for solid)
                 - alpha (float): Opacity value (0.8)
         """
@@ -57,18 +57,15 @@ class Plots:
         alpha = 0.8  # Opacity
         return colors, ls, alpha
 
-    def plot_returns_bars(self):
+    def plot_returns_bars(self) -> go.Figure:
         """
         Creates a bar chart of returns for each asset in the data.
 
         This function visualizes the returns of each asset as bars, making it easy
         to compare performance across different time periods.
 
-        Args:
-            data (_Data): A Data object containing returns data to plot.
-
         Returns:
-            plotly.graph_objects.Figure: A Plotly figure object containing the bar chart.
+            go.Figure: A Plotly figure object containing the bar chart.
                 The figure shows returns for each asset with a horizontal line at y=0.
 
         Example:
@@ -116,7 +113,9 @@ class Plots:
 
         return fig
 
-    def plot_snapshot(self, title="Portfolio Summary", compounded=True, log_scale=False):
+    def plot_snapshot(
+        self, title: str = "Portfolio Summary", compounded: bool = True, log_scale: bool = False
+    ) -> go.Figure:
         """
         Creates a comprehensive dashboard with multiple plots for portfolio analysis.
 
@@ -128,21 +127,20 @@ class Plots:
         This provides a complete visual summary of portfolio performance.
 
         Args:
-            data (_Data): A Data object containing returns data.
             title (str, optional): Title of the plot. Defaults to "Portfolio Summary".
             compounded (bool, optional): Whether to use compounded returns. Defaults to True.
             log_scale (bool, optional): Whether to use logarithmic scale for cumulative returns.
                 Defaults to False.
 
         Returns:
-            plotly.graph_objects.Figure: A Plotly figure object containing the dashboard.
+            go.Figure: A Plotly figure object containing the dashboard.
 
         Example:
             >>> from jquantstats.api import _Data
             >>> import polars as pl
             >>> returns = pl.DataFrame(...)
             >>> data = _Data(returns=returns)
-            >>> fig = data.plots.snapshot_plotly(title="My Portfolio Performance")
+            >>> fig = data.plots.plot_snapshot(title="My Portfolio Performance")
             >>> fig.show()
         """
         # Calculate drawdowns
@@ -220,14 +218,14 @@ class Plots:
 
     def monthly_heatmap(
         self,
-        col,
-        annot_size=13,
-        cbar=True,
-        returns_label="Strategy",
-        compounded=False,
-        fontname="Arial",
-        ylabel=True,
-    ):
+        col: str,
+        annot_size: int = 13,
+        cbar: bool = True,
+        returns_label: str = "Strategy",
+        compounded: bool = False,
+        fontname: str = "Arial",
+        ylabel: bool = True,
+    ) -> go.Figure:
         """
         Creates a heatmap of monthly returns by year.
 
@@ -245,7 +243,7 @@ class Plots:
             ylabel (bool, optional): Whether to display the y-axis label. Defaults to True.
 
         Returns:
-            plotly.graph_objects.Figure: A Plotly figure object containing the heatmap.
+            go.Figure: A Plotly figure object containing the heatmap.
 
         Example:
             >>> fig = data.plots.monthly_heatmap("AAPL", returns_label="Apple Inc.")

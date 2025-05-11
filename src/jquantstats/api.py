@@ -108,7 +108,7 @@ class _Data:
     index: pl.DataFrame | None = None
 
     @property
-    def plots(self):
+    def plots(self) -> "Plots":
         """
         Provides access to visualization methods for the financial data.
 
@@ -118,7 +118,7 @@ class _Data:
         return Plots(self)
 
     @property
-    def stats(self):
+    def stats(self) -> "Stats":
         """
         Provides access to statistical analysis methods for the financial data.
 
@@ -128,7 +128,7 @@ class _Data:
         return Stats(self)
 
     @property
-    def date_col(self):
+    def date_col(self) -> list[str]:
         """
         Returns the column names of the index DataFrame.
 
@@ -139,7 +139,7 @@ class _Data:
         return self.index.columns
 
     @property
-    def assets(self):
+    def assets(self) -> list[str]:
         """
         Returns the combined list of asset column names from returns and benchmark.
 
