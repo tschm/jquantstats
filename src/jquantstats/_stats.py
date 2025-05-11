@@ -106,16 +106,16 @@ class Stats:
     def rolling_volatility(self, series: pl.Expr, rolling_period=126, periods_per_year=252) -> pl.Expr:
         return series.rolling_std(window_size=rolling_period) * np.sqrt(periods_per_year)
 
-    @to_frame
-    def price(self, series: pl.Expr, compounded=False, initial=1.0) -> pl.Expr:
-        if compounded:
-            # First compute cumulative compounded returns
-            cum = initial * (1 + series).cum_prod()
-        else:
-            # Simple cumulative sum of returns
-            cum = initial + series.cum_sum()
-
-        return cum
+    # @to_frame
+    # def price(self, series: pl.Expr, compounded=False, initial=1.0) -> pl.Expr:
+    #     if compounded:
+    #         # First compute cumulative compounded returns
+    #         cum = initial * (1 + series).cum_prod()
+    #     else:
+    #         # Simple cumulative sum of returns
+    #         cum = initial + series.cum_sum()
+    #
+    #     return cum
 
     @to_frame
     def drawdown(self, series: pl.Expr, compounded=False, initial=1.0) -> pl.Expr:
