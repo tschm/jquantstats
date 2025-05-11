@@ -1,3 +1,4 @@
+import polars as pl
 import pytest
 from polars.testing import assert_frame_equal
 
@@ -59,3 +60,29 @@ def test_r_squared_no_benchmark(data_no_benchmark):
     # Verify that calling r_squared() raises an AttributeError
     with pytest.raises(AttributeError, match="No benchmark data available"):
         data_no_benchmark.stats.r_squared()
+
+
+def test_non_overlapping_dates():
+    """
+    Tests that build_data raises a ValueError when returns and benchmark have non-overlapping dates.
+
+    Verifies:
+        1. Calling build_data with non-overlapping dates raises a ValueError with the expected message.
+    """
+    # Create returns data with dates in 2020
+    returns_dates = [f"2020-01-{i:02d}" for i in range(1, 11)]
+    returns = pl.DataFrame({
+        "Date": returns_dates,
+        "Asset": [0.01] * len(returns_dates)
+    }).with_columns(pl.col("Date").str.to_date())
+
+    # Create benchmark data with dates in 2010
+    benchmark_dates = [f"2010-01-{i:02d}" for i in range(1, 11)]
+    benchmark = pl.DataFrame({
+        "Date": benchmark_dates,
+        "Benchmark": [0.01] * len(benchmark_dates)
+    }).with_columns(pl.col("Date").str.to_date())
+
+    # Verify that calling build_data raises a ValueError
+    with pytest.raises(ValueError, match="No overlapping dates between returns and benchmark."):
+        build_data(returns=returns, benchmark=benchmark)
