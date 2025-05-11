@@ -37,10 +37,6 @@ def test_all(data):
     x = data.all
     print(x)
 
-def test_prices(data):
-    x = data.prices()
-    print(x)
-
 def test_assets(data):
     x = data.assets
     assert x == ['AAPL', 'META', 'SPY -- Benchmark']

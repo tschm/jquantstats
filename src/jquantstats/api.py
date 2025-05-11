@@ -146,36 +146,6 @@ class _Data:
         else:
             return pl.concat([self.index, self.returns, self.benchmark], how="horizontal")
 
-    def prices(self, compounded: bool = False, initial_value: float = 100.0) -> pl.DataFrame:
-        """
-        Converts returns to prices.
-
-        Args:
-            compounded (bool, optional): If True, uses compounded returns (cumprod).
-                                         If False, uses simple returns (cumsum).
-            initial_value (float, optional): Starting price value. Defaults to 100.0.
-
-        Returns:
-            pl.DataFrame: Price data derived from returns.
-        """
-
-        def to_prices(data: pl.DataFrame) -> pl.DataFrame:
-            if data is None:
-                return None
-            df = data.fill_null(0.0)
-            if compounded:
-                return df.select(
-                    [(pl.lit(initial_value) * (pl.col(col) + 1).cumprod()).alias(col) for col in df.columns]
-                )
-            else:
-                return df.select([(pl.lit(initial_value) + pl.col(col).cum_sum()).alias(col) for col in df.columns])
-
-        parts = [self.index, to_prices(self.returns)]
-        if self.benchmark is not None:
-            parts.append(to_prices(self.benchmark))
-
-        return pl.concat(parts, how="horizontal")
-
     def resample(self, every: str = "1mo", compounded: bool = False) -> "_Data":
         """
         Resamples returns and benchmark to a different frequency using Polars.
