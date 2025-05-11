@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for src/jquantstats/_stats.py: 97%</title>
+    <title>Coverage for src/jquantstats/_stats.py: 99%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
     <link rel="stylesheet" href="style_cb_8e611ae1.css" type="text/css">
     <script src="coverage_html_cb_6fb7b396.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>src/jquantstats/_stats.py</b>:
-            <span class="pc_cov">97%</span>
+            <span class="pc_cov">99%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -54,9 +54,9 @@
             </div>
         </aside>
         <h2>
-            <span class="text">224 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">217<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">7<span class="text"> missing</span></button>
+            <span class="text">218 statements &nbsp;</span>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">215<span class="text"> run</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">3<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_f30850e03af1646d_api_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.8.0">coverage.py v7.8.0</a>,
-            created at 2025-05-11 11:17 +0000
+            created at 2025-05-11 11:18 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -188,16 +188,16 @@
     <p class="run"><span class="n"><a id="t106" href="#t106">106</a></span><span class="t">    <span class="key">def</span> <span class="nam">rolling_volatility</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">series</span><span class="op">:</span> <span class="nam">pl</span><span class="op">.</span><span class="nam">Expr</span><span class="op">,</span> <span class="nam">rolling_period</span><span class="op">=</span><span class="num">126</span><span class="op">,</span> <span class="nam">periods_per_year</span><span class="op">=</span><span class="num">252</span><span class="op">)</span> <span class="op">-></span> <span class="nam">pl</span><span class="op">.</span><span class="nam">Expr</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t107" href="#t107">107</a></span><span class="t">        <span class="key">return</span> <span class="nam">series</span><span class="op">.</span><span class="nam">rolling_std</span><span class="op">(</span><span class="nam">window_size</span><span class="op">=</span><span class="nam">rolling_period</span><span class="op">)</span> <span class="op">*</span> <span class="nam">np</span><span class="op">.</span><span class="nam">sqrt</span><span class="op">(</span><span class="nam">periods_per_year</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t108" href="#t108">108</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t109" href="#t109">109</a></span><span class="t">    <span class="op">@</span><span class="nam">to_frame</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t110" href="#t110">110</a></span><span class="t">    <span class="key">def</span> <span class="nam">price</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">series</span><span class="op">:</span> <span class="nam">pl</span><span class="op">.</span><span class="nam">Expr</span><span class="op">,</span> <span class="nam">compounded</span><span class="op">=</span><span class="key">False</span><span class="op">,</span> <span class="nam">initial</span><span class="op">=</span><span class="num">1.0</span><span class="op">)</span> <span class="op">-></span> <span class="nam">pl</span><span class="op">.</span><span class="nam">Expr</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t111" href="#t111">111</a></span><span class="t">        <span class="key">if</span> <span class="nam">compounded</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t112" href="#t112">112</a></span><span class="t">            <span class="com"># First compute cumulative compounded returns</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t113" href="#t113">113</a></span><span class="t">            <span class="nam">cum</span> <span class="op">=</span> <span class="nam">initial</span> <span class="op">*</span> <span class="op">(</span><span class="num">1</span> <span class="op">+</span> <span class="nam">series</span><span class="op">)</span><span class="op">.</span><span class="nam">cum_prod</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t114" href="#t114">114</a></span><span class="t">        <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t115" href="#t115">115</a></span><span class="t">            <span class="com"># Simple cumulative sum of returns</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t116" href="#t116">116</a></span><span class="t">            <span class="nam">cum</span> <span class="op">=</span> <span class="nam">initial</span> <span class="op">+</span> <span class="nam">series</span><span class="op">.</span><span class="nam">cum_sum</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t117" href="#t117">117</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t118" href="#t118">118</a></span><span class="t">        <span class="key">return</span> <span class="nam">cum</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t109" href="#t109">109</a></span><span class="t">    <span class="com"># @to_frame</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t110" href="#t110">110</a></span><span class="t">    <span class="com"># def price(self, series: pl.Expr, compounded=False, initial=1.0) -> pl.Expr:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t111" href="#t111">111</a></span><span class="t">    <span class="com">#     if compounded:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t112" href="#t112">112</a></span><span class="t">    <span class="com">#         # First compute cumulative compounded returns</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t113" href="#t113">113</a></span><span class="t">    <span class="com">#         cum = initial * (1 + series).cum_prod()</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t114" href="#t114">114</a></span><span class="t">    <span class="com">#     else:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t115" href="#t115">115</a></span><span class="t">    <span class="com">#         # Simple cumulative sum of returns</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t116" href="#t116">116</a></span><span class="t">    <span class="com">#         cum = initial + series.cum_sum()</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t117" href="#t117">117</a></span><span class="t">    <span class="com">#</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t118" href="#t118">118</a></span><span class="t">    <span class="com">#     return cum</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t119" href="#t119">119</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t120" href="#t120">120</a></span><span class="t">    <span class="op">@</span><span class="nam">to_frame</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t121" href="#t121">121</a></span><span class="t">    <span class="key">def</span> <span class="nam">drawdown</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">series</span><span class="op">:</span> <span class="nam">pl</span><span class="op">.</span><span class="nam">Expr</span><span class="op">,</span> <span class="nam">compounded</span><span class="op">=</span><span class="key">False</span><span class="op">,</span> <span class="nam">initial</span><span class="op">=</span><span class="num">1.0</span><span class="op">)</span> <span class="op">-></span> <span class="nam">pl</span><span class="op">.</span><span class="nam">Expr</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -539,7 +539,7 @@
             <a class="nav" href="z_f30850e03af1646d_api_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.8.0">coverage.py v7.8.0</a>,
-            created at 2025-05-11 11:17 +0000
+            created at 2025-05-11 11:18 +0000
         </p>
     </div>
 </footer>

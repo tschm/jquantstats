@@ -70,9 +70,6 @@
                                 <a class="function" href="#Stats.rolling_volatility">rolling_volatility</a>
                         </li>
                         <li>
-                                <a class="function" href="#Stats.price">price</a>
-                        </li>
-                        <li>
                                 <a class="function" href="#Stats.drawdown">drawdown</a>
                         </li>
                         <li>
@@ -297,16 +294,16 @@
 </span><span id="L-106"><a href="#L-106"><span class="linenos">106</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">rolling_volatility</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">series</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">Expr</span><span class="p">,</span> <span class="n">rolling_period</span><span class="o">=</span><span class="mi">126</span><span class="p">,</span> <span class="n">periods_per_year</span><span class="o">=</span><span class="mi">252</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">Expr</span><span class="p">:</span>
 </span><span id="L-107"><a href="#L-107"><span class="linenos">107</span></a>        <span class="k">return</span> <span class="n">series</span><span class="o">.</span><span class="n">rolling_std</span><span class="p">(</span><span class="n">window_size</span><span class="o">=</span><span class="n">rolling_period</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">periods_per_year</span><span class="p">)</span>
 </span><span id="L-108"><a href="#L-108"><span class="linenos">108</span></a>
-</span><span id="L-109"><a href="#L-109"><span class="linenos">109</span></a>    <span class="nd">@to_frame</span>
-</span><span id="L-110"><a href="#L-110"><span class="linenos">110</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">price</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">series</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">Expr</span><span class="p">,</span> <span class="n">compounded</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">initial</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">Expr</span><span class="p">:</span>
-</span><span id="L-111"><a href="#L-111"><span class="linenos">111</span></a>        <span class="k">if</span> <span class="n">compounded</span><span class="p">:</span>
-</span><span id="L-112"><a href="#L-112"><span class="linenos">112</span></a>            <span class="c1"># First compute cumulative compounded returns</span>
-</span><span id="L-113"><a href="#L-113"><span class="linenos">113</span></a>            <span class="n">cum</span> <span class="o">=</span> <span class="n">initial</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">series</span><span class="p">)</span><span class="o">.</span><span class="n">cum_prod</span><span class="p">()</span>
-</span><span id="L-114"><a href="#L-114"><span class="linenos">114</span></a>        <span class="k">else</span><span class="p">:</span>
-</span><span id="L-115"><a href="#L-115"><span class="linenos">115</span></a>            <span class="c1"># Simple cumulative sum of returns</span>
-</span><span id="L-116"><a href="#L-116"><span class="linenos">116</span></a>            <span class="n">cum</span> <span class="o">=</span> <span class="n">initial</span> <span class="o">+</span> <span class="n">series</span><span class="o">.</span><span class="n">cum_sum</span><span class="p">()</span>
-</span><span id="L-117"><a href="#L-117"><span class="linenos">117</span></a>
-</span><span id="L-118"><a href="#L-118"><span class="linenos">118</span></a>        <span class="k">return</span> <span class="n">cum</span>
+</span><span id="L-109"><a href="#L-109"><span class="linenos">109</span></a>    <span class="c1"># @to_frame</span>
+</span><span id="L-110"><a href="#L-110"><span class="linenos">110</span></a>    <span class="c1"># def price(self, series: pl.Expr, compounded=False, initial=1.0) -&gt; pl.Expr:</span>
+</span><span id="L-111"><a href="#L-111"><span class="linenos">111</span></a>    <span class="c1">#     if compounded:</span>
+</span><span id="L-112"><a href="#L-112"><span class="linenos">112</span></a>    <span class="c1">#         # First compute cumulative compounded returns</span>
+</span><span id="L-113"><a href="#L-113"><span class="linenos">113</span></a>    <span class="c1">#         cum = initial * (1 + series).cum_prod()</span>
+</span><span id="L-114"><a href="#L-114"><span class="linenos">114</span></a>    <span class="c1">#     else:</span>
+</span><span id="L-115"><a href="#L-115"><span class="linenos">115</span></a>    <span class="c1">#         # Simple cumulative sum of returns</span>
+</span><span id="L-116"><a href="#L-116"><span class="linenos">116</span></a>    <span class="c1">#         cum = initial + series.cum_sum()</span>
+</span><span id="L-117"><a href="#L-117"><span class="linenos">117</span></a>    <span class="c1">#</span>
+</span><span id="L-118"><a href="#L-118"><span class="linenos">118</span></a>    <span class="c1">#     return cum</span>
 </span><span id="L-119"><a href="#L-119"><span class="linenos">119</span></a>
 </span><span id="L-120"><a href="#L-120"><span class="linenos">120</span></a>    <span class="nd">@to_frame</span>
 </span><span id="L-121"><a href="#L-121"><span class="linenos">121</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">drawdown</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">series</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">Expr</span><span class="p">,</span> <span class="n">compounded</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">initial</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">Expr</span><span class="p">:</span>
@@ -755,16 +752,16 @@
 </span><span id="Stats-107"><a href="#Stats-107"><span class="linenos">107</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">rolling_volatility</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">series</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">Expr</span><span class="p">,</span> <span class="n">rolling_period</span><span class="o">=</span><span class="mi">126</span><span class="p">,</span> <span class="n">periods_per_year</span><span class="o">=</span><span class="mi">252</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">Expr</span><span class="p">:</span>
 </span><span id="Stats-108"><a href="#Stats-108"><span class="linenos">108</span></a>        <span class="k">return</span> <span class="n">series</span><span class="o">.</span><span class="n">rolling_std</span><span class="p">(</span><span class="n">window_size</span><span class="o">=</span><span class="n">rolling_period</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">periods_per_year</span><span class="p">)</span>
 </span><span id="Stats-109"><a href="#Stats-109"><span class="linenos">109</span></a>
-</span><span id="Stats-110"><a href="#Stats-110"><span class="linenos">110</span></a>    <span class="nd">@to_frame</span>
-</span><span id="Stats-111"><a href="#Stats-111"><span class="linenos">111</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">price</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">series</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">Expr</span><span class="p">,</span> <span class="n">compounded</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">initial</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">Expr</span><span class="p">:</span>
-</span><span id="Stats-112"><a href="#Stats-112"><span class="linenos">112</span></a>        <span class="k">if</span> <span class="n">compounded</span><span class="p">:</span>
-</span><span id="Stats-113"><a href="#Stats-113"><span class="linenos">113</span></a>            <span class="c1"># First compute cumulative compounded returns</span>
-</span><span id="Stats-114"><a href="#Stats-114"><span class="linenos">114</span></a>            <span class="n">cum</span> <span class="o">=</span> <span class="n">initial</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">series</span><span class="p">)</span><span class="o">.</span><span class="n">cum_prod</span><span class="p">()</span>
-</span><span id="Stats-115"><a href="#Stats-115"><span class="linenos">115</span></a>        <span class="k">else</span><span class="p">:</span>
-</span><span id="Stats-116"><a href="#Stats-116"><span class="linenos">116</span></a>            <span class="c1"># Simple cumulative sum of returns</span>
-</span><span id="Stats-117"><a href="#Stats-117"><span class="linenos">117</span></a>            <span class="n">cum</span> <span class="o">=</span> <span class="n">initial</span> <span class="o">+</span> <span class="n">series</span><span class="o">.</span><span class="n">cum_sum</span><span class="p">()</span>
-</span><span id="Stats-118"><a href="#Stats-118"><span class="linenos">118</span></a>
-</span><span id="Stats-119"><a href="#Stats-119"><span class="linenos">119</span></a>        <span class="k">return</span> <span class="n">cum</span>
+</span><span id="Stats-110"><a href="#Stats-110"><span class="linenos">110</span></a>    <span class="c1"># @to_frame</span>
+</span><span id="Stats-111"><a href="#Stats-111"><span class="linenos">111</span></a>    <span class="c1"># def price(self, series: pl.Expr, compounded=False, initial=1.0) -&gt; pl.Expr:</span>
+</span><span id="Stats-112"><a href="#Stats-112"><span class="linenos">112</span></a>    <span class="c1">#     if compounded:</span>
+</span><span id="Stats-113"><a href="#Stats-113"><span class="linenos">113</span></a>    <span class="c1">#         # First compute cumulative compounded returns</span>
+</span><span id="Stats-114"><a href="#Stats-114"><span class="linenos">114</span></a>    <span class="c1">#         cum = initial * (1 + series).cum_prod()</span>
+</span><span id="Stats-115"><a href="#Stats-115"><span class="linenos">115</span></a>    <span class="c1">#     else:</span>
+</span><span id="Stats-116"><a href="#Stats-116"><span class="linenos">116</span></a>    <span class="c1">#         # Simple cumulative sum of returns</span>
+</span><span id="Stats-117"><a href="#Stats-117"><span class="linenos">117</span></a>    <span class="c1">#         cum = initial + series.cum_sum()</span>
+</span><span id="Stats-118"><a href="#Stats-118"><span class="linenos">118</span></a>    <span class="c1">#</span>
+</span><span id="Stats-119"><a href="#Stats-119"><span class="linenos">119</span></a>    <span class="c1">#     return cum</span>
 </span><span id="Stats-120"><a href="#Stats-120"><span class="linenos">120</span></a>
 </span><span id="Stats-121"><a href="#Stats-121"><span class="linenos">121</span></a>    <span class="nd">@to_frame</span>
 </span><span id="Stats-122"><a href="#Stats-122"><span class="linenos">122</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">drawdown</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">series</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">Expr</span><span class="p">,</span> <span class="n">compounded</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">initial</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">Expr</span><span class="p">:</span>
@@ -1385,34 +1382,6 @@ return/trade return for a period</p>
             <div class="pdoc-code codehilite"><pre><span></span><span id="Stats.rolling_volatility-106"><a href="#Stats.rolling_volatility-106"><span class="linenos">106</span></a>    <span class="nd">@to_frame</span>
 </span><span id="Stats.rolling_volatility-107"><a href="#Stats.rolling_volatility-107"><span class="linenos">107</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">rolling_volatility</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">series</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">Expr</span><span class="p">,</span> <span class="n">rolling_period</span><span class="o">=</span><span class="mi">126</span><span class="p">,</span> <span class="n">periods_per_year</span><span class="o">=</span><span class="mi">252</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">Expr</span><span class="p">:</span>
 </span><span id="Stats.rolling_volatility-108"><a href="#Stats.rolling_volatility-108"><span class="linenos">108</span></a>        <span class="k">return</span> <span class="n">series</span><span class="o">.</span><span class="n">rolling_std</span><span class="p">(</span><span class="n">window_size</span><span class="o">=</span><span class="n">rolling_period</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">periods_per_year</span><span class="p">)</span>
-</span></pre></div>
-
-
-    
-
-                            </div>
-                            <div id="Stats.price" class="classattr">
-                                        <input id="Stats.price-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
-<div class="attr function">
-                    <div class="decorator decorator-to_frame">@to_frame</div>
-
-        <span class="def">def</span>
-        <span class="name">price</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">series</span><span class="p">:</span> <span class="n">polars</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">Expr</span>,</span><span class="param">	<span class="n">compounded</span><span class="o">=</span><span class="kc">False</span>,</span><span class="param">	<span class="n">initial</span><span class="o">=</span><span class="mf">1.0</span></span><span class="return-annotation">) -> <span class="n">polars</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">Expr</span>:</span></span>
-
-                <label class="view-source-button" for="Stats.price-view-source"><span>View Source</span></label>
-
-    </div>
-    <a class="headerlink" href="#Stats.price"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Stats.price-110"><a href="#Stats.price-110"><span class="linenos">110</span></a>    <span class="nd">@to_frame</span>
-</span><span id="Stats.price-111"><a href="#Stats.price-111"><span class="linenos">111</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">price</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">series</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">Expr</span><span class="p">,</span> <span class="n">compounded</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">initial</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">Expr</span><span class="p">:</span>
-</span><span id="Stats.price-112"><a href="#Stats.price-112"><span class="linenos">112</span></a>        <span class="k">if</span> <span class="n">compounded</span><span class="p">:</span>
-</span><span id="Stats.price-113"><a href="#Stats.price-113"><span class="linenos">113</span></a>            <span class="c1"># First compute cumulative compounded returns</span>
-</span><span id="Stats.price-114"><a href="#Stats.price-114"><span class="linenos">114</span></a>            <span class="n">cum</span> <span class="o">=</span> <span class="n">initial</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">series</span><span class="p">)</span><span class="o">.</span><span class="n">cum_prod</span><span class="p">()</span>
-</span><span id="Stats.price-115"><a href="#Stats.price-115"><span class="linenos">115</span></a>        <span class="k">else</span><span class="p">:</span>
-</span><span id="Stats.price-116"><a href="#Stats.price-116"><span class="linenos">116</span></a>            <span class="c1"># Simple cumulative sum of returns</span>
-</span><span id="Stats.price-117"><a href="#Stats.price-117"><span class="linenos">117</span></a>            <span class="n">cum</span> <span class="o">=</span> <span class="n">initial</span> <span class="o">+</span> <span class="n">series</span><span class="o">.</span><span class="n">cum_sum</span><span class="p">()</span>
-</span><span id="Stats.price-118"><a href="#Stats.price-118"><span class="linenos">118</span></a>
-</span><span id="Stats.price-119"><a href="#Stats.price-119"><span class="linenos">119</span></a>        <span class="k">return</span> <span class="n">cum</span>
 </span></pre></div>
 
 

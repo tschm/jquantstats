@@ -136,12 +136,6 @@ DA:103,1
 DA:105,1
 DA:106,1
 DA:107,1
-DA:109,1
-DA:110,1
-DA:111,0
-DA:113,0
-DA:116,0
-DA:118,0
 DA:120,1
 DA:121,1
 DA:133,1
@@ -303,8 +297,8 @@ DA:445,1
 DA:447,1
 DA:448,1
 DA:450,1
-LF:224
-LH:217
+LF:218
+LH:215
 FN:14,15,Stats.__post_init__
 FNDA:1,Stats.__post_init__
 FN:18,19,Stats._quantile_expr
@@ -337,8 +331,6 @@ FN:96,103,Stats.volatility
 FNDA:1,Stats.volatility
 FN:106,107,Stats.rolling_volatility
 FNDA:1,Stats.rolling_volatility
-FN:110,118,Stats.price
-FNDA:0,Stats.price
 FN:121,141,Stats.drawdown
 FNDA:1,Stats.drawdown
 FN:144,150,Stats.autocorr
@@ -401,7 +393,7 @@ FN:407,422,Stats.information_ratio
 FNDA:1,Stats.information_ratio
 FN:425,450,Stats.greeks
 FNDA:1,Stats.greeks
-FNF:48
+FNF:47
 FNH:45
 end_of_record
 SF:src/jquantstats/api.py
