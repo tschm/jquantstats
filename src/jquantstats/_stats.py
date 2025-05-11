@@ -15,20 +15,12 @@ class Stats:
         object.__setattr__(self, "all", self.data.all)
 
     @staticmethod
-    def _quantile_expr(series, q):
-        return series.quantile(q)
-
-    @staticmethod
     def _mean_positive_expr(series):
         return series.filter(series >= 0).mean()
 
     @staticmethod
     def _mean_negative_expr(series):
         return series.filter(series < 0).mean()
-
-    @staticmethod
-    def _quantile_expr(series, cutoff):
-        return series.quantile(cutoff)
 
     @staticmethod
     def columnwise_stat(func):
@@ -105,17 +97,6 @@ class Stats:
     @to_frame
     def rolling_volatility(self, series: pl.Expr, rolling_period=126, periods_per_year=252) -> pl.Expr:
         return series.rolling_std(window_size=rolling_period) * np.sqrt(periods_per_year)
-
-    # @to_frame
-    # def price(self, series: pl.Expr, compounded=False, initial=1.0) -> pl.Expr:
-    #     if compounded:
-    #         # First compute cumulative compounded returns
-    #         cum = initial * (1 + series).cum_prod()
-    #     else:
-    #         # Simple cumulative sum of returns
-    #         cum = initial + series.cum_sum()
-    #
-    #     return cum
 
     @to_frame
     def drawdown(self, series: pl.Expr, compounded=False, initial=1.0) -> pl.Expr:
@@ -240,8 +221,8 @@ class Stats:
     @columnwise_stat
     def tail_ratio(self, series, cutoff=0.95):
         """Calculates the ratio of the right (95%) and left (5%) tails."""
-        left_tail = self._quantile_expr(series, 1 - cutoff)
-        right_tail = self._quantile_expr(series, cutoff)
+        left_tail = series.quantile(1 - cutoff)
+        right_tail = series.quantile(cutoff)
         return abs(right_tail / left_tail)  # .alias(series.meta.output_name)
 
     @columnwise_stat
