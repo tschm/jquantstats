@@ -419,7 +419,7 @@ DA:60,1
 DA:70,1
 DA:71,1
 DA:72,1
-DA:73,0
+DA:73,1
 DA:74,1
 DA:75,1
 DA:78,1
@@ -470,7 +470,7 @@ DA:204,1
 DA:206,1
 DA:216,1
 LF:64
-LH:63
+LH:64
 FN:35,82,build_data
 FNDA:1,build_data
 FN:51,67,build_data.subtract_risk_free
