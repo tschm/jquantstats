@@ -2,8 +2,8 @@ import dataclasses
 
 import polars as pl
 
-from jquantstats._plots import Plots
-from jquantstats._stats import Stats
+from ._plots import Plots
+from ._stats import Stats
 
 
 @dataclasses.dataclass(frozen=True)
