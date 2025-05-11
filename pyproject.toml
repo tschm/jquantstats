@@ -36,6 +36,7 @@ target-version = "py312"
 exclude = [
     "*__init__.py"
 ]
+extend-ignore = ["F821"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]
