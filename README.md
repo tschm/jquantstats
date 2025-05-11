@@ -70,22 +70,21 @@ pip install jquantstats[dev]
 ## Quick Start
 
 ```python
-import pandas as pd
+import polars as pl
 from jquantstats.api import build_data
 
 # Create a Data object from returns
-returns = pd.DataFrame(...)  # Your returns data
+returns = pl.DataFrame(...)  # Your returns data
 
 # Basic usage
 data = build_data(returns=returns)
 
 # With benchmark and risk-free rate
-benchmark = pd.Series(...)  # Your benchmark returns
+benchmark = pl.DataFrame(...)  # Your benchmark returns
 data = build_data(
     returns=returns,
     benchmark=benchmark,
-    rf=0.02,      # risk-free rate (e.g., 2% annual rate)
-    nperiods=252  # number of trading days per year
+    rf=0.0002,      # risk-free rate (e.g., 0.02% per day)
 )
 
 # Calculate statistics
