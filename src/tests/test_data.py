@@ -41,6 +41,14 @@ def test_prices(data):
     x = data.prices()
     print(x)
 
+def test_assets(data):
+    x = data.assets
+    assert x == ['AAPL', 'META', 'SPY -- Benchmark']
+
+def test_date_col(data):
+    x = data.date_col
+    assert x == ["Date"]
+
 # def test_highwater_mark():
 #     # Sample data
 #     df = pl.DataFrame({
@@ -173,8 +181,8 @@ def test_resample(data):
     #assert yearly_data.returns.index.freq == 'YE'  # Yearly frequency
 
     # Test resampling to monthly frequency with compounded=True
-    monthly_data = data.resample(every="1m", compounded=True)
-
+    monthly_data = data.resample(every="1mo", compounded=True)
+    print(monthly_data.all)
     # Verify the resampled data has the correct structure
     assert monthly_data.returns.shape[1] == data.returns.shape[1]  # Same number of columns
     #assert monthly_data.returns.index.freq == 'ME'  # Monthly frequency
