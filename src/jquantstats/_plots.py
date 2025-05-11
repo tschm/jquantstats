@@ -9,6 +9,23 @@ from plotly.subplots import make_subplots
 
 @dataclasses.dataclass(frozen=True)
 class Plots:
+    """
+    Visualization tools for financial returns data.
+
+    This class provides methods for creating various plots and visualizations
+    of financial returns data, including:
+
+    - Returns bar charts
+    - Portfolio performance snapshots
+    - Monthly returns heatmaps
+
+    The class is designed to work with the _Data class and uses Plotly
+    for creating interactive visualizations.
+
+    Attributes:
+        data: The _Data object containing returns and benchmark data to visualize.
+    """
+
     data: "_Data"  # type: ignore
 
     _FLATUI_COLORS = [
@@ -212,7 +229,27 @@ class Plots:
         ylabel=True,
     ):
         """
-        Creates a heatmap of monthly returns by year using Polars only.
+        Creates a heatmap of monthly returns by year.
+
+        This visualization displays returns as a color-coded grid with months on the x-axis
+        and years on the y-axis. It provides an intuitive way to identify seasonal patterns
+        and compare performance across different time periods.
+
+        Args:
+            col (str): The column name of the asset to plot.
+            annot_size (int, optional): Font size for annotations. Defaults to 13.
+            cbar (bool, optional): Whether to display a color bar. Defaults to True.
+            returns_label (str, optional): Label for the returns in the title. Defaults to "Strategy".
+            compounded (bool, optional): Whether to use compounded returns. Defaults to False.
+            fontname (str, optional): Font family to use. Defaults to "Arial".
+            ylabel (bool, optional): Whether to display the y-axis label. Defaults to True.
+
+        Returns:
+            plotly.graph_objects.Figure: A Plotly figure object containing the heatmap.
+
+        Example:
+            >>> fig = data.plots.monthly_heatmap("AAPL", returns_label="Apple Inc.")
+            >>> fig.show()
         """
 
         cmap = "RdYlGn"

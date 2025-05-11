@@ -8,6 +8,27 @@ import polars as pl
 
 @dataclasses.dataclass(frozen=True)
 class Stats:
+    """
+    Statistical analysis tools for financial returns data.
+
+    This class provides a comprehensive set of methods for calculating various
+    financial metrics and statistics on returns data, including:
+
+    - Basic statistics (mean, skew, kurtosis)
+    - Risk metrics (volatility, value-at-risk, drawdown)
+    - Performance ratios (Sharpe, Sortino, information ratio)
+    - Win/loss metrics (win rate, profit factor, payoff ratio)
+    - Rolling calculations (rolling volatility, rolling Sharpe)
+    - Factor analysis (alpha, beta, R-squared)
+
+    The class is designed to work with the _Data class and operates on Polars DataFrames
+    for efficient computation.
+
+    Attributes:
+        data: The _Data object containing returns and benchmark data.
+        all: A DataFrame combining all data (index, returns, benchmark) for easy access.
+    """
+
     data: "_Data"  # type: ignore
     all: pl.DataFrame = None  # Default is None; will be set in __post_init__
 
