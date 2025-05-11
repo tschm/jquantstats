@@ -40,11 +40,6 @@ class Plots:
         alpha = 0.8  # Opacity
         return colors, ls, alpha
 
-    @staticmethod
-    def _compsum(returns):
-        """Calculates rolling compounded returns"""
-        return returns.add(1).cumprod(axis=0) - 1
-
     def plot_returns_bars(self):
         """
         Creates a bar chart of returns for each asset in the data.
@@ -61,8 +56,8 @@ class Plots:
 
         Example:
             >>> from jquantstats.api import _Data
-            >>> import pandas as pd
-            >>> returns = pd.DataFrame(...)
+            >>> import polars as pl
+            >>> returns = pl.DataFrame(...)
             >>> data = _Data(returns=returns)
             >>> fig = data.plots.plot_returns_bars()
             >>> fig.show()
@@ -127,10 +122,10 @@ class Plots:
 
         Example:
             >>> from jquantstats.api import _Data
-            >>> import pandas as pd
-            >>> returns = pd.DataFrame(...)
+            >>> import polars as pl
+            >>> returns = pl.DataFrame(...)
             >>> data = _Data(returns=returns)
-            >>> fig = snapshot_plotly(data, title="My Portfolio Performance")
+            >>> fig = data.plots.snapshot_plotly(title="My Portfolio Performance")
             >>> fig.show()
         """
         # Calculate drawdowns
