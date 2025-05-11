@@ -110,8 +110,7 @@ visit [jQuantStats Documentation](https://tschm.github.io/jquantstats/book).
 
 - Python 3.10+
 - numpy
-- pandas
-- scipy
+- polars
 - plotly
 - kaleido (for static image export)
 
