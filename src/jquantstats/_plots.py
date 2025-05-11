@@ -217,62 +217,52 @@ class Plots:
         ylabel=True,
     ):
         """
-        Creates a heatmap of monthly returns by year.
-
-        This function visualizes monthly returns in a calendar-like heatmap format,
-        with years on the y-axis and months on the x-axis. Positive returns are shown
-        in green, negative in red, with color intensity proportional to return magnitude.
-
-        Args:
-            data (_Data): A Data object containing returns data.
-            annot_size (int, optional): Font size for annotations. Defaults to 13.
-            cbar (bool, optional): Whether to show the color bar. Defaults to True.
-            returns_label (str, optional): Label for the returns data. Defaults to "Strategy".
-            compounded (bool, optional): Whether to use compounded returns. Defaults to True.
-            fontname (str, optional): Font family to use. Defaults to "Arial".
-            ylabel (bool, optional): Whether to show y-axis label. Defaults to True.
-
-        Returns:
-            plotly.graph_objects.Figure: A Plotly figure object containing the heatmap.
-
-        Example:
-            >>> from jquantstats.api import _Data
-            >>> import pandas as pd
-            >>> returns = pd.DataFrame(...)
-            >>> data = _Data(returns=returns)
-            >>> fig = data.plots.monthly_heatmap(returns_label="My Portfolio")
-            >>> fig.show()
+        Creates a heatmap of monthly returns by year using Polars only.
         """
 
         cmap = "RdYlGn"
+        date_col = self.data.index.columns[0]
 
-        # Resample returns monthly
+        # Resample monthly
         data = self.data.resample(every="1mo", compounded=compounded)
 
-        date_col = self.data.index.columns[0]
+        # Prepare DataFrame with Year, Month, Return (%)
         result = data.all.with_columns(
             pl.col(date_col).dt.year().alias("Year"),
             pl.col(date_col).dt.month().alias("Month"),
             (pl.col(col) * 100).alias("Return"),
         )
 
-        # Convert to pandas for compatibility with pivot logic
-        df_pd = result.select(["Year", "Month", "Return"]).to_pandas()
-        pivot = df_pd.pivot(index="Year", columns="Month", values="Return").fillna(0)
+        # Pivot table (Year x Month)
+        pivot = result.pivot(
+            values="Return",
+            index="Year",
+            columns="Month",
+            aggregate_function="first",  # Should be fine with monthly data
+        ).sort("Year", descending=True)
 
-        # Rename columns to month names
-        pivot.columns = [calendar.month_abbr[m] for m in pivot.columns]
-        pivot = pivot.iloc[::-1]  # Most recent year at the top
+        # Sort columns by calendar month
+        month_cols = [str(m) for m in range(1, 13)]
+        pivot = pivot.select("Year", *month_cols)
 
-        zmin = -np.max(np.abs(pivot.values))
-        zmax = np.max(np.abs(pivot.values))
+        # Rename columns to month abbreviations
+        new_col_names = ["Year"] + [calendar.month_abbr[int(m)] for m in month_cols]
+        pivot.columns = new_col_names
+
+        # Extract z-matrix for heatmap
+        z = np.round(pivot.drop("Year").to_numpy(), 2)
+        y = pivot["Year"].to_numpy().astype(str)
+        x = new_col_names[1:]
+
+        zmin = -np.nanmax(np.abs(z))
+        zmax = np.nanmax(np.abs(z))
 
         fig = go.Figure(
             data=go.Heatmap(
-                z=pivot.values,
-                x=pivot.columns,
-                y=pivot.index.astype(str),
-                text=np.round(pivot.values, 2),
+                z=z,
+                x=x,
+                y=y,
+                text=z,
                 texttemplate="%{text:.2f}%",
                 colorscale=cmap,
                 zmid=0,

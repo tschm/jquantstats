@@ -8,13 +8,9 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "numpy>=2.2.3",
-    "pandas>=2.2.3",
-    "scipy>=1.15.0",
     "plotly>=6.0.0",
     "kaleido==0.2.1",
-    "polars==1.29.0",
-    "pyarrow==20.0.0"
-
+    "polars==1.29.0"
 ]
 
 [project.urls]
@@ -26,8 +22,6 @@ dev = [
     "pytest==8.3.5",
     "pre-commit==4.2.0",
     "yfinance==0.2.58",
-    #"polars==1.29.0",
-    #"pyarrow==20.0.0"
 ]
 
 [tool.ruff]
