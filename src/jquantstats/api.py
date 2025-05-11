@@ -49,9 +49,6 @@ def build_data(
     """
 
     def subtract_risk_free(df: pl.DataFrame, rf: float | pl.DataFrame, date_col: str) -> pl.DataFrame:
-        if df is None:
-            return None
-
         # Handle scalar rf case
         if isinstance(rf, float):
             rf_df = df.select([pl.col(date_col), pl.lit(rf).alias("rf")])
@@ -159,9 +156,6 @@ class _Data:
         """
 
         def resample_frame(df: pl.DataFrame) -> pl.DataFrame:
-            if df is None:
-                return None
-
             df = self.index.hstack(df)  # Add the date column for resampling
 
             return df.group_by_dynamic(
