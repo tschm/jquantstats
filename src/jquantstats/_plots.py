@@ -9,7 +9,7 @@ from plotly.subplots import make_subplots
 
 @dataclasses.dataclass(frozen=True)
 class Plots:
-    data: "_Data"
+    data: "_Data"  # type: ignore
 
     _FLATUI_COLORS = [
         "#FEDD78",  # Yellow

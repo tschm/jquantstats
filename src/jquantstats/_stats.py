@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import dataclasses
 from collections.abc import Callable
 from functools import wraps
@@ -10,7 +8,7 @@ import polars as pl
 
 @dataclasses.dataclass(frozen=True)
 class Stats:
-    data: _Data  # Assuming _Data is another class or object you've defined
+    data: "_Data"  # type: ignore
     all: pl.DataFrame = None  # Default is None; will be set in __post_init__
 
     def __post_init__(self):
