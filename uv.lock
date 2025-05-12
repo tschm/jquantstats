@@ -478,7 +478,7 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'dev'", specifier = "==8.3.5" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = "==6.1.1" },
     { name = "quantstats", marker = "extra == 'dev'", specifier = "==0.0.64" },
-    { name = "yfinance", marker = "extra == 'dev'", specifier = "==0.2.59" },
+    { name = "yfinance", marker = "extra == 'dev'", specifier = "==0.2.61" },
 ]
 provides-extras = ["dev"]
 
@@ -1376,7 +1376,7 @@ wheels = [
 
 [[package]]
 name = "yfinance"
-version = "0.2.59"
+version = "0.2.61"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beautifulsoup4" },
@@ -1392,7 +1392,7 @@ dependencies = [
     { name = "requests" },
     { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/91/f2/776756439ce8de7b4e6c6df7c72340c6e6d6efe4d413011591d4432ef407/yfinance-0.2.59.tar.gz", hash = "sha256:632a6dbf6f912a9ca27fd4677903bec779a527bf29a5f9889af845d73c5ab7f3", size = 126907, upload-time = "2025-05-07T08:47:16.497Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c1/28/152c38b35453b7d08d56df8ebf81d85448655c5a99b56baae7424f0f8db6/yfinance-0.2.61.tar.gz", hash = "sha256:dc704a23776a43dbd97f352469e6cea8193e9e6cb69d82490bc1a4e6ada6ca37", size = 127391, upload-time = "2025-05-12T08:22:08.846Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b4/53/c65b103b8ad6c3c0bc33d10493eb8721f2d7417886f1d814ef58f96482fd/yfinance-0.2.59-py2.py3-none-any.whl", hash = "sha256:9fdb762ee1be969af1cf592c7245952fd88790b8eebb71311153cbca39fee01c", size = 117376, upload-time = "2025-05-07T08:47:14.909Z" },
+    { url = "https://files.pythonhosted.org/packages/73/b5/d50eec88bc731bb8570ae42a9b764a36144e217361c33fa068391ff59ba3/yfinance-0.2.61-py2.py3-none-any.whl", hash = "sha256:e52d0fea9deffa55b81496f548104418ca4e6aa5629335064c7d485d355b4dbf", size = 117870, upload-time = "2025-05-12T08:22:07.245Z" },
 ]
