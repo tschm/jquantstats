@@ -1,4 +1,5 @@
 import dataclasses
+from datetime import timedelta
 
 import polars as pl
 
@@ -24,8 +25,27 @@ class Data:
     """
 
     returns: pl.DataFrame
+    index: pl.DataFrame
     benchmark: pl.DataFrame | None = None
-    index: pl.DataFrame | None = None
+
+    def __post_init__(self):
+        # You need at least two points
+        print(self.index.shape)
+        if self.index.shape[0] < 2:
+            raise ValueError("Index must contain at least two timestamps.")
+
+        # Check index is monotonically increasing
+        datetime_col = self.index[self.index.columns[0]]
+        if not datetime_col.is_sorted():
+            raise ValueError("Index must be monotonically increasing.")
+
+        # Check row count matches returns
+        if self.returns.shape[0] != self.index.shape[0]:
+            raise ValueError("Returns and index must have the same number of rows.")
+
+        # Check row count matches benchmark (if provided)
+        if self.benchmark is not None and self.benchmark.shape[0] != self.index.shape[0]:
+            raise ValueError("Benchmark and index must have the same number of rows.")
 
     @property
     def plots(self) -> "Plots":
@@ -71,19 +91,6 @@ class Data:
             return self.returns.columns + self.benchmark.columns
         except AttributeError:
             return self.returns.columns
-
-    def __post_init__(self) -> None:
-        """
-        Post-initialization hook for the dataclass.
-
-        This method is automatically called after the object is initialized.
-        In the current implementation, this method is a placeholder for potential
-        validation logic, such as ensuring that benchmark and returns have matching indices.
-
-        Note:
-            The method body is currently empty, but the method signature is maintained
-            for future implementation of validation logic.
-        """
 
     @property
     def all(self) -> pl.DataFrame:
@@ -173,3 +180,30 @@ class Data:
             Data: A new Data object containing the last n rows of the combined data.
         """
         return Data(returns=self.returns.tail(n), benchmark=self.benchmark.tail(n), index=self.index.tail(n))
+
+    @property
+    def _periods_per_year(self) -> int:
+        """
+        Estimate the number of periods per year based on average frequency in the index.
+        Assumes `self.index` is a Polars DataFrame with a single datetime column.
+        """
+        # Extract the datetime column (assuming only one)
+        datetime_col = self.index[self.index.columns[0]]
+
+        # Ensure it's sorted
+        sorted_dt = datetime_col.sort()
+
+        # Compute differences
+        diffs = sorted_dt.diff().drop_nulls()
+
+        # Mean difference (Duration)
+        mean_diff = diffs.mean()
+
+        # if mean_diff is None:
+        #    raise ValueError("Cannot compute mean frequency: result is None.")
+
+        # Convert Duration (timedelta) to seconds
+        seconds = mean_diff.total_seconds() if isinstance(mean_diff, timedelta) else mean_diff / timedelta(seconds=1)
+
+        periods_per_year = round((365 * 24 * 60 * 60) / seconds)
+        return int(periods_per_year)

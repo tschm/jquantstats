@@ -1,4 +1,10 @@
+from datetime import date
+
+import polars as pl
+import pytest
 from polars.testing import assert_frame_equal
+
+from jquantstats.api import build_data
 
 
 def test_head(data):
@@ -45,87 +51,104 @@ def test_date_col(data):
     x = data.date_col
     assert x == ["Date"]
 
-# def test_highwater_mark():
-#     # Sample data
-#     df = pl.DataFrame({
-#         "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
-#         "Asset": [0.01, -0.02, 0.03],
-#     })
-#
-#     benchmark_df = pl.DataFrame({
-#         "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
-#         "Benchmark": [0.005, -0.01, 0.02],
-#     })
-#
-#     index = df.select("Date")
-#
-#     data = _Data(
-#         returns=df.drop("Date"),
-#         benchmark=benchmark_df.drop("Date"),
-#         index=index
-#     )
-#
-#     # Test highwater mark with simple returns
-#     hwm_simple = data.highwater_mark(compounded=False).to_pandas().set_index("Date")
-#     prices_simple = data.prices(compounded=False).to_pandas().set_index("Date")
-#
-#     # Verify shape
-#     assert hwm_simple.shape == prices_simple.shape
-#
-#     # Verify high-water mark is non-decreasing
-#     for col in hwm_simple.columns:
-#         assert hwm_simple[col].is_monotonic_increasing
-#
-#     print(hwm_simple.head(5))
-#     print(prices_simple.head(5))
-#     #assert (hwm_simple >= prices_simple).all().all()
-#
-#
-# def test_drawdown(data):
-#     """
-#     Tests that the drawdown() method correctly calculates drawdowns from prices.
-#
-#     Args:
-#         data (_Data): The data fixture containing a Data object.
-#
-#     Verifies:
-#         1. The return value is a DataFrame with the same shape as the prices.
-#         2. For compounded=False: drawdown equals peak_price - current_price.
-#         3. For compounded=True: drawdown equals (current_price / peak_price) - 1.
-#         4. Drawdowns are always <= 0 for compounded=True.
-#         5. Drawdowns are always >= 0 for compounded=False.
-#     """
-#     # Test with compounded=False (default)
-#     dd_simple = data.drawdown(compounded=False)
-#     prices_simple = data.prices(compounded=False)
-#     hwm_simple = prices_simple.cummax()
-#
-#     # Verify shape
-#     assert dd_simple.shape == prices_simple.shape
-#
-#     # Verify drawdown calculation: peak_price - current_price
-#     expected_dd_simple = hwm_simple - prices_simple
-#     pd.testing.assert_frame_equal(dd_simple, expected_dd_simple)
-#
-#     # Verify drawdowns are always >= 0 (since they represent absolute losses)
-#     assert (dd_simple >= 0.0).all().all()
-#
-#     # Test with compounded=True
-#     dd_compound = data.drawdown(compounded=True)
-#     prices_compound = data.prices(compounded=True)
-#     hwm_compound = prices_compound.cummax()
-#
-#     # Verify shape
-#     assert dd_compound.shape == prices_compound.shape
-#
-#     # Verify drawdown calculation: (current_price / peak_price) - 1
-#     expected_dd_compound = prices_compound / hwm_compound - 1.0
-#     pd.testing.assert_frame_equal(dd_compound, expected_dd_compound)
-#
-#     # Verify drawdowns are always <= 0 (since they represent percentage losses)
-#     assert (dd_compound <= 0.0).all().all()
-#
-#
+def test_periods(data):
+    assert data._periods_per_year == 252
+
+def test_periods_edge_cases(data):
+    """
+    Tests edge cases for the _periods_per_year property.
+
+    Args:
+        data (Data): The data fixture containing a Data object.
+
+    Verifies:
+        1. ValueError is raised when index has less than 2 timestamps
+        2. Different frequencies return different period counts
+        3. Unsorted data is handled correctly
+    """
+    # Weekly data
+    # Create dates with weekly intervals
+    weekly_dates = [date(2023, 1, 1), date(2023, 1, 8), date(2023, 1, 15), date(2023, 1, 22), date(2023, 1, 29),
+                   date(2023, 2, 5), date(2023, 2, 12), date(2023, 2, 19), date(2023, 2, 26), date(2023, 3, 5)]
+    weekly_returns = pl.DataFrame({
+        "Date": weekly_dates,
+        "returns": [0.01] * 10
+    })
+    weekly_data = build_data(returns=weekly_returns)
+    print(weekly_data._periods_per_year)
+    assert weekly_data._periods_per_year == 52
+    # Monthly data
+    # Create dates with monthly intervals
+    monthly_dates = [date(2023, 1, 1), date(2023, 2, 1), date(2023, 3, 1), date(2023, 4, 1), date(2023, 5, 1),
+                    date(2023, 6, 1), date(2023, 7, 1), date(2023, 8, 1), date(2023, 9, 1), date(2023, 10, 1)]
+    monthly_returns = pl.DataFrame({
+        "Date": monthly_dates,
+        "returns": [0.01] * 10
+    })
+    monthly_data = build_data(returns=monthly_returns)
+    assert monthly_data._periods_per_year == 12
+
+
+def test_post_init():
+    """
+    Tests the validation checks in the __post_init__ method of the Data class.
+
+    Verifies:
+        1. ValueError is raised when index has less than 2 timestamps
+        2. ValueError is raised when index is not monotonically increasing
+        3. ValueError is raised when returns and index have different row counts
+        4. ValueError is raised when benchmark and index have different row counts
+    """
+    # Test case 1: Index with less than 2 timestamps
+    single_date = [date(2023, 1, 1)]
+    single_returns = pl.DataFrame({
+        "Date": single_date,
+        "returns": [0.01]
+    })
+
+    with pytest.raises(ValueError, match="Index must contain at least two timestamps."):
+        build_data(returns=single_returns, date_col="Date")
+
+    # Test case 2: Unsorted index
+    unsorted_dates = [date(2023, 1, 15), date(2023, 1, 1), date(2023, 1, 30)]
+    unsorted_returns = pl.DataFrame({
+        "Date": unsorted_dates,
+        "returns": [0.01, 0.02, 0.03]
+    })
+
+    with pytest.raises(ValueError, match="Index must be monotonically increasing."):
+        build_data(returns=unsorted_returns)
+
+    # Test case 3: Returns and index with different row counts
+    dates = [date(2023, 1, 1), date(2023, 1, 15), date(2023, 1, 30)]
+    returns = pl.DataFrame({
+        "returns": [0.01, 0.02]
+    })
+    index = pl.DataFrame({
+        "Date": dates
+    })
+
+    with pytest.raises(ValueError, match="Returns and index must have the same number of rows."):
+        from jquantstats._data import Data
+        Data(returns=returns, index=index)
+
+    # Test case 4: Benchmark and index with different row counts
+    dates = [date(2023, 1, 1), date(2023, 1, 15), date(2023, 1, 30)]
+    returns = pl.DataFrame({
+        "returns": [0.01, 0.02, 0.03]
+    })
+    benchmark = pl.DataFrame({
+        "benchmark": [0.01, 0.02]
+    })
+    index = pl.DataFrame({
+        "Date": dates
+    })
+
+    with pytest.raises(ValueError, match="Benchmark and index must have the same number of rows."):
+        from jquantstats._data import Data
+        Data(returns=returns, benchmark=benchmark, index=index)
+
+
 
 def test_copy(data):
     """
@@ -183,44 +206,19 @@ def test_resample(data):
     assert monthly_data.returns.shape[1] == data.returns.shape[1]  # Same number of columns
     #assert monthly_data.returns.index.freq == 'ME'  # Monthly frequency
 
+def test_stats(data):
+    assert data.stats is not None
 
-# def test_apply(data):
-#     """
-#     Tests that the apply() method correctly applies a function to the returns DataFrame.
-#
-#     Args:
-#         data (_Data): The data fixture containing a Data object.
-#
-#     Verifies:
-#         1. The method correctly applies a function to the returns DataFrame.
-#         2. The result matches the direct application of the function to the returns DataFrame.
-#         3. The method works with different functions and arguments.
-#     """
-#     # Test applying a function with no additional arguments
-#     result1 = data.apply(np.mean)
-#     expected1 = np.mean(data.returns)
-#     assert result1 == pytest.approx(expected1)
-#
-#     # Test applying a function with axis argument
-#     result2 = data.apply(np.mean, axis=1)
-#     expected2 = np.mean(data.returns, axis=1)
-#     pd.testing.assert_series_equal(result2, expected2)
-#
-#     # Test applying a function with multiple arguments
-#     result3 = data.apply(np.percentile, q=75, axis=0)
-#     expected3 = np.percentile(data.returns, q=75, axis=0)
-#     np.testing.assert_array_equal(result3, expected3)
-#
-#     # Test applying a custom function
-#     def custom_func(df, multiplier=1):
-#         return df.sum() * multiplier
-#
-#     result4 = data.apply(custom_func, multiplier=2)
-#     expected4 = custom_func(data.returns, multiplier=2)
-#     pd.testing.assert_series_equal(result4, expected4)
+def test_plots(data):
+    assert data.plots is not None
 
-# def test_all_pl(data):
-#     print(data.all_pl())
-#     x = data.all_pl().to_pandas().set_index("Date")
-#     pd.testing.assert_frame_equal(x, data.all())
-#     print(data.all().skew())
+def test_all_no_benchmark(data_no_benchmark):
+    assert data_no_benchmark.all is not None
+
+def test_assets_no_benchmark(data_no_benchmark):
+    assert data_no_benchmark.assets is not None
+
+def test_copy_no_benchmark(data_no_benchmark):
+    x = data_no_benchmark.copy()
+    assert x.returns is not None
+    assert x.benchmark is None

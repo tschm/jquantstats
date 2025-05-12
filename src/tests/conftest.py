@@ -44,6 +44,10 @@ def data(portfolio, benchmark):
     return build_data(returns=portfolio, benchmark=benchmark)
 
 @pytest.fixture
+def data_no_benchmark(portfolio):
+    return build_data(returns=portfolio)
+
+@pytest.fixture
 def edge(data):
     index = data.index["Date"]
     returns = pl.DataFrame({"index": index, "returns": [0.0] * len(index)})
