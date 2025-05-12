@@ -1,4 +1,5 @@
 """Tests for the build_data function."""
+import pandas as pd
 import polars as pl
 from polars.testing import assert_frame_equal, assert_series_equal
 
@@ -74,3 +75,12 @@ def test_with_benchmark(returns, benchmark):
     """
     result = build_data(returns=returns, benchmark=benchmark)
     assert result.benchmark.columns == ["SPY -- Benchmark"]
+
+def test_with_pandas(returns, benchmark):
+    x = returns.to_pandas().set_index("Date")
+    y = benchmark.to_pandas().set_index("Date")
+
+    data = build_data(returns=x, benchmark=y)
+    pd.testing.assert_frame_equal(data.returns_pd, returns.to_pandas().set_index("Date"))
+    pd.testing.assert_frame_equal(data.benchmark_pd,
+                                  benchmark.to_pandas().set_index("Date").loc[data.benchmark_pd.index])
