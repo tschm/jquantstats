@@ -23,7 +23,7 @@ dev = [
     "pytest-cov==6.1.1",
     "pytest==8.3.5",
     "pre-commit==4.2.0",
-    "yfinance==0.2.59",
+    "yfinance==0.2.61",
     "quantstats==0.0.64"
 ]
 
