@@ -114,6 +114,19 @@ class Data:
     def all_pd(self) -> pd.DataFrame:
         return self.all.to_pandas().set_index(self.date_col)
 
+    @property
+    def returns_pd(self) -> pd.DataFrame:
+        x = pl.concat([self.index, self.returns], how="horizontal")
+        return x.to_pandas().set_index(self.date_col)
+
+    @property
+    def benchmark_pd(self) -> pd.DataFrame:
+        if self.benchmark is None:
+            return None
+
+        x = pl.concat([self.index, self.benchmark], how="horizontal")
+        return x.to_pandas().set_index(self.date_col)
+
     def resample(self, every: str = "1mo", compounded: bool = False) -> "Data":
         """
         Resamples returns and benchmark to a different frequency using Polars.
@@ -203,9 +216,6 @@ class Data:
 
         # Mean difference (Duration)
         mean_diff = diffs.mean()
-
-        # if mean_diff is None:
-        #    raise ValueError("Cannot compute mean frequency: result is None.")
 
         # Convert Duration (timedelta) to seconds
         seconds = mean_diff.total_seconds() if isinstance(mean_diff, timedelta) else mean_diff / timedelta(seconds=1)

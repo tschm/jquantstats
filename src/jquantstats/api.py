@@ -28,13 +28,17 @@ including accessing statistical metrics through the stats property and visualiza
 through the plots property.
 """
 
+import pandas as pd
 import polars as pl
 
 from ._data import Data
 
 
 def build_data(
-    returns: pl.DataFrame, rf: float | pl.DataFrame = 0.0, benchmark: pl.DataFrame = None, date_col: str = "Date"
+    returns: pl.DataFrame | pd.DataFrame,
+    rf: float | pl.DataFrame = 0.0,
+    benchmark: pl.DataFrame = None,
+    date_col: str = "Date",
 ) -> "Data":
     """
     Build a _Data object from returns and optional benchmark using Polars.
@@ -66,6 +70,12 @@ def build_data(
                 if col not in {date_col, "rf"} and df.schema[col] in pl.NUMERIC_DTYPES
             ]
         )
+
+    if isinstance(returns, pd.DataFrame):
+        returns = pl.from_pandas(returns, include_index=True)
+
+    if isinstance(benchmark, pd.DataFrame):
+        benchmark = pl.from_pandas(benchmark, include_index=True)
 
     # Align returns and benchmark if both provided
     if benchmark is not None:
