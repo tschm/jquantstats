@@ -45,6 +45,10 @@ def test_date_col(data):
     x = data.date_col
     assert x == ["Date"]
 
+def test_periods(data):
+    assert data._periods_per_year == 252
+
+
 # def test_highwater_mark():
 #     # Sample data
 #     df = pl.DataFrame({

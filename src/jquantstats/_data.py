@@ -1,4 +1,5 @@
 import dataclasses
+from datetime import timedelta
 
 import polars as pl
 
@@ -24,8 +25,8 @@ class Data:
     """
 
     returns: pl.DataFrame
+    index: pl.DataFrame
     benchmark: pl.DataFrame | None = None
-    index: pl.DataFrame | None = None
 
     @property
     def plots(self) -> "Plots":
@@ -173,3 +174,33 @@ class Data:
             Data: A new Data object containing the last n rows of the combined data.
         """
         return Data(returns=self.returns.tail(n), benchmark=self.benchmark.tail(n), index=self.index.tail(n))
+
+    @property
+    def _periods_per_year(self) -> int:
+        """
+        Estimate the number of periods per year based on average frequency in the index.
+        Assumes `self.index` is a Polars DataFrame with a single datetime column.
+        """
+        if self.index.shape[0] < 2:
+            raise ValueError("Index must contain at least two timestamps.")
+
+        # Extract the datetime column (assuming only one)
+        datetime_col = self.index[self.index.columns[0]]
+
+        # Ensure it's sorted
+        sorted_dt = datetime_col.sort()
+
+        # Compute differences
+        diffs = sorted_dt.diff().drop_nulls()
+
+        # Mean difference (Duration)
+        mean_diff = diffs.mean()
+
+        if mean_diff is None:
+            raise ValueError("Cannot compute mean frequency: result is None.")
+
+        # Convert Duration (timedelta) to seconds
+        seconds = mean_diff.total_seconds() if isinstance(mean_diff, timedelta) else mean_diff / timedelta(seconds=1)
+
+        periods_per_year = round((365 * 24 * 60 * 60) / seconds)
+        return int(periods_per_year)
