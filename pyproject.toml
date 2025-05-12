@@ -10,7 +10,9 @@ dependencies = [
     "numpy>=2.2.3",
     "plotly>=6.0.0",
     "kaleido==0.2.1",
-    "polars==1.29.0"
+    "polars==1.29.0",
+    "pandas>=2.2.3",
+    "pyarrow>=20.0.0",
 ]
 
 [project.urls]
@@ -58,4 +60,4 @@ exclude_dirs = ["src/tests"]
 pep621_dev_dependency_groups = ["dev"]
 
 [tool.deptry.per_rule_ignores]
-DEP002 = ["kaleido"]
+DEP002 = ["kaleido", "pyarrow"]

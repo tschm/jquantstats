@@ -1,6 +1,7 @@
 import dataclasses
 from datetime import timedelta
 
+import pandas as pd
 import polars as pl
 
 from ._plots import Plots
@@ -108,6 +109,10 @@ class Data:
             return pl.concat([self.index, self.returns], how="horizontal")
         else:
             return pl.concat([self.index, self.returns, self.benchmark], how="horizontal")
+
+    @property
+    def all_pd(self) -> pd.DataFrame:
+        return self.all.to_pandas().set_index(self.date_col)
 
     def resample(self, every: str = "1mo", compounded: bool = False) -> "Data":
         """
