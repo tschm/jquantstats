@@ -223,5 +223,8 @@ def test_copy_no_benchmark(data_no_benchmark):
     assert x.returns is not None
     assert x.benchmark is None
 
+def test_benchmark_pd_no_benchmark(data_no_benchmark):
+    assert data_no_benchmark.benchmark_pd is None
+
 def test_all_pd(data):
     print(data.all_pd)
