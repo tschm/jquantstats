@@ -54,6 +54,20 @@ def build_data(
     """
 
     def subtract_risk_free(df: pl.DataFrame, rf: float | pl.DataFrame, date_col: str) -> pl.DataFrame:
+        """
+        Subtracts the risk-free rate from all numeric columns in the DataFrame.
+
+        This function handles both scalar risk-free rates and time series risk-free rates.
+        For scalar rates, it creates a constant column. For time series, it joins on the date column.
+
+        Args:
+            df (pl.DataFrame): DataFrame containing returns data.
+            rf (float | pl.DataFrame): Risk-free rate as either a scalar or a DataFrame with a time series.
+            date_col (str): Name of the date column for joining when rf is a DataFrame.
+
+        Returns:
+            pl.DataFrame: DataFrame with risk-free rate subtracted from all numeric columns.
+        """
         # Handle scalar rf case
         if isinstance(rf, float):
             rf_df = df.select([pl.col(date_col), pl.lit(rf).alias("rf")])

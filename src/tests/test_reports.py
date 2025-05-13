@@ -18,8 +18,27 @@ def reports(data):
 
 @pytest.fixture
 def metrics(resource_dir):
+    """
+    Fixture that returns the metrics CSV file as a DataFrame.
+
+    Args:
+        resource_dir: The resource_dir fixture containing the path to the resources directory.
+
+    Returns:
+        pl.DataFrame: A DataFrame containing the metrics data.
+    """
     return pl.read_csv(resource_dir / 'metrics.csv')
 
 
 def test_metric(reports, metrics):
+    """
+    Tests that the metrics method returns the correct metrics.
+
+    Args:
+        reports: The reports fixture containing a Reports object.
+        metrics: The metrics fixture containing the expected metrics.
+
+    Verifies:
+        The metrics method returns a DataFrame that matches the expected metrics.
+    """
     assert_frame_equal(metrics, reports.metrics())
