@@ -4,6 +4,7 @@ from functools import wraps
 
 import numpy as np
 import polars as pl
+from scipy.stats import norm
 
 
 @dataclasses.dataclass(frozen=True)
@@ -37,7 +38,7 @@ class Stats:
 
     @staticmethod
     def _mean_positive_expr(series: pl.Series) -> float:
-        return series.filter(series >= 0).mean()
+        return series.filter(series > 0).mean()
 
     @staticmethod
     def _mean_negative_expr(series: pl.Series) -> float:
@@ -230,7 +231,7 @@ class Stats:
         Returns:
             float: The profit ratio value.
         """
-        wins = series.filter(series > 0)
+        wins = series.filter(series >= 0)
         losses = series.filter(series < 0)
 
         try:
@@ -271,7 +272,7 @@ class Stats:
         return {name: profit_factor[name] * tail_ratio[name] for name in profit_factor.keys()}
 
     @columnwise_stat
-    def value_at_risk(self, series: pl.Series, alpha: float = 0.05) -> float:
+    def value_at_risk(self, series: pl.Series, sigma=1, alpha: float = 0.05) -> float:
         """
         Calculates the daily value-at-risk
         (variance-covariance calculation with confidence level)
@@ -283,26 +284,13 @@ class Stats:
         Returns:
             float: The value at risk.
         """
-        # Ensure returns are sorted and drop nulls
-        cleaned_returns = series.drop_nulls()
+        mu = series.mean()
+        sigma *= series.std()
 
-        # Compute VaR using quantile; note that VaR is typically a negative number (i.e. loss)
-        return cleaned_returns.quantile(alpha, interpolation="nearest")
-
-    def var(self, alpha: float = 0.05) -> dict[str, float]:
-        """
-        Shorthand for value_at_risk()
-
-        Args:
-            alpha (float, optional): Confidence level. Defaults to 0.05.
-
-        Returns:
-            dict[str, float]: Dictionary mapping asset names to value at risk.
-        """
-        return self.value_at_risk(alpha)
+        return norm.ppf(alpha, mu, sigma)
 
     @columnwise_stat
-    def conditional_value_at_risk(self, series: pl.Series, alpha: float = 0.05) -> float:
+    def conditional_value_at_risk(self, series: pl.Series, sigma=1, alpha: float = 0.05) -> float:
         """
         Calculates the conditional value-at-risk (CVaR / expected shortfall)
         for each numeric column.
@@ -314,56 +302,13 @@ class Stats:
         Returns:
             float: The conditional value at risk.
         """
-        # Ensure returns are sorted and drop nulls
-        cleaned_returns = series.drop_nulls()
+        mu = series.mean()
+        sigma *= series.std()
 
-        # Compute VaR using quantile; note that VaR is typically a negative number (i.e. loss)
-        var = cleaned_returns.quantile(alpha, interpolation="nearest")
+        var = norm.ppf(alpha, mu, sigma)
 
         # Compute mean of returns less than or equal to VaR
-        cvar = cleaned_returns.filter(cleaned_returns <= var).mean()
-
-        return cvar
-
-    def cvar(self, alpha: float = 0.05) -> dict[str, float]:
-        """
-        Shorthand for conditional_value_at_risk()
-
-        Args:
-            alpha (float, optional): Confidence level. Defaults to 0.05.
-
-        Returns:
-            dict[str, float]: Dictionary mapping asset names to conditional value at risk.
-        """
-        return self.conditional_value_at_risk(alpha)
-
-    def expected_shortfall(self, alpha: float = 0.05) -> dict[str, float]:
-        """
-        Shorthand for conditional_value_at_risk()
-
-        Args:
-            alpha (float, optional): Confidence level. Defaults to 0.05.
-
-        Returns:
-            dict[str, float]: Dictionary mapping asset names to expected shortfall.
-        """
-        return self.conditional_value_at_risk(alpha)
-
-    @columnwise_stat
-    def tail_ratio(self, series: pl.Series, cutoff: float = 0.95) -> float:
-        """
-        Calculates the ratio of the right (95%) and left (5%) tails.
-
-        Args:
-            series (pl.Series): The series to calculate tail ratio for.
-            cutoff (float, optional): The cutoff percentile. Defaults to 0.95.
-
-        Returns:
-            float: The tail ratio value.
-        """
-        left_tail = series.quantile(1 - cutoff)
-        right_tail = series.quantile(cutoff)
-        return abs(right_tail / left_tail)  # .alias(series.meta.output_name)
+        return series.filter(series < var).mean()
 
     @columnwise_stat
     def win_rate(self, series: pl.Series) -> float:
@@ -398,40 +343,6 @@ class Stats:
             return total_gain / total_pain
         except ZeroDivisionError:
             return np.nan
-
-    @columnwise_stat
-    def outlier_win_ratio(self, series: pl.Series, quantile: float = 0.99) -> float:
-        """
-        Calculates the outlier winners ratio:
-        99th percentile of returns / mean positive return
-
-        Args:
-            series (pl.Series): The series to calculate outlier win ratio for.
-            quantile (float, optional): The quantile to use. Defaults to 0.99.
-
-        Returns:
-            float: The outlier win ratio value.
-        """
-        q = series.quantile(quantile, interpolation="nearest")
-        mean_positive = series.filter(series > 0).mean()
-        return q / mean_positive
-
-    @columnwise_stat
-    def outlier_loss_ratio(self, series: pl.Series, quantile: float = 0.01) -> float:
-        """
-        Calculates the outlier losers ratio
-        1st percentile of returns / mean negative return
-
-        Args:
-            series (pl.Series): The series to calculate outlier loss ratio for.
-            quantile (float, optional): The quantile to use. Defaults to 0.01.
-
-        Returns:
-            float: The outlier loss ratio value.
-        """
-        q = series.quantile(quantile, interpolation="nearest")
-        mean_negative = series.filter(series < 0).mean()
-        return q / mean_negative
 
     @columnwise_stat
     def risk_return_ratio(self, series: pl.Series) -> float:

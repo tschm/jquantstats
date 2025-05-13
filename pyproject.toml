@@ -13,6 +13,7 @@ dependencies = [
     "polars==1.29.0",
     "pandas>=2.2.3",
     "pyarrow>=20.0.0",
+    "scipy>=1.15.3",
 ]
 
 [project.urls]
