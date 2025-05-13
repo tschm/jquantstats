@@ -478,7 +478,24 @@ class Stats:
             equity = initial + series.cum_sum()
 
         # equity = self.price(series, compounded, initial=initial)
-        return -100 * ((equity / equity.cum_max()) - 1)
+        return -initial * ((equity / equity.cum_max()) - 1)
+
+    @staticmethod
+    def max_drawdown_single_series(series: pl.Series) -> float:
+        cumulative = (series + 1).cum_prod()
+        peak = cumulative.cum_max()
+        drawdown = cumulative / peak - 1
+        return -drawdown.min()
+
+    @columnwise_stat
+    def max_drawdown(self, series: pl.Expr) -> float:
+        return Stats.max_drawdown_single_series(series)
+
+    # @columnwise_stat
+    # def calmar(self, series):
+    #    dd = Stats.max_drawdown_single_series(series)
+    #    #dd = self.max_drawdown(series)
+    #    return 100*series.mean() / dd if dd > 0 else np.nan
 
     def adjusted_sortino(self, periods: int = 252) -> dict[str, float]:
         """

@@ -1,4 +1,6 @@
+import polars as pl
 import pytest
+from polars.testing import assert_frame_equal
 
 
 @pytest.fixture
@@ -14,6 +16,10 @@ def reports(data):
     """
     return data.reports
 
+@pytest.fixture
+def metrics(resource_dir):
+    return pl.read_csv(resource_dir / 'metrics.csv')
 
-def test_metric(reports):
-    print(reports.metrics())
+
+def test_metric(reports, metrics):
+    assert_frame_equal(metrics, reports.metrics())

@@ -12,7 +12,7 @@ class Reports:
             "Sharpe Ratio": self.data.stats.sharpe(),
             "Sortino Ratio": self.data.stats.sortino(),
             # "Calmar Ratio": self.data.stats.calmar(),
-            # "Max Drawdown": self.data.stats.max_drawdown(),
+            "Max Drawdown": self.data.stats.max_drawdown(),
             "Volatility": self.data.stats.volatility(),
             # "CAGR": self.data.stats.cagr(),
             "Value at Risk (5%)": self.data.stats.value_at_risk(alpha=0.05),
