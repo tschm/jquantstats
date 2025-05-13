@@ -14,6 +14,9 @@ dependencies = [
     "pandas>=2.2.3",
     "pyarrow>=20.0.0",
     "scipy>=1.15.3",
+    "ipython==8.36.0",
+    "quantstats==0.0.64"
+
 ]
 
 [project.urls]
@@ -25,8 +28,8 @@ dev = [
     "pytest==8.3.5",
     "pre-commit==4.2.0",
     "yfinance==0.2.61",
-    "ipython==8.36.0",
-    "quantstats"
+    #"ipython==8.36.0",
+    #"quantstats==0.0.64"
 ]
 
 
