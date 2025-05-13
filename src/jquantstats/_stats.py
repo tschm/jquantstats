@@ -58,7 +58,7 @@ class Stats:
 
         @wraps(func)
         def wrapper(self, *args, **kwargs) -> dict[str, float]:
-            return {col: func(self, self.all[col], *args, **kwargs) for col in self.data.assets}
+            return {col: func(self, series, *args, **kwargs) for col, series in self.data.items()}
 
         return wrapper
 
@@ -78,7 +78,7 @@ class Stats:
         def wrapper(self, *args, **kwargs) -> pl.DataFrame:
             return self.all.select(
                 [pl.col(name) for name in self.data.date_col]
-                + [func(self, pl.col(name), *args, **kwargs).alias(name) for name in self.data.assets]
+                + [func(self, series, *args, **kwargs).alias(col) for col, series in self.data.items()]
             )
 
         return wrapper
