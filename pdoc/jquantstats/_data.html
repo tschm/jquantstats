@@ -81,6 +81,9 @@
                         <li>
                                 <a class="function" href="#Data.tail">tail</a>
                         </li>
+                        <li>
+                                <a class="function" href="#Data.items">items</a>
+                        </li>
                 </ul>
 
             </li>
@@ -329,6 +332,10 @@
 </span><span id="L-222"><a href="#L-222"><span class="linenos">222</span></a>
 </span><span id="L-223"><a href="#L-223"><span class="linenos">223</span></a>        <span class="n">periods_per_year</span> <span class="o">=</span> <span class="nb">round</span><span class="p">((</span><span class="mi">365</span> <span class="o">*</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span> <span class="o">/</span> <span class="n">seconds</span><span class="p">)</span>
 </span><span id="L-224"><a href="#L-224"><span class="linenos">224</span></a>        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">periods_per_year</span><span class="p">)</span>
+</span><span id="L-225"><a href="#L-225"><span class="linenos">225</span></a>
+</span><span id="L-226"><a href="#L-226"><span class="linenos">226</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-227"><a href="#L-227"><span class="linenos">227</span></a>        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">assets</span><span class="p">:</span>
+</span><span id="L-228"><a href="#L-228"><span class="linenos">228</span></a>            <span class="k">yield</span> <span class="n">col</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">all</span><span class="p">[</span><span class="n">col</span><span class="p">]</span>
 </span></pre></div>
 
 
@@ -559,6 +566,10 @@
 </span><span id="Data-223"><a href="#Data-223"><span class="linenos">223</span></a>
 </span><span id="Data-224"><a href="#Data-224"><span class="linenos">224</span></a>        <span class="n">periods_per_year</span> <span class="o">=</span> <span class="nb">round</span><span class="p">((</span><span class="mi">365</span> <span class="o">*</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span> <span class="o">/</span> <span class="n">seconds</span><span class="p">)</span>
 </span><span id="Data-225"><a href="#Data-225"><span class="linenos">225</span></a>        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">periods_per_year</span><span class="p">)</span>
+</span><span id="Data-226"><a href="#Data-226"><span class="linenos">226</span></a>
+</span><span id="Data-227"><a href="#Data-227"><span class="linenos">227</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="Data-228"><a href="#Data-228"><span class="linenos">228</span></a>        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">assets</span><span class="p">:</span>
+</span><span id="Data-229"><a href="#Data-229"><span class="linenos">229</span></a>            <span class="k">yield</span> <span class="n">col</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">all</span><span class="p">[</span><span class="n">col</span><span class="p">]</span>
 </span></pre></div>
 
 
@@ -1009,6 +1020,26 @@ which is useful for analysis and visualization.</p>
     Data: A new Data object containing the last n rows of the combined data.</p>
 </div>
 
+
+                            </div>
+                            <div id="Data.items" class="classattr">
+                                        <input id="Data.items-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">items</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span></span><span class="return-annotation">):</span></span>
+
+                <label class="view-source-button" for="Data.items-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#Data.items"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Data.items-227"><a href="#Data.items-227"><span class="linenos">227</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="Data.items-228"><a href="#Data.items-228"><span class="linenos">228</span></a>        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">assets</span><span class="p">:</span>
+</span><span id="Data.items-229"><a href="#Data.items-229"><span class="linenos">229</span></a>            <span class="k">yield</span> <span class="n">col</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">all</span><span class="p">[</span><span class="n">col</span><span class="p">]</span>
+</span></pre></div>
+
+
+    
 
                             </div>
                 </section>

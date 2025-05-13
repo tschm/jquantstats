@@ -82,8 +82,11 @@ DA:218,1
 DA:221,1
 DA:223,1
 DA:224,1
-LF:81
-LH:81
+DA:226,1
+DA:227,1
+DA:228,1
+LF:84
+LH:84
 FN:32,49,Data.__post_init__
 FNDA:1,Data.__post_init__
 FN:52,59,Data.plots
@@ -114,8 +117,10 @@ FN:190,200,Data.tail
 FNDA:1,Data.tail
 FN:203,224,Data._periods_per_year
 FNDA:1,Data._periods_per_year
-FNF:15
-FNH:15
+FN:226,228,Data.items
+FNDA:1,Data.items
+FNF:16
+FNH:16
 end_of_record
 SF:src/jquantstats/_plots.py
 DA:1,1
