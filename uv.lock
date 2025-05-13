@@ -510,28 +510,28 @@ name = "jquantstats"
 version = "0.0.0"
 source = { editable = "." }
 dependencies = [
-    { name = "ipython" },
     { name = "kaleido" },
     { name = "numpy" },
     { name = "pandas" },
     { name = "plotly" },
     { name = "polars" },
     { name = "pyarrow" },
-    { name = "quantstats" },
     { name = "scipy" },
 ]
 
 [package.optional-dependencies]
 dev = [
+    { name = "ipython" },
     { name = "pre-commit" },
     { name = "pytest" },
     { name = "pytest-cov" },
+    { name = "quantstats" },
     { name = "yfinance" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "ipython", specifier = "==8.36.0" },
+    { name = "ipython", marker = "extra == 'dev'", specifier = "==8.36.0" },
     { name = "kaleido", specifier = "==0.2.1" },
     { name = "numpy", specifier = ">=2.2.3" },
     { name = "pandas", specifier = ">=2.2.3" },
@@ -541,7 +541,7 @@ requires-dist = [
     { name = "pyarrow", specifier = ">=20.0.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = "==8.3.5" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = "==6.1.1" },
-    { name = "quantstats", specifier = "==0.0.64" },
+    { name = "quantstats", marker = "extra == 'dev'", specifier = "==0.0.64" },
     { name = "scipy", specifier = ">=1.15.3" },
     { name = "yfinance", marker = "extra == 'dev'", specifier = "==0.2.61" },
 ]

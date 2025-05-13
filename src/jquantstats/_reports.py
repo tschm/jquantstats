@@ -1,23 +1,27 @@
 import dataclasses
 
-import quantstats as qs
+import polars as pl
 
 
 @dataclasses.dataclass(frozen=True)
 class Reports:
     data: "Data"  # type: ignore
 
-    def basic(self, grayscale=False, figsize=(8, 5), display=True, compounded=True, periods_per_year=None, **kwargs):
-        periods_per_year = periods_per_year or self.data._periods_per_year
-        return qs.reports.basic(
-            returns=self.data.returns_pd.iloc[:, 0],
-            benchmark=self.data.benchmark_pd,
-            rf=0.0,
-            grayscale=grayscale,
-            figsize=figsize,
-            display=display,
-            compounded=compounded,
-            periods_per_year=periods_per_year,
-            match_dates=True,
-            **kwargs,
-        )
+    def metrics(self):
+        metrics = {
+            "Sharpe Ratio": self.data.stats.sharpe(),
+            "Sortino Ratio": self.data.stats.sortino(),
+            # "Calmar Ratio": self.data.stats.calmar(),
+            # "Max Drawdown": self.data.stats.max_drawdown(),
+            "Volatility": self.data.stats.volatility(),
+            # "CAGR": self.data.stats.cagr(),
+            "Value at Risk (5%)": self.data.stats.value_at_risk(alpha=0.05),
+            "Win/Loss Ratio": self.data.stats.win_loss_ratio(),
+            # "Mean Daily Return": self.data.returns.mean(),
+            # "Std Dev": self.data.returns.std().to_dict(),
+            "Skew": self.data.stats.skew(),
+            "Kurtosis": self.data.stats.kurtosis(),
+        }
+
+        # convert to Polars DataFrame with metrics as rows, assets as columns
+        return pl.DataFrame([{"Metric": name, **vals} for name, vals in metrics.items()])

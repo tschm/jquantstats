@@ -14,5 +14,6 @@ def reports(data):
     """
     return data.reports
 
-def test_reports(reports):
-    reports.basic()
+
+def test_metric(reports):
+    print(reports.metrics())
