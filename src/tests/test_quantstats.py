@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 import quantstats as qs
 
@@ -80,7 +81,6 @@ def test_profit_factor(stats, aapl):
     y = qs.stats.profit_factor(aapl)
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
 
-
 def test_value_at_risk(stats, aapl):
     x = stats.value_at_risk(alpha=0.05)
     y = qs.stats.value_at_risk(aapl)
@@ -125,3 +125,13 @@ def test_exposure(stats, aapl):
     x = stats.exposure()
     y = qs.stats.exposure(aapl)
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
+
+def test_sortino(stats, aapl):
+    x = stats.sortino(periods=252)
+    y = qs.stats.sortino(aapl)
+    assert x["AAPL"] ==  pytest.approx(y, abs=1e-6)
+
+def test_information_ratio(stats, aapl, benchmark_pd):
+    x = stats.information_ratio()
+    y = np.sqrt(252)*qs.stats.information_ratio(aapl, benchmark=benchmark_pd)
+    assert x["AAPL"] ==  pytest.approx(y, abs=1e-6)

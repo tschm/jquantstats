@@ -107,7 +107,7 @@ def test_rolling_sharpe(stats):
 
 def test_sortino(stats):
     result = stats.sortino(periods=252)
-    assert result["META"] == pytest.approx(0.7311766729290573)
+    assert result["META"] == pytest.approx(1.06321091920911)
 
 def test_rolling_sortino(stats):
     result = stats.rolling_sortino(rolling_period=20, periods_per_year=252)
@@ -116,7 +116,7 @@ def test_rolling_sortino(stats):
 
 def test_adjusted_sortino(stats):
     result = stats.adjusted_sortino(periods=252)
-    assert result["META"] == pytest.approx(0.5170199836735547)
+    assert result["META"] == pytest.approx(0.7518036508043441)
 
 def test_edge_cases(edge):
     assert np.isnan(edge.stats.profit_ratio()["returns"])# == {"returns": np.nan, "Benchmark": np.nan}

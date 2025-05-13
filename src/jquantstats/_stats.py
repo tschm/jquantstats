@@ -466,8 +466,7 @@ class Stats:
             float: The Sortino ratio value.
         """
 
-        downside_deviation = np.sqrt(((series.filter(series < 0)) ** 2).mean())
-
+        downside_deviation = np.sqrt(((series.filter(series < 0)) ** 2).sum() / series.count())
         ratio = series.mean() / downside_deviation
         return ratio * np.sqrt(periods)
 
