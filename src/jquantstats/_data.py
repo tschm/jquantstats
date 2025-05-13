@@ -5,6 +5,7 @@ import pandas as pd
 import polars as pl
 
 from ._plots import Plots
+from ._reports import Reports
 from ._stats import Stats
 
 
@@ -31,7 +32,6 @@ class Data:
 
     def __post_init__(self):
         # You need at least two points
-        print(self.index.shape)
         if self.index.shape[0] < 2:
             raise ValueError("Index must contain at least two timestamps.")
 
@@ -67,6 +67,16 @@ class Data:
             Stats: An instance of the Stats class initialized with this data.
         """
         return Stats(self)
+
+    @property
+    def reports(self) -> "Reports":
+        """
+        Provides access to reporting methods for the financial data.
+
+        Returns:
+            Reports: An instance of the Reports class initialized with this data.
+        """
+        return Reports(self)
 
     @property
     def date_col(self) -> list[str]:
@@ -112,15 +122,46 @@ class Data:
 
     @property
     def all_pd(self) -> pd.DataFrame:
+        """
+        Converts the combined data (index, returns, benchmark) to a pandas DataFrame.
+
+        This property provides a convenient way to access all data as a pandas DataFrame
+        with the date column set as the index, which is useful for compatibility with
+        pandas-based libraries and functions.
+
+        Returns:
+            pd.DataFrame: A pandas DataFrame containing all data with the date column as index.
+        """
         return self.all.to_pandas().set_index(self.date_col)
 
     @property
     def returns_pd(self) -> pd.DataFrame:
+        """
+        Converts the returns data to a pandas DataFrame.
+
+        This property provides a convenient way to access returns data as a pandas DataFrame
+        with the date column set as the index, which is useful for compatibility with
+        pandas-based libraries and functions.
+
+        Returns:
+            pd.DataFrame: A pandas DataFrame containing returns data with the date column as index.
+        """
         x = pl.concat([self.index, self.returns], how="horizontal")
         return x.to_pandas().set_index(self.date_col)
 
     @property
-    def benchmark_pd(self) -> pd.DataFrame:
+    def benchmark_pd(self) -> pd.DataFrame | None:
+        """
+        Converts the benchmark data to a pandas DataFrame.
+
+        This property provides a convenient way to access benchmark data as a pandas DataFrame
+        with the date column set as the index, which is useful for compatibility with
+        pandas-based libraries and functions.
+
+        Returns:
+            pd.DataFrame | None: A pandas DataFrame containing benchmark data with the date column
+                                as index, or None if no benchmark data is available.
+        """
         if self.benchmark is None:
             return None
 
@@ -223,6 +264,15 @@ class Data:
         periods_per_year = round((365 * 24 * 60 * 60) / seconds)
         return int(periods_per_year)
 
-    def items(self):
+    def items(self) -> tuple[str, pl.Series]:
+        """
+        Iterates over all assets and their corresponding data series.
+
+        This method provides a convenient way to iterate over all assets in the data,
+        yielding each asset name and its corresponding data series.
+
+        Yields:
+            tuple[str, pl.Series]: A tuple containing the asset name and its data series.
+        """
         for col in self.assets:
             yield col, self.all[col]

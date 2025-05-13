@@ -7,6 +7,17 @@ from jquantstats.api import build_data
 
 
 def test_no_rf(returns):
+    """
+    Tests that build_data works without a risk-free rate.
+
+    Args:
+        returns (pd.DataFrame): The returns fixture containing asset returns.
+
+    Verifies:
+        1. The function returns a Data object.
+        2. The returns in the Data object match the input returns.
+        3. The date column is correctly excluded from the returns.
+    """
     d = build_data(returns, date_col="Date")
     assert_frame_equal(d.returns, returns.drop("Date"))
 
@@ -77,6 +88,18 @@ def test_with_benchmark(returns, benchmark):
     assert result.benchmark.columns == ["SPY -- Benchmark"]
 
 def test_with_pandas(returns, benchmark):
+    """
+    Tests that build_data correctly handles pandas DataFrames as input.
+
+    Args:
+        returns (pl.DataFrame): The returns fixture containing asset returns.
+        benchmark (pl.DataFrame): The benchmark fixture containing benchmark returns.
+
+    Verifies:
+        1. The function returns a Data object when given pandas DataFrames.
+        2. The returns_pd attribute matches the input returns DataFrame.
+        3. The benchmark_pd attribute matches the input benchmark DataFrame.
+    """
     x = returns.to_pandas().set_index("Date")
     y = benchmark.to_pandas().set_index("Date")
 

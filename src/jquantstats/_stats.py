@@ -168,33 +168,6 @@ class Stats:
         factor = np.sqrt(periods) if annualize else 1
         return series.std() * factor
 
-    @to_frame
-    def rolling_volatility(self, series: pl.Expr, rolling_period=126, periods_per_year=252) -> pl.Expr:
-        return series.rolling_std(window_size=rolling_period) * np.sqrt(periods_per_year)
-
-    @to_frame
-    def drawdown(self, series: pl.Expr, compounded=False, initial=1.0) -> pl.Expr:
-        """
-        Computes drawdown from the high-water mark.
-
-        Args:
-            series (pl.Expr): Polars expression for the return series.
-            compounded (bool): Whether to use compounded returns.
-            initial (float): Initial portfolio value (default is 1).
-
-        Returns:
-            pl.Expr: A Polars expression representing the drawdown.
-        """
-        if compounded:
-            # First compute cumulative compounded returns
-            equity = initial * (1 + series).cum_prod()
-        else:
-            # Simple cumulative sum of returns
-            equity = initial + series.cum_sum()
-
-        # equity = self.price(series, compounded, initial=initial)
-        return -100 * ((equity / equity.cum_max()) - 1)
-
     @columnwise_stat
     def payoff_ratio(self, series: pl.Series) -> float:
         """
@@ -258,18 +231,6 @@ class Stats:
         losses = series.filter(series < 0)
 
         return np.abs(wins.sum() / losses.sum())
-
-    def common_sense_ratio(self) -> dict[str, float]:
-        """
-        Measures the common sense ratio (profit factor * tail ratio)
-
-        Returns:
-            dict[str, float]: Dictionary mapping asset names to common sense ratios.
-        """
-        profit_factor = self.profit_factor()
-        tail_ratio = self.tail_ratio()
-
-        return {name: profit_factor[name] * tail_ratio[name] for name in profit_factor.keys()}
 
     @columnwise_stat
     def value_at_risk(self, series: pl.Series, sigma=1, alpha: float = 0.05) -> float:
@@ -435,23 +396,6 @@ class Stats:
         factor = periods or 1
         return res * np.sqrt(factor)
 
-    @to_frame
-    def rolling_sharpe(self, series: pl.Expr, rolling_period: int = 126, periods_per_year: int = 252) -> pl.Expr:
-        """
-        Calculates the rolling Sharpe ratio.
-
-        Args:
-            series (pl.Expr): The expression to calculate rolling Sharpe ratio for.
-            rolling_period (int, optional): The rolling window size. Defaults to 126.
-            periods_per_year (int, optional): Number of periods per year. Defaults to 252.
-
-        Returns:
-            pl.Expr: The rolling Sharpe ratio expression.
-        """
-        res = series.rolling_mean(window_size=rolling_period) / series.rolling_std(window_size=rolling_period)
-        factor = periods_per_year or 1
-        return res * np.sqrt(factor)
-
     @columnwise_stat
     def sortino(self, series: pl.Series, periods: int = 252) -> float:
         """
@@ -466,8 +410,7 @@ class Stats:
             float: The Sortino ratio value.
         """
 
-        downside_deviation = np.sqrt(((series.filter(series < 0)) ** 2).mean())
-
+        downside_deviation = np.sqrt(((series.filter(series < 0)) ** 2).sum() / series.count())
         ratio = series.mean() / downside_deviation
         return ratio * np.sqrt(periods)
 
@@ -492,6 +435,67 @@ class Stats:
         # Avoid division by zero
         sortino = mean_ret / downside.sqrt().fill_nan(0).fill_null(0)
         return sortino * (periods_per_year**0.5)
+
+    @to_frame
+    def rolling_sharpe(self, series: pl.Expr, rolling_period: int = 126, periods_per_year: int = 252) -> pl.Expr:
+        """
+        Calculates the rolling Sharpe ratio.
+
+        Args:
+            series (pl.Expr): The expression to calculate rolling Sharpe ratio for.
+            rolling_period (int, optional): The rolling window size. Defaults to 126.
+            periods_per_year (int, optional): Number of periods per year. Defaults to 252.
+
+        Returns:
+            pl.Expr: The rolling Sharpe ratio expression.
+        """
+        res = series.rolling_mean(window_size=rolling_period) / series.rolling_std(window_size=rolling_period)
+        factor = periods_per_year or 1
+        return res * np.sqrt(factor)
+
+    @to_frame
+    def rolling_volatility(self, series: pl.Expr, rolling_period=126, periods_per_year=252) -> pl.Expr:
+        return series.rolling_std(window_size=rolling_period) * np.sqrt(periods_per_year)
+
+    @to_frame
+    def drawdown(self, series: pl.Expr, compounded=False, initial=1.0) -> pl.Expr:
+        """
+        Computes drawdown from the high-water mark.
+
+        Args:
+            series (pl.Expr): Polars expression for the return series.
+            compounded (bool): Whether to use compounded returns.
+            initial (float): Initial portfolio value (default is 1).
+
+        Returns:
+            pl.Expr: A Polars expression representing the drawdown.
+        """
+        if compounded:
+            # First compute cumulative compounded returns
+            equity = initial * (1 + series).cum_prod()
+        else:
+            # Simple cumulative sum of returns
+            equity = initial + series.cum_sum()
+
+        # equity = self.price(series, compounded, initial=initial)
+        return -initial * ((equity / equity.cum_max()) - 1)
+
+    @staticmethod
+    def max_drawdown_single_series(series: pl.Series) -> float:
+        cumulative = (series + 1).cum_prod()
+        peak = cumulative.cum_max()
+        drawdown = cumulative / peak - 1
+        return -drawdown.min()
+
+    @columnwise_stat
+    def max_drawdown(self, series: pl.Expr) -> float:
+        return Stats.max_drawdown_single_series(series)
+
+    # @columnwise_stat
+    # def calmar(self, series):
+    #    dd = Stats.max_drawdown_single_series(series)
+    #    #dd = self.max_drawdown(series)
+    #    return 100*series.mean() / dd if dd > 0 else np.nan
 
     def adjusted_sortino(self, periods: int = 252) -> dict[str, float]:
         """
@@ -534,7 +538,6 @@ class Stats:
 
         # Drop nulls
         df = df.drop_nulls()
-        print(df)
 
         matrix = df.to_numpy()
         # Get actual Series

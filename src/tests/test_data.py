@@ -39,19 +39,55 @@ def test_tail(data):
     assert_frame_equal(x.returns, data.returns.tail(5))
 
 def test_all(data):
+    """
+    Tests that the all property returns a DataFrame with all data.
+
+    Args:
+        data (_Data): The data fixture containing a Data object.
+
+    Verifies:
+        The all property returns a DataFrame that includes all data.
+    """
     print(data.returns.head(5))
     x = data.all
     print(x)
 
 def test_assets(data):
+    """
+    Tests that the assets property returns the correct list of asset names.
+
+    Args:
+        data (_Data): The data fixture containing a Data object.
+
+    Verifies:
+        The assets property returns the expected list of asset names.
+    """
     x = data.assets
     assert x == ['AAPL', 'META', 'SPY -- Benchmark']
 
 def test_date_col(data):
+    """
+    Tests that the date_col property returns the correct date column name.
+
+    Args:
+        data (_Data): The data fixture containing a Data object.
+
+    Verifies:
+        The date_col property returns the expected date column name.
+    """
     x = data.date_col
     assert x == ["Date"]
 
 def test_periods(data):
+    """
+    Tests that the _periods_per_year property returns the correct number of periods.
+
+    Args:
+        data (_Data): The data fixture containing a Data object.
+
+    Verifies:
+        The _periods_per_year property returns the expected number of periods (252 for daily data).
+    """
     assert data._periods_per_year == 252
 
 def test_periods_edge_cases(data):
@@ -207,24 +243,88 @@ def test_resample(data):
     #assert monthly_data.returns.index.freq == 'ME'  # Monthly frequency
 
 def test_stats(data):
+    """
+    Tests that the stats property returns a non-None value.
+
+    Args:
+        data (_Data): The data fixture containing a Data object.
+
+    Verifies:
+        The stats property returns a non-None value.
+    """
     assert data.stats is not None
 
 def test_plots(data):
+    """
+    Tests that the plots property returns a non-None value.
+
+    Args:
+        data (_Data): The data fixture containing a Data object.
+
+    Verifies:
+        The plots property returns a non-None value.
+    """
     assert data.plots is not None
 
 def test_all_no_benchmark(data_no_benchmark):
+    """
+    Tests that the all property works correctly when there is no benchmark.
+
+    Args:
+        data_no_benchmark (_Data): The data_no_benchmark fixture containing a Data object with no benchmark.
+
+    Verifies:
+        The all property returns a non-None value when there is no benchmark.
+    """
     assert data_no_benchmark.all is not None
 
 def test_assets_no_benchmark(data_no_benchmark):
+    """
+    Tests that the assets property works correctly when there is no benchmark.
+
+    Args:
+        data_no_benchmark (_Data): The data_no_benchmark fixture containing a Data object with no benchmark.
+
+    Verifies:
+        The assets property returns a non-None value when there is no benchmark.
+    """
     assert data_no_benchmark.assets is not None
 
 def test_copy_no_benchmark(data_no_benchmark):
+    """
+    Tests that the copy method works correctly when there is no benchmark.
+
+    Args:
+        data_no_benchmark (_Data): The data_no_benchmark fixture containing a Data object with no benchmark.
+
+    Verifies:
+        1. The copied object has non-None returns.
+        2. The copied object has None benchmark.
+    """
     x = data_no_benchmark.copy()
     assert x.returns is not None
     assert x.benchmark is None
 
 def test_benchmark_pd_no_benchmark(data_no_benchmark):
+    """
+    Tests that the benchmark_pd property is None when there is no benchmark.
+
+    Args:
+        data_no_benchmark (_Data): The data_no_benchmark fixture containing a Data object with no benchmark.
+
+    Verifies:
+        The benchmark_pd property is None when there is no benchmark.
+    """
     assert data_no_benchmark.benchmark_pd is None
 
 def test_all_pd(data):
+    """
+    Tests that the all_pd property returns a pandas DataFrame with all data.
+
+    Args:
+        data (_Data): The data fixture containing a Data object.
+
+    Verifies:
+        The all_pd property returns a pandas DataFrame.
+    """
     print(data.all_pd)

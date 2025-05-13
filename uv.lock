@@ -541,7 +541,7 @@ requires-dist = [
     { name = "pyarrow", specifier = ">=20.0.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = "==8.3.5" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = "==6.1.1" },
-    { name = "quantstats", marker = "extra == 'dev'" },
+    { name = "quantstats", marker = "extra == 'dev'", specifier = "==0.0.64" },
     { name = "scipy", specifier = ">=1.15.3" },
     { name = "yfinance", marker = "extra == 'dev'", specifier = "==0.2.61" },
 ]
