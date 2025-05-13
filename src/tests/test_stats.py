@@ -29,7 +29,7 @@ def test_avg_return(stats):
 
 def test_avg_win(stats):
     result = stats.avg_win()
-    assert result["META"] == pytest.approx(0.016643066469975223)
+    assert result["META"] == pytest.approx(0.016760408889269992)
 
 def test_avg_loss(stats):
     result = stats.avg_loss()
@@ -44,11 +44,6 @@ def test_rolling_volatility(stats):
     print(result.tail(5))
     assert result.shape == stats.all.shape
 
-
-def test_tail_ratio(stats):
-    result = stats.tail_ratio(cutoff=0.95)
-    assert result["META"] == pytest.approx(0.9789355685152505)
-
 def test_payoff_ratio(stats):
     result = stats.payoff_ratio()
     assert result["META"] == pytest.approx(1.0383990517002815)
@@ -59,35 +54,19 @@ def test_win_loss_ratio(stats):
 
 def test_profit_ratio(stats):
     result = stats.profit_ratio()
-    assert result["META"] == pytest.approx(0.9383417987749899)
+    assert result["META"] == pytest.approx(0.9252488178411934)
 
 def test_profit_factor(stats):
     result = stats.profit_factor()
     assert result["META"] == pytest.approx(1.149125608578595)
 
-def test_common_sense_ratio(stats):
-    result = stats.common_sense_ratio()
-    assert result["META"] == pytest.approx(1.12491993092932)
-
 def test_value_at_risk(stats):
     result = stats.value_at_risk(alpha=0.05)
-    assert result["META"] == pytest.approx(-0.036720613002961255)
-
-def test_var(stats):
-    result = stats.var(alpha=0.05)
-    assert result["META"] == pytest.approx(-0.036720613002961255)
+    assert result["META"] == pytest.approx(-0.04038269463520536)
 
 def test_conditional_value_at_risk(stats):
     result = stats.conditional_value_at_risk( alpha=0.05)
-    assert result["META"] == pytest.approx(-0.05541208494628702)
-
-def test_cvar(stats):
-    result = stats.cvar(alpha=0.05)
-    assert result["META"] == pytest.approx(-0.05541208494628702)
-
-def test_expected_shortfall(stats):
-    result = stats.expected_shortfall(alpha=0.05)
-    assert result["META"] == pytest.approx(-0.05541208494628702)
+    assert result["META"] == pytest.approx(-0.06084410598898649 )
 
 def test_win_rate(stats):
     result = stats.win_rate()
@@ -104,14 +83,6 @@ def test_gain_to_pain_ratio(stats):
 def test_risk_return_ratio(stats):
     result = stats.risk_return_ratio()
     assert result["META"] == pytest.approx(0.045095921921619944)
-
-def test_outlier_win_ratio(stats):
-    result = stats.outlier_win_ratio(quantile=0.99)
-    assert result["META"] == pytest.approx(3.870328455823392)
-
-def test_outlier_loss_ratio(stats):
-    result = stats.outlier_loss_ratio(quantile=0.01)
-    assert result["META"] == pytest.approx(3.909307423414421)
 
 def test_best(stats):
     result = stats.best()

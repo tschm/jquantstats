@@ -222,3 +222,7 @@ class Data:
 
         periods_per_year = round((365 * 24 * 60 * 60) / seconds)
         return int(periods_per_year)
+
+    def items(self):
+        for col in self.assets:
+            yield col, self.all[col]

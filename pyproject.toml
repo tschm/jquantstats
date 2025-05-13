@@ -13,6 +13,7 @@ dependencies = [
     "polars==1.29.0",
     "pandas>=2.2.3",
     "pyarrow>=20.0.0",
+    "scipy>=1.15.3",
 ]
 
 [project.urls]
@@ -24,8 +25,10 @@ dev = [
     "pytest==8.3.5",
     "pre-commit==4.2.0",
     "yfinance==0.2.61",
-    "quantstats==0.0.64"
+    "ipython==8.0.0",
+    "quantstats"
 ]
+
 
 [tool.ruff]
 line-length = 120
