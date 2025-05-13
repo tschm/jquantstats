@@ -19,7 +19,7 @@ repos:
     rev: v0.44.0
     hooks:
       - id: markdownlint
-        args: [ "--ignore", "book/**/*.md" ]
+        args: [ "--ignore", "book/**/*.md", "--ignore", "opinion.md" ]
 
   - repo: https://github.com/asottile/pyupgrade
     rev: v3.19.1
