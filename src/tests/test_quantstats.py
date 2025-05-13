@@ -129,7 +129,7 @@ def test_exposure(stats, aapl):
 def test_sortino(stats, aapl):
     x = stats.sortino(periods=252)
     y = qs.stats.sortino(aapl)
-    assert x["AAPL"] ==  pytest.approx(y, abs=1e-6)
+    assert x["AAPL"] == pytest.approx(y, abs=1e-6)
 
 def test_information_ratio(stats, aapl, benchmark_pd):
     x = stats.information_ratio()
