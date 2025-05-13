@@ -24,7 +24,7 @@ dev = [
     "pytest==8.3.5",
     "pre-commit==4.2.0",
     "yfinance==0.2.61",
-    "ipython==8.36.0",
+    "ipython==9.2.0",
     "quantstats==0.0.64"
 ]
 
