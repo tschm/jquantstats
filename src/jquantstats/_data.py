@@ -32,7 +32,6 @@ class Data:
 
     def __post_init__(self):
         # You need at least two points
-        print(self.index.shape)
         if self.index.shape[0] < 2:
             raise ValueError("Index must contain at least two timestamps.")
 

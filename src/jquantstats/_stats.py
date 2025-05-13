@@ -538,7 +538,6 @@ class Stats:
 
         # Drop nulls
         df = df.drop_nulls()
-        print(df)
 
         matrix = df.to_numpy()
         # Get actual Series

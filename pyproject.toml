@@ -1,8 +1,7 @@
 [project]
 name = 'jquantstats'
 version = "0.0.0"
-description = "Toying with quantstats"
-# Please add authors and correct the email...
+description = "Analytics for quants"
 authors = [{name='tschm', email= 'thomas.schmelzer@gmail.com'}]
 readme = "README.md"
 requires-python = ">=3.10"
