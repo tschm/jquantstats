@@ -51,7 +51,7 @@ packages = ["src/jquantstats"]
 include = [
     "LICENSE",    # Ensure the LICENSE file is included in your package
     "README.md",
-    "jquantstats"
+    "src/jquantstats"
 ]
 
 [tool.bandit]
