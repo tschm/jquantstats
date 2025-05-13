@@ -5,6 +5,7 @@ import pandas as pd
 import polars as pl
 
 from ._plots import Plots
+from ._reports import Reports
 from ._stats import Stats
 
 
@@ -67,6 +68,10 @@ class Data:
             Stats: An instance of the Stats class initialized with this data.
         """
         return Stats(self)
+
+    @property
+    def reports(self) -> "Reports":
+        return Reports(self)
 
     @property
     def date_col(self) -> list[str]:
