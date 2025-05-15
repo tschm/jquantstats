@@ -1,33 +1,47 @@
-# this job can be used to identify missing and obsolete dependencies
+# Workflow: Deptry
+# Purpose: This workflow identifies missing and obsolete dependencies in the project.
+#          It helps maintain a clean dependency tree by detecting unused packages and
+#          implicit dependencies that should be explicitly declared.
 name: "Deptry"
 
+# Trigger: This workflow runs on every push and on pull requests to the main branch
 on:
   push:
   pull_request:
-    # The branches below must be a subset of the branches above
+    # Only run on pull requests targeting the main branch
     branches: [ main ]
 
+# Permissions: Only read access to repository contents is needed
 permissions:
     contents: read
 
 jobs:
+  # Job: Dependencies
+  # Purpose: Checks the project's dependency health using deptry
   Dependencies:
     runs-on: ubuntu-latest
 
     steps:
+      # Step: Checkout the repository code
       - name: Checkout ${{ github.repository }}
         uses: actions/checkout@v4
 
+      # Step: Set up Python environment
+      # Uses the latest available Python 3.x version
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
 
+      # Step: Install deptry tool
+      # Updates pip and installs deptry without caching to ensure latest version
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install --no-cache-dir deptry
 
+      # Step: Run deptry analysis
+      # Analyzes the src/jquantstats directory for dependency issues
       - name: Run Deptry
         shell: bash
         run: deptry src/jquantstats
