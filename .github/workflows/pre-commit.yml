@@ -1,14 +1,23 @@
+# Workflow: pre-commit
+# Purpose: This workflow runs pre-commit checks on the codebase to ensure code quality
+#          and consistency. It automatically validates code style, formatting, and other
+#          checks defined in the pre-commit configuration.
 name: pre-commit
 
+# Trigger: This workflow runs on every push to the repository
 on:
   push
 
+# Permissions: Only read access to repository contents is needed
 permissions:
   contents: read
 
-
 jobs:
+  # Job: pre-commit
+  # Purpose: Executes the pre-commit checks against the codebase
   pre-commit:
     runs-on: ubuntu-latest
     steps:
+      # Step: Run pre-commit checks using the cradle action
+      # This action handles the checkout of code and runs all pre-commit hooks
       - uses: tschm/cradle/actions/pre-commit@v0.1.63

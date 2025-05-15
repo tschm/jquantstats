@@ -1,57 +1,82 @@
+# Workflow: Documentation Book
+# Purpose: This workflow generates comprehensive documentation for the project, including
+#          API documentation, test coverage reports, and processed Jupyter notebooks.
+#          It then combines these into a documentation book and publishes it.
 name: "book"
 
+# Trigger: This workflow runs on every push to the repository
 on:
 - push
 
-
+# Permissions: Write access to checks for test reports and read access to repository contents
 permissions:
     checks: write
     contents: read
 
 jobs:
-
+  # Job: pdoc
+  # Purpose: Generates API documentation using pdoc
   pdoc:
     runs-on: "ubuntu-latest"
     steps:
+      # Step: Set up the virtual environment
       - name: "Build the virtual environment"
         uses: tschm/cradle/actions/environment@v0.1.63
 
+      # Step: Generate API documentation with pdoc
+      # Creates documentation from the source code in src/jquantstats
       - uses: tschm/cradle/actions/pdoc@v0.1.63
         with:
           source-folder: src/jquantstats
 
-
+  # Job: test
+  # Purpose: Runs tests and generates coverage reports
   test:
     runs-on: "ubuntu-latest"
     steps:
+      # Step: Set up the virtual environment
       - name: "Build the virtual environment"
         uses: tschm/cradle/actions/environment@v0.1.63
 
+      # Step: Run tests and generate coverage reports
+      # Also uploads coverage data to Coveralls if enabled
       - uses: tschm/cradle/actions/coverage@main
         with:
           tests-folder: src/tests
           source-folder: src/jquantstats
           coveralls: 'true'
 
+  # Job: jupyter
+  # Purpose: Processes Jupyter notebooks for inclusion in documentation
   jupyter:
     runs-on: "ubuntu-latest"
     steps:
+      # Step: Set up the virtual environment
       - name: "Build the virtual environment"
         uses: tschm/cradle/actions/environment@v0.1.63
 
+      # Step: Process Jupyter notebooks
+      # Executes and prepares notebooks for documentation
       - uses: tschm/cradle/actions/jupyter@v0.1.63
 
+  # Job: book
+  # Purpose: Combines and publishes the documentation
   book:
     runs-on: "ubuntu-latest"
+    # This job depends on the completion of test, pdoc, and jupyter jobs
     needs: [test, pdoc, jupyter]
 
+    # Elevated permissions needed to publish the documentation
     permissions:
       contents: write
 
     steps:
+      # Step: Checkout the repository code
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # Step: Upload the generated documentation book
+      # Skipped when running locally with 'act' to prevent accidental deployments
       - name: Upload the book
         if: ${{ env.ACT != 'true' }}  # Skip if running with 'act'
         uses: tschm/cradle/actions/book@v0.1.63

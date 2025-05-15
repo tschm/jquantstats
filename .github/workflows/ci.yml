@@ -1,25 +1,40 @@
+# Workflow: Continuous Integration
+# Purpose: This workflow runs the test suite across multiple operating systems and Python versions
+#          to ensure cross-platform compatibility and verify that the code works as expected
+#          in all supported environments.
 name: "ci"
 
+# Trigger: This workflow runs on every push to the repository
 on:
 - push
 
 jobs:
+  # Job: test
+  # Purpose: Runs the test suite in a matrix of different environments
   test:
-    # The type of runner that the job will run on
+    # The type of runner that the job will run on - determined by the matrix
     runs-on: ${{ matrix.os }}
 
+    # Matrix strategy: Test on multiple OS and Python version combinations
+    # This ensures the code works across different platforms and Python versions
     strategy:
       matrix:
+        # Test on Ubuntu, Windows, and macOS
         os: [ ubuntu-latest, windows-latest, macos-latest ]
+        # Test on Python 3.10, 3.11, 3.12, and 3.13
         python-version: [ '3.10', '3.11', '3.12', '3.13' ]
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+      # Step: Set up the virtual environment with the specified Python version
+      # This prepares the environment for running tests
       - name: "Build the virtual environment"
         uses: tschm/cradle/actions/environment@v0.1.63
         with:
           python-version: ${{ matrix.python-version }}
 
+      # Step: Run the test suite
+      # Executes all tests in the src/tests directory
       - uses: tschm/cradle/actions/test@v0.1.63
         with:
           tests-folder: src/tests
