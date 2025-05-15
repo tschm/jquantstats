@@ -11,7 +11,7 @@ dependencies = [
     "kaleido==0.2.1",
     "polars==1.29.0",
     "pandas>=2.2.3",
-    "pyarrow",
+    "pyarrow>=20.0.0",
     "scipy>=1.15.3"
 ]
 
