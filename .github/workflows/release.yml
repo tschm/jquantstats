@@ -24,7 +24,7 @@ jobs:
       # Step: Generate a new version tag using the cradle action
       - name: Generate Tag
         id: tag_step
-        uses: tschm/cradle/actions/tag@v0.1.63
+        uses: tschm/cradle/actions/tag@v0.1.64
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
