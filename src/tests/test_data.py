@@ -88,7 +88,7 @@ def test_periods(data):
     Verifies:
         The _periods_per_year property returns the expected number of periods (252 for daily data).
     """
-    assert data._periods_per_year == 252
+    assert data._periods_per_year == pytest.approx(251.56913616203425)
 
 def test_periods_edge_cases(data):
     """
@@ -112,7 +112,7 @@ def test_periods_edge_cases(data):
     })
     weekly_data = build_data(returns=weekly_returns)
     print(weekly_data._periods_per_year)
-    assert weekly_data._periods_per_year == 52
+    assert weekly_data._periods_per_year == pytest.approx(52.142857142857146)
     # Monthly data
     # Create dates with monthly intervals
     monthly_dates = [date(2023, 1, 1), date(2023, 2, 1), date(2023, 3, 1), date(2023, 4, 1), date(2023, 5, 1),
@@ -122,7 +122,7 @@ def test_periods_edge_cases(data):
         "returns": [0.01] * 10
     })
     monthly_data = build_data(returns=monthly_returns)
-    assert monthly_data._periods_per_year == 12
+    assert monthly_data._periods_per_year == pytest.approx(12.032967032967033)
 
 
 def test_post_init():

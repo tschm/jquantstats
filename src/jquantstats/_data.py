@@ -241,7 +241,7 @@ class Data:
         return Data(returns=self.returns.tail(n), benchmark=self.benchmark.tail(n), index=self.index.tail(n))
 
     @property
-    def _periods_per_year(self) -> int:
+    def _periods_per_year(self) -> float:
         """
         Estimate the number of periods per year based on average frequency in the index.
         Assumes `self.index` is a Polars DataFrame with a single datetime column.
@@ -261,8 +261,7 @@ class Data:
         # Convert Duration (timedelta) to seconds
         seconds = mean_diff.total_seconds() if isinstance(mean_diff, timedelta) else mean_diff / timedelta(seconds=1)
 
-        periods_per_year = round((365 * 24 * 60 * 60) / seconds)
-        return int(periods_per_year)
+        return (365 * 24 * 60 * 60) / seconds
 
     def items(self) -> tuple[str, pl.Series]:
         """

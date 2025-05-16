@@ -379,7 +379,7 @@ class Stats:
         return np.round((series.filter(series != 0).count() / self.all.height), decimals=2)
 
     @columnwise_stat
-    def sharpe(self, series: pl.Series, periods: int = 252) -> float:
+    def sharpe(self, series: pl.Series, periods: float = None) -> float:
         """
         Calculates the Sharpe ratio of asset returns.
 
@@ -390,6 +390,8 @@ class Stats:
         Returns:
             float: The Sharpe ratio value.
         """
+        periods = periods or self.data._periods_per_year
+
         divisor = series.std(ddof=1)
 
         res = series.mean() / divisor
