@@ -501,7 +501,7 @@ def test_max_drawdown(stats):
         3. The max_drawdown method returns the same values as the maximum of the drawdown series.
     """
     # Calculate maximum drawdowns
-    max_dd = stats.max_drawdown()
+    max_dd = stats.max_drawdown(compounded=True)
 
     # Verify structure
     assert isinstance(max_dd, dict)
@@ -515,3 +515,13 @@ def test_max_drawdown(stats):
     dd = stats.drawdown()
     for col in stats.data.assets:
         assert max_dd[col] == pytest.approx(dd[col].max(), abs=0.0001)
+
+    max_dd = stats.max_drawdown(compounded=False)
+
+    # Verify structure
+    assert isinstance(max_dd, dict)
+    assert set(max_dd.keys()) == set(stats.data.assets)
+
+    # Verify values for specific assets
+    assert max_dd["META"] == pytest.approx(1.00, abs=0.01)
+    assert max_dd["AAPL"] == pytest.approx(1.00, abs=0.01)

@@ -462,7 +462,7 @@ class Stats:
 
     @to_frame
     def drawdown(self, series: pl.Series, compounded=True) -> pl.Series:
-        equity = self.prices(series)
+        equity = self.prices(series, compounded=compounded)
         d = (equity / equity.cum_max()) - 1
         return -d
 
@@ -474,15 +474,15 @@ class Stats:
             return series.cum_prod()
 
     @staticmethod
-    def max_drawdown_single_series(series: pl.Series) -> float:
-        cumulative = (series + 1).cum_prod()
-        peak = cumulative.cum_max()
-        drawdown = cumulative / peak - 1
+    def max_drawdown_single_series(series: pl.Series, compounded=True) -> float:
+        price = Stats.prices(series, compounded=compounded)
+        peak = price.cum_max()
+        drawdown = price / peak - 1
         return -drawdown.min()
 
     @columnwise_stat
-    def max_drawdown(self, series: pl.Expr) -> float:
-        return Stats.max_drawdown_single_series(series)
+    def max_drawdown(self, series: pl.Expr, compounded=True) -> float:
+        return Stats.max_drawdown_single_series(series, compounded=compounded)
 
     # @columnwise_stat
     # def calmar(self, series):
