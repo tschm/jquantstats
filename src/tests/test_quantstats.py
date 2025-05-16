@@ -54,8 +54,8 @@ def test_sharpe_ratio(stats, aapl):
     Verifies:
         The sharpe ratio calculated by our library matches the one from quantstats.
     """
-    x = stats.sharpe()
-    y = qs.stats.sharpe(aapl)
+    x = stats.sharpe(periods=252)
+    y = qs.stats.sharpe(aapl, periods=252)
 
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
 

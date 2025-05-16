@@ -41,4 +41,5 @@ def test_metric(reports, metrics):
     Verifies:
         The metrics method returns a DataFrame that matches the expected metrics.
     """
+    #reports.metrics().write_csv("metrics.csv")
     assert_frame_equal(metrics, reports.metrics())
