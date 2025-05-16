@@ -145,8 +145,8 @@ def test_volatility(stats, aapl):
     Verifies:
         The volatility calculated by our library matches the one from quantstats.
     """
-    x = stats.volatility()
-    y = qs.stats.volatility(aapl)
+    x = stats.volatility(periods=252)
+    y = qs.stats.volatility(aapl, periods=252)
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
 
 def test_payoff_ratio(stats, aapl):

@@ -1,4 +1,5 @@
 import numpy as np
+import polars as pl
 import pytest
 
 
@@ -421,3 +422,96 @@ def test_r2(stats):
     result = stats.r2()
     expected = stats.r_squared()
     assert result == expected
+
+def test_drawdowns(stats):
+    """
+    Tests that the drawdown method calculates drawdowns correctly.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        1. The drawdown method returns a DataFrame with the expected structure.
+        2. The drawdown values are calculated correctly.
+        3. The maximum drawdown values match expected values.
+        4. Drawdown values are always non-negative (since they represent losses).
+    """
+    # Test the drawdown method returns a DataFrame with the expected structure
+    dd = stats.drawdown()
+    assert isinstance(dd, pl.DataFrame)
+    assert dd.shape[0] == stats.all.shape[0]  # Same number of rows as input data
+
+    # Check that all columns from returns and benchmark are present
+    for col in stats.data.returns.columns:
+        assert col in dd.columns
+    if stats.data.benchmark is not None:
+        for col in stats.data.benchmark.columns:
+            assert col in dd.columns
+
+    # Verify drawdown values are always non-negative (since they represent losses)
+    for col in dd.columns:
+        if col not in stats.data.date_col:  # Skip date column
+            assert (dd[col] >= 0).all()
+
+    # Test specific drawdown values for META
+    # The maximum drawdown for META should be approximately 0.76 (76%)
+    max_dd = dd["META"].max()
+    assert max_dd == pytest.approx(0.76, abs=0.01)
+
+    # Test that drawdown is zero at peak equity points
+    prices = stats.prices(stats.all["META"])
+    peak_indices = prices.cum_max() == prices
+    dd_at_peaks = dd.filter(peak_indices)["META"]
+    assert (dd_at_peaks == 0).all()
+
+def test_drawdowns_edge_case(edge):
+    """
+    Tests that the drawdown method handles edge cases correctly.
+
+    Args:
+        edge: The edge fixture containing a Data object with edge case data.
+
+    Verifies:
+        1. The drawdown method works with constant zero returns.
+        2. The drawdown values are all zero when returns are all zero.
+    """
+    # Test the drawdown method with constant zero returns
+    dd = edge.stats.drawdown()
+
+    # Verify the structure
+    assert isinstance(dd, pl.DataFrame)
+    assert dd.shape[0] == edge.stats.all.shape[0]
+
+    # For constant zero returns, drawdowns should all be zero
+    for col in dd.columns:
+        if col not in edge.stats.data.date_col:  # Skip date column
+            assert (dd[col] == 0).all()
+
+
+def test_max_drawdown(stats):
+    """
+    Tests that the max_drawdown method calculates maximum drawdown correctly.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        1. The max_drawdown method returns a dictionary with the expected structure.
+        2. The maximum drawdown values match the expected values.
+        3. The max_drawdown method returns the same values as the maximum of the drawdown series.
+    """
+    # Calculate maximum drawdowns
+    max_dd = stats.max_drawdown()
+
+    # Verify structure
+    assert isinstance(max_dd, dict)
+    assert set(max_dd.keys()) == set(stats.data.assets)
+
+    # Verify values for specific assets
+    assert max_dd["META"] == pytest.approx(0.76, abs=0.01)
+    assert max_dd["AAPL"] == pytest.approx(0.82, abs=0.01)
+
+    # Verify that max_drawdown returns the same values as the maximum of the drawdown series
+    dd = stats.drawdown()
+    for col in stats.data.assets:
+        assert max_dd[col] == pytest.approx(dd[col].max(), abs=0.0001)

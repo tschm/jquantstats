@@ -151,7 +151,7 @@ class Stats:
         return self._mean_negative_expr(series)
 
     @columnwise_stat
-    def volatility(self, series: pl.Series, periods: int = 252, annualize: bool = True) -> float:
+    def volatility(self, series: pl.Series, periods: float = None, annualize: bool = True) -> float:
         """
         Calculates the volatility of returns:
         - Std dev of returns
@@ -165,6 +165,7 @@ class Stats:
         Returns:
             float: The volatility value.
         """
+        periods = periods or self.data._periods_per_year
         factor = np.sqrt(periods) if annualize else 1
         return series.std() * factor
 
@@ -399,7 +400,7 @@ class Stats:
         return res * np.sqrt(factor)
 
     @columnwise_stat
-    def sortino(self, series: pl.Series, periods: int = 252) -> float:
+    def sortino(self, series: pl.Series, periods: float = None) -> float:
         """
         Calculates the Sortino ratio: mean return divided by downside deviation.
         Based on Red Rock Capital's Sortino ratio paper.
@@ -411,7 +412,7 @@ class Stats:
         Returns:
             float: The Sortino ratio value.
         """
-
+        periods = periods or self.data._periods_per_year
         downside_deviation = np.sqrt(((series.filter(series < 0)) ** 2).sum() / series.count())
         ratio = series.mean() / downside_deviation
         return ratio * np.sqrt(periods)
@@ -460,27 +461,17 @@ class Stats:
         return series.rolling_std(window_size=rolling_period) * np.sqrt(periods_per_year)
 
     @to_frame
-    def drawdown(self, series: pl.Expr, compounded=False, initial=1.0) -> pl.Expr:
-        """
-        Computes drawdown from the high-water mark.
+    def drawdown(self, series: pl.Series, compounded=True) -> pl.Series:
+        equity = self.prices(series)
+        d = (equity / equity.cum_max()) - 1
+        return -d
 
-        Args:
-            series (pl.Expr): Polars expression for the return series.
-            compounded (bool): Whether to use compounded returns.
-            initial (float): Initial portfolio value (default is 1).
-
-        Returns:
-            pl.Expr: A Polars expression representing the drawdown.
-        """
+    @staticmethod
+    def prices(series: pl.Series, compounded=True) -> pl.Series:
         if compounded:
-            # First compute cumulative compounded returns
-            equity = initial * (1 + series).cum_prod()
+            return (1.0 + series).cum_prod()
         else:
-            # Simple cumulative sum of returns
-            equity = initial + series.cum_sum()
-
-        # equity = self.price(series, compounded, initial=initial)
-        return -initial * ((equity / equity.cum_max()) - 1)
+            return series.cum_prod()
 
     @staticmethod
     def max_drawdown_single_series(series: pl.Series) -> float:
@@ -499,7 +490,7 @@ class Stats:
     #    #dd = self.max_drawdown(series)
     #    return 100*series.mean() / dd if dd > 0 else np.nan
 
-    def adjusted_sortino(self, periods: int = 252) -> dict[str, float]:
+    def adjusted_sortino(self, periods: float = None) -> dict[str, float]:
         """
         Jack Schwager's adjusted Sortino ratio for direct comparison to Sharpe.
         See: https://archive.is/wip/2rwFW
@@ -587,7 +578,7 @@ class Stats:
             return 0.0
 
     @columnwise_stat
-    def greeks(self, series: pl.Series, periods_per_year: int = 252, benchmark: str = None) -> dict[str, float]:
+    def greeks(self, series: pl.Series, periods_per_year: float = None, benchmark: str = None) -> dict[str, float]:
         """
         Calculates alpha and beta of the portfolio
 
@@ -599,6 +590,10 @@ class Stats:
         Returns:
             dict[str, float]: Dictionary containing alpha and beta values.
         """
+        periods_per_year = periods_per_year or self.data._periods_per_year
+
+        # period_col = benchmark or self.data.benchmark.columns[0]
+
         # find covariance
         benchmark_col = benchmark or self.data.benchmark.columns[0]
 
