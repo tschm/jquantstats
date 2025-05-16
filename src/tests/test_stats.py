@@ -368,7 +368,7 @@ def test_information_ratio(stats):
     Verifies:
         The information ratio value for AAPL matches the expected value.
     """
-    result = stats.information_ratio()
+    result = stats.information_ratio(periods_per_year=252)
     assert result["AAPL"] == pytest.approx(0.45766323376481344)
 
 def test_greeks(stats):

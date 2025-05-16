@@ -418,7 +418,7 @@ class Stats:
         return ratio * np.sqrt(periods)
 
     @to_frame
-    def rolling_sortino(self, series: pl.Expr, rolling_period: int = 126, periods_per_year: int = 252) -> pl.Expr:
+    def rolling_sortino(self, series: pl.Expr, rolling_period: int = 126, periods_per_year: float = None) -> pl.Expr:
         """
         Calculates the rolling Sortino ratio.
 
@@ -430,6 +430,8 @@ class Stats:
         Returns:
             pl.Expr: The rolling Sortino ratio expression.
         """
+        periods_per_year = periods_per_year or self.data._periods_per_year
+
         mean_ret = series.rolling_mean(window_size=rolling_period)
 
         # Rolling downside deviation (squared negative returns averaged over window)
@@ -440,7 +442,7 @@ class Stats:
         return sortino * (periods_per_year**0.5)
 
     @to_frame
-    def rolling_sharpe(self, series: pl.Expr, rolling_period: int = 126, periods_per_year: int = 252) -> pl.Expr:
+    def rolling_sharpe(self, series: pl.Expr, rolling_period: int = 126, periods_per_year: float = None) -> pl.Expr:
         """
         Calculates the rolling Sharpe ratio.
 
@@ -452,12 +454,12 @@ class Stats:
         Returns:
             pl.Expr: The rolling Sharpe ratio expression.
         """
+        periods_per_year = periods_per_year or self.data._periods_per_year
         res = series.rolling_mean(window_size=rolling_period) / series.rolling_std(window_size=rolling_period)
-        factor = periods_per_year or 1
-        return res * np.sqrt(factor)
+        return res * np.sqrt(periods_per_year)
 
     @to_frame
-    def rolling_volatility(self, series: pl.Expr, rolling_period=126, periods_per_year=252) -> pl.Expr:
+    def rolling_volatility(self, series: pl.Expr, rolling_period=126, periods_per_year: float = None) -> pl.Expr:
         return series.rolling_std(window_size=rolling_period) * np.sqrt(periods_per_year)
 
     @to_frame
@@ -552,7 +554,7 @@ class Stats:
         return self.r_squared()
 
     @columnwise_stat
-    def information_ratio(self, series: pl.Series, periods_per_year: int = 252, benchmark: str = None) -> float:
+    def information_ratio(self, series: pl.Series, periods_per_year: float = None, benchmark: str = None) -> float:
         """
         Calculates the information ratio
         (basically the risk return ratio of the net profits)
@@ -565,6 +567,8 @@ class Stats:
         Returns:
             float: The information ratio value.
         """
+        periods_per_year = periods_per_year or self.data.periods_per_year
+
         benchmark_col = benchmark or self.data.benchmark.columns[0]
 
         active = series - self.data.benchmark[benchmark_col]

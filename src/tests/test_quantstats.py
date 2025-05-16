@@ -371,6 +371,6 @@ def test_information_ratio(stats, aapl, benchmark_pd):
     Verifies:
         The information ratio calculated by our library matches the one from quantstats.
     """
-    x = stats.information_ratio()
+    x = stats.information_ratio(periods_per_year=252)
     y = np.sqrt(252)*qs.stats.information_ratio(aapl, benchmark=benchmark_pd)
     assert x["AAPL"] ==  pytest.approx(y, abs=1e-6)
