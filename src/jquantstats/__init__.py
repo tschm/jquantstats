@@ -16,3 +16,4 @@ Example:
     >>> sharpe = data.stats.sharpe()
     >>> fig = data.plots.plot_returns_bars()
 """
+from .api import build_data

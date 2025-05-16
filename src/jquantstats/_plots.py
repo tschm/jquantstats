@@ -144,7 +144,7 @@ class Plots:
             >>> fig.show()
         """
         # Calculate drawdowns
-        dd = self.data.stats.drawdown(compounded=compounded, initial=100)
+        dd = 100 * self.data.stats.drawdown(compounded=compounded)
 
         # Create subplot structure
         fig = make_subplots(
