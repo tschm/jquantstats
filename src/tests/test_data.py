@@ -227,17 +227,15 @@ def test_resample(data):
         3. The resampling works with both compounded=False and compounded=True.
         4. The resampling works with different resample rules (YE, ME, etc.).
     """
-    # Test resampling to yearly frequency with compounded=False (default)
-    yearly_data = data.resample(every="1y", compounded=False)
+    # Test resampling to yearly frequency
+    yearly_data = data.resample(every="1y")
 
     # Verify the resampled data has the correct structure
     assert yearly_data.returns.shape[1] == data.returns.shape[1]  # Same number of columns
-    print(yearly_data.all)
     #assert yearly_data.returns.index.freq == 'YE'  # Yearly frequency
 
     # Test resampling to monthly frequency with compounded=True
-    monthly_data = data.resample(every="1mo", compounded=True)
-    print(monthly_data.all)
+    monthly_data = data.resample(every="1mo")
     # Verify the resampled data has the correct structure
     assert monthly_data.returns.shape[1] == data.returns.shape[1]  # Same number of columns
     #assert monthly_data.returns.index.freq == 'ME'  # Monthly frequency

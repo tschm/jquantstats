@@ -31,12 +31,13 @@ def test_plot_snapshot(plots):
     fig = plots.plot_snapshot()
     assert fig is not None
     assert hasattr(fig, 'show')
+    fig.show()
 
     # Test with custom parameters
-    fig = plots.plot_snapshot(title="Custom Title", compounded=False, log_scale=True)
+    fig = plots.plot_snapshot(title="Custom Title", log_scale=True)
     assert fig is not None
     assert hasattr(fig, 'show')
-
+    fig.show()
 
 def test_monthly_heatmap(plots):
     """
@@ -51,15 +52,15 @@ def test_monthly_heatmap(plots):
         3. The method works with different parameters.
     """
     print(plots.data.all)
-    print(plots.data.resample(every="1mo", compounded=False).all)
+    print(plots.data.resample(every="1mo").all)
 
     # Test with default parameters
-    fig = plots.monthly_heatmap(col="AAPL", compounded=False)
+    fig = plots.monthly_heatmap(col="AAPL")
     assert fig is not None
     assert hasattr(fig, 'show')
 
     # Test with custom parameters
     fig = plots.monthly_heatmap(col="AAPL", annot_size=10, cbar=False, returns_label="AAPL",
-                               compounded=False, fontname="Courier", ylabel=False)
+                                fontname="Courier", ylabel=False)
     assert fig is not None
     assert hasattr(fig, 'show')

@@ -463,8 +463,8 @@ class Stats:
         return series.rolling_std(window_size=rolling_period) * np.sqrt(periods_per_year)
 
     @to_frame
-    def drawdown(self, series: pl.Series, compounded=True) -> pl.Series:
-        equity = self.prices(series, compounded=compounded)
+    def drawdown(self, series: pl.Series) -> pl.Series:
+        equity = self.prices(series)
         d = (equity / equity.cum_max()) - 1
         return -d
 
@@ -476,15 +476,15 @@ class Stats:
             return series.cum_prod()
 
     @staticmethod
-    def max_drawdown_single_series(series: pl.Series, compounded=True) -> float:
-        price = Stats.prices(series, compounded=compounded)
+    def max_drawdown_single_series(series: pl.Series) -> float:
+        price = Stats.prices(series)
         peak = price.cum_max()
         drawdown = price / peak - 1
         return -drawdown.min()
 
     @columnwise_stat
-    def max_drawdown(self, series: pl.Expr, compounded=True) -> float:
-        return Stats.max_drawdown_single_series(series, compounded=compounded)
+    def max_drawdown(self, series: pl.Expr) -> float:
+        return Stats.max_drawdown_single_series(series)
 
     # @columnwise_stat
     # def calmar(self, series):

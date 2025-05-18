@@ -2,9 +2,135 @@ import calendar
 import dataclasses
 
 import numpy as np
+import pandas as pd
+import plotly.express as px
 import plotly.graph_objects as go
 import polars as pl
 from plotly.subplots import make_subplots
+
+
+def _plot_performance_dashboard(returns: pd.DataFrame, log_scale=False) -> go.Figure:
+    """
+    Plots a 3-panel performance dashboard using Plotly.
+
+    Parameters:
+        returns (pd.DataFrame): Daily returns (percent change), indexed by date.
+
+    Returns:
+        go.Figure: Plotly figure with 3 subplots:
+            - Cumulative Returns
+            - Drawdowns
+            - Monthly Returns
+    """
+
+    def hex_to_rgba(hex_color: str, alpha: float = 0.2) -> str:
+        """Convert hex color like '#1f77b4' to rgba string."""
+        hex_color = hex_color.lstrip("#")
+        r, g, b = tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
+        return f"rgba({r}, {g}, {b}, {alpha})"
+
+    tickers = returns.columns.tolist()
+    prices = (1 + returns).cumprod()
+
+    # Assign colors
+    palette = px.colors.qualitative.Plotly
+    COLORS = {ticker: palette[i % len(palette)] for i, ticker in enumerate(tickers)}
+    COLORS.update({f"{ticker}_light": hex_to_rgba(COLORS[ticker]) for ticker in tickers})
+
+    # Monthly returns
+    monthly_returns = returns.resample("ME").apply(lambda x: (1 + x).prod() - 1)
+    monthly_returns.index = monthly_returns.index.to_period("M").to_timestamp()
+
+    # Create figure
+    fig = make_subplots(
+        rows=3,
+        cols=1,
+        shared_xaxes=True,
+        row_heights=[0.5, 0.25, 0.25],
+        subplot_titles=["Cumulative Returns", "Drawdowns", "Monthly Returns"],
+    )
+
+    # 1. Cumulative Returns
+    for ticker in tickers:
+        fig.add_trace(
+            go.Scatter(
+                x=prices.index,
+                y=prices[ticker],
+                mode="lines",
+                name=ticker,
+                legendgroup=ticker,
+                line=dict(color=COLORS[ticker], width=2),
+                hovertemplate=f"<b>%{{x|%b %Y}}</b><br>{ticker}: %{{y:.2f}}x",
+                showlegend=True,
+            ),
+            row=1,
+            col=1,
+        )
+
+    # 2. Drawdowns
+    for ticker in tickers:
+        dd = (prices[ticker] - prices[ticker].cummax()) / prices[ticker].cummax()
+        fig.add_trace(
+            go.Scatter(
+                x=dd.index,
+                y=dd,
+                mode="lines",
+                fill="tozeroy",
+                fillcolor=COLORS[f"{ticker}_light"],
+                line=dict(color=COLORS[ticker], width=1),
+                name=ticker,
+                legendgroup=ticker,
+                hovertemplate=f"{ticker} Drawdown: %{{y:.2%}}",
+                showlegend=False,
+            ),
+            row=2,
+            col=1,
+        )
+
+    # Add zero line for drawdown
+    fig.add_hline(y=0, line_width=1, line_color="gray", row=2, col=1)
+
+    # 3. Monthly Returns
+    for ticker in tickers:
+        fig.add_trace(
+            go.Bar(
+                x=monthly_returns.index,
+                y=monthly_returns[ticker],
+                name=ticker,
+                legendgroup=ticker,
+                marker=dict(
+                    color=[COLORS[ticker] if val > 0 else COLORS[f"{ticker}_light"] for val in monthly_returns[ticker]],
+                    line=dict(width=0),
+                ),
+                opacity=0.8,
+                hovertemplate=f"{ticker} Monthly Return: %{{y:.2%}}",
+                showlegend=False,
+            ),
+            row=3,
+            col=1,
+        )
+
+    # Layout and styling
+    fig.update_layout(
+        title=f"{' vs '.join(tickers)} Performance Dashboard",
+        height=900,
+        hovermode="x unified",
+        plot_bgcolor="white",
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    )
+
+    fig.update_yaxes(title_text="Cumulative Return", row=1, col=1, tickformat=".2f")
+    fig.update_yaxes(title_text="Drawdown", row=2, col=1, tickformat=".0%")
+    fig.update_yaxes(title_text="Monthly Return", row=3, col=1, tickformat=".0%")
+
+    fig.update_xaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
+    fig.update_yaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
+
+    # Apply log scale to cumulative returns if requested
+    if log_scale:
+        fig.update_yaxes(type="log", row=1, col=1)
+
+    return fig
 
 
 @dataclasses.dataclass(frozen=True)
@@ -28,9 +154,7 @@ class Plots:
 
     data: "Data"  # type: ignore
 
-    def plot_snapshot(
-        self, title: str = "Portfolio Summary", compounded: bool = True, log_scale: bool = False
-    ) -> go.Figure:
+    def plot_snapshot(self, title: str = "Portfolio Summary", log_scale: bool = False) -> go.Figure:
         """
         Creates a comprehensive dashboard with multiple plots for portfolio analysis.
 
@@ -58,77 +182,7 @@ class Plots:
             >>> fig = data.plots.plot_snapshot(title="My Portfolio Performance")
             >>> fig.show()
         """
-        # Calculate drawdowns
-        dd = 100 * self.data.stats.drawdown(compounded=compounded)
-
-        # Create subplot structure
-        fig = make_subplots(
-            rows=3,
-            cols=1,
-            shared_xaxes=True,  # Share x-axis across all subplots
-            row_heights=[0.5, 0.25, 0.25],  # Allocate more space to cumulative returns
-            vertical_spacing=0.03,
-            subplot_titles=["Cumulative Return", "Drawdown", "Daily Return"],
-        )
-
-        # Plot cumulative returns for each asset
-        for col in self.data.returns.columns:
-            cum_returns = 100 * ((1 + self.data.returns[col]).cum_prod())  # Convert to percentage
-            fig.add_trace(
-                go.Scatter(
-                    x=self.data.index[self.data.index.columns[0]],
-                    y=cum_returns,
-                    name=col,
-                    mode="lines",
-                ),
-                row=1,
-                col=1,
-            )
-
-        # Plot drawdowns for each asset
-        for col in self.data.returns.columns:
-            fig.add_trace(
-                go.Scatter(
-                    x=self.data.index[self.data.index.columns[0]],
-                    y=dd[col],
-                    name=f"DD: {col}",
-                    mode="lines",
-                ),
-                row=2,
-                col=1,
-            )
-
-        # Plot daily returns for each asset
-        for col in self.data.assets:
-            fig.add_trace(
-                go.Scatter(
-                    x=self.data.index[self.data.index.columns[0]],
-                    y=self.data.all[col] * 100,  # Convert to percentage
-                    name=f"{col} Return",
-                    mode="lines",
-                ),
-                row=3,
-                col=1,
-            )
-
-        # Configure layout
-        fig.update_layout(
-            height=800,  # Taller figure for better visibility
-            title_text=title,
-            showlegend=True,
-            template="plotly_white",  # Clean white template
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        )
-
-        # Apply log scale to cumulative returns if requested
-        if log_scale:
-            fig.update_yaxes(type="log", row=1, col=1)
-
-        # Format y-axes
-        fig.update_yaxes(title="Cumulative Return (%)", row=1, col=1)
-        fig.update_yaxes(title="Drawdown", tickformat=".1%", row=2, col=1)
-        fig.update_yaxes(title="Daily Return (%)", row=3, col=1)
-
+        fig = _plot_performance_dashboard(returns=self.data.all_pd, log_scale=log_scale)
         return fig
 
     def monthly_heatmap(
@@ -137,7 +191,6 @@ class Plots:
         annot_size: int = 13,
         cbar: bool = True,
         returns_label: str = "Strategy",
-        compounded: bool = False,
         fontname: str = "Arial",
         ylabel: bool = True,
     ) -> go.Figure:
@@ -169,7 +222,7 @@ class Plots:
         date_col = self.data.index.columns[0]
 
         # Resample monthly
-        data = self.data.resample(every="1mo", compounded=compounded)
+        data = self.data.resample(every="1mo")
 
         # Prepare DataFrame with Year, Month, Return (%)
         result = data.all.with_columns(

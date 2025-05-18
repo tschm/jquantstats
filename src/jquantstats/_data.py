@@ -168,7 +168,7 @@ class Data:
         x = pl.concat([self.index, self.benchmark], how="horizontal")
         return x.to_pandas().set_index(self.date_col)
 
-    def resample(self, every: str = "1mo", compounded: bool = False) -> "Data":
+    def resample(self, every: str = "1mo") -> "Data":
         """
         Resamples returns and benchmark to a different frequency using Polars.
 
@@ -186,11 +186,7 @@ class Data:
             return df.group_by_dynamic(
                 index_column=self.index.columns[0], every=every, period=every, closed="right", label="right"
             ).agg(
-                [
-                    pl.col(col).sum().alias(col) if not compounded else ((pl.col(col) + 1.0).product() - 1.0).alias(col)
-                    for col in df.columns
-                    if col != self.index.columns[0]
-                ]
+                [((pl.col(col) + 1.0).product() - 1.0).alias(col) for col in df.columns if col != self.index.columns[0]]
             )
 
         resampled_returns = resample_frame(self.returns)
