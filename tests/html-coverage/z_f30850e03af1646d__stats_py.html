@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for src/jquantstats/_stats.py: 100%</title>
+    <title>Coverage for src/jquantstats/_stats.py: 99%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
     <link rel="stylesheet" href="style_cb_8e611ae1.css" type="text/css">
     <script src="coverage_html_cb_6fb7b396.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>src/jquantstats/_stats.py</b>:
-            <span class="pc_cov">100%</span>
+            <span class="pc_cov">99%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -55,8 +55,8 @@
         </aside>
         <h2>
             <span class="text">203 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">203<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">0<span class="text"> missing</span></button>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">202<span class="text"> run</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">1<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_f30850e03af1646d_api_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.8.0">coverage.py v7.8.0</a>,
-            created at 2025-05-18 14:05 +0000
+            created at 2025-05-18 15:34 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -545,8 +545,8 @@
     <p class="run"><span class="n"><a id="t463" href="#t463">463</a></span><span class="t">        <span class="key">return</span> <span class="nam">series</span><span class="op">.</span><span class="nam">rolling_std</span><span class="op">(</span><span class="nam">window_size</span><span class="op">=</span><span class="nam">rolling_period</span><span class="op">)</span> <span class="op">*</span> <span class="nam">np</span><span class="op">.</span><span class="nam">sqrt</span><span class="op">(</span><span class="nam">periods_per_year</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t464" href="#t464">464</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t465" href="#t465">465</a></span><span class="t">    <span class="op">@</span><span class="nam">to_frame</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t466" href="#t466">466</a></span><span class="t">    <span class="key">def</span> <span class="nam">drawdown</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">series</span><span class="op">:</span> <span class="nam">pl</span><span class="op">.</span><span class="nam">Series</span><span class="op">,</span> <span class="nam">compounded</span><span class="op">=</span><span class="key">True</span><span class="op">)</span> <span class="op">-></span> <span class="nam">pl</span><span class="op">.</span><span class="nam">Series</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t467" href="#t467">467</a></span><span class="t">        <span class="nam">equity</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">prices</span><span class="op">(</span><span class="nam">series</span><span class="op">,</span> <span class="nam">compounded</span><span class="op">=</span><span class="nam">compounded</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t466" href="#t466">466</a></span><span class="t">    <span class="key">def</span> <span class="nam">drawdown</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">series</span><span class="op">:</span> <span class="nam">pl</span><span class="op">.</span><span class="nam">Series</span><span class="op">)</span> <span class="op">-></span> <span class="nam">pl</span><span class="op">.</span><span class="nam">Series</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t467" href="#t467">467</a></span><span class="t">        <span class="nam">equity</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">prices</span><span class="op">(</span><span class="nam">series</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t468" href="#t468">468</a></span><span class="t">        <span class="nam">d</span> <span class="op">=</span> <span class="op">(</span><span class="nam">equity</span> <span class="op">/</span> <span class="nam">equity</span><span class="op">.</span><span class="nam">cum_max</span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">-</span> <span class="num">1</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t469" href="#t469">469</a></span><span class="t">        <span class="key">return</span> <span class="op">-</span><span class="nam">d</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t470" href="#t470">470</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -555,18 +555,18 @@
     <p class="run"><span class="n"><a id="t473" href="#t473">473</a></span><span class="t">        <span class="key">if</span> <span class="nam">compounded</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t474" href="#t474">474</a></span><span class="t">            <span class="key">return</span> <span class="op">(</span><span class="num">1.0</span> <span class="op">+</span> <span class="nam">series</span><span class="op">)</span><span class="op">.</span><span class="nam">cum_prod</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t475" href="#t475">475</a></span><span class="t">        <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t476" href="#t476">476</a></span><span class="t">            <span class="key">return</span> <span class="nam">series</span><span class="op">.</span><span class="nam">cum_prod</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t476" href="#t476">476</a></span><span class="t">            <span class="key">return</span> <span class="nam">series</span><span class="op">.</span><span class="nam">cum_prod</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t477" href="#t477">477</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t478" href="#t478">478</a></span><span class="t">    <span class="op">@</span><span class="nam">staticmethod</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t479" href="#t479">479</a></span><span class="t">    <span class="key">def</span> <span class="nam">max_drawdown_single_series</span><span class="op">(</span><span class="nam">series</span><span class="op">:</span> <span class="nam">pl</span><span class="op">.</span><span class="nam">Series</span><span class="op">,</span> <span class="nam">compounded</span><span class="op">=</span><span class="key">True</span><span class="op">)</span> <span class="op">-></span> <span class="nam">float</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t480" href="#t480">480</a></span><span class="t">        <span class="nam">price</span> <span class="op">=</span> <span class="nam">Stats</span><span class="op">.</span><span class="nam">prices</span><span class="op">(</span><span class="nam">series</span><span class="op">,</span> <span class="nam">compounded</span><span class="op">=</span><span class="nam">compounded</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t479" href="#t479">479</a></span><span class="t">    <span class="key">def</span> <span class="nam">max_drawdown_single_series</span><span class="op">(</span><span class="nam">series</span><span class="op">:</span> <span class="nam">pl</span><span class="op">.</span><span class="nam">Series</span><span class="op">)</span> <span class="op">-></span> <span class="nam">float</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t480" href="#t480">480</a></span><span class="t">        <span class="nam">price</span> <span class="op">=</span> <span class="nam">Stats</span><span class="op">.</span><span class="nam">prices</span><span class="op">(</span><span class="nam">series</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t481" href="#t481">481</a></span><span class="t">        <span class="nam">peak</span> <span class="op">=</span> <span class="nam">price</span><span class="op">.</span><span class="nam">cum_max</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t482" href="#t482">482</a></span><span class="t">        <span class="nam">drawdown</span> <span class="op">=</span> <span class="nam">price</span> <span class="op">/</span> <span class="nam">peak</span> <span class="op">-</span> <span class="num">1</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t483" href="#t483">483</a></span><span class="t">        <span class="key">return</span> <span class="op">-</span><span class="nam">drawdown</span><span class="op">.</span><span class="nam">min</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t484" href="#t484">484</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t485" href="#t485">485</a></span><span class="t">    <span class="op">@</span><span class="nam">columnwise_stat</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t486" href="#t486">486</a></span><span class="t">    <span class="key">def</span> <span class="nam">max_drawdown</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">series</span><span class="op">:</span> <span class="nam">pl</span><span class="op">.</span><span class="nam">Expr</span><span class="op">,</span> <span class="nam">compounded</span><span class="op">=</span><span class="key">True</span><span class="op">)</span> <span class="op">-></span> <span class="nam">float</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t487" href="#t487">487</a></span><span class="t">        <span class="key">return</span> <span class="nam">Stats</span><span class="op">.</span><span class="nam">max_drawdown_single_series</span><span class="op">(</span><span class="nam">series</span><span class="op">,</span> <span class="nam">compounded</span><span class="op">=</span><span class="nam">compounded</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t486" href="#t486">486</a></span><span class="t">    <span class="key">def</span> <span class="nam">max_drawdown</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">series</span><span class="op">:</span> <span class="nam">pl</span><span class="op">.</span><span class="nam">Expr</span><span class="op">)</span> <span class="op">-></span> <span class="nam">float</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t487" href="#t487">487</a></span><span class="t">        <span class="key">return</span> <span class="nam">Stats</span><span class="op">.</span><span class="nam">max_drawdown_single_series</span><span class="op">(</span><span class="nam">series</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t488" href="#t488">488</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t489" href="#t489">489</a></span><span class="t">    <span class="com"># @columnwise_stat</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t490" href="#t490">490</a></span><span class="t">    <span class="com"># def calmar(self, series):</span>&nbsp;</span><span class="r"></span></p>
@@ -713,7 +713,7 @@
             <a class="nav" href="z_f30850e03af1646d_api_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.8.0">coverage.py v7.8.0</a>,
-            created at 2025-05-18 14:05 +0000
+            created at 2025-05-18 15:34 +0000
         </p>
     </div>
 </footer>
