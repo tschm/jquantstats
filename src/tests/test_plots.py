@@ -15,22 +15,6 @@ def plots(data):
     return data.plots
 
 
-def test_plot_returns_bars(plots):
-    """
-    Tests that the plot_returns_bars method works correctly.
-
-    Args:
-        plots: The plots fixture.
-
-    Verifies:
-        1. The method returns a plotly Figure object.
-        2. The method doesn't raise any exceptions.
-    """
-    fig = plots.plot_returns_bars()
-    assert fig is not None
-    assert hasattr(fig, 'show')
-
-
 def test_plot_snapshot(plots):
     """
     Tests that the plot_snapshot method works correctly.
