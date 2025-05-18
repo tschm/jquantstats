@@ -469,11 +469,8 @@ class Stats:
         return -d
 
     @staticmethod
-    def prices(series: pl.Series, compounded=True) -> pl.Series:
-        if compounded:
-            return (1.0 + series).cum_prod()
-        else:
-            return series.cum_prod()
+    def prices(series: pl.Series) -> pl.Series:
+        return (1.0 + series).cum_prod()
 
     @staticmethod
     def max_drawdown_single_series(series: pl.Series) -> float:
