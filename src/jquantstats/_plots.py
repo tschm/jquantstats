@@ -10,21 +10,7 @@ from plotly.subplots import make_subplots
 
 
 def _plot_performance_dashboard(returns: pd.DataFrame, log_scale=False) -> go.Figure:
-    """
-    Plots a 3-panel performance dashboard using Plotly.
-
-    Parameters:
-        returns (pd.DataFrame): Daily returns (percent change), indexed by date.
-
-    Returns:
-        go.Figure: Plotly figure with 3 subplots:
-            - Cumulative Returns
-            - Drawdowns
-            - Monthly Returns
-    """
-
     def hex_to_rgba(hex_color: str, alpha: float = 0.2) -> str:
-        """Convert hex color like '#1f77b4' to rgba string."""
         hex_color = hex_color.lstrip("#")
         r, g, b = tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
         return f"rgba({r}, {g}, {b}, {alpha})"
@@ -32,25 +18,24 @@ def _plot_performance_dashboard(returns: pd.DataFrame, log_scale=False) -> go.Fi
     tickers = returns.columns.tolist()
     prices = (1 + returns).cumprod()
 
-    # Assign colors
     palette = px.colors.qualitative.Plotly
     COLORS = {ticker: palette[i % len(palette)] for i, ticker in enumerate(tickers)}
     COLORS.update({f"{ticker}_light": hex_to_rgba(COLORS[ticker]) for ticker in tickers})
 
-    # Monthly returns
     monthly_returns = returns.resample("ME").apply(lambda x: (1 + x).prod() - 1)
     monthly_returns.index = monthly_returns.index.to_period("M").to_timestamp()
 
-    # Create figure
+    # Create subplot grid with domain for stats table
     fig = make_subplots(
         rows=3,
         cols=1,
         shared_xaxes=True,
         row_heights=[0.5, 0.25, 0.25],
         subplot_titles=["Cumulative Returns", "Drawdowns", "Monthly Returns"],
+        vertical_spacing=0.05,
     )
 
-    # 1. Cumulative Returns
+    # --- Row 1: Cumulative Returns
     for ticker in tickers:
         fig.add_trace(
             go.Scatter(
@@ -67,7 +52,7 @@ def _plot_performance_dashboard(returns: pd.DataFrame, log_scale=False) -> go.Fi
             col=1,
         )
 
-    # 2. Drawdowns
+    # --- Row 2: Drawdowns
     for ticker in tickers:
         dd = (prices[ticker] - prices[ticker].cummax()) / prices[ticker].cummax()
         fig.add_trace(
@@ -87,10 +72,9 @@ def _plot_performance_dashboard(returns: pd.DataFrame, log_scale=False) -> go.Fi
             col=1,
         )
 
-    # Add zero line for drawdown
     fig.add_hline(y=0, line_width=1, line_color="gray", row=2, col=1)
 
-    # 3. Monthly Returns
+    # --- Row 3: Monthly Returns
     for ticker in tickers:
         fig.add_trace(
             go.Bar(
@@ -110,13 +94,28 @@ def _plot_performance_dashboard(returns: pd.DataFrame, log_scale=False) -> go.Fi
             col=1,
         )
 
-    # Layout and styling
+    # Layout
     fig.update_layout(
         title=f"{' vs '.join(tickers)} Performance Dashboard",
-        height=900,
+        height=1200,
         hovermode="x unified",
         plot_bgcolor="white",
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        xaxis=dict(
+            rangeselector=dict(
+                buttons=list(
+                    [
+                        dict(count=6, label="6m", step="month", stepmode="backward"),
+                        dict(count=1, label="1y", step="year", stepmode="backward"),
+                        dict(count=3, label="3y", step="year", stepmode="backward"),
+                        dict(step="year", stepmode="todate", label="YTD"),
+                        dict(step="all", label="All"),
+                    ]
+                )
+            ),
+            rangeslider=dict(visible=False),
+            type="date",
+        ),
     )
 
     fig.update_yaxes(title_text="Cumulative Return", row=1, col=1, tickformat=".2f")
@@ -126,7 +125,6 @@ def _plot_performance_dashboard(returns: pd.DataFrame, log_scale=False) -> go.Fi
     fig.update_xaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
     fig.update_yaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
 
-    # Apply log scale to cumulative returns if requested
     if log_scale:
         fig.update_yaxes(type="log", row=1, col=1)
 
