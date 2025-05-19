@@ -31,13 +31,12 @@ def test_plot_snapshot(plots):
     fig = plots.plot_snapshot()
     assert fig is not None
     assert hasattr(fig, 'show')
-    fig.show()
 
     # Test with custom parameters
     fig = plots.plot_snapshot(title="Custom Title", log_scale=True)
     assert fig is not None
     assert hasattr(fig, 'show')
-    fig.show()
+
 
 def test_monthly_heatmap(plots):
     """
