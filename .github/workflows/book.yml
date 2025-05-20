@@ -21,11 +21,11 @@ jobs:
     steps:
       # Step: Set up the virtual environment
       - name: "Build the virtual environment"
-        uses: tschm/cradle/actions/environment@v0.1.64
+        uses: tschm/cradle/actions/environment@v0.1.66
 
       # Step: Generate API documentation with pdoc
       # Creates documentation from the source code in src/jquantstats
-      - uses: tschm/cradle/actions/pdoc@v0.1.64
+      - uses: tschm/cradle/actions/pdoc@v0.1.66
         with:
           source-folder: src/jquantstats
 
@@ -36,7 +36,7 @@ jobs:
     steps:
       # Step: Set up the virtual environment
       - name: "Build the virtual environment"
-        uses: tschm/cradle/actions/environment@v0.1.64
+        uses: tschm/cradle/actions/environment@v0.1.66
 
       # Step: Run tests and generate coverage reports
       # Also uploads coverage data to Coveralls if enabled
@@ -53,11 +53,11 @@ jobs:
     steps:
       # Step: Set up the virtual environment
       - name: "Build the virtual environment"
-        uses: tschm/cradle/actions/environment@v0.1.64
+        uses: tschm/cradle/actions/environment@v0.1.66
 
       # Step: Process Jupyter notebooks
       # Executes and prepares notebooks for documentation
-      - uses: tschm/cradle/actions/jupyter@v0.1.64
+      - uses: tschm/cradle/actions/jupyter@v0.1.66
 
   # Job: book
   # Purpose: Combines and publishes the documentation
@@ -79,4 +79,4 @@ jobs:
       # Skipped when running locally with 'act' to prevent accidental deployments
       - name: Upload the book
         if: ${{ env.ACT != 'true' }}  # Skip if running with 'act'
-        uses: tschm/cradle/actions/book@v0.1.64
+        uses: tschm/cradle/actions/book@v0.1.66
