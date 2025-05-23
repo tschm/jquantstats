@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>jQuantStats: Portfolio analytics for quants &#8212; quantstats</title>
+    <title>jQuantStats: Portfolio Analytics for Quants &#8212; quantstats</title>
   
   
   
@@ -171,7 +171,7 @@
         <ul class="nav bd-sidenav bd-sidenav__home-link">
             <li class="toctree-l1 current active">
                 <a class="reference internal" href="#">
-                    jQuantStats: Portfolio analytics for quants
+                    jQuantStats: Portfolio Analytics for Quants
                 </a>
             </li>
         </ul>
@@ -363,7 +363,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>jQuantStats: Portfolio analytics for quants</h1>
+    <h1>jQuantStats: Portfolio Analytics for Quants</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -393,9 +393,9 @@ document.write(`
                 <article class="bd-article">
                   
   <section class="tex2jax_ignore mathjax_ignore" id="jquantstats-portfolio-analytics-for-quants">
-<h1><a class="reference external" href="https://tschm.github.io/jquantstats/book">jQuantStats</a>: Portfolio analytics for quants<a class="headerlink" href="#jquantstats-portfolio-analytics-for-quants" title="Link to this heading">#</a></h1>
+<h1><a class="reference external" href="https://tschm.github.io/jquantstats/book">jQuantStats</a>: Portfolio Analytics for Quants<a class="headerlink" href="#jquantstats-portfolio-analytics-for-quants" title="Link to this heading">#</a></h1>
 <p><a class="reference external" href="https://badge.fury.io/py/jquantstats"><img alt="PyPI version" src="https://badge.fury.io/py/jquantstats.svg" /></a>
-<a class="reference internal" href="#LICENSE.txt"><span class="xref myst"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg" /></span></a>
+<a class="reference internal" href="#LICENSE.txt"><span class="xref myst"><img alt="License" src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" /></span></a>
 <a class="reference external" href="https://github.com/tschm/jquantstats/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/tschm/jquantstats/actions/workflows/ci.yml/badge.svg" /></a>
 <a class="reference external" href="https://coveralls.io/github/tschm/jquantstats?branch=main"><img alt="Coverage Status" src="https://coveralls.io/repos/github/tschm/jquantstats/badge.svg?branch=main" /></a>
 <a class="reference external" href="https://www.codefactor.io/repository/github/tschm/jquantstats"><img alt="CodeFactor" src="https://www.codefactor.io/repository/github/tschm/jquantstats/badge" /></a>
@@ -404,46 +404,33 @@ document.write(`
 <section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
 <p><strong>jQuantStats</strong> is a Python library for portfolio analytics
-that helps quants and portfolio managers understand
-their performance through in-depth analytics and risk metrics.
-It provides tools for calculating various performance metrics
-and visualizing portfolio performance.</p>
-<p>The library is inspired by and currently exposes a subset of the
-functionality of <a class="reference external" href="https://github.com/ranaroussi/quantstats">QuantStats</a>,
-focusing on providing a clean, modern API with enhanced
-visualization capabilities using Plotly.</p>
-<p>We have made the following changes when compared to quantstats:</p>
+that helps quants and portfolio managers understand their performance
+through in-depth analytics and risk metrics. It provides tools
+for calculating various performance metrics and visualizing
+portfolio performance using interactive Plotly charts.</p>
+<p>The library is inspired by <a class="reference external" href="https://github.com/ranaroussi/quantstats">QuantStats</a>,
+but focuses on providing a clean, modern API with
+enhanced visualization capabilities. Key improvements include:</p>
 <ul class="simple">
-<li><p>added tests (based on pytest), pre-commit hooks and
-github ci/cd workflows</p></li>
-<li><p>removed a direct dependency on yfinance to inject data</p></li>
-<li><p>moved all graphical output to plotly and removed the matplotlib dependency</p></li>
-<li><p>removed some statistical metrics but intend to bring them back</p></li>
-<li><p>moved to Marimo for demos</p></li>
-<li><p>gave up on the very tight coupling with pandas</p></li>
+<li><p>Support for both pandas and polars DataFrames</p></li>
+<li><p>Modern interactive visualizations using Plotly</p></li>
+<li><p>Comprehensive test coverage with pytest</p></li>
+<li><p>Clean, well-documented API</p></li>
+<li><p>Efficient data processing with polars</p></li>
 </ul>
-<p>Along the way we broke downwards compatibility with quantstats but the
-underlying usage pattern is too different. Users familiar with
-Dataclasses may find the chosen path appealing.
-A data class is
-constructed using the <code class="docutils literal notranslate"><span class="pre">build_data</span></code> function.
-This function is essentially
-the only viable entry point into jquantstats.
-It constructs and returns
-a <code class="docutils literal notranslate"><span class="pre">_Data</span></code> object which exposes plots and stats via its member attributes.</p>
-<p>At this early stage the user would have to define a benchmark
-and set the underlying risk-free rate.</p>
 </section>
 <section id="features">
 <h2>Features<a class="headerlink" href="#features" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><strong>Performance Metrics</strong>: Calculate key metrics like Sharpe ratio, Sortino ratio,
-drawdowns, volatility, and many more</p></li>
-<li><p><strong>Risk Analysis</strong>: Analyze risk through metrics like Value at Risk (VaR),
-Conditional VaR, and drawdown analysis</p></li>
-<li><p><strong>Visualization</strong>: Create interactive plots for portfolio performance, drawdowns,
+<li><p><strong>Performance Metrics</strong>: Calculate key metrics like Sharpe ratio,
+Sortino ratio, drawdowns, volatility, and more</p></li>
+<li><p><strong>Risk Analysis</strong>: Analyze risk through metrics like
+Value at Risk (VaR), Conditional VaR, and drawdown analysis</p></li>
+<li><p><strong>Interactive Visualizations</strong>: Create interactive
+plots for portfolio performance, drawdowns,
 return distributions, and monthly heatmaps</p></li>
 <li><p><strong>Benchmark Comparison</strong>: Compare your portfolio performance against benchmarks</p></li>
+<li><p><strong>Pandas &amp; Polars Support</strong>: Work with either pandas or polars DataFrames as input</p></li>
 </ul>
 </section>
 <section id="installation">
@@ -461,18 +448,26 @@ return distributions, and monthly heatmaps</p></li>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">jquantstats.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_data</span>
 
-<span class="c1"># Create a Data object from returns</span>
-<span class="n">returns</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>  <span class="c1"># Your returns data</span>
+<span class="c1"># Create sample returns data</span>
+<span class="n">returns</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+    <span class="s2">&quot;Date&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;2023-01-01&quot;</span><span class="p">,</span> <span class="s2">&quot;2023-01-02&quot;</span><span class="p">,</span> <span class="s2">&quot;2023-01-03&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;Asset1&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.01</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.03</span><span class="p">],</span>
+    <span class="s2">&quot;Asset2&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.01</span><span class="p">]</span>
+<span class="p">})</span><span class="o">.</span><span class="n">with_columns</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;Date&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">to_date</span><span class="p">())</span>
 
 <span class="c1"># Basic usage</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">build_data</span><span class="p">(</span><span class="n">returns</span><span class="o">=</span><span class="n">returns</span><span class="p">)</span>
 
 <span class="c1"># With benchmark and risk-free rate</span>
-<span class="n">benchmark</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>  <span class="c1"># Your benchmark returns</span>
+<span class="n">benchmark</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+    <span class="s2">&quot;Date&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;2023-01-01&quot;</span><span class="p">,</span> <span class="s2">&quot;2023-01-02&quot;</span><span class="p">,</span> <span class="s2">&quot;2023-01-03&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;Market&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.005</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">]</span>
+<span class="p">})</span><span class="o">.</span><span class="n">with_columns</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;Date&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">to_date</span><span class="p">())</span>
+
 <span class="n">data</span> <span class="o">=</span> <span class="n">build_data</span><span class="p">(</span>
     <span class="n">returns</span><span class="o">=</span><span class="n">returns</span><span class="p">,</span>
     <span class="n">benchmark</span><span class="o">=</span><span class="n">benchmark</span><span class="p">,</span>
-    <span class="n">rf</span><span class="o">=</span><span class="mf">0.0002</span><span class="p">,</span>      <span class="c1"># risk-free rate (e.g., 0.02% per day)</span>
+    <span class="n">rf</span><span class="o">=</span><span class="mf">0.0002</span><span class="p">,</span>  <span class="c1"># risk-free rate (e.g., 0.02% per day)</span>
 <span class="p">)</span>
 
 <span class="c1"># Calculate statistics</span>
@@ -491,8 +486,7 @@ return distributions, and monthly heatmaps</p></li>
 </section>
 <section id="documentation">
 <h2>Documentation<a class="headerlink" href="#documentation" title="Link to this heading">#</a></h2>
-<p>For detailed documentation,
-visit <a class="reference external" href="https://tschm.github.io/jquantstats/book">jQuantStats Documentation</a>.</p>
+<p>For detailed documentation, visit <a class="reference external" href="https://tschm.github.io/jquantstats/book">jQuantStats Documentation</a>.</p>
 </section>
 <section id="requirements">
 <h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading">#</a></h2>
@@ -500,8 +494,10 @@ visit <a class="reference external" href="https://tschm.github.io/jquantstats/bo
 <li><p>Python 3.10+</p></li>
 <li><p>numpy</p></li>
 <li><p>polars</p></li>
+<li><p>pandas</p></li>
 <li><p>plotly</p></li>
 <li><p>kaleido (for static image export)</p></li>
+<li><p>scipy</p></li>
 </ul>
 </section>
 <section id="contributing">
@@ -517,8 +513,8 @@ visit <a class="reference external" href="https://tschm.github.io/jquantstats/bo
 </section>
 <section id="license">
 <h2>License<a class="headerlink" href="#license" title="Link to this heading">#</a></h2>
-<p>This project is licensed under the
-Apache License 2.0 - see the <a class="reference internal" href="#LICENSE.txt"><span class="xref myst">LICENSE.txt</span></a> file for details.</p>
+<p>This project is licensed under the Apache
+License 2.0 - see the <a class="reference internal" href="#LICENSE.txt"><span class="xref myst">LICENSE.txt</span></a> file for details.</p>
 </section>
 <div class="toctree-wrapper compound">
 </div>
