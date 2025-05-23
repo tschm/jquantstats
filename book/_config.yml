@@ -11,7 +11,7 @@ parse:
     - linkify
     - dollarmath
   myst_substitutions:
-    book_url: https://tschm.github.io/quantstats
+    book_url: https://tschm.github.io/jquantstats
 
 # needed for plotly
 sphinx:
@@ -22,7 +22,7 @@ sphinx:
 
 # Information about where the book exists on the web
 repository:
-  url: https://github.com/tschm/quantstats
+  url: https://github.com/tschm/jquantstats
   path_to_book: book
   branch: main
 
