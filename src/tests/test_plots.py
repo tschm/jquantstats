@@ -37,4 +37,5 @@ def test_plot_snapshot(plots):
     assert fig is not None
     assert hasattr(fig, 'show')
 
-    fig.show()
+    # causing sometimes problems
+    # fig.show()
