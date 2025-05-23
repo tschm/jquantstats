@@ -1,12 +1,12 @@
 # My Opinion on jQuantStats
 
-## Overview
+## 📊 Overview
 
 jQuantStats is a Python library for portfolio analytics aimed at quants and portfolio managers. It's a modernized fork
 of QuantStats, focusing on providing a clean API with enhanced visualization capabilities using Plotly instead of
 Matplotlib.
 
-## Strengths
+## 💪 Strengths
 
 ### Code Quality
 
@@ -38,7 +38,7 @@ Matplotlib.
 - **CI/CD Integration**: GitHub Actions workflows for continuous integration.
 - **Pre-commit Hooks**: Ensures code quality before commits.
 
-## Areas for Improvement
+## 🔍 Areas for Improvement
 
 ### Documentation
 
@@ -53,7 +53,7 @@ removed with the intention to bring them back later.
 
 - The version number (0.0.0) indicates this is still in very early development.
 
-## Conclusion
+## 🏁 Conclusion
 
 jQuantStats is a well-designed, modern Python library that shows excellent
 software engineering practices. The code is clean, well-tested, and follows

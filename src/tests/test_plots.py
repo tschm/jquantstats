@@ -1,5 +1,7 @@
 import pytest
 
+from jquantstats import build_data
+
 
 @pytest.fixture
 def plots(data):
@@ -37,5 +39,13 @@ def test_plot_snapshot(plots):
     assert fig is not None
     assert hasattr(fig, 'show')
 
+    # causing sometimes problems
+    # fig.show()
+
+def test_plot_snapshot_one_symbol(returns):
+    fig = build_data(returns=returns).plots.plot_snapshot()
+
+    assert fig is not None
+    assert hasattr(fig, 'show')
     # causing sometimes problems
     # fig.show()

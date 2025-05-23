@@ -90,6 +90,12 @@ def _plot_performance_dashboard(returns: pl.DataFrame, log_scale=False) -> go.Fi
         # Get monthly returns values as a list for coloring
         monthly_values = monthly_returns[ticker].to_list()
 
+        # If there's only one ticker, use green for positive returns and red for negative returns
+        if len(tickers) == 1:
+            bar_colors = ["green" if val > 0 else "red" for val in monthly_values]
+        else:
+            bar_colors = [COLORS[ticker] if val > 0 else COLORS[f"{ticker}_light"] for val in monthly_values]
+
         fig.add_trace(
             go.Bar(
                 x=monthly_returns[date_col],
@@ -97,7 +103,7 @@ def _plot_performance_dashboard(returns: pl.DataFrame, log_scale=False) -> go.Fi
                 name=ticker,
                 legendgroup=ticker,
                 marker=dict(
-                    color=[COLORS[ticker] if val > 0 else COLORS[f"{ticker}_light"] for val in monthly_values],
+                    color=bar_colors,
                     line=dict(width=0),
                 ),
                 opacity=0.8,
