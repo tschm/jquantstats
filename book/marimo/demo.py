@@ -50,13 +50,6 @@ def _(data):
 
 @app.cell
 def _(data):
-    data.all_pd
-
-    return
-
-
-@app.cell
-def _(data):
     data.assets
     return
 

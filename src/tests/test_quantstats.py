@@ -17,20 +17,11 @@ def stats(data):
     return data.stats
 
 @pytest.fixture
-def benchmark_pd(data):
-    """
-    Fixture that returns the benchmark_pd property of the data fixture.
-
-    Args:
-        data: The data fixture containing a Data object.
-
-    Returns:
-        pd.DataFrame: The benchmark data as a pandas DataFrame.
-    """
-    return data.benchmark_pd
+def pandas_frame(data):
+    return data.all.to_pandas().set_index("Date")
 
 @pytest.fixture
-def aapl(data):
+def aapl(pandas_frame):
     """
     Fixture that returns the AAPL returns from the data fixture.
 
@@ -40,7 +31,11 @@ def aapl(data):
     Returns:
         pd.Series: The AAPL returns as a pandas Series.
     """
-    return data.returns_pd["AAPL"].dropna()
+    return pandas_frame["AAPL"]
+
+@pytest.fixture
+def benchmark_pd(pandas_frame):
+    return pandas_frame["SPY -- Benchmark"]
 
 
 def test_sharpe_ratio(stats, aapl):

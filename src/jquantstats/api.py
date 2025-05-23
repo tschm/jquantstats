@@ -35,9 +35,9 @@ from ._data import Data
 
 
 def build_data(
-    returns: pl.DataFrame | pd.DataFrame,
-    rf: float | pl.DataFrame = 0.0,
-    benchmark: pl.DataFrame = None,
+    returns: pl.DataFrame | pd.DataFrame | pd.Series,
+    rf: float | pl.DataFrame | pd.DataFrame | pd.Series = 0.0,
+    benchmark: pl.DataFrame | pd.DataFrame | pd.Series = None,
     date_col: str = "Date",
 ) -> "Data":
     """
@@ -85,8 +85,20 @@ def build_data(
             ]
         )
 
+    if isinstance(returns, pd.Series):
+        returns = pl.from_pandas(returns.to_frame(), include_index=True)
+
     if isinstance(returns, pd.DataFrame):
         returns = pl.from_pandas(returns, include_index=True)
+
+    if isinstance(rf, pd.Series):
+        rf = pl.from_pandas(rf.to_frame(), include_index=True)
+
+    if isinstance(rf, pd.DataFrame):
+        rf = pl.from_pandas(rf, include_index=True)
+
+    if isinstance(benchmark, pd.Series):
+        benchmark = pl.from_pandas(benchmark.to_frame(), include_index=True)
 
     if isinstance(benchmark, pd.DataFrame):
         benchmark = pl.from_pandas(benchmark, include_index=True)
