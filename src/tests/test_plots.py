@@ -37,29 +37,4 @@ def test_plot_snapshot(plots):
     assert fig is not None
     assert hasattr(fig, 'show')
 
-
-def test_monthly_heatmap(plots):
-    """
-    Tests that the monthly_heatmap method works correctly.
-
-    Args:
-        plots: The plots fixture.
-
-    Verifies:
-        1. The method returns a plotly Figure object.
-        2. The method doesn't raise any exceptions.
-        3. The method works with different parameters.
-    """
-    print(plots.data.all)
-    print(plots.data.resample(every="1mo").all)
-
-    # Test with default parameters
-    fig = plots.monthly_heatmap(col="AAPL")
-    assert fig is not None
-    assert hasattr(fig, 'show')
-
-    # Test with custom parameters
-    fig = plots.monthly_heatmap(col="AAPL", annot_size=10, cbar=False, returns_label="AAPL",
-                                fontname="Courier", ylabel=False)
-    assert fig is not None
-    assert hasattr(fig, 'show')
+    fig.show()

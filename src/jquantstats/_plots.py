@@ -1,11 +1,8 @@
-import calendar
 import dataclasses
 
-import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-import polars as pl
 from plotly.subplots import make_subplots
 
 
@@ -181,124 +178,4 @@ class Plots:
             >>> fig.show()
         """
         fig = _plot_performance_dashboard(returns=self.data.all_pd, log_scale=log_scale)
-        return fig
-
-    def monthly_heatmap(
-        self,
-        col: str,
-        annot_size: int = 13,
-        cbar: bool = True,
-        returns_label: str = "Strategy",
-        fontname: str = "Arial",
-        ylabel: bool = True,
-    ) -> go.Figure:
-        """
-        Creates a heatmap of monthly returns by year.
-
-        This visualization displays returns as a color-coded grid with months on the x-axis
-        and years on the y-axis. It provides an intuitive way to identify seasonal patterns
-        and compare performance across different time periods.
-
-        Args:
-            col (str): The column name of the asset to plot.
-            annot_size (int, optional): Font size for annotations. Defaults to 13.
-            cbar (bool, optional): Whether to display a color bar. Defaults to True.
-            returns_label (str, optional): Label for the returns in the title. Defaults to "Strategy".
-            compounded (bool, optional): Whether to use compounded returns. Defaults to False.
-            fontname (str, optional): Font family to use. Defaults to "Arial".
-            ylabel (bool, optional): Whether to display the y-axis label. Defaults to True.
-
-        Returns:
-            go.Figure: A Plotly figure object containing the heatmap.
-
-        Example:
-            >>> fig = data.plots.monthly_heatmap("AAPL", returns_label="Apple Inc.")
-            >>> fig.show()
-        """
-
-        cmap = "RdYlGn"
-        date_col = self.data.index.columns[0]
-
-        # Resample monthly
-        data = self.data.resample(every="1mo")
-
-        # Prepare DataFrame with Year, Month, Return (%)
-        result = data.all.with_columns(
-            pl.col(date_col).dt.year().alias("Year"),
-            pl.col(date_col).dt.month().alias("Month"),
-            (pl.col(col) * 100).alias("Return"),
-        )
-
-        # Pivot table (Year x Month)
-        pivot = result.pivot(
-            values="Return",
-            index="Year",
-            columns="Month",
-            aggregate_function="first",  # Should be fine with monthly data
-        ).sort("Year", descending=True)
-
-        # Sort columns by calendar month
-        month_cols = [str(m) for m in range(1, 13)]
-        pivot = pivot.select("Year", *month_cols)
-
-        # Rename columns to month abbreviations
-        new_col_names = ["Year"] + [calendar.month_abbr[int(m)] for m in month_cols]
-        pivot.columns = new_col_names
-
-        # Extract z-matrix for heatmap
-        z = np.round(pivot.drop("Year").to_numpy(), 2)
-        y = pivot["Year"].to_numpy().astype(str)
-        x = new_col_names[1:]
-
-        zmin = -np.nanmax(np.abs(z))
-        zmax = np.nanmax(np.abs(z))
-
-        fig = go.Figure(
-            data=go.Heatmap(
-                z=z,
-                x=x,
-                y=y,
-                text=z,
-                texttemplate="%{text:.2f}%",
-                colorscale=cmap,
-                zmid=0,
-                zmin=zmin,
-                zmax=zmax,
-                colorbar=dict(
-                    title="Return (%)",
-                    ticksuffix="%",
-                    tickfont=dict(size=annot_size),
-                )
-                if cbar
-                else None,
-                hovertemplate="Year: %{y}<br>Month: %{x}<br>Return: %{z:.2f}%",
-            )
-        )
-
-        fig.update_layout(
-            title={
-                "text": f"{returns_label} - Monthly Returns (%)",
-                "y": 0.95,
-                "x": 0.5,
-                "xanchor": "center",
-                "yanchor": "top",
-                "font": dict(family=fontname, size=16, color="black"),
-            },
-            xaxis=dict(
-                title="",
-                side="top",
-                showgrid=False,
-                tickfont=dict(family=fontname, size=annot_size),
-            ),
-            yaxis=dict(
-                title="Years" if ylabel else "",
-                autorange="reversed",
-                showgrid=False,
-                tickfont=dict(family=fontname, size=annot_size),
-            ),
-            plot_bgcolor="white",
-            paper_bgcolor="white",
-            margin=dict(l=0, r=0, t=80, b=0),
-        )
-
         return fig
