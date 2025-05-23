@@ -1,12 +1,11 @@
 # [jQuantStats](https://tschm.github.io/jquantstats/book): Portfolio analytics for quants
 
 [![PyPI version](https://badge.fury.io/py/jquantstats.svg)](https://badge.fury.io/py/jquantstats)
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE.txt)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.txt)
 [![CI](https://github.com/tschm/jquantstats/actions/workflows/ci.yml/badge.svg)](https://github.com/tschm/jquantstats/actions/workflows/ci.yml)
 [![Coverage Status](https://coveralls.io/repos/github/tschm/jquantstats/badge.svg?branch=main)](https://coveralls.io/github/tschm/jquantstats?branch=main)
-[![CodeFactor](https://www.codefactor.io/repository/github/tschm/jquantstats/badge)](https://www.codefactor.io/repository/github/tschm/quantstats)
+[![CodeFactor](https://www.codefactor.io/repository/github/tschm/jquantstats/badge)](https://www.codefactor.io/repository/github/tschm/jquantstats)
 [![Renovate enabled](https://img.shields.io/badge/renovate-enabled-brightgreen.svg)](https://github.com/renovatebot/renovate)
-[![Downloads](https://static.pepy.tech/badge/jquantstats/month)](https://pepy.tech/project/jquantstats)
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/tschm/jquantstats)
 
