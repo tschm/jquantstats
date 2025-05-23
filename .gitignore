@@ -10,3 +10,4 @@ Icon
 .output.txt
 src/.coverage
 __marimo__
+.coverage

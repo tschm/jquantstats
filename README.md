@@ -1,7 +1,7 @@
-# [jQuantStats](https://tschm.github.io/jquantstats/book): Portfolio analytics for quants
+# [jQuantStats](https://tschm.github.io/jquantstats/book): Portfolio Analytics for Quants
 
 [![PyPI version](https://badge.fury.io/py/jquantstats.svg)](https://badge.fury.io/py/jquantstats)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.txt)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE.txt)
 [![CI](https://github.com/tschm/jquantstats/actions/workflows/ci.yml/badge.svg)](https://github.com/tschm/jquantstats/actions/workflows/ci.yml)
 [![Coverage Status](https://coveralls.io/repos/github/tschm/jquantstats/badge.svg?branch=main)](https://coveralls.io/github/tschm/jquantstats?branch=main)
 [![CodeFactor](https://www.codefactor.io/repository/github/tschm/jquantstats/badge)](https://www.codefactor.io/repository/github/tschm/jquantstats)
@@ -12,48 +12,32 @@
 ## Overview
 
 **jQuantStats** is a Python library for portfolio analytics
-that helps quants and portfolio managers understand
-their performance through in-depth analytics and risk metrics.
-It provides tools for calculating various performance metrics
-and visualizing portfolio performance.
+that helps quants and portfolio managers understand their performance
+through in-depth analytics and risk metrics. It provides tools
+for calculating various performance metrics and visualizing
+portfolio performance using interactive Plotly charts.
 
-The library is inspired by and currently exposes a subset of the
-functionality of [QuantStats](https://github.com/ranaroussi/quantstats),
-focusing on providing a clean, modern API with enhanced
-visualization capabilities using Plotly.
+The library is inspired by [QuantStats](https://github.com/ranaroussi/quantstats),
+but focuses on providing a clean, modern API with
+enhanced visualization capabilities. Key improvements include:
 
-We have made the following changes when compared to quantstats:
-
-- added tests (based on pytest), pre-commit hooks and
-  github ci/cd workflows
-- removed a direct dependency on yfinance to inject data
-- moved all graphical output to plotly and removed the matplotlib dependency
-- removed some statistical metrics but intend to bring them back
-- moved to Marimo for demos
-- gave up on the very tight coupling with pandas
-
-Along the way we broke downwards compatibility with quantstats but the
-underlying usage pattern is too different. Users familiar with
-Dataclasses may find the chosen path appealing.
-A data class is
-constructed using the `build_data` function.
-This function is essentially
-the only viable entry point into jquantstats.
-It constructs and returns
-a `_Data` object which exposes plots and stats via its member attributes.
-
-At this early stage the user would have to define a benchmark
-and set the underlying risk-free rate.
+- Support for both pandas and polars DataFrames
+- Modern interactive visualizations using Plotly
+- Comprehensive test coverage with pytest
+- Clean, well-documented API
+- Efficient data processing with polars
 
 ## Features
 
-- **Performance Metrics**: Calculate key metrics like Sharpe ratio, Sortino ratio,
-  drawdowns, volatility, and many more
-- **Risk Analysis**: Analyze risk through metrics like Value at Risk (VaR),
-  Conditional VaR, and drawdown analysis
-- **Visualization**: Create interactive plots for portfolio performance, drawdowns,
-  return distributions, and monthly heatmaps
+- **Performance Metrics**: Calculate key metrics like Sharpe ratio,
+Sortino ratio, drawdowns, volatility, and more
+- **Risk Analysis**: Analyze risk through metrics like
+Value at Risk (VaR), Conditional VaR, and drawdown analysis
+- **Interactive Visualizations**: Create interactive
+plots for portfolio performance, drawdowns,
+return distributions, and monthly heatmaps
 - **Benchmark Comparison**: Compare your portfolio performance against benchmarks
+- **Pandas & Polars Support**: Work with either pandas or polars DataFrames as input
 
 ## Installation
 
@@ -73,18 +57,26 @@ pip install jquantstats[dev]
 import polars as pl
 from jquantstats.api import build_data
 
-# Create a Data object from returns
-returns = pl.DataFrame(...)  # Your returns data
+# Create sample returns data
+returns = pl.DataFrame({
+    "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+    "Asset1": [0.01, -0.02, 0.03],
+    "Asset2": [0.02, 0.01, -0.01]
+}).with_columns(pl.col("Date").str.to_date())
 
 # Basic usage
 data = build_data(returns=returns)
 
 # With benchmark and risk-free rate
-benchmark = pl.DataFrame(...)  # Your benchmark returns
+benchmark = pl.DataFrame({
+    "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+    "Market": [0.005, -0.01, 0.02]
+}).with_columns(pl.col("Date").str.to_date())
+
 data = build_data(
     returns=returns,
     benchmark=benchmark,
-    rf=0.0002,      # risk-free rate (e.g., 0.02% per day)
+    rf=0.0002,  # risk-free rate (e.g., 0.02% per day)
 )
 
 # Calculate statistics
@@ -102,16 +94,17 @@ fig.show()
 
 ## Documentation
 
-For detailed documentation,
-visit [jQuantStats Documentation](https://tschm.github.io/jquantstats/book).
+For detailed documentation, visit [jQuantStats Documentation](https://tschm.github.io/jquantstats/book).
 
 ## Requirements
 
 - Python 3.10+
 - numpy
 - polars
+- pandas
 - plotly
 - kaleido (for static image export)
+- scipy
 
 ## Contributing
 
@@ -125,5 +118,5 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the
-Apache License 2.0 - see the [LICENSE.txt](LICENSE.txt) file for details.
+This project is licensed under the Apache
+License 2.0 - see the [LICENSE.txt](LICENSE.txt) file for details.
