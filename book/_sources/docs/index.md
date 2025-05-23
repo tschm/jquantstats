@@ -9,7 +9,7 @@
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/tschm/jquantstats)
 
-## Overview
+## 📊 Overview
 
 **jQuantStats** is a Python library for portfolio analytics
 that helps quants and portfolio managers understand their performance
@@ -27,7 +27,7 @@ enhanced visualization capabilities. Key improvements include:
 - Clean, well-documented API
 - Efficient data processing with polars
 
-## Features
+## ✨ Features
 
 - **Performance Metrics**: Calculate key metrics like Sharpe ratio,
 Sortino ratio, drawdowns, volatility, and more
@@ -39,7 +39,7 @@ return distributions, and monthly heatmaps
 - **Benchmark Comparison**: Compare your portfolio performance against benchmarks
 - **Pandas & Polars Support**: Work with either pandas or polars DataFrames as input
 
-## Installation
+## 📦 Installation
 
 ```bash
 pip install jquantstats
@@ -51,7 +51,7 @@ For development:
 pip install jquantstats[dev]
 ```
 
-## Quick Start
+## 🚀 Quick Start
 
 ```python
 import polars as pl
@@ -92,11 +92,11 @@ fig = data.plots.monthly_heatmap()
 fig.show()
 ```
 
-## Documentation
+## 📚 Documentation
 
 For detailed documentation, visit [jQuantStats Documentation](https://tschm.github.io/jquantstats/book).
 
-## Requirements
+## 🔧 Requirements
 
 - Python 3.10+
 - numpy
@@ -106,7 +106,7 @@ For detailed documentation, visit [jQuantStats Documentation](https://tschm.gith
 - kaleido (for static image export)
 - scipy
 
-## Contributing
+## 👥 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
@@ -116,7 +116,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## License
+## ⚖️ License
 
 This project is licensed under the Apache
 License 2.0 - see the [LICENSE.txt](LICENSE.txt) file for details.
