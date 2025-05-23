@@ -36,7 +36,7 @@ from ._data import Data
 
 def build_data(
     returns: pl.DataFrame | pd.DataFrame,
-    rf: float | pl.DataFrame = 0.0,
+    rf: float | pl.DataFrame | pd.DataFrame = 0.0,
     benchmark: pl.DataFrame = None,
     date_col: str = "Date",
 ) -> "Data":

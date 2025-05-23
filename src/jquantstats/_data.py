@@ -1,7 +1,6 @@
 import dataclasses
 from datetime import timedelta
 
-import pandas as pd
 import polars as pl
 
 from ._plots import Plots
@@ -119,54 +118,6 @@ class Data:
             return pl.concat([self.index, self.returns], how="horizontal")
         else:
             return pl.concat([self.index, self.returns, self.benchmark], how="horizontal")
-
-    @property
-    def all_pd(self) -> pd.DataFrame:
-        """
-        Converts the combined data (index, returns, benchmark) to a pandas DataFrame.
-
-        This property provides a convenient way to access all data as a pandas DataFrame
-        with the date column set as the index, which is useful for compatibility with
-        pandas-based libraries and functions.
-
-        Returns:
-            pd.DataFrame: A pandas DataFrame containing all data with the date column as index.
-        """
-        return self.all.to_pandas().set_index(self.date_col)
-
-    @property
-    def returns_pd(self) -> pd.DataFrame:
-        """
-        Converts the returns data to a pandas DataFrame.
-
-        This property provides a convenient way to access returns data as a pandas DataFrame
-        with the date column set as the index, which is useful for compatibility with
-        pandas-based libraries and functions.
-
-        Returns:
-            pd.DataFrame: A pandas DataFrame containing returns data with the date column as index.
-        """
-        x = pl.concat([self.index, self.returns], how="horizontal")
-        return x.to_pandas().set_index(self.date_col)
-
-    @property
-    def benchmark_pd(self) -> pd.DataFrame | None:
-        """
-        Converts the benchmark data to a pandas DataFrame.
-
-        This property provides a convenient way to access benchmark data as a pandas DataFrame
-        with the date column set as the index, which is useful for compatibility with
-        pandas-based libraries and functions.
-
-        Returns:
-            pd.DataFrame | None: A pandas DataFrame containing benchmark data with the date column
-                                as index, or None if no benchmark data is available.
-        """
-        if self.benchmark is None:
-            return None
-
-        x = pl.concat([self.index, self.benchmark], how="horizontal")
-        return x.to_pandas().set_index(self.date_col)
 
     def resample(self, every: str = "1mo") -> "Data":
         """

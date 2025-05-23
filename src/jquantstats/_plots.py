@@ -1,26 +1,34 @@
 import dataclasses
 
-import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import polars as pl
 from plotly.subplots import make_subplots
 
 
-def _plot_performance_dashboard(returns: pd.DataFrame, log_scale=False) -> go.Figure:
+def _plot_performance_dashboard(returns: pl.DataFrame, log_scale=False) -> go.Figure:
     def hex_to_rgba(hex_color: str, alpha: float = 0.5) -> str:
         hex_color = hex_color.lstrip("#")
         r, g, b = tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
         return f"rgba({r}, {g}, {b}, {alpha})"
 
-    tickers = returns.columns.tolist()
-    prices = (1 + returns).cumprod()
+    # Get the date column name from the first column of the DataFrame
+    date_col = returns.columns[0]
+
+    # Get the tickers (all columns except the date column)
+    tickers = [col for col in returns.columns if col != date_col]
+
+    # Calculate cumulative returns (prices)
+    prices = returns.with_columns([((1 + pl.col(ticker)).cum_prod()).alias(f"{ticker}_price") for ticker in tickers])
 
     palette = px.colors.qualitative.Plotly
     COLORS = {ticker: palette[i % len(palette)] for i, ticker in enumerate(tickers)}
     COLORS.update({f"{ticker}_light": hex_to_rgba(COLORS[ticker]) for ticker in tickers})
 
-    monthly_returns = returns.resample("ME").apply(lambda x: (1 + x).prod() - 1)
-    monthly_returns.index = monthly_returns.index.to_period("M").to_timestamp()
+    # Resample to monthly returns
+    monthly_returns = returns.group_by_dynamic(
+        index_column=date_col, every="1mo", period="1mo", closed="right", label="right"
+    ).agg([((pl.col(ticker) + 1.0).product() - 1.0).alias(ticker) for ticker in tickers])
 
     # Create subplot grid with domain for stats table
     fig = make_subplots(
@@ -34,10 +42,11 @@ def _plot_performance_dashboard(returns: pd.DataFrame, log_scale=False) -> go.Fi
 
     # --- Row 1: Cumulative Returns
     for ticker in tickers:
+        price_col = f"{ticker}_price"
         fig.add_trace(
             go.Scatter(
-                x=prices.index,
-                y=prices[ticker],
+                x=prices[date_col],
+                y=prices[price_col],
                 mode="lines",
                 name=ticker,
                 legendgroup=ticker,
@@ -51,11 +60,16 @@ def _plot_performance_dashboard(returns: pd.DataFrame, log_scale=False) -> go.Fi
 
     # --- Row 2: Drawdowns
     for ticker in tickers:
-        dd = (prices[ticker] - prices[ticker].cummax()) / prices[ticker].cummax()
+        price_col = f"{ticker}_price"
+        # Calculate drawdowns using polars
+        price_series = prices[price_col]
+        cummax = prices.select(pl.col(price_col).cum_max().alias("cummax"))
+        dd_values = ((price_series - cummax["cummax"]) / cummax["cummax"]).to_list()
+
         fig.add_trace(
             go.Scatter(
-                x=dd.index,
-                y=dd,
+                x=prices[date_col],
+                y=dd_values,
                 mode="lines",
                 fill="tozeroy",
                 fillcolor=COLORS[f"{ticker}_light"],
@@ -73,14 +87,17 @@ def _plot_performance_dashboard(returns: pd.DataFrame, log_scale=False) -> go.Fi
 
     # --- Row 3: Monthly Returns
     for ticker in tickers:
+        # Get monthly returns values as a list for coloring
+        monthly_values = monthly_returns[ticker].to_list()
+
         fig.add_trace(
             go.Bar(
-                x=monthly_returns.index,
+                x=monthly_returns[date_col],
                 y=monthly_returns[ticker],
                 name=ticker,
                 legendgroup=ticker,
                 marker=dict(
-                    color=[COLORS[ticker] if val > 0 else COLORS[f"{ticker}_light"] for val in monthly_returns[ticker]],
+                    color=[COLORS[ticker] if val > 0 else COLORS[f"{ticker}_light"] for val in monthly_values],
                     line=dict(width=0),
                 ),
                 opacity=0.8,
@@ -177,5 +194,5 @@ class Plots:
             >>> fig = data.plots.plot_snapshot(title="My Portfolio Performance")
             >>> fig.show()
         """
-        fig = _plot_performance_dashboard(returns=self.data.all_pd, log_scale=log_scale)
+        fig = _plot_performance_dashboard(returns=self.data.all, log_scale=log_scale)
         return fig

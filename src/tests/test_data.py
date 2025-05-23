@@ -302,27 +302,3 @@ def test_copy_no_benchmark(data_no_benchmark):
     x = data_no_benchmark.copy()
     assert x.returns is not None
     assert x.benchmark is None
-
-def test_benchmark_pd_no_benchmark(data_no_benchmark):
-    """
-    Tests that the benchmark_pd property is None when there is no benchmark.
-
-    Args:
-        data_no_benchmark (_Data): The data_no_benchmark fixture containing a Data object with no benchmark.
-
-    Verifies:
-        The benchmark_pd property is None when there is no benchmark.
-    """
-    assert data_no_benchmark.benchmark_pd is None
-
-def test_all_pd(data):
-    """
-    Tests that the all_pd property returns a pandas DataFrame with all data.
-
-    Args:
-        data (_Data): The data fixture containing a Data object.
-
-    Verifies:
-        The all_pd property returns a pandas DataFrame.
-    """
-    print(data.all_pd)
