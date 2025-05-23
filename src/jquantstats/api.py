@@ -20,29 +20,49 @@
 jQuantStats API module.
 
 This module provides the core API for the jQuantStats library, including the Data class
-for handling financial returns data and benchmarks. The main entry point is the build_data
-function, which creates a Data object from returns and optional benchmark data.
+for handling financial returns data and benchmarks.
 
-The Data class provides methods for analyzing and manipulating financial returns data,
-including accessing statistical metrics through the stats property and visualization
-through the plots property. The module supports both pandas and polars DataFrames as input,
-with internal conversion to polars for efficient data processing.
+Overview
+--------
+The main entry point is the `build_data` function, which creates a Data object from
+returns and optional benchmark data. The Data class provides methods for analyzing and
+manipulating financial returns data, including accessing statistical metrics through
+the `stats` property and visualization through the `plots` property.
 
-Example:
-    >>> import polars as pl
-    >>> from jquantstats.api import build_data
-    >>>
-    >>> # Create a Data object from returns
-    >>> returns = pl.DataFrame(...)  # Your returns data
-    >>> data = build_data(returns=returns)
-    >>>
-    >>> # With benchmark and risk-free rate
-    >>> benchmark = pl.DataFrame(...)  # Your benchmark returns
-    >>> data = build_data(
-    ...     returns=returns,
-    ...     benchmark=benchmark,
-    ...     rf=0.0002,  # risk-free rate (e.g., 0.02% per day)
-    ... )
+Features
+--------
+- Support for both pandas and polars DataFrames as input
+- Automatic conversion to polars for efficient data processing
+- Handling of risk-free rate adjustments
+- Benchmark comparison capabilities
+- Date alignment between returns and benchmark data
+
+Example
+-------
+```python
+import polars as pl
+from jquantstats.api import build_data
+
+# Create a Data object from returns
+returns = pl.DataFrame({
+    "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+    "Asset1": [0.01, -0.02, 0.03]
+}).with_columns(pl.col("Date").str.to_date())
+
+data = build_data(returns=returns)
+
+# With benchmark and risk-free rate
+benchmark = pl.DataFrame({
+    "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+    "Market": [0.005, -0.01, 0.02]
+}).with_columns(pl.col("Date").str.to_date())
+
+data = build_data(
+    returns=returns,
+    benchmark=benchmark,
+    rf=0.0002,  # risk-free rate (e.g., 0.02% per day)
+)
+```
 """
 
 import pandas as pd
@@ -61,95 +81,135 @@ def build_data(
     Build a Data object from returns and optional benchmark using Polars.
 
     This function is the main entry point for creating a Data object, which is the core
-    container for financial returns data in jQuantStats. It handles the conversion of
-    pandas DataFrames and Series to polars DataFrames, aligns dates between returns and
-    benchmark data, and subtracts the risk-free rate to calculate excess returns.
+    container for financial returns data in jQuantStats.
 
-    Parameters:
-        returns (pl.DataFrame | pd.DataFrame | pd.Series): Financial returns data.
-            - If pl.DataFrame: First column should be the date column, remaining columns are asset returns.
-            - If pd.DataFrame: Index can be dates (will be included) or a date column should be present.
-            - If pd.Series: Index should be dates, values are returns for a single asset.
+    Description
+    -----------
+    The `build_data` function handles the conversion of pandas DataFrames and Series to
+    polars DataFrames, aligns dates between returns and benchmark data, and subtracts
+    the risk-free rate to calculate excess returns.
 
-        rf (float | pl.DataFrame | pd.DataFrame | pd.Series, optional): Risk-free rate.
-            - If float: Constant risk-free rate applied to all dates.
-            - If DataFrame/Series: Time-varying risk-free rate with dates matching returns.
-            Defaults to 0.0 (no risk-free rate adjustment).
+    Parameters
+    ----------
+    returns : pl.DataFrame | pd.DataFrame | pd.Series
+        Financial returns data.
 
-        benchmark (pl.DataFrame | pd.DataFrame | pd.Series, optional): Benchmark returns.
-            - If pl.DataFrame: First column should be the date column, remaining columns are benchmark returns.
-            - If pd.DataFrame: Index can be dates (will be included) or a date column should be present.
-            - If pd.Series: Index should be dates, values are returns for a single benchmark.
-            Defaults to None (no benchmark).
+        - If pl.DataFrame: First column should be the date column, remaining columns are asset returns.
+        - If pd.DataFrame: Index can be dates (will be included) or a date column should be present.
+        - If pd.Series: Index should be dates, values are returns for a single asset.
 
-        date_col (str, optional): Name of the date column in the DataFrames.
-            Defaults to "Date".
+    rf : float | pl.DataFrame | pd.DataFrame | pd.Series, optional
+        Risk-free rate. Default is 0.0 (no risk-free rate adjustment).
 
-    Returns:
-        Data: Object containing excess returns and benchmark (if any), with methods for
-            analysis and visualization through the stats and plots properties.
+        - If float: Constant risk-free rate applied to all dates.
+        - If DataFrame/Series: Time-varying risk-free rate with dates matching returns.
 
-    Raises:
-        ValueError: If there are no overlapping dates between returns and benchmark.
+    benchmark : pl.DataFrame | pd.DataFrame | pd.Series, optional
+        Benchmark returns. Default is None (no benchmark).
 
-    Examples:
-        Basic usage with polars DataFrame:
-        >>> import polars as pl
-        >>> returns = pl.DataFrame({
-        ...     "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
-        ...     "Asset1": [0.01, -0.02, 0.03],
-        ...     "Asset2": [0.02, 0.01, -0.01]
-        ... }).with_columns(pl.col("Date").str.to_date())
-        >>> data = build_data(returns=returns)
+        - If pl.DataFrame: First column should be the date column, remaining columns are benchmark returns.
+        - If pd.DataFrame: Index can be dates (will be included) or a date column should be present.
+        - If pd.Series: Index should be dates, values are returns for a single benchmark.
 
-        With pandas DataFrame:
-        >>> import pandas as pd
-        >>> returns_pd = pd.DataFrame({
-        ...     "Date": pd.to_datetime(["2023-01-01", "2023-01-02", "2023-01-03"]),
-        ...     "Asset1": [0.01, -0.02, 0.03],
-        ...     "Asset2": [0.02, 0.01, -0.01]
-        ... })
-        >>> data = build_data(returns=returns_pd)
+    date_col : str, optional
+        Name of the date column in the DataFrames. Default is "Date".
 
-        With benchmark and risk-free rate:
-        >>> benchmark = pl.DataFrame({
-        ...     "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
-        ...     "Market": [0.005, -0.01, 0.02]
-        ... }).with_columns(pl.col("Date").str.to_date())
-        >>> data = build_data(returns=returns, benchmark=benchmark, rf=0.0002)
+    Returns
+    -------
+    Data
+        Object containing excess returns and benchmark (if any), with methods for
+        analysis and visualization through the `stats` and `plots` properties.
+
+    Raises
+    ------
+    ValueError
+        If there are no overlapping dates between returns and benchmark.
+
+    Examples
+    --------
+    Basic usage with polars DataFrame:
+
+    ```python
+    import polars as pl
+    from jquantstats.api import build_data
+
+    returns = pl.DataFrame({
+        "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+        "Asset1": [0.01, -0.02, 0.03],
+        "Asset2": [0.02, 0.01, -0.01]
+    }).with_columns(pl.col("Date").str.to_date())
+
+    data = build_data(returns=returns)
+    ```
+
+    With pandas DataFrame:
+
+    ```python
+    import pandas as pd
+    from jquantstats.api import build_data
+
+    returns_pd = pd.DataFrame({
+        "Date": pd.to_datetime(["2023-01-01", "2023-01-02", "2023-01-03"]),
+        "Asset1": [0.01, -0.02, 0.03],
+        "Asset2": [0.02, 0.01, -0.01]
+    })
+
+    data = build_data(returns=returns_pd)
+    ```
+
+    With benchmark and risk-free rate:
+
+    ```python
+    benchmark = pl.DataFrame({
+        "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+        "Market": [0.005, -0.01, 0.02]
+    }).with_columns(pl.col("Date").str.to_date())
+
+    data = build_data(returns=returns, benchmark=benchmark, rf=0.0002)
+    ```
     """
 
     def subtract_risk_free(df: pl.DataFrame, rf: float | pl.DataFrame, date_col: str) -> pl.DataFrame:
         """
-        Subtracts the risk-free rate from all numeric columns in the DataFrame.
+        Subtract the risk-free rate from all numeric columns in the DataFrame.
 
+        Description
+        -----------
         This function handles both scalar risk-free rates and time series risk-free rates.
         For scalar rates, it creates a constant column with the risk-free rate value.
         For time series, it joins the risk-free rate DataFrame with the returns DataFrame
         on the date column and then subtracts the risk-free rate from each numeric column.
 
-        Parameters:
-            df (pl.DataFrame): DataFrame containing returns data with a date column
-                and one or more numeric columns representing asset returns.
+        Parameters
+        ----------
+        df : pl.DataFrame
+            DataFrame containing returns data with a date column
+            and one or more numeric columns representing asset returns.
 
-            rf (float | pl.DataFrame): Risk-free rate to subtract from returns.
-                - If float: A constant risk-free rate applied to all dates.
-                - If pl.DataFrame: A DataFrame with a date column and a second column
-                  containing time-varying risk-free rates.
+        rf : float | pl.DataFrame
+            Risk-free rate to subtract from returns.
 
-            date_col (str): Name of the date column in both DataFrames for joining
-                when rf is a DataFrame.
+            - If float: A constant risk-free rate applied to all dates.
+            - If pl.DataFrame: A DataFrame with a date column and a second column
+              containing time-varying risk-free rates.
 
-        Returns:
-            pl.DataFrame: DataFrame with the risk-free rate subtracted from all numeric columns,
-                preserving the original column names. The resulting DataFrame includes the
-                date column and all numeric columns from the input DataFrame.
+        date_col : str
+            Name of the date column in both DataFrames for joining
+            when rf is a DataFrame.
 
-        Notes:
-            - The function performs an inner join when rf is a DataFrame, which means
-              only dates present in both DataFrames will be included in the result.
-            - Only columns with numeric data types will have the risk-free rate subtracted.
-            - The date column and any non-numeric columns are preserved in the output.
+        Returns
+        -------
+        pl.DataFrame
+            DataFrame with the risk-free rate subtracted from all numeric columns,
+            preserving the original column names. The resulting DataFrame includes the
+            date column and all numeric columns from the input DataFrame.
+
+        Notes
+        -----
+        - The function performs an inner join when rf is a DataFrame, which means
+          only dates present in both DataFrames will be included in the result.
+        - Only columns with numeric data types will have the risk-free rate subtracted.
+        - The date column and any non-numeric columns are preserved in the output.
         """
         # Handle scalar rf case
         if isinstance(rf, float):
