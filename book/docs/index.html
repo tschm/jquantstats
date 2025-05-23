@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>jqrQuantStats: Portfolio analytics for quants &#8212; quantstats</title>
+    <title>jQuantStats: Portfolio analytics for quants &#8212; quantstats</title>
   
   
   
@@ -171,7 +171,7 @@
         <ul class="nav bd-sidenav bd-sidenav__home-link">
             <li class="toctree-l1 current active">
                 <a class="reference internal" href="#">
-                    jqrQuantStats: Portfolio analytics for quants
+                    jQuantStats: Portfolio analytics for quants
                 </a>
             </li>
         </ul>
@@ -363,7 +363,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>jqrQuantStats: Portfolio analytics for quants</h1>
+    <h1>jQuantStats: Portfolio analytics for quants</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -373,8 +373,14 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#features">Features</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start">Quick Start</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#visualize-stock-performance">Visualize stock performance</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation">Documentation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contributing">Contributing</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#license">License</a></li>
 </ul>
             </nav>
         </div>
@@ -386,144 +392,133 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="jqrquantstats-portfolio-analytics-for-quants">
-<h1><a class="reference external" href="https://tschm.github.io/quantstats/book">jqrQuantStats</a>: Portfolio analytics for quants<a class="headerlink" href="#jqrquantstats-portfolio-analytics-for-quants" title="Link to this heading">#</a></h1>
-<p><a class="reference external" href="https://badge.fury.io/py/jqrquantstats"><img alt="PyPI version" src="https://badge.fury.io/py/jqrquantstats.svg" /></a>
+  <section class="tex2jax_ignore mathjax_ignore" id="jquantstats-portfolio-analytics-for-quants">
+<h1><a class="reference external" href="https://tschm.github.io/jquantstats/book">jQuantStats</a>: Portfolio analytics for quants<a class="headerlink" href="#jquantstats-portfolio-analytics-for-quants" title="Link to this heading">#</a></h1>
+<p><a class="reference external" href="https://badge.fury.io/py/jquantstats"><img alt="PyPI version" src="https://badge.fury.io/py/jquantstats.svg" /></a>
 <a class="reference internal" href="#LICENSE.txt"><span class="xref myst"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg" /></span></a>
-<a class="reference external" href="https://github.com/tschm/quantstats/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/tschm/quantstats/actions/workflows/ci.yml/badge.svg" /></a>
-<a class="reference external" href="https://coveralls.io/github/tschm/quantstats?branch=main"><img alt="Coverage Status" src="https://coveralls.io/repos/github/tschm/quantstats/badge.svg?branch=main" /></a>
-<a class="reference external" href="https://www.codefactor.io/repository/github/tschm/quantstats"><img alt="CodeFactor" src="https://www.codefactor.io/repository/github/tschm/quantstats/badge" /></a>
+<a class="reference external" href="https://github.com/tschm/jquantstats/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/tschm/jquantstats/actions/workflows/ci.yml/badge.svg" /></a>
+<a class="reference external" href="https://coveralls.io/github/tschm/jquantstats?branch=main"><img alt="Coverage Status" src="https://coveralls.io/repos/github/tschm/jquantstats/badge.svg?branch=main" /></a>
+<a class="reference external" href="https://www.codefactor.io/repository/github/tschm/jquantstats"><img alt="CodeFactor" src="https://www.codefactor.io/repository/github/tschm/jquantstats/badge" /></a>
 <a class="reference external" href="https://github.com/renovatebot/renovate"><img alt="Renovate enabled" src="https://img.shields.io/badge/renovate-enabled-brightgreen.svg" /></a></p>
-<p><a class="reference external" href="https://codespaces.new/tschm/quantstats"><img alt="Open in GitHub Codespaces" src="https://github.com/codespaces/badge.svg" /></a></p>
-<p><strong>QuantStats</strong> Python library that performs portfolio profiling,
-allowing quants and portfolio managers to understand
-their performance better by providing them with in-depth analytics and risk metrics.</p>
-<p>QuantStats is comprised of 3 main modules:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">quantstats.stats</span></code> - for calculating various performance metrics,
-like Sharpe ratio, Win rate, Volatility, etc.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">quantstats.plots</span></code> - for visualizing performance, drawdowns,
-rolling statistics, monthly returns, etc.</p></li>
-</ol>
-<p>Here’s an example of a simple tear sheet analyzing a strategy:</p>
-<section id="quick-start">
-<h2>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">src</span><span class="w"> </span><span class="kn">import</span> <span class="n">quantstats</span> <span class="k">as</span> <span class="n">qs</span>
-
-<span class="c1"># extend pandas functionality with metrics, etc.</span>
-<span class="n">qs</span><span class="o">.</span><span class="n">extend_pandas</span><span class="p">()</span>
-
-<span class="c1"># fetch the daily returns for a stock</span>
-<span class="n">stock</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">quantstats</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">download_returns</span><span class="p">(</span><span class="s1">&#39;META&#39;</span><span class="p">)</span>
-
-<span class="c1"># show sharpe ratio</span>
-<span class="n">qs</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">sharpe</span><span class="p">(</span><span class="n">stock</span><span class="p">)</span>
-
-<span class="c1"># or using extend_pandas() :)</span>
-<span class="n">stock</span><span class="o">.</span><span class="n">sharpe</span><span class="p">()</span>
+<p><a class="reference external" href="https://codespaces.new/tschm/jquantstats"><img alt="Open in GitHub Codespaces" src="https://github.com/codespaces/badge.svg" /></a></p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p><strong>jQuantStats</strong> is a Python library for portfolio analytics
+that helps quants and portfolio managers understand
+their performance through in-depth analytics and risk metrics.
+It provides tools for calculating various performance metrics
+and visualizing portfolio performance.</p>
+<p>The library is inspired by and currently exposes a subset of the
+functionality of <a class="reference external" href="https://github.com/ranaroussi/quantstats">QuantStats</a>,
+focusing on providing a clean, modern API with enhanced
+visualization capabilities using Plotly.</p>
+<p>We have made the following changes when compared to quantstats:</p>
+<ul class="simple">
+<li><p>added tests (based on pytest), pre-commit hooks and
+github ci/cd workflows</p></li>
+<li><p>removed a direct dependency on yfinance to inject data</p></li>
+<li><p>moved all graphical output to plotly and removed the matplotlib dependency</p></li>
+<li><p>removed some statistical metrics but intend to bring them back</p></li>
+<li><p>moved to Marimo for demos</p></li>
+<li><p>gave up on the very tight coupling with pandas</p></li>
+</ul>
+<p>Along the way we broke downwards compatibility with quantstats but the
+underlying usage pattern is too different. Users familiar with
+Dataclasses may find the chosen path appealing.
+A data class is
+constructed using the <code class="docutils literal notranslate"><span class="pre">build_data</span></code> function.
+This function is essentially
+the only viable entry point into jquantstats.
+It constructs and returns
+a <code class="docutils literal notranslate"><span class="pre">_Data</span></code> object which exposes plots and stats via its member attributes.</p>
+<p>At this early stage the user would have to define a benchmark
+and set the underlying risk-free rate.</p>
+</section>
+<section id="features">
+<h2>Features<a class="headerlink" href="#features" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>Performance Metrics</strong>: Calculate key metrics like Sharpe ratio, Sortino ratio,
+drawdowns, volatility, and many more</p></li>
+<li><p><strong>Risk Analysis</strong>: Analyze risk through metrics like Value at Risk (VaR),
+Conditional VaR, and drawdown analysis</p></li>
+<li><p><strong>Visualization</strong>: Create interactive plots for portfolio performance, drawdowns,
+return distributions, and monthly heatmaps</p></li>
+<li><p><strong>Benchmark Comparison</strong>: Compare your portfolio performance against benchmarks</p></li>
+</ul>
+</section>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>jquantstats
 </pre></div>
 </div>
-<p>Output:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="m">0</span>.8135304438803402
+<p>For development:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>jquantstats<span class="o">[</span>dev<span class="o">]</span>
 </pre></div>
 </div>
 </section>
-<section id="visualize-stock-performance">
-<h2>Visualize stock performance<a class="headerlink" href="#visualize-stock-performance" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
-    <span class="n">qs</span><span class="o">.</span><span class="n">plots</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="n">stock</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Facebook Performance&#39;</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<section id="quick-start">
+<h2>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">jquantstats.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_data</span>
 
-    <span class="c1"># can also be called via:</span>
-    <span class="c1"># stock.plot_snapshot(title=&#39;Facebook Performance&#39;, show=True)</span>
+<span class="c1"># Create a Data object from returns</span>
+<span class="n">returns</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>  <span class="c1"># Your returns data</span>
+
+<span class="c1"># Basic usage</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">build_data</span><span class="p">(</span><span class="n">returns</span><span class="o">=</span><span class="n">returns</span><span class="p">)</span>
+
+<span class="c1"># With benchmark and risk-free rate</span>
+<span class="n">benchmark</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>  <span class="c1"># Your benchmark returns</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">build_data</span><span class="p">(</span>
+    <span class="n">returns</span><span class="o">=</span><span class="n">returns</span><span class="p">,</span>
+    <span class="n">benchmark</span><span class="o">=</span><span class="n">benchmark</span><span class="p">,</span>
+    <span class="n">rf</span><span class="o">=</span><span class="mf">0.0002</span><span class="p">,</span>      <span class="c1"># risk-free rate (e.g., 0.02% per day)</span>
+<span class="p">)</span>
+
+<span class="c1"># Calculate statistics</span>
+<span class="n">sharpe</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">sharpe</span><span class="p">()</span>
+<span class="n">volatility</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">volatility</span><span class="p">()</span>
+
+<span class="c1"># Create visualizations</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">plots</span><span class="o">.</span><span class="n">plot_snapshot</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Portfolio Performance&quot;</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="c1"># Monthly returns heatmap</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">plots</span><span class="o">.</span><span class="n">monthly_heatmap</span><span class="p">()</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>Output:</p>
-<p><a class="reference external" href="https://github.com/ranaroussi/quantstats/blob/main/docs/snapshot.jpg?raw=true">Snapshot</a></p>
-<p>To view a complete list of available methods, run</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">qs</span><span class="o">.</span><span class="n">stats</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;_&#39;</span><span class="p">]</span>
-
-<span class="p">[</span><span class="s1">&#39;avg_loss&#39;</span><span class="p">,</span>
- <span class="s1">&#39;avg_return&#39;</span><span class="p">,</span>
- <span class="s1">&#39;avg_win&#39;</span><span class="p">,</span>
- <span class="s1">&#39;best&#39;</span><span class="p">,</span>
- <span class="s1">&#39;cagr&#39;</span><span class="p">,</span>
- <span class="s1">&#39;calmar&#39;</span><span class="p">,</span>
- <span class="s1">&#39;common_sense_ratio&#39;</span><span class="p">,</span>
- <span class="s1">&#39;comp&#39;</span><span class="p">,</span>
- <span class="s1">&#39;compare&#39;</span><span class="p">,</span>
- <span class="s1">&#39;compsum&#39;</span><span class="p">,</span>
- <span class="s1">&#39;conditional_value_at_risk&#39;</span><span class="p">,</span>
- <span class="s1">&#39;consecutive_losses&#39;</span><span class="p">,</span>
- <span class="s1">&#39;consecutive_wins&#39;</span><span class="p">,</span>
- <span class="s1">&#39;cpc_index&#39;</span><span class="p">,</span>
- <span class="s1">&#39;cvar&#39;</span><span class="p">,</span>
- <span class="s1">&#39;drawdown_details&#39;</span><span class="p">,</span>
- <span class="s1">&#39;expected_return&#39;</span><span class="p">,</span>
- <span class="s1">&#39;expected_shortfall&#39;</span><span class="p">,</span>
- <span class="s1">&#39;exposure&#39;</span><span class="p">,</span>
- <span class="s1">&#39;gain_to_pain_ratio&#39;</span><span class="p">,</span>
- <span class="s1">&#39;geometric_mean&#39;</span><span class="p">,</span>
- <span class="s1">&#39;ghpr&#39;</span><span class="p">,</span>
- <span class="s1">&#39;greeks&#39;</span><span class="p">,</span>
- <span class="s1">&#39;implied_volatility&#39;</span><span class="p">,</span>
- <span class="s1">&#39;information_ratio&#39;</span><span class="p">,</span>
- <span class="s1">&#39;kelly_criterion&#39;</span><span class="p">,</span>
- <span class="s1">&#39;kurtosis&#39;</span><span class="p">,</span>
- <span class="s1">&#39;max_drawdown&#39;</span><span class="p">,</span>
- <span class="s1">&#39;monthly_returns&#39;</span><span class="p">,</span>
- <span class="s1">&#39;outlier_loss_ratio&#39;</span><span class="p">,</span>
- <span class="s1">&#39;outlier_win_ratio&#39;</span><span class="p">,</span>
- <span class="s1">&#39;outliers&#39;</span><span class="p">,</span>
- <span class="s1">&#39;payoff_ratio&#39;</span><span class="p">,</span>
- <span class="s1">&#39;profit_factor&#39;</span><span class="p">,</span>
- <span class="s1">&#39;profit_ratio&#39;</span><span class="p">,</span>
- <span class="s1">&#39;r2&#39;</span><span class="p">,</span>
- <span class="s1">&#39;r_squared&#39;</span><span class="p">,</span>
- <span class="s1">&#39;rar&#39;</span><span class="p">,</span>
- <span class="s1">&#39;recovery_factor&#39;</span><span class="p">,</span>
- <span class="s1">&#39;remove_outliers&#39;</span><span class="p">,</span>
- <span class="s1">&#39;risk_of_ruin&#39;</span><span class="p">,</span>
- <span class="s1">&#39;risk_return_ratio&#39;</span><span class="p">,</span>
- <span class="s1">&#39;rolling_greeks&#39;</span><span class="p">,</span>
- <span class="s1">&#39;ror&#39;</span><span class="p">,</span>
- <span class="s1">&#39;sharpe&#39;</span><span class="p">,</span>
- <span class="s1">&#39;skew&#39;</span><span class="p">,</span>
- <span class="s1">&#39;sortino&#39;</span><span class="p">,</span>
- <span class="s1">&#39;adjusted_sortino&#39;</span><span class="p">,</span>
- <span class="s1">&#39;tail_ratio&#39;</span><span class="p">,</span>
- <span class="s1">&#39;to_drawdown_series&#39;</span><span class="p">,</span>
- <span class="s1">&#39;ulcer_index&#39;</span><span class="p">,</span>
- <span class="s1">&#39;ulcer_performance_index&#39;</span><span class="p">,</span>
- <span class="s1">&#39;upi&#39;</span><span class="p">,</span>
- <span class="s1">&#39;utils&#39;</span><span class="p">,</span>
- <span class="s1">&#39;value_at_risk&#39;</span><span class="p">,</span>
- <span class="s1">&#39;var&#39;</span><span class="p">,</span>
- <span class="s1">&#39;volatility&#39;</span><span class="p">,</span>
- <span class="s1">&#39;win_loss_ratio&#39;</span><span class="p">,</span>
- <span class="s1">&#39;win_rate&#39;</span><span class="p">,</span>
- <span class="s1">&#39;worst&#39;</span><span class="p">]</span>
-</pre></div>
-</div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">qs</span><span class="o">.</span><span class="n">plots</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;_&#39;</span><span class="p">]</span>
-
-<span class="p">[</span><span class="s1">&#39;daily_returns&#39;</span><span class="p">,</span>
- <span class="s1">&#39;distribution&#39;</span><span class="p">,</span>
- <span class="s1">&#39;drawdown&#39;</span><span class="p">,</span>
- <span class="s1">&#39;drawdowns_periods&#39;</span><span class="p">,</span>
- <span class="s1">&#39;earnings&#39;</span><span class="p">,</span>
- <span class="s1">&#39;histogram&#39;</span><span class="p">,</span>
- <span class="s1">&#39;log_returns&#39;</span><span class="p">,</span>
- <span class="s1">&#39;monthly_heatmap&#39;</span><span class="p">,</span>
- <span class="s1">&#39;returns&#39;</span><span class="p">,</span>
- <span class="s1">&#39;rolling_beta&#39;</span><span class="p">,</span>
- <span class="s1">&#39;rolling_sharpe&#39;</span><span class="p">,</span>
- <span class="s1">&#39;rolling_sortino&#39;</span><span class="p">,</span>
- <span class="s1">&#39;rolling_volatility&#39;</span><span class="p">,</span>
- <span class="s1">&#39;snapshot&#39;</span><span class="p">,</span>
- <span class="s1">&#39;yearly_returns&#39;</span><span class="p">]</span>
-</pre></div>
-</div>
+</section>
+<section id="documentation">
+<h2>Documentation<a class="headerlink" href="#documentation" title="Link to this heading">#</a></h2>
+<p>For detailed documentation,
+visit <a class="reference external" href="https://tschm.github.io/jquantstats/book">jQuantStats Documentation</a>.</p>
+</section>
+<section id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Python 3.10+</p></li>
+<li><p>numpy</p></li>
+<li><p>polars</p></li>
+<li><p>plotly</p></li>
+<li><p>kaleido (for static image export)</p></li>
+</ul>
+</section>
+<section id="contributing">
+<h2>Contributing<a class="headerlink" href="#contributing" title="Link to this heading">#</a></h2>
+<p>Contributions are welcome! Please feel free to submit a Pull Request.</p>
+<ol class="arabic simple">
+<li><p>Fork the repository</p></li>
+<li><p>Create your feature branch (<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">-b</span> <span class="pre">feature/amazing-feature</span></code>)</p></li>
+<li><p>Commit your changes (<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">commit</span> <span class="pre">-m</span> <span class="pre">'Add</span> <span class="pre">some</span> <span class="pre">amazing</span> <span class="pre">feature'</span></code>)</p></li>
+<li><p>Push to the branch (<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">push</span> <span class="pre">origin</span> <span class="pre">feature/amazing-feature</span></code>)</p></li>
+<li><p>Open a Pull Request</p></li>
+</ol>
+</section>
+<section id="license">
+<h2>License<a class="headerlink" href="#license" title="Link to this heading">#</a></h2>
+<p>This project is licensed under the
+Apache License 2.0 - see the <a class="reference internal" href="#LICENSE.txt"><span class="xref myst">LICENSE.txt</span></a> file for details.</p>
 </section>
 <div class="toctree-wrapper compound">
 </div>
@@ -584,8 +579,14 @@ rolling statistics, monthly returns, etc.</p></li>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#features">Features</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start">Quick Start</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#visualize-stock-performance">Visualize stock performance</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation">Documentation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contributing">Contributing</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#license">License</a></li>
 </ul>
   </nav></div>
 
