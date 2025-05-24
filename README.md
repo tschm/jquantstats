@@ -34,8 +34,8 @@ Sortino ratio, drawdowns, volatility, and more
 - **Risk Analysis**: Analyze risk through metrics like
 Value at Risk (VaR), Conditional VaR, and drawdown analysis
 - **Interactive Visualizations**: Create interactive
-plots for portfolio performance, drawdowns,
-return distributions, and monthly heatmaps
+plots for portfolio performance, drawdowns, and
+return distributions
 - **Benchmark Comparison**: Compare your portfolio performance against benchmarks
 - **Pandas & Polars Support**: Work with either pandas or polars DataFrames as input
 
@@ -85,10 +85,6 @@ volatility = data.stats.volatility()
 
 # Create visualizations
 fig = data.plots.plot_snapshot(title="Portfolio Performance")
-fig.show()
-
-# Monthly returns heatmap
-fig = data.plots.monthly_heatmap()
 fig.show()
 ```
 
