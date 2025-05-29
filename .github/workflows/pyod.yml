@@ -1,13 +1,10 @@
 name: pyodide
 
-# Trigger: This workflow runs on every push to the repository
 on:
-  push
+  push:
 
-# Permissions: Only read access to repository contents is needed
 permissions:
   contents: read
-
 
 jobs:
   test-pyodide:
@@ -36,6 +33,7 @@ jobs:
         run: npm install puppeteer
 
       - name: Run Puppeteer test to load pyodide & install wheel
+        shell: bash
         run: |
           node --input-type=module <<'EOF'
           import puppeteer from "puppeteer";
@@ -48,26 +46,30 @@ jobs:
 
             await page.goto('about:blank');
 
-            // Expose console.log from the page context to GitHub Actions logs
             page.on('console', msg => console.log('PAGE LOG:', msg.text()));
 
             await page.evaluate(async () => {
-              // Load Pyodide
               const pyodide = await loadPyodide({
                 indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/"
+              });
+              console.log('✅ Pyodide loaded');
+
+              await pyodide.loadPackage('micropip');
+
+              const wheelUrl = 'http://127.0.0.1:8000/jquantstats.whl';
+
+              console.log(`Installing wheel from: ${wheelUrl}`);
+
+              await pyodide.runPythonAsync(\`
+                import micropip
+                await micropip.install("${wheelUrl}")
+                import jquantstats
+                print("✅ jquantstats imported successfully")
+              \`);
             });
-            console.log('✅ Pyodide loaded');
 
-            // Load micropip
-            await pyodide.loadPackage('micropip');
-
-            // Find your wheel filename served by local HTTP server
-            // Note: Adjust wheel filename if needed
-            const wheelUrl = 'http://127.0.0.1:8000/jquantstats.whl';
-
-            console.log(`Installing wheel from: ${wheelUrl}`);
-
-          })().catch(console.error);
+            await browser.close();
+          })();
           EOF
 
       - name: Stop HTTP server
