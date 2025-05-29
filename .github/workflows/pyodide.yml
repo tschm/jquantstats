@@ -55,8 +55,8 @@ jobs:
               // Load Pyodide
               const pyodide = await loadPyodide({
                 indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/"
-              });
-              console.log('✅ Pyodide loaded');
+            });
+            console.log('✅ Pyodide loaded');
           })().catch(console.error);
           EOF
 
