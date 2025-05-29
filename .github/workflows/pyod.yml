@@ -60,12 +60,10 @@ jobs:
 
               console.log(`Installing wheel from: ${wheelUrl}`);
 
-              await pyodide.runPythonAsync(\`
-                import micropip
-                await micropip.install("${wheelUrl}")
-                import jquantstats
-                print("✅ jquantstats imported successfully")
-              \`);
+              await pyodide.runPythonAsync(`import micropip; from urllib.parse import quote; await micropip.install(quote("${wheelUrl}"))`);
+              await pyodide.runPythonAsync("import jquantstats");
+              console.log("✅ jquantstats successfully imported");
+
             });
 
             await browser.close();
