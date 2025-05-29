@@ -1,94 +1,57 @@
-name: Test Pyodide Compatibility Inline
+name: Test jquantstats Pyodide install (Node.js only)
 
-on: [push]
+on:
+  push:
+    branches: [main]
+  pull_request:
 
 jobs:
-  pyodide-test:
+  pyodide-nodejs:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
       - name: Build wheel
         run: |
-          python -m pip install --upgrade build
-          python -m build
+          python3 -m pip install --upgrade build
+          python3 -m build --wheel --outdir dist
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install puppeteer and serve-handler
-        run: npm install puppeteer serve-handler
-
-      - name: Run Pyodide wheel install test
+      - name: Start HTTP server
         run: |
+          python3 -m http.server 8000 &
+          echo $! > server_pid.txt
+          sleep 2
+
+      - name: Install Pyodide and wheel via Node.js
+        shell: bash
+        run: |
+          npm install pyodide
+
           node --input-type=module <<'EOF'
-          import http from 'http';
-          import serveHandler from 'serve-handler';
-          import puppeteer from 'puppeteer';
+          import { loadPyodide } from "pyodide";
+          import fs from "fs";
 
-          const PORT = 8000;
+          async function main() {
+            const pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/" });
+            console.log("✅ Pyodide loaded");
 
-          // Start a static file server serving the dist directory (with your wheel)
-          const server = http.createServer((req, res) => serveHandler(req, res, { public: 'dist' }));
-          server.listen(PORT);
+            const files = fs.readdirSync('./dist');
+            const wheel = files.find(f => f.endsWith(".whl"));
+            if (!wheel) throw new Error("No wheel found");
 
-          // Launch Puppeteer headless browser with no sandbox (required in GitHub Actions)
-          const browser = await puppeteer.launch({
-            headless: "new",
-            args: ['--no-sandbox', '--disable-setuid-sandbox'],
-          });
+            const wheelUrl = `http://localhost:8000/${wheel}`;
+            console.log("Installing wheel from", wheelUrl);
 
-          const page = await browser.newPage();
+            await pyodide.loadPackage("micropip");
+            await pyodide.runPythonAsync("import micropip");
+            await pyodide.runPythonAsync(`await micropip.install("${wheelUrl}")`);
+            await pyodide.runPythonAsync("import jquantstats");
+            await pyodide.runPythonAsync("print('✅ jquantstats imported successfully')");
+          }
 
-          // Create a data URL with inline HTML/JS to load Pyodide, install wheel, and import package
-          const html = `
-            <html>
-              <body>
-                <script type="module">
-                  import { loadPyodide } from "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.mjs";
-
-                  async function test() {
-                    const pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/" });
-                    await pyodide.loadPackage("micropip");
-
-                    // Fetch the wheel file name from the dist directory served on localhost
-                    const resp = await fetch('http://localhost:${PORT}/');
-                    const text = await resp.text();
-                    const wheelMatch = text.match(/href="([^"]+\\.whl)"/);
-                    if (!wheelMatch) throw new Error("No wheel found in dist directory");
-                    const wheelUrl = \`http://localhost:${PORT}/\${wheelMatch[1]}\`;
-
-                    console.log("Installing wheel from:", wheelUrl);
-
-                    await pyodide.runPythonAsync(\`
-                      import micropip
-                      await micropip.install("${wheelUrl}")
-                      import jquantstats
-                      print("✅ jquantstats imported successfully")
-                    \`);
-                    console.log("Pyodide test completed.");
-                  }
-
-                  test();
-                </script>
-              </body>
-            </html>
-          `;
-
-          // Navigate to the inline HTML page using a data URL
-          await page.goto("data:text/html," + encodeURIComponent(html), { waitUntil: "networkidle0" });
-
-          // Wait some time for the JS to run inside the page (adjust if needed)
-          await page.waitForTimeout(10000);
-
-          await browser.close();
-          server.close();
+          main().catch(console.error);
           EOF
+
+      - name: Kill HTTP server
+        run: kill $(cat server_pid.txt) || true
