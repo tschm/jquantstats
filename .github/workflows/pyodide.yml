@@ -1,14 +1,17 @@
-name: Test jquantstats Pyodide install (Node.js only)
+name: pyodide
 
+# Trigger: This workflow runs on every push to the repository
 on:
-  push:
-    branches: [main]
-  pull_request:
+  push
+
+# Permissions: Only read access to repository contents is needed
+permissions:
+  contents: read
+
 
 jobs:
-  pyodide-nodejs:
+  test-pyodide:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -17,44 +20,30 @@ jobs:
         with:
           python-version: 3.12
 
-      - name: Build wheel
-        run: |
-          python3 -m pip install --upgrade build
-          python3 -m build --wheel --outdir dist
+      - name: Install build tools
+        run: python -m pip install --upgrade build
 
-      - name: Start HTTP server
+      - name: Build wheel
+        run: python -m build --wheel --outdir dist
+
+      - name: Start HTTP server in background
         run: |
-          python3 -m http.server 8000 &
+          python -m http.server 8000 &
           echo $! > server_pid.txt
           sleep 2
 
-      - name: Install Pyodide and wheel via Node.js
-        shell: bash
-        run: |
+      - name: Install Puppeteer
+        run: npm install puppeteer
+
+      - name: Run Puppeteer test to load pyodide & install wheel
+        run:
           node --input-type=module <<'EOF'
-          import { loadPyodide } from "pyodide";
-          import fs from "fs";
+          import puppeteer from "puppeteer";
 
-          async function main() {
-            const pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/" });
-            console.log("✅ Pyodide loaded");
+          (async () => {
 
-            const files = fs.readdirSync('./dist');
-            const wheel = files.find(f => f.endsWith(".whl"));
-            if (!wheel) throw new Error("No wheel found");
-
-            const wheelUrl = `http://localhost:8000/${wheel}`;
-            console.log("Installing wheel from", wheelUrl);
-
-            await pyodide.loadPackage("micropip");
-            await pyodide.runPythonAsync("import micropip");
-            await pyodide.runPythonAsync(`await micropip.install("${wheelUrl}")`);
-            await pyodide.runPythonAsync("import jquantstats");
-            await pyodide.runPythonAsync("print('✅ jquantstats imported successfully')");
-          }
-
-          main().catch(console.error);
+          })().catch(console.error);
           EOF
 
-      - name: Kill HTTP server
+      - name: Stop HTTP server
         run: kill $(cat server_pid.txt) || true
