@@ -57,6 +57,16 @@ jobs:
                 indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/"
             });
             console.log('✅ Pyodide loaded');
+
+            // Load micropip
+            await pyodide.loadPackage('micropip');
+
+            // Find your wheel filename served by local HTTP server
+            // Note: Adjust wheel filename if needed
+            const wheelUrl = 'http://127.0.0.1:8000/jquantstats.whl';
+
+            console.log(`Installing wheel from: ${wheelUrl}`);
+
           })().catch(console.error);
           EOF
 
