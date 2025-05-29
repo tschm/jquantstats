@@ -1,0 +1,93 @@
+name: Test Micropip Installation (Wheel)
+
+on:
+  push
+
+jobs:
+  test-micropip-wheel:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    # Step 1: Build the wheel
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install build tools
+      run: |
+        python -m pip install build wheel
+
+    - name: Build wheel
+      run: |
+        python -m build --wheel
+        mkdir dist_pyodide
+        cp dist/*.whl dist_pyodide/
+        echo "WHEEL_NAME=$(ls dist_pyodide/*.whl)" >> $GITHUB_ENV
+
+    # Step 2: Test with Pyodide
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install Pyodide
+      run: |
+        npm init -y --silent
+        npm install pyodide@0.25.0
+
+    - name: Run micropip test with wheel
+      run: |
+        cat <<EOF > test_jquantstats.js
+        const { loadPyodide } = require("pyodide");
+        const fs = require('fs');
+
+        async function testInstall() {
+          console.log("Loading Pyodide...");
+          let pyodide = await loadPyodide({
+            stdout: console.log,
+            stderr: console.error
+          });
+
+          console.log("Loading micropip...");
+          await pyodide.loadPackage("micropip");
+          const micropip = pyodide.pyimport("micropip");
+
+          // Make wheel available to Pyodide
+          const wheelData = fs.readFileSync("dist_pyodide/${WHEEL_NAME}");
+          pyodide.FS.writeFile("/tmp/${WHEEL_NAME}", wheelData);
+
+          console.log("Installing jquantstats from wheel...");
+          try {
+            await micropip.install("/tmp/${WHEEL_NAME}");
+
+            console.log("Testing jquantstats import...");
+            pyodide.runPython(\`
+              import jquantstats
+              print(f"Successfully imported jquantstats version: {jquantstats.__version__}")
+              # Add basic functionality tests here
+              assert jquantstats.__version__ is not None
+
+              # Example test - modify for your actual functions
+              try:
+                  print("Testing basic functionality...")
+                  # Replace with actual test of your package's functions
+                  print(jquantstats.__version__)
+              except Exception as e:
+                  print(f"Functionality test failed: {e}")
+                  raise
+            \`);
+          } catch (e) {
+            console.error("Installation failed:", e);
+            process.exit(1);
+          }
+        }
+
+        testInstall().catch(e => {
+          console.error("Test failed:", e);
+          process.exit(1);
+        });
+        EOF
+
+        node test_jquantstats.js
