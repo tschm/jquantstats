@@ -31,8 +31,6 @@ jobs:
       - name: Install Pyodide and wheel via Node.js
         shell: bash
         run: |
-          npm install pyodide
-
           node --input-type=module <<'EOF'
           import { loadPyodide } from "pyodide";
           import fs from "fs";
