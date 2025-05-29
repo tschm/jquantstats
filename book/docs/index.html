@@ -375,11 +375,7 @@ document.write(`
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">📊 Overview</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#features">✨ Features</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">📦 Installation</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#standard-installation">Standard Installation</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pyodide-jupyterlite-installation">Pyodide / JupyterLite Installation</a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">📦 Installation</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start">🚀 Quick Start</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation">📚 Documentation</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">🔧 Requirements</a></li>
@@ -439,8 +435,6 @@ return distributions</p></li>
 </section>
 <section id="installation">
 <h2>📦 Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
-<section id="standard-installation">
-<h3>Standard Installation<a class="headerlink" href="#standard-installation" title="Link to this heading">#</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>jquantstats
 </pre></div>
 </div>
@@ -448,22 +442,6 @@ return distributions</p></li>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>jquantstats<span class="o">[</span>dev<span class="o">]</span>
 </pre></div>
 </div>
-<p>For static image export capabilities:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>jquantstats<span class="o">[</span>export<span class="o">]</span>
-</pre></div>
-</div>
-</section>
-<section id="pyodide-jupyterlite-installation">
-<h3>Pyodide / JupyterLite Installation<a class="headerlink" href="#pyodide-jupyterlite-installation" title="Link to this heading">#</a></h3>
-<p>You can use jQuantStats in browser environments like JupyterLite
-or any Pyodide-based application:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">micropip</span>
-<span class="k">await</span> <span class="n">micropip</span><span class="o">.</span><span class="n">install</span><span class="p">(</span><span class="s1">&#39;jquantstats&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Note: In browser environments, static image export
-(which requires the <code class="docutils literal notranslate"><span class="pre">kaleido</span></code> package) is not supported.</p>
-</section>
 </section>
 <section id="quick-start">
 <h2>🚀 Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading">#</a></h2>
@@ -595,11 +573,7 @@ License 2.0 - see the <a class="reference internal" href="#LICENSE.txt"><span cl
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">📊 Overview</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#features">✨ Features</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">📦 Installation</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#standard-installation">Standard Installation</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pyodide-jupyterlite-installation">Pyodide / JupyterLite Installation</a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">📦 Installation</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start">🚀 Quick Start</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation">📚 Documentation</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">🔧 Requirements</a></li>
