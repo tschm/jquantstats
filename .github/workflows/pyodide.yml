@@ -1,59 +1,74 @@
-name: Test Pyodide Wheel Install
+name: Pyodide Test
 
 on: [push, pull_request]
 
 jobs:
-  test-pyodide:
+  pyodide-test:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: 20
 
-      - name: Install HTTP server
-        run: npm install -g http-server
-
-      - name: Build Python wheel
+      - name: Install deps
         run: |
-          pip install build
-          python -m build
+          npm install puppeteer http-server
 
-      - name: Start server in background
+      - name: Create test.html
         run: |
-          http-server dist -p 8000 &
-          echo "Server started"
-          sleep 2  # Let the server start
+          mkdir -p test
+          cat <<EOF > test/test.html
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
+          </head>
+          <body>
+            <script>
+              async function run() {
+                const pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/" });
+                const wheel = location.hash.substring(1);
+                const url = \`http://localhost:8000/dist/\${wheel}\`;
+                await pyodide.loadPackage("micropip");
+                await pyodide.runPythonAsync(\`
+                  import micropip
+                  await micropip.install("\${url}")
+                  import jquantstats
+                  print("✅ jquantstats successfully imported")
+                \`);
+              }
+              run();
+            </script>
+          </body>
+          </html>
+          EOF
 
-      - name: Test with Pyodide and micropip
+      - name: Serve and test Pyodide wheel
         run: |
-          npm install pyodide
+          npx http-server -p 8000 . &
+          sleep 3
+
           node --input-type=module <<'EOF'
-          import { loadPyodide } from "pyodide";
-          import fs from "fs";
+          import { launch } from 'puppeteer';
+          import fs from 'fs';
 
-          const start = async () => {
-            const pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/" });
+          const wheel = fs.readdirSync('./dist').find(f => f.endsWith('.whl'));
 
-            console.log("✅ Pyodide loaded");
+          const browser = await launch({ headless: "new" });
+          const page = await browser.newPage();
 
-            const files = fs.readdirSync('./dist');
-            const wheel = files.find(f => f.endsWith(".whl"));
-            const url = `http://localhost:8000/${wheel}`;
+          page.on('console', msg => {
+            console.log("Browser log:", msg.text());
+          });
 
-            console.log(`Installing: ${url}`);
-            await pyodide.loadPackage("micropip");
+          await page.goto(`http://localhost:8000/test/test.html#${wheel}`, {
+            waitUntil: 'load'
+          });
 
-            await pyodide.runPythonAsync(`
-              import micropip
-              await micropip.install("${url}")
-              import jquantstats
-              print("✅ jquantstats successfully imported")
-            `);
-          };
-
-          start();
+          await page.waitForTimeout(10000);
+          await browser.close();
           EOF
