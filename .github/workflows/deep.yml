@@ -55,7 +55,7 @@ jobs:
           const micropip = pyodide.pyimport("micropip");
 
           // Make wheel available to Pyodide
-          const wheelData = fs.readFileSync("dist_pyodide/${WHEEL_NAME}");
+          const wheelData = fs.readFileSync("${WHEEL_NAME}");
           pyodide.FS.writeFile("/tmp/${WHEEL_NAME}", wheelData);
 
           console.log("Installing jquantstats from wheel...");
