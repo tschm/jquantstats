@@ -1,0 +1,38 @@
+name: Test jquantstats with Pyodide
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test-pyodide:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tools
+        run: pip install build
+
+      - name: Build wheel
+        run: python -m build --wheel --outdir dist/
+
+      - name: Start HTTP server in background
+        run: |
+          python3 -m http.server 8000 --directory dist &
+          sleep 2
+
+      - name: Install pyodide CLI
+        run: pip install pyodide-py
+
+      - name: Test installation with micropip (CLI)
+        run: |
+          WHEEL_NAME=$(ls dist/*.whl | xargs basename)
+          pyodide -c "import micropip; await micropip.install('http://localhost:8000/$WHEEL_NAME')"
