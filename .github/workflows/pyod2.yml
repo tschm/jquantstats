@@ -50,15 +50,26 @@ jobs:
             page.on('console', msg => console.log('PAGE LOG:', msg.text()));
 
             await page.evaluate(async () => {
-              // Inject Pyodide script
               const script = document.createElement("script");
               script.src = "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js";
               document.head.appendChild(script);
+
+              // Wait until loadPyodide is available
               await new Promise((resolve) => {
-                script.onload = resolve;
+                script.onload = () => {
+                  if (typeof loadPyodide !== 'undefined') resolve();
+                  else {
+                    const checkInterval = setInterval(() => {
+                      if (typeof loadPyodide !== 'undefined') {
+                        clearInterval(checkInterval);
+                        resolve();
+                      }
+                    }, 50);
+                  }
+                };
               });
 
-              const pyodide = await loadPyodide({
+              const pyodide = await globalThis.loadPyodide({
                 indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/"
               });
 
