@@ -1,7 +1,10 @@
 name: Test Micropip Installation (Wheel)
 
 on:
-  push
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
 
 jobs:
   test-micropip-wheel:
@@ -20,10 +23,13 @@ jobs:
         python -m pip install build wheel
 
     - name: Build wheel
+      id: build-wheel
       run: |
         python -m build --wheel
+        WHEEL_NAME=$(ls dist/*.whl)
+        echo "WHEEL_NAME=${WHEEL_NAME}" >> $GITHUB_ENV
+        echo "WHEEL_BASENAME=$(basename ${WHEEL_NAME})" >> $GITHUB_ENV
         ls -la dist/
-        echo "WHEEL_PATH=$(ls dist/*.whl)" >> $GITHUB_ENV
 
     # Step 2: Test with Pyodide
     - name: Set up Node.js
@@ -31,19 +37,19 @@ jobs:
       with:
         node-version: '18'
 
-    - name: Install Pyodide
+    - name: Install Pyodide and HTTP server
       run: |
         npm init -y --silent
-        npm install pyodide@0.25.0
+        npm install pyodide@0.25.0 http-server
 
     - name: Run micropip test with wheel
-      env:
-        WHEEL_NAME: ${{ env.WHEEL_PATH }}
       run: |
+        # Start HTTP server in background
+        npx http-server dist -p 8080 --cors -s &
+        SERVER_PID=$!
+
         cat <<EOF > test_jquantstats.js
         const { loadPyodide } = require("pyodide");
-        const fs = require('fs');
-        const path = require('path');
 
         async function testInstall() {
           console.log("[1/5] Initializing Pyodide...");
@@ -55,37 +61,20 @@ jobs:
           console.log("[2/5] Loading micropip...");
           await pyodide.loadPackage("micropip");
 
-          // Get absolute path to wheel
-          const wheelPath = path.resolve("dist", path.basename("${WHEEL_NAME}"));
-          console.log("[3/5] Preparing wheel:", wheelPath);
+          const wheelUrl = "http://localhost:8080/${WHEEL_BASENAME}";
+          console.log("[3/5] Installing from URL:", wheelUrl);
 
-          // Verify wheel exists
-          if (!fs.existsSync(wheelPath)) {
-            throw new Error(\`Wheel file not found: \${wheelPath}\`);
-          }
-
-          // Read wheel into memory
-          const wheelData = fs.readFileSync(wheelPath);
-
-          // Write to Pyodide filesystem
-          const pyodideWheelPath = "/tmp/" + path.basename(wheelPath);
-          console.log("[4/5] Writing wheel to Pyodide FS:", pyodideWheelPath);
-          pyodide.FS.writeFile(pyodideWheelPath, wheelData);
-
-          console.log("[5/5] Installing package...");
-          const micropip = pyodide.pyimport("micropip");
           try {
-            await micropip.install(pyodideWheelPath);
+            const micropip = pyodide.pyimport("micropip");
+            await micropip.install(wheelUrl);
 
-            console.log("Running tests...");
+            console.log("[4/5] Running tests...");
             pyodide.runPython(\`
               import jquantstats
               print(f"Package version: {jquantstats.__version__}")
 
-              # Basic functionality test
               try:
                   print("Running smoke tests...")
-                  # Add your actual test cases here
                   assert jquantstats.__version__ is not None
                   print("All tests passed!")
               except Exception as e:
@@ -94,18 +83,26 @@ jobs:
             \`);
           } catch (e) {
             console.error("Installation error:", e.toString());
-            console.error("Python error:", pyodide.runPython("str(e)"));
+            if (pyodide.runPython("'__version__' in dir()")) {
+              console.error("Python error:", pyodide.runPython("str(e)"));
+            }
             throw e;
           }
         }
 
         testInstall()
-          .then(() => console.log("Success!"))
+          .then(() => {
+            console.log("[5/5] Success!");
+            process.exit(0);
+          })
           .catch(e => {
             console.error("Test failed:", e);
             process.exit(1);
+          })
+          .finally(() => {
+            process.kill(${SERVER_PID});
           });
         EOF
 
-        echo "Testing with wheel: ${WHEEL_NAME}"
+        echo "Testing with wheel: ${WHEEL_BASENAME}"
         node test_jquantstats.js
