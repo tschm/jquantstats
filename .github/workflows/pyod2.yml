@@ -42,6 +42,7 @@ jobs:
             const browser = await puppeteer.launch({
               args: ['--no-sandbox', '--disable-setuid-sandbox']
             });
+
             const page = await browser.newPage();
 
             await page.goto('about:blank');
@@ -49,21 +50,32 @@ jobs:
             page.on('console', msg => console.log('PAGE LOG:', msg.text()));
 
             await page.evaluate(async () => {
+              // Inject Pyodide script
+              const script = document.createElement("script");
+              script.src = "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js";
+              document.head.appendChild(script);
+              await new Promise((resolve) => {
+                script.onload = resolve;
+              });
+
               const pyodide = await loadPyodide({
                 indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/"
               });
-              console.log('✅ Pyodide loaded');
 
-              await pyodide.loadPackage('micropip');
+              console.log("✅ Pyodide loaded");
 
-              const wheelUrl = 'http://127.0.0.1:8000/jquantstats.whl';
+              await pyodide.loadPackage("micropip");
+
+              const wheelUrl = "http://127.0.0.1:8000/jquantstats-0.1.0-py3-none-any.whl";
 
               console.log(`Installing wheel from: ${wheelUrl}`);
 
-              await pyodide.runPythonAsync(`import micropip; from urllib.parse import quote; await micropip.install(quote("${wheelUrl}"))`);
-              await pyodide.runPythonAsync("import jquantstats");
-              console.log("✅ jquantstats successfully imported");
-
+              await pyodide.runPythonAsync(`
+                import micropip
+                await micropip.install("${wheelUrl}")
+                import jquantstats
+                print("✅ jquantstats imported successfully")
+              `);
             });
 
             await browser.close();
