@@ -28,5 +28,31 @@ jobs:
           echo "Server started"
           sleep 2  # Let the server start
 
-      - name: Run Node + Pyodide test
-        run: node test/pyodide-install-test.mjs
+      - name: Test with Pyodide and micropip
+        run: |
+          node --input-type=module <<'EOF'
+          import { loadPyodide } from "pyodide";
+          import fs from "fs";
+
+          const start = async () => {
+            const pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/" });
+
+            console.log("✅ Pyodide loaded");
+
+            const files = fs.readdirSync('./dist');
+            const wheel = files.find(f => f.endsWith(".whl"));
+            const url = `http://localhost:8000/${wheel}`;
+
+            console.log(`Installing: ${url}`);
+            await pyodide.loadPackage("micropip");
+
+            await pyodide.runPythonAsync(`
+              import micropip
+              await micropip.install("${url}")
+              import jquantstats
+              print("✅ jquantstats successfully imported")
+            `);
+          };
+
+          start();
+          EOF
