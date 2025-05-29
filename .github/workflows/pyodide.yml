@@ -30,6 +30,7 @@ jobs:
 
       - name: Test with Pyodide and micropip
         run: |
+          npm install pyodide
           node --input-type=module <<'EOF'
           import { loadPyodide } from "pyodide";
           import fs from "fs";
