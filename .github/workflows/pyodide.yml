@@ -36,7 +36,7 @@ jobs:
         run: npm install puppeteer
 
       - name: Run Puppeteer test to load pyodide & install wheel
-        run:
+        run: |
           node --input-type=module <<'EOF'
           import puppeteer from "puppeteer";
 
