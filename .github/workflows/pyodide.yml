@@ -41,7 +41,22 @@ jobs:
           import puppeteer from "puppeteer";
 
           (async () => {
+            const browser = await puppeteer.launch({
+              args: ['--no-sandbox', '--disable-setuid-sandbox']
+            });
+            const page = await browser.newPage();
 
+            await page.goto('about:blank');
+
+            // Expose console.log from the page context to GitHub Actions logs
+            page.on('console', msg => console.log('PAGE LOG:', msg.text()));
+
+            await page.evaluate(async () => {
+              // Load Pyodide
+              const pyodide = await loadPyodide({
+                indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/"
+              });
+              console.log('✅ Pyodide loaded');
           })().catch(console.error);
           EOF
 
