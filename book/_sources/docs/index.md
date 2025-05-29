@@ -41,6 +41,8 @@ return distributions
 
 ## 📦 Installation
 
+### Standard Installation
+
 ```bash
 pip install jquantstats
 ```
@@ -50,6 +52,25 @@ For development:
 ```bash
 pip install jquantstats[dev]
 ```
+
+For static image export capabilities:
+
+```bash
+pip install jquantstats[export]
+```
+
+### Pyodide / JupyterLite Installation
+
+You can use jQuantStats in browser environments like JupyterLite
+or any Pyodide-based application:
+
+```python
+import micropip
+await micropip.install('jquantstats')
+```
+
+Note: In browser environments, static image export
+(which requires the `kaleido` package) is not supported.
 
 ## 🚀 Quick Start
 
