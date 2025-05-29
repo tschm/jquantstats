@@ -23,7 +23,31 @@ jobs:
           python3 -m http.server 8000 --directory dist &
           sleep 2
 
-      - name: Test micropip install with Docker
+      - name: Test micropip install and import with Docker
         run: |
           docker run --rm -v ${{ github.workspace }}:/app -w /app -p 8000:8000 iodide/pyodide:0.23.4 \
-          pyodide -c "import micropip; await micropip.install('http://localhost:8000/$(ls dist/*.whl | xargs basename)')"
+          pyodide -c "
+          import micropip
+          await micropip.install('http://localhost:8000/$(ls dist/*.whl | xargs basename)')
+
+          # Import the package
+          import jquantstats
+
+          # Test basic functionality
+          import polars as pl
+          from jquantstats.api import build_data
+
+          # Create sample returns data
+          returns = pl.DataFrame({
+              'Date': ['2023-01-01', '2023-01-02', '2023-01-03'],
+              'Asset1': [0.01, -0.02, 0.03]
+          }).with_columns(pl.col('Date').str.to_date())
+
+          # Basic usage
+          data = build_data(returns=returns)
+
+          # Calculate a statistic
+          volatility = data.stats.volatility()
+
+          print('Successfully imported and used jquantstats in Pyodide!')
+          "
