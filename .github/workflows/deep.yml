@@ -22,15 +22,14 @@ jobs:
     - name: Build wheel
       run: |
         python -m build --wheel
-        mkdir dist_pyodide
-        cp dist/*.whl dist_pyodide/
-        echo "WHEEL_NAME=$(ls dist_pyodide/*.whl)" >> $GITHUB_ENV
+        ls -la dist/
+        echo "WHEEL_PATH=$(ls dist/*.whl)" >> $GITHUB_ENV
 
     # Step 2: Test with Pyodide
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: '18'
 
     - name: Install Pyodide
       run: |
@@ -38,56 +37,75 @@ jobs:
         npm install pyodide@0.25.0
 
     - name: Run micropip test with wheel
+      env:
+        WHEEL_NAME: ${{ env.WHEEL_PATH }}
       run: |
         cat <<EOF > test_jquantstats.js
         const { loadPyodide } = require("pyodide");
         const fs = require('fs');
+        const path = require('path');
 
         async function testInstall() {
-          console.log("Loading Pyodide...");
+          console.log("[1/5] Initializing Pyodide...");
           let pyodide = await loadPyodide({
             stdout: console.log,
             stderr: console.error
           });
 
-          console.log("Loading micropip...");
+          console.log("[2/5] Loading micropip...");
           await pyodide.loadPackage("micropip");
+
+          // Get absolute path to wheel
+          const wheelPath = path.resolve("dist", path.basename("${WHEEL_NAME}"));
+          console.log("[3/5] Preparing wheel:", wheelPath);
+
+          // Verify wheel exists
+          if (!fs.existsSync(wheelPath)) {
+            throw new Error(\`Wheel file not found: \${wheelPath}\`);
+          }
+
+          // Read wheel into memory
+          const wheelData = fs.readFileSync(wheelPath);
+
+          // Write to Pyodide filesystem
+          const pyodideWheelPath = "/tmp/" + path.basename(wheelPath);
+          console.log("[4/5] Writing wheel to Pyodide FS:", pyodideWheelPath);
+          pyodide.FS.writeFile(pyodideWheelPath, wheelData);
+
+          console.log("[5/5] Installing package...");
           const micropip = pyodide.pyimport("micropip");
-
-          // Make wheel available to Pyodide
-          const wheelData = fs.readFileSync("${WHEEL_NAME}");
-          pyodide.FS.writeFile("/tmp/${WHEEL_NAME}", wheelData);
-
-          console.log("Installing jquantstats from wheel...");
           try {
-            await micropip.install("/tmp/${WHEEL_NAME}");
+            await micropip.install(pyodideWheelPath);
 
-            console.log("Testing jquantstats import...");
+            console.log("Running tests...");
             pyodide.runPython(\`
               import jquantstats
-              print(f"Successfully imported jquantstats version: {jquantstats.__version__}")
-              # Add basic functionality tests here
-              assert jquantstats.__version__ is not None
+              print(f"Package version: {jquantstats.__version__}")
 
-              # Example test - modify for your actual functions
+              # Basic functionality test
               try:
-                  print("Testing basic functionality...")
-                  # Replace with actual test of your package's functions
-                  print(jquantstats.__version__)
+                  print("Running smoke tests...")
+                  # Add your actual test cases here
+                  assert jquantstats.__version__ is not None
+                  print("All tests passed!")
               except Exception as e:
-                  print(f"Functionality test failed: {e}")
+                  print(f"Test failed: {str(e)}")
                   raise
             \`);
           } catch (e) {
-            console.error("Installation failed:", e);
-            process.exit(1);
+            console.error("Installation error:", e.toString());
+            console.error("Python error:", pyodide.runPython("str(e)"));
+            throw e;
           }
         }
 
-        testInstall().catch(e => {
-          console.error("Test failed:", e);
-          process.exit(1);
-        });
+        testInstall()
+          .then(() => console.log("Success!"))
+          .catch(e => {
+            console.error("Test failed:", e);
+            process.exit(1);
+          });
         EOF
 
+        echo "Testing with wheel: ${WHEEL_NAME}"
         node test_jquantstats.js
