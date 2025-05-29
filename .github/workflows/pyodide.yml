@@ -1,6 +1,6 @@
-name: Pyodide Test
+name: Test Pyodide Compatibility Inline
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
   pyodide-test:
@@ -9,71 +9,86 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
       - name: Build wheel
         run: |
-          pip install build
+          python -m pip install --upgrade build
           python -m build
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: "20"
 
-      - name: Install deps
+      - name: Install puppeteer and serve-handler
+        run: npm install puppeteer serve-handler
+
+      - name: Run Pyodide wheel install test
         run: |
-          npm install puppeteer http-server
-
-      - name: Create test.html
-        run: |
-          mkdir -p test
-          cat <<EOF > test/test.html
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
-          </head>
-          <body>
-            <script>
-              async function run() {
-                const pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/" });
-                const wheel = location.hash.substring(1);
-                const url = \`http://localhost:8000/dist/\${wheel}\`;
-                await pyodide.loadPackage("micropip");
-                await pyodide.runPythonAsync(\`
-                  import micropip
-                  await micropip.install("\${url}")
-                  import jquantstats
-                  print("✅ jquantstats successfully imported")
-                \`);
-              }
-              run();
-            </script>
-          </body>
-          </html>
-          EOF
-
-      - name: Serve and test Pyodide wheel
-        run: |
-          npx http-server -p 8000 . &
-          sleep 3
-
           node --input-type=module <<'EOF'
-          import { launch } from 'puppeteer';
-          import fs from 'fs';
+          import http from 'http';
+          import serveHandler from 'serve-handler';
+          import puppeteer from 'puppeteer';
 
-          const wheel = fs.readdirSync('./dist').find(f => f.endsWith('.whl'));
+          const PORT = 8000;
 
-          const browser = await launch({ headless: "new" });
+          // Start a static file server serving the dist directory (with your wheel)
+          const server = http.createServer((req, res) => serveHandler(req, res, { public: 'dist' }));
+          server.listen(PORT);
+
+          // Launch Puppeteer headless browser with no sandbox (required in GitHub Actions)
+          const browser = await puppeteer.launch({
+            headless: "new",
+            args: ['--no-sandbox', '--disable-setuid-sandbox'],
+          });
+
           const page = await browser.newPage();
 
-          page.on('console', msg => {
-            console.log("Browser log:", msg.text());
-          });
+          // Create a data URL with inline HTML/JS to load Pyodide, install wheel, and import package
+          const html = `
+            <html>
+              <body>
+                <script type="module">
+                  import { loadPyodide } from "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.mjs";
 
-          await page.goto(`http://localhost:8000/test/test.html#${wheel}`, {
-            waitUntil: 'load'
-          });
+                  async function test() {
+                    const pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/" });
+                    await pyodide.loadPackage("micropip");
 
+                    // Fetch the wheel file name from the dist directory served on localhost
+                    const resp = await fetch('http://localhost:${PORT}/');
+                    const text = await resp.text();
+                    const wheelMatch = text.match(/href="([^"]+\\.whl)"/);
+                    if (!wheelMatch) throw new Error("No wheel found in dist directory");
+                    const wheelUrl = \`http://localhost:${PORT}/\${wheelMatch[1]}\`;
+
+                    console.log("Installing wheel from:", wheelUrl);
+
+                    await pyodide.runPythonAsync(\`
+                      import micropip
+                      await micropip.install("${wheelUrl}")
+                      import jquantstats
+                      print("✅ jquantstats imported successfully")
+                    \`);
+                    console.log("Pyodide test completed.");
+                  }
+
+                  test();
+                </script>
+              </body>
+            </html>
+          `;
+
+          // Navigate to the inline HTML page using a data URL
+          await page.goto("data:text/html," + encodeURIComponent(html), { waitUntil: "networkidle0" });
+
+          // Wait some time for the JS to run inside the page (adjust if needed)
           await page.waitForTimeout(10000);
+
           await browser.close();
+          server.close();
           EOF
