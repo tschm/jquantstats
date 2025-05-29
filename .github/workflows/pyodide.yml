@@ -25,34 +25,95 @@ jobs:
 
       - name: Start HTTP server in background
         run: |
-          python -m http.server 8000 --directory dist &
+          python -m http.server 8000 &
+          echo $! > server_pid.txt
           sleep 2
 
-      - name: Test micropip install and import with Docker
+      - name: Install Puppeteer
+        run: npm install puppeteer
+
+      - name: Run Puppeteer test to load pyodide & install wheel
+        shell: bash
         run: |
-          docker run --rm -v ${{ github.workspace }}:/app -w /app -p 8000:8000 iodide/pyodide:0.23.4 \
-          pyodide -c "
-          import micropip
-          await micropip.install('http://localhost:8000/$(ls dist/*.whl | xargs basename)')
+          node --input-type=module <<'EOF'
+          import puppeteer from "puppeteer";
 
-          # Import the package
-          import jquantstats
+          (async () => {
+            const browser = await puppeteer.launch({
+              args: ['--no-sandbox', '--disable-setuid-sandbox']
+            });
 
-          # Test basic functionality
-          import polars as pl
-          from jquantstats.api import build_data
+            const page = await browser.newPage();
 
-          # Create sample returns data
-          returns = pl.DataFrame({
-              'Date': ['2023-01-01', '2023-01-02', '2023-01-03'],
-              'Asset1': [0.01, -0.02, 0.03]
-          }).with_columns(pl.col('Date').str.to_date())
+            await page.goto('about:blank');
 
-          # Basic usage
-          data = build_data(returns=returns)
+            page.on('console', msg => console.log('PAGE LOG:', msg.text()));
 
-          # Calculate a statistic
-          volatility = data.stats.volatility()
+            await page.evaluate(async () => {
+              const script = document.createElement("script");
+              script.src = "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js";
+              document.head.appendChild(script);
 
-          print('Successfully imported and used jquantstats in Pyodide!')
-          "
+              // Wait until loadPyodide is available
+              await new Promise((resolve) => {
+                script.onload = () => {
+                  if (typeof loadPyodide !== 'undefined') resolve();
+                  else {
+                    const checkInterval = setInterval(() => {
+                      if (typeof loadPyodide !== 'undefined') {
+                        clearInterval(checkInterval);
+                        resolve();
+                      }
+                    }, 50);
+                  }
+                };
+              });
+
+              const pyodide = await globalThis.loadPyodide({
+                indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/"
+              });
+
+              console.log("✅ Pyodide loaded");
+
+              await pyodide.loadPackage("micropip");
+
+              // Find the wheel file by parsing the directory listing
+              const response = await fetch("http://127.0.0.1:8000/");
+              const html = await response.text();
+              const wheelFile = html.match(/href="([^"]+\.whl)"/)[1];
+              const wheelUrl = "http://127.0.0.1:8000/" + wheelFile;
+
+              console.log(`Installing wheel from: ${wheelUrl}`);
+
+              await pyodide.runPythonAsync(`
+                import micropip
+                await micropip.install("${wheelUrl}")
+                import jquantstats
+                print("✅ jquantstats imported successfully")
+
+                # Test basic functionality
+                import polars as pl
+                from jquantstats.api import build_data
+
+                # Create sample returns data
+                returns = pl.DataFrame({
+                    'Date': ['2023-01-01', '2023-01-02', '2023-01-03'],
+                    'Asset1': [0.01, -0.02, 0.03]
+                }).with_columns(pl.col('Date').str.to_date())
+
+                # Basic usage
+                data = build_data(returns=returns)
+
+                # Calculate a statistic
+                volatility = data.stats.volatility()
+
+                print("✅ jquantstats functionality tested successfully")
+              `);
+            });
+
+            await browser.close();
+          })();
+          EOF
+
+      - name: Stop HTTP server
+        run: kill $(cat server_pid.txt) || true
