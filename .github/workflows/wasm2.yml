@@ -1,0 +1,44 @@
+name: WASM2
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    name: Build wheel for Pyodide
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install build dependencies
+        run: |
+          pip install build
+
+      - name: Build wheel
+        run: |
+          python -m build --wheel
+
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-wheel
+          path: dist/*.whl
+
+  test:
+    name: Test in Pyodide via pytest-pyodide
+    needs: build
+    uses: pyodide/pytest-pyodide/.github/workflows/main.yaml@main
+    with:
+      build-artifact-name: wasm-wheel
+      build-artifact-path: dist
+      browser: firefox
+      runner: selenium
+      pyodide-version: 0.27.2
