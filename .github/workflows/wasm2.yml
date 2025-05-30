@@ -2,11 +2,9 @@ name: WASM2
 
 on:
   push:
-  pull_request:
 
 jobs:
   build:
-    name: Build wheel for Pyodide
     runs-on: ubuntu-latest
 
     steps:
@@ -33,12 +31,15 @@ jobs:
           path: dist/*.whl
 
   test:
-    name: Test in Pyodide via pytest-pyodide
+    runs-on: ubuntu-latest
     needs: build
-    uses: pyodide/pytest-pyodide/.github/workflows/main.yaml@main
-    with:
-      build-artifact-name: wasm-wheel
-      build-artifact-path: dist
-      browser: firefox
-      runner: selenium
-      pyodide-version: 0.27.2
+
+    steps:
+      - uses: tschm/cradle/actions/pyodide@main
+        with:
+          build-artifact-name: wasm-wheel
+          build-artifact-path: dist
+          browser: firefox
+          runner: selenium
+          pyodide-version: 0.27.2
+          github_token: ${{ secrets.GITHUB_TOKEN }}
