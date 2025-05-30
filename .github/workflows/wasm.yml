@@ -1,0 +1,59 @@
+name: WASM Package Compatibility Check
+
+on:
+  push:
+
+jobs:
+  check-wasm-compatibility:
+    runs-on: ubuntu-latest
+    container: python:3.12-slim
+
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v4
+
+    - name: Set up Pyodide environment
+      run: |
+        pip install pyodide-py
+        python -m pip install pytest
+
+    - name: Test package with micropip
+      run: |
+        cat <<EOF > test_wasm_compatibility.py
+        import pyodide_js
+        import pytest
+        import sys
+        from pyodide import micropip
+
+        # Configure Pyodide
+        await pyodide_js.loadPackage("micropip")
+
+        # Your target package
+        TARGET_PACKAGE = "your-package-name"  # CHANGE THIS
+
+        async def test_installation():
+            print(f"Attempting to install {TARGET_PACKAGE}...")
+            try:
+                await micropip.install(TARGET_PACKAGE)
+                print("Installation succeeded!")
+
+                # Verify all dependencies can be imported
+                packages = micropip.list()
+                print("\nTesting imports of installed packages:")
+
+                for pkg in packages:
+                    try:
+                        __import__(pkg)
+                        print(f"✓ {pkg} imports successfully")
+                    except Exception as e:
+                        print(f"✗ {pkg} FAILED to import: {str(e)}")
+                        raise
+
+            except Exception as e:
+                print(f"Installation failed: {str(e)}")
+                sys.exit(1)
+
+        await test_installation()
+        EOF
+
+        python test_wasm_compatibility.py
