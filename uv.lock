@@ -625,7 +625,7 @@ plot = [
 requires-dist = [
     { name = "ipython", marker = "extra == 'dev'", specifier = "==8.36.0" },
     { name = "kaleido", marker = "extra == 'plot'", specifier = "==0.2.1" },
-    { name = "numpy", specifier = ">=2.0.0" },
+    { name = "numpy", specifier = ">=2.2.6" },
     { name = "pandas", specifier = ">=2.2.3" },
     { name = "plotly", specifier = ">=6.0.0" },
     { name = "polars", specifier = "==1.18.0" },
