@@ -26,7 +26,9 @@ dev = [
     "pre-commit==4.2.0",
     "yfinance==0.2.61",
     "ipython==8.36.0",
-    "quantstats==0.0.64"
+    "quantstats==0.0.64",
+    "pytest-pyodide==0.58.4",
+    "pytest-httpserver==1.1.3"
 ]
 
 
