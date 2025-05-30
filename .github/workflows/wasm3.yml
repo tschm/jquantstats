@@ -23,6 +23,7 @@ jobs:
 
       - name: Export notebook via wasm
         run: |
+          uv pip install --no-cache-dir marimo
           mkdir -p dist/wasm
           # export as readonly, with code locked
-          marimo export html-wasm book/marimo/demo.py -o dist/wasm --mode run
+          uv run marimo export html-wasm book/marimo/demo.py -o dist/wasm --mode run
