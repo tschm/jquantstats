@@ -3,7 +3,6 @@ name: PYODIDE
 
 on:
   push:
-    branches: [main]
 
 jobs:
   # Build for pyodide 0.27
