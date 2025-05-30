@@ -28,9 +28,10 @@ jobs:
 
       - name: Build wheel with uv
         run: |
-          uv pip install build
-          uv pip install -e .  # Install package dependencies
-          python -m build --wheel --no-isolation
+          uv pip install hatch
+          hatch build
+          #uv pip install -e .  # Install package dependencies
+          #python -m build --wheel --no-isolation
           echo "Built wheel:"
           ls -la dist/
 
