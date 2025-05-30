@@ -16,13 +16,23 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install build dependencies
+      - name: Install uv
         run: |
-          pip install build pytest-cov
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Build wheel
+      - name: Set up Python with uv
         run: |
-          python -m build --wheel
+          uv venv .venv
+          echo ".venv/bin" >> $GITHUB_PATH
+
+      - name: Build wheel with uv
+        run: |
+          uv pip install build
+          uv pip install -e .  # Install package dependencies
+          python -m build --wheel --no-isolation
+          echo "Built wheel:"
+          ls -la dist/
 
       - name: Upload wheel artifact
         uses: actions/upload-artifact@v4
