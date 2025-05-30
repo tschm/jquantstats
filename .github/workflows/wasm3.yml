@@ -1,0 +1,28 @@
+name: WASM3
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Set up Python with uv
+        run: |
+          uv venv .venv
+          echo ".venv/bin" >> $GITHUB_PATH
+
+      - name: Export notebook via wasm
+        run: |
+          mkdir -p dist/wasm
+          # export as readonly, with code locked
+          marimo export html-wasm book/marimo/demo.py -o dist/wasm --mode run
