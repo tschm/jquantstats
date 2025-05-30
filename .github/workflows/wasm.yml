@@ -53,7 +53,7 @@ jobs:
                 print(f"Installation failed: {str(e)}")
                 sys.exit(1)
 
-        await test_installation()
+        test_installation()
         EOF
 
         python test_wasm_compatibility.py
