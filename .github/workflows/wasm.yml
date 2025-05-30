@@ -29,7 +29,7 @@ jobs:
         await pyodide_js.loadPackage("micropip")
 
         # Your target package
-        TARGET_PACKAGE = "your-package-name"  # CHANGE THIS
+        TARGET_PACKAGE = "jquantstats"
 
         async def test_installation():
             print(f"Attempting to install {TARGET_PACKAGE}...")
