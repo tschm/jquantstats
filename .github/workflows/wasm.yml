@@ -25,13 +25,13 @@ jobs:
         import sys
         from pyodide import micropip
 
-        # Configure Pyodide
-        await pyodide_js.loadPackage("micropip")
-
         # Your target package
         TARGET_PACKAGE = "jquantstats"
 
         async def test_installation():
+            # Configure Pyodide
+            await pyodide_js.loadPackage("micropip")
+
             print(f"Attempting to install {TARGET_PACKAGE}...")
             try:
                 await micropip.install(TARGET_PACKAGE)
