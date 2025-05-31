@@ -40,6 +40,7 @@ exclude = [
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]
+ignore = ["F821"]
 
 [build-system]
 requires = ["hatchling"]
