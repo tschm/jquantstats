@@ -8,7 +8,7 @@ requires-python = ">=3.10"
 dependencies = [
     "numpy>=2.0.0",
     "plotly>=6.0.0",
-    "polars==1.18.0",
+    "polars>=1.18.0",
     "pandas>=2.2.3",
     "pyarrow>=18.0.0",
     "scipy>=1.14.1"
@@ -36,10 +36,11 @@ target-version = "py312"
 exclude = [
     "*__init__.py"
 ]
-extend-ignore = ["F821"]
+#lint.extend-ignore = ["F821"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]
+ignore = ["F821"]
 
 [build-system]
 requires = ["hatchling"]
