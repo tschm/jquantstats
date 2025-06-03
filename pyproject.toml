@@ -22,7 +22,7 @@ plot = ["kaleido==0.2.1"]
 
 dev = [
     "pytest-cov==6.1.1",
-    "pytest==8.3.5",
+    "pytest==8.4.0",
     "pre-commit==4.2.0",
     "yfinance==0.2.61",
     "ipython==8.37.0",
