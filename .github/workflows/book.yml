@@ -89,12 +89,16 @@ jobs:
     # This job depends on the completion of test, pdoc, and jupyter jobs
     needs: [test, pdoc, jupyter, marimo]
 
-    # Elevated permissions needed to publish the documentation
+    environment:
+      name: github-pages
+
     permissions:
-      contents: write
+      contents: read
+      pages: write
+      id-token: write
 
     steps:
       # Step: Upload the generated documentation book
       # Skipped when running locally with 'act' to prevent accidental deployments
       - name: Upload the book
-        uses: tschm/cradle/actions/book@v0.1.69
+        uses: tschm/cradle/actions/book@v0.1.71
