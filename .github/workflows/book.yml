@@ -6,7 +6,9 @@ name: "book"
 
 # Trigger: This workflow runs on every push to the repository
 on:
-- push
+  push:
+    branches:
+      - main
 
 # Permissions: Write access to checks for test reports and read access to repository contents
 permissions:
