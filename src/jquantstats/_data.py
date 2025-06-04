@@ -220,5 +220,7 @@ class Data:
         Yields:
             tuple[str, pl.Series]: A tuple containing the asset name and its data series.
         """
+        matrix = self.all
+        
         for col in self.assets:
-            yield col, self.all[col]
+            yield col, matrix[col]
