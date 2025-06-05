@@ -30,7 +30,7 @@ jobs:
           uv pip install --no-cache-dir marimo
           mkdir -p artifacts/notebooks
           # export as readonly, with code locked
-          uv run marimo export html book/marimo/demo.py -o artifacts/notebooks/index.html
+          uv run marimo export html-wasm book/marimo/demo.py -o artifacts/marimo/demo/index.html --mode edit
 
       - name: Upload documentation
         #if: ${{ env.ACT != 'true' }}  # Skip if running with 'act'
