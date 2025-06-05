@@ -1,30 +1,22 @@
 import marimo
 
-__generated_with = "0.13.6"
+__generated_with = "0.13.15"
 app = marimo.App(width="medium")
 
 
 @app.cell
 def _():
-    return
-
-
-@app.cell
-def _():
-    from pathlib import Path
-
+    import marimo as mo
     import polars as pl
 
     from jquantstats.api import build_data
 
-    path = Path(__file__).parent
-    print(path)
-    return build_data, path, pl
+    return build_data, mo, pl
 
 
 @app.cell
-def _(path, pl):
-    returns = pl.read_csv(path / "data" / "portfolio.csv", try_parse_dates=True).with_columns(
+def _(mo, pl):
+    returns = pl.read_csv(mo.notebook_location() / "data" / "portfolio.csv", try_parse_dates=True).with_columns(
         [
             pl.col("AAPL").cast(pl.Float64, strict=False),
             pl.col("META").cast(pl.Float64, strict=False),
@@ -32,7 +24,7 @@ def _(path, pl):
         ]
     )
 
-    benchmark = pl.read_csv(path / "data" / "benchmark.csv", try_parse_dates=True)
+    benchmark = pl.read_csv(mo.notebook_location() / "data" / "benchmark.csv", try_parse_dates=True)
     return benchmark, returns
 
 
@@ -77,11 +69,6 @@ def _(data):
     data
     # fig = data.plots.plot_snapshot(log_scale=True)
     # fig.show()
-    return
-
-
-@app.cell
-def _():
     return
 
 
