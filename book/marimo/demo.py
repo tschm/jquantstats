@@ -16,7 +16,7 @@ def _():
 
 @app.cell
 def _(mo, pl):
-    returns = pl.read_csv(mo.notebook_location() / "data" / "portfolio.csv", try_parse_dates=True).with_columns(
+    returns = pl.read_csv(mo.notebook_location() / "public" / "portfolio.csv", try_parse_dates=True).with_columns(
         [
             pl.col("AAPL").cast(pl.Float64, strict=False),
             pl.col("META").cast(pl.Float64, strict=False),
@@ -24,7 +24,7 @@ def _(mo, pl):
         ]
     )
 
-    benchmark = pl.read_csv(mo.notebook_location() / "data" / "benchmark.csv", try_parse_dates=True)
+    benchmark = pl.read_csv(mo.notebook_location() / "public" / "benchmark.csv", try_parse_dates=True)
     return benchmark, returns
 
 
