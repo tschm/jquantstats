@@ -11,3 +11,5 @@ Icon
 src/.coverage
 __marimo__
 .coverage
+docs
+quantstats.md

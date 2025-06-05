@@ -11,9 +11,8 @@ install: venv ## Install a virtual environment
 
 .PHONY: fmt
 fmt:  install ## Run autoformatting and linting
-	@uv pip install pre-commit
-	@uv run pre-commit install
-	@uv run pre-commit run --all-files
+	@uvx pre-commit install
+	@uvx pre-commit run --all-files
 
 .PHONY: test
 test: install ## Run tests
