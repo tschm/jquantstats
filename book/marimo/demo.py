@@ -25,6 +25,7 @@ def _(mo, pl):
     )
 
     benchmark = pl.read_csv(str(mo.notebook_location() / "public" / "benchmark.csv"), try_parse_dates=True)
+
     return benchmark, returns
 
 
