@@ -5,3 +5,6 @@ root: docs/index
 chapters:
     - file: docs/api
     - file: docs/reports
+
+    - url: https://tschm.github.io/jquantstats/notebooks/index.html
+      title: Demo
