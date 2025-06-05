@@ -6,5 +6,5 @@ chapters:
     - file: docs/api
     - file: docs/reports
 
-    - url: https://tschm.github.io/jquantstats/notebooks/index.html
+    - url: https://tschm.github.io/jquantstats/marimo/demo/index.html
       title: Demo
