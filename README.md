@@ -85,7 +85,7 @@ volatility = data.stats.volatility()
 
 # Create visualizations
 fig = data.plots.plot_snapshot(title="Portfolio Performance")
-fig.show()
+fig
 ```
 
 ## 📚 Documentation
