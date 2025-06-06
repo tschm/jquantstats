@@ -134,7 +134,6 @@ For detailed documentation, visit [jQuantStats Documentation](https://tschm.gith
 - polars
 - pandas
 - plotly
-- kaleido (for static image export)
 - scipy
 
 ## 👥 Contributing
