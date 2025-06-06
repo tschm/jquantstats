@@ -1,6 +1,7 @@
 import dataclasses
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from functools import wraps
+from typing import cast
 
 import numpy as np
 import polars as pl
@@ -219,8 +220,8 @@ class Stats:
             float: The profit ratio value.
 
         """
-        wins = series[series >= 0]
-        losses = series[series < 0]
+        wins = series.filter(series >= 0)
+        losses = series.filter(series < 0)
 
         try:
             win_ratio = np.abs(wins.mean() / wins.count())
@@ -290,7 +291,13 @@ class Stats:
         var = norm.ppf(alpha, mu, sigma)
 
         # Compute mean of returns less than or equal to VaR
-        return series[series < var].mean()
+        # Cast to Any or pl.Series to suppress Ty error
+        # Cast the mask to pl.Expr to satisfy type checker
+        mask = cast(Iterable[bool], series < var)
+        return series.filter(mask).mean()
+
+        # filtered_series = cast(pl.Series, series.filter(series < var))
+        # return filtered_series.mean()
 
     @columnwise_stat
     def win_rate(self, series: pl.Series) -> float:

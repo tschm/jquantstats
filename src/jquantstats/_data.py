@@ -224,4 +224,4 @@ class Data:
         matrix = self.all
 
         for col in self.assets:
-            yield col, matrix[col]
+            yield col, matrix.get_column(col)
