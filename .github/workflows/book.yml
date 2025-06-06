@@ -33,7 +33,6 @@ jobs:
           uv run marimo export html-wasm book/marimo/demo.py -o artifacts/marimo/demo/index.html --mode edit
 
       - name: Upload documentation
-        #if: ${{ env.ACT != 'true' }}  # Skip if running with 'act'
         uses: actions/upload-artifact@v4
         with:
           name: marimo

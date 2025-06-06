@@ -17,7 +17,7 @@ class Reports:
 
     data: "Data"  # type: ignore
 
-    def metrics(self) -> pl.DataFrame:
+    def metrics(self, periods=None) -> pl.DataFrame:
         """
         Calculate various financial metrics and return them as a DataFrame.
 
@@ -26,11 +26,11 @@ class Reports:
                           The first column is 'Metric' containing the name of each metric.
         """
         metrics: dict[str, dict[str, float]] = {
-            "Sharpe Ratio": self.data.stats.sharpe(),
-            "Sortino Ratio": self.data.stats.sortino(),
+            "Sharpe Ratio": self.data.stats.sharpe(periods=periods),
+            "Sortino Ratio": self.data.stats.sortino(periods=periods),
             # "Calmar Ratio": self.data.stats.calmar(),
             "Max Drawdown": self.data.stats.max_drawdown(),
-            "Volatility": self.data.stats.volatility(),
+            "Volatility": self.data.stats.volatility(periods=periods),
             # "CAGR": self.data.stats.cagr(),
             "Value at Risk (5%)": self.data.stats.value_at_risk(alpha=0.05),
             "Win/Loss Ratio": self.data.stats.win_loss_ratio(),
