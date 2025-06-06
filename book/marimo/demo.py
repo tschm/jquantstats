@@ -70,8 +70,8 @@ def _(data):
 @app.cell
 def _(data):
     data
-    # fig = data.plots.plot_snapshot(log_scale=True)
-    # fig.show()
+    fig = data.plots.plot_snapshot(log_scale=True)
+    fig
     return
 
 
