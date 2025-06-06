@@ -55,9 +55,10 @@ pip install jquantstats[dev]
 ## 🚀 Quick Start
 
 ```python
+>>> # Import jquantstats
 >>> import polars as pl
->>> from jquantstats.api import build_data
->>>
+>>> from jquantstats import build_data
+
 >>> # Create sample returns data
 >>> returns = pl.DataFrame({
 ...     "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
@@ -75,7 +76,7 @@ shape: (3, 3)
 │ 2023-01-02 ┆ -0.02  ┆ 0.01   │
 │ 2023-01-03 ┆ 0.03   ┆ -0.01  │
 └────────────┴────────┴────────┘
->>>
+
 >>> # Basic usage
 >>> data = build_data(returns=returns)
 >>>
@@ -95,25 +96,26 @@ shape: (3, 2)
 │ 2023-01-02 ┆ -0.01  │
 │ 2023-01-03 ┆ 0.02   │
 └────────────┴────────┘
->>>
+
 >>> data = build_data(
 ...     returns=returns,
 ...     benchmark=benchmark,
 ...     rf=0.0002,  # risk-free rate (e.g., 0.02% per day)
 ... )
->>>
+
 >>> # Calculate statistics
 >>> sharpe = data.stats.sharpe()
 >>> sharpe
 {'Asset1': np.float64(4.909200099205072),
  'Asset2': np.float64(8.08795106197808),
  'Market': np.float64(6.113591415853696)}
+
 >>> volatility = data.stats.volatility()
 >>> volatility
 {'Asset1': np.float64(0.4807979478602905),
  'Asset2': np.float64(0.2918332857414772),
  'Market': np.float64(0.286574597618142)}
->>>
+
 >>> # Create visualizations
 >>> fig = data.plots.plot_snapshot(title="Portfolio Performance")
 >>> type(fig)
