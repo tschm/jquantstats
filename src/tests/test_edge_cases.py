@@ -1,3 +1,5 @@
+"""Tests for edge cases in the jquantstats package."""
+
 import polars as pl
 import pytest
 from polars.testing import assert_frame_equal
@@ -7,21 +9,20 @@ from jquantstats.api import build_data
 
 @pytest.fixture
 def data_no_benchmark(returns):
-    """
-    Fixture that returns a Data object with no benchmark.
+    """Fixture that returns a Data object with no benchmark.
 
     Args:
         returns: The returns fixture containing asset returns.
 
     Returns:
         _Data: A Data object with returns but no benchmark.
+
     """
     return build_data(returns=returns)
 
 
 def test_copy_no_benchmark(data_no_benchmark):
-    """
-    Tests that the copy() method works correctly when benchmark is None.
+    """Tests that the copy() method works correctly when benchmark is None.
 
     Args:
         data_no_benchmark: Fixture that returns a Data object with no benchmark.
@@ -31,6 +32,7 @@ def test_copy_no_benchmark(data_no_benchmark):
         2. The copied object has the same returns as the original.
         3. The benchmark is None in both the original and the copy.
         4. Modifying the copied object does not affect the original.
+
     """
     # Create a copy of the data object
     data_copy = data_no_benchmark.copy()
@@ -48,14 +50,14 @@ def test_copy_no_benchmark(data_no_benchmark):
 
 
 def test_r_squared_no_benchmark(data_no_benchmark):
-    """
-    Tests that the r_squared() method raises an AttributeError when benchmark is None.
+    """Tests that the r_squared() method raises an AttributeError when benchmark is None.
 
     Args:
         data_no_benchmark: Fixture that returns a Data object with no benchmark.
 
     Verifies:
         1. Calling r_squared() raises an AttributeError with the expected message.
+
     """
     # Verify that calling r_squared() raises an AttributeError
     with pytest.raises(AttributeError, match="No benchmark data available"):
@@ -63,8 +65,7 @@ def test_r_squared_no_benchmark(data_no_benchmark):
 
 
 def test_non_overlapping_dates():
-    """
-    Tests that build_data raises a ValueError when returns and benchmark have non-overlapping dates.
+    """Tests that build_data raises a ValueError when returns and benchmark have non-overlapping dates.
 
     Verifies:
         1. Calling build_data with non-overlapping dates raises a ValueError with the expected message.

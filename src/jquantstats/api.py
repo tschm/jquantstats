@@ -16,8 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-jQuantStats API module.
+"""jQuantStats API module.
 
 This module provides the core API for the jQuantStats library, including the Data class
 for handling financial returns data and benchmarks.
@@ -37,7 +36,7 @@ Features
 - Benchmark comparison capabilities
 - Date alignment between returns and benchmark data
 
-Example
+Example:
 -------
 ```python
 import polars as pl
@@ -63,6 +62,7 @@ data = build_data(
     rf=0.0002,  # risk-free rate (e.g., 0.02% per day)
 )
 ```
+
 """
 
 import pandas as pd
@@ -77,8 +77,7 @@ def build_data(
     benchmark: pl.DataFrame | pd.DataFrame | pd.Series = None,
     date_col: str = "Date",
 ) -> Data:
-    """
-    Build a Data object from returns and optional benchmark using Polars.
+    """Build a Data object from returns and optional benchmark using Polars.
 
     This function is the main entry point for creating a Data object, which is the core
     container for financial returns data in jQuantStats.
@@ -167,11 +166,11 @@ def build_data(
 
     data = build_data(returns=returns, benchmark=benchmark, rf=0.0002)
     ```
+
     """
 
     def subtract_risk_free(df: pl.DataFrame, rf: float | pl.DataFrame, date_col: str) -> pl.DataFrame:
-        """
-        Subtract the risk-free rate from all numeric columns in the DataFrame.
+        """Subtract the risk-free rate from all numeric columns in the DataFrame.
 
         Description
         -----------
@@ -210,6 +209,7 @@ def build_data(
           only dates present in both DataFrames will be included in the result.
         - Only columns with numeric data types will have the risk-free rate subtracted.
         - The date column and any non-numeric columns are preserved in the output.
+
         """
         # Handle scalar rf case
         if isinstance(rf, float):

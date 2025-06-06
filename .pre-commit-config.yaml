@@ -10,7 +10,7 @@ repos:
     rev: 'v0.11.12'
     hooks:
       - id: ruff
-        args: [ --fix, --exit-non-zero-on-fix ]
+        args: [ --fix, --exit-non-zero-on-fix, --unsafe-fixes ]
       # Run the formatter
       - id: ruff-format
         exclude: src/tests

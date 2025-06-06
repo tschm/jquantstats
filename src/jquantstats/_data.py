@@ -10,8 +10,7 @@ from ._stats import Stats
 
 @dataclasses.dataclass(frozen=True)
 class Data:
-    """
-    A container for financial returns data and an optional benchmark.
+    """A container for financial returns data and an optional benchmark.
 
     This class provides methods for analyzing and manipulating financial returns data,
     including converting returns to prices, calculating drawdowns, and resampling data
@@ -23,6 +22,7 @@ class Data:
         benchmark (pl.DataFrame, optional): DataFrame containing benchmark returns data.
                                            Defaults to None.
         index (pl.DataFrame): DataFrame containing the date index for the returns data.
+
     """
 
     returns: pl.DataFrame
@@ -49,53 +49,53 @@ class Data:
 
     @property
     def plots(self) -> "Plots":
-        """
-        Provides access to visualization methods for the financial data.
+        """Provides access to visualization methods for the financial data.
 
         Returns:
             Plots: An instance of the Plots class initialized with this data.
+
         """
         return Plots(self)
 
     @property
     def stats(self) -> "Stats":
-        """
-        Provides access to statistical analysis methods for the financial data.
+        """Provides access to statistical analysis methods for the financial data.
 
         Returns:
             Stats: An instance of the Stats class initialized with this data.
+
         """
         return Stats(self)
 
     @property
     def reports(self) -> "Reports":
-        """
-        Provides access to reporting methods for the financial data.
+        """Provides access to reporting methods for the financial data.
 
         Returns:
             Reports: An instance of the Reports class initialized with this data.
+
         """
         return Reports(self)
 
     @property
     def date_col(self) -> list[str]:
-        """
-        Returns the column names of the index DataFrame.
+        """Return the column names of the index DataFrame.
 
         Returns:
             list[str]: List of column names in the index DataFrame, typically containing
                       the date column name.
+
         """
         return self.index.columns
 
     @property
     def assets(self) -> list[str]:
-        """
-        Returns the combined list of asset column names from returns and benchmark.
+        """Return the combined list of asset column names from returns and benchmark.
 
         Returns:
             list[str]: List of all asset column names from both returns and benchmark
                       (if available).
+
         """
         try:
             return self.returns.columns + self.benchmark.columns
@@ -104,8 +104,7 @@ class Data:
 
     @property
     def all(self) -> pl.DataFrame:
-        """
-        Combines index, returns, and benchmark data into a single DataFrame.
+        """Combine index, returns, and benchmark data into a single DataFrame.
 
         This property provides a convenient way to access all data in a single DataFrame,
         which is useful for analysis and visualization.
@@ -113,6 +112,7 @@ class Data:
         Returns:
             pl.DataFrame: A DataFrame containing the index, all returns data, and benchmark data
                          (if available) combined horizontally.
+
         """
         if self.benchmark is None:
             return pl.concat([self.index, self.returns], how="horizontal")
@@ -120,8 +120,7 @@ class Data:
             return pl.concat([self.index, self.returns, self.benchmark], how="horizontal")
 
     def resample(self, every: str = "1mo") -> "Data":
-        """
-        Resamples returns and benchmark to a different frequency using Polars.
+        """Resamples returns and benchmark to a different frequency using Polars.
 
         Args:
             every (str, optional): Resampling frequency (e.g., '1mo', '1y'). Defaults to '1mo'.
@@ -129,6 +128,7 @@ class Data:
 
         Returns:
             Data: Resampled data.
+
         """
 
         def resample_frame(df: pl.DataFrame) -> pl.DataFrame:
@@ -151,11 +151,11 @@ class Data:
         )
 
     def copy(self) -> "Data":
-        """
-        Creates a deep copy of the Data object.
+        """Create a deep copy of the Data object.
 
         Returns:
             Data: A new Data object with copies of the returns and benchmark.
+
         """
         try:
             return Data(returns=self.returns.clone(), benchmark=self.benchmark.clone(), index=self.index.clone())
@@ -164,33 +164,33 @@ class Data:
             return Data(returns=self.returns.clone(), index=self.index.clone())
 
     def head(self, n: int = 5) -> "Data":
-        """
-        Returns the first n rows of the combined returns and benchmark data.
+        """Return the first n rows of the combined returns and benchmark data.
 
         Args:
             n (int, optional): Number of rows to return. Defaults to 5.
 
         Returns:
             Data: A new Data object containing the first n rows of the combined data.
+
         """
         return Data(returns=self.returns.head(n), benchmark=self.benchmark.head(n), index=self.index.head(n))
 
     def tail(self, n: int = 5) -> "Data":
-        """
-        Returns the last n rows of the combined returns and benchmark data.
+        """Return the last n rows of the combined returns and benchmark data.
 
         Args:
             n (int, optional): Number of rows to return. Defaults to 5.
 
         Returns:
             Data: A new Data object containing the last n rows of the combined data.
+
         """
         return Data(returns=self.returns.tail(n), benchmark=self.benchmark.tail(n), index=self.index.tail(n))
 
     @property
     def _periods_per_year(self) -> float:
-        """
-        Estimate the number of periods per year based on average frequency in the index.
+        """Estimate the number of periods per year based on average frequency in the index.
+
         Assumes `self.index` is a Polars DataFrame with a single datetime column.
         """
         # Extract the datetime column (assuming only one)
@@ -211,14 +211,14 @@ class Data:
         return (365 * 24 * 60 * 60) / seconds
 
     def items(self) -> tuple[str, pl.Series]:
-        """
-        Iterates over all assets and their corresponding data series.
+        """Iterate over all assets and their corresponding data series.
 
         This method provides a convenient way to iterate over all assets in the data,
         yielding each asset name and its corresponding data series.
 
         Yields:
             tuple[str, pl.Series]: A tuple containing the asset name and its data series.
+
         """
         matrix = self.all
 

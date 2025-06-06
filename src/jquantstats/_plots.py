@@ -153,8 +153,7 @@ def _plot_performance_dashboard(returns: pl.DataFrame, log_scale=False) -> go.Fi
 
 @dataclasses.dataclass(frozen=True)
 class Plots:
-    """
-    Visualization tools for financial returns data.
+    """Visualization tools for financial returns data.
 
     This class provides methods for creating various plots and visualizations
     of financial returns data, including:
@@ -168,13 +167,13 @@ class Plots:
 
     Attributes:
         data: The _Data object containing returns and benchmark data to visualize.
+
     """
 
     data: "Data"  # type: ignore
 
     def plot_snapshot(self, title: str = "Portfolio Summary", log_scale: bool = False) -> go.Figure:
-        """
-        Creates a comprehensive dashboard with multiple plots for portfolio analysis.
+        """Create a comprehensive dashboard with multiple plots for portfolio analysis.
 
         This function generates a three-panel plot showing:
         1. Cumulative returns over time
@@ -199,6 +198,7 @@ class Plots:
             >>> data = Data(returns=returns)
             >>> fig = data.plots.plot_snapshot(title="My Portfolio Performance")
             >>> fig.show()
+
         """
         fig = _plot_performance_dashboard(returns=self.data.all, log_scale=log_scale)
         return fig

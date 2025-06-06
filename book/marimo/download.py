@@ -1,3 +1,5 @@
+"""Download some data needed for the tests."""
+
 import marimo
 
 __generated_with = "0.13.4"

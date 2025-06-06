@@ -1,3 +1,4 @@
+"""Tests for the build_data function with pandas input types."""
 import pandas as pd
 import pytest
 
@@ -6,14 +7,14 @@ from jquantstats.api import build_data
 
 @pytest.fixture
 def returns_pd(returns):
-    """
-    Fixture that returns a pandas DataFrame version of the returns fixture.
+    """Fixture that returns a pandas DataFrame version of the returns fixture.
 
     Args:
         returns (pl.DataFrame): The polars DataFrame returns fixture.
 
     Returns:
         pd.DataFrame: A pandas DataFrame containing the same data as the returns fixture.
+
     """
     # Convert to pandas and ensure Date column is datetime
     df = returns.to_pandas()
@@ -23,28 +24,28 @@ def returns_pd(returns):
 
 @pytest.fixture
 def returns_series_pd(returns_pd):
-    """
-    Fixture that returns a pandas Series version of the Meta returns.
+    """Fixture that returns a pandas Series version of the Meta returns.
 
     Args:
         returns_pd (pd.DataFrame): The pandas DataFrame returns fixture.
 
     Returns:
         pd.Series: A pandas Series containing the Meta returns with Date as index.
+
     """
     return returns_pd.set_index("Date")["Meta"]
 
 
 @pytest.fixture
 def benchmark_pd(benchmark):
-    """
-    Fixture that returns a pandas DataFrame version of the benchmark fixture.
+    """Fixture that returns a pandas DataFrame version of the benchmark fixture.
 
     Args:
         benchmark (pl.DataFrame): The polars DataFrame benchmark fixture.
 
     Returns:
         pd.DataFrame: A pandas DataFrame containing the same data as the benchmark fixture.
+
     """
     # Convert to pandas and ensure Date column is datetime
     df = benchmark.to_pandas()
@@ -54,28 +55,28 @@ def benchmark_pd(benchmark):
 
 @pytest.fixture
 def benchmark_series_pd(benchmark_pd):
-    """
-    Fixture that returns a pandas Series version of the benchmark returns.
+    """Fixture that returns a pandas Series version of the benchmark returns.
 
     Args:
         benchmark_pd (pd.DataFrame): The pandas DataFrame benchmark fixture.
 
     Returns:
         pd.Series: A pandas Series containing the benchmark returns with Date as index.
+
     """
     return benchmark_pd.set_index("Date")["SPY -- Benchmark"]
 
 
 @pytest.fixture
 def rf_pd(returns_pd):
-    """
-    Fixture that returns a pandas DataFrame with a constant risk-free rate.
+    """Fixture that returns a pandas DataFrame with a constant risk-free rate.
 
     Args:
         returns_pd (pd.DataFrame): The pandas DataFrame returns fixture.
 
     Returns:
         pd.DataFrame: A pandas DataFrame with Date and a constant risk-free rate.
+
     """
     # The Date column from returns_pd is already datetime
     return pd.DataFrame({
@@ -86,21 +87,20 @@ def rf_pd(returns_pd):
 
 @pytest.fixture
 def rf_series_pd(rf_pd):
-    """
-    Fixture that returns a pandas Series with a constant risk-free rate.
+    """Fixture that returns a pandas Series with a constant risk-free rate.
 
     Args:
         rf_pd (pd.DataFrame): The pandas DataFrame risk-free rate fixture.
 
     Returns:
         pd.Series: A pandas Series with a constant risk-free rate and Date as index.
+
     """
     return rf_pd.set_index("Date")["rf"]
 
 
 def test_build_data_with_pd_dataframe_returns(returns_pd):
-    """
-    Tests that build_data works with a pandas DataFrame for returns.
+    """Tests that build_data works with a pandas DataFrame for returns.
 
     Args:
         returns_pd (pd.DataFrame): The pandas DataFrame returns fixture.
@@ -109,6 +109,7 @@ def test_build_data_with_pd_dataframe_returns(returns_pd):
         1. The function returns a Data object.
         2. The returns in the Data object match the input returns.
         3. The date column is correctly excluded from the returns.
+
     """
     result = build_data(returns=returns_pd)
 
@@ -125,8 +126,7 @@ def test_build_data_with_pd_dataframe_returns(returns_pd):
 
 
 def test_build_data_with_pd_series_returns(returns_series_pd):
-    """
-    Tests that build_data works with a pandas Series for returns.
+    """Tests that build_data works with a pandas Series for returns.
 
     Args:
         returns_series_pd (pd.Series): The pandas Series returns fixture.
@@ -134,6 +134,7 @@ def test_build_data_with_pd_series_returns(returns_series_pd):
     Verifies:
         1. The function returns a Data object.
         2. The returns in the Data object match the input returns.
+
     """
     result = build_data(returns=returns_series_pd)
 
@@ -152,8 +153,7 @@ def test_build_data_with_pd_series_returns(returns_series_pd):
 
 
 def test_build_data_with_pd_dataframe_benchmark(returns_pd, benchmark_pd):
-    """
-    Tests that build_data works with a pandas DataFrame for benchmark.
+    """Tests that build_data works with a pandas DataFrame for benchmark.
 
     Args:
         returns_pd (pd.DataFrame): The pandas DataFrame returns fixture.
@@ -162,6 +162,7 @@ def test_build_data_with_pd_dataframe_benchmark(returns_pd, benchmark_pd):
     Verifies:
         1. The function returns a Data object with both returns and benchmark.
         2. The benchmark in the Data object matches the input benchmark.
+
     """
     # Use a constant risk-free rate of 0 to avoid subtraction
     result = build_data(returns=returns_pd, benchmark=benchmark_pd, rf=0.0)
@@ -180,8 +181,7 @@ def test_build_data_with_pd_dataframe_benchmark(returns_pd, benchmark_pd):
 
 
 def test_build_data_with_pd_series_benchmark(returns_pd, benchmark_series_pd):
-    """
-    Tests that build_data works with a pandas Series for benchmark.
+    """Tests that build_data works with a pandas Series for benchmark.
 
     Args:
         returns_pd (pd.DataFrame): The pandas DataFrame returns fixture.
@@ -190,6 +190,7 @@ def test_build_data_with_pd_series_benchmark(returns_pd, benchmark_series_pd):
     Verifies:
         1. The function returns a Data object with both returns and benchmark.
         2. The benchmark in the Data object has the expected structure.
+
     """
     # Use a constant risk-free rate of 0 to avoid subtraction
     result = build_data(returns=returns_pd, benchmark=benchmark_series_pd, rf=0.0)
@@ -208,8 +209,7 @@ def test_build_data_with_pd_series_benchmark(returns_pd, benchmark_series_pd):
 
 
 def test_build_data_with_pd_dataframe_rf(returns_pd, rf_pd):
-    """
-    Tests that build_data works with a pandas DataFrame for risk-free rate.
+    """Tests that build_data works with a pandas DataFrame for risk-free rate.
 
     Args:
         returns_pd (pd.DataFrame): The pandas DataFrame returns fixture.
@@ -218,6 +218,7 @@ def test_build_data_with_pd_dataframe_rf(returns_pd, rf_pd):
     Verifies:
         1. The function returns a Data object.
         2. The returns in the Data object are correctly adjusted by the risk-free rate.
+
     """
     result = build_data(returns=returns_pd, rf=rf_pd)
 
@@ -239,8 +240,7 @@ def test_build_data_with_pd_dataframe_rf(returns_pd, rf_pd):
 
 
 def test_build_data_with_pd_series_rf(returns_pd, rf_series_pd):
-    """
-    Tests that build_data works with a pandas Series for risk-free rate.
+    """Tests that build_data works with a pandas Series for risk-free rate.
 
     Args:
         returns_pd (pd.DataFrame): The pandas DataFrame returns fixture.
@@ -249,6 +249,7 @@ def test_build_data_with_pd_series_rf(returns_pd, rf_series_pd):
     Verifies:
         1. The function returns a Data object.
         2. The returns in the Data object are correctly adjusted by the risk-free rate.
+
     """
     result = build_data(returns=returns_pd, rf=rf_series_pd)
 
@@ -270,8 +271,7 @@ def test_build_data_with_pd_series_rf(returns_pd, rf_series_pd):
 
 
 def test_build_data_with_pd_all_inputs(returns_series_pd, benchmark_series_pd, rf_series_pd):
-    """
-    Tests that build_data works with all inputs as pandas Series.
+    """Tests that build_data works with all inputs as pandas Series.
 
     Args:
         returns_series_pd (pd.Series): The pandas Series returns fixture.
@@ -281,6 +281,7 @@ def test_build_data_with_pd_all_inputs(returns_series_pd, benchmark_series_pd, r
     Verifies:
         1. The function returns a Data object with both returns and benchmark.
         2. The returns and benchmark in the Data object have the expected structure.
+
     """
     # Use a constant risk-free rate to simplify testing
     result = build_data(returns=returns_series_pd, benchmark=benchmark_series_pd, rf=0.0)
@@ -305,8 +306,7 @@ def test_build_data_with_pd_all_inputs(returns_series_pd, benchmark_series_pd, r
 
 
 def test_build_data_error_no_overlapping_dates():
-    """
-    Tests that build_data raises an error when there are no overlapping dates between returns and benchmark.
+    """Tests that build_data raises an error when there are no overlapping dates between returns and benchmark.
 
     Verifies:
         1. The function raises a ValueError when there are no overlapping dates.

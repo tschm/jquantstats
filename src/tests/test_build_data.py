@@ -6,8 +6,7 @@ from jquantstats.api import build_data
 
 
 def test_no_rf(returns):
-    """
-    Tests that build_data works without a risk-free rate.
+    """Tests that build_data works without a risk-free rate.
 
     Args:
         returns (pd.DataFrame): The returns fixture containing asset returns.
@@ -16,14 +15,14 @@ def test_no_rf(returns):
         1. The function returns a Data object.
         2. The returns in the Data object match the input returns.
         3. The date column is correctly excluded from the returns.
+
     """
     d = build_data(returns, date_col="Date")
     assert_frame_equal(d.returns, returns.drop("Date"))
 
 
 def test_with_constant_rf(returns):
-    """
-    Tests that build_data works with a constant risk-free rate.
+    """Tests that build_data works with a constant risk-free rate.
 
     Args:
         returns (pd.DataFrame): The returns fixture containing asset returns.
@@ -32,6 +31,7 @@ def test_with_constant_rf(returns):
         1. The function returns a Data object.
         2. The returns in the Data object match the input returns minus the risk-free rate.
         3. The benchmark is None when not provided.
+
     """
     # Test with a small constant and daily risk-free rate
     rf = 0.001
@@ -44,8 +44,7 @@ def test_with_constant_rf(returns):
 
 
 def test_with_series_rf(returns):
-    """
-    Tests that build_data works with a Series as the risk-free rate.
+    """Tests that build_data works with a Series as the risk-free rate.
 
     Args:
         returns (pd.DataFrame): The returns fixture containing asset returns.
@@ -54,6 +53,7 @@ def test_with_series_rf(returns):
         1. The function returns a Data object.
         2. The returns in the Data object match the input returns minus the risk-free rate.
         3. The risk-free rate Series is correctly aligned with the returns index.
+
     """
     # Create a Series with a constant risk-free rate
     date_col = "Date"
@@ -70,8 +70,7 @@ def test_with_series_rf(returns):
 
 
 def test_with_benchmark(returns, benchmark):
-    """
-    Tests that build_data correctly handles a benchmark.
+    """Tests that build_data correctly handles a benchmark.
 
     Args:
         returns (pd.DataFrame): The returns fixture containing asset returns.
@@ -82,6 +81,7 @@ def test_with_benchmark(returns, benchmark):
         2. The returns in the Data object match the input returns.
         3. The benchmark in the Data object matches the input benchmark.
         4. The indices of the returns and benchmark are aligned.
+
     """
     result = build_data(returns=returns, benchmark=benchmark)
     assert result.benchmark.columns == ["SPY -- Benchmark"]

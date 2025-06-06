@@ -5,25 +5,25 @@ import polars as pl
 
 @dataclasses.dataclass(frozen=True)
 class Reports:
-    """
-    A class for generating financial reports from Data objects.
+    """A class for generating financial reports from Data objects.
 
     This class provides methods for calculating and formatting various financial metrics
     into report-ready formats such as DataFrames.
 
     Attributes:
         data (Data): The financial data object to generate reports from.
+
     """
 
     data: "Data"  # type: ignore
 
     def metrics(self, periods=None) -> pl.DataFrame:
-        """
-        Calculate various financial metrics and return them as a DataFrame.
+        """Calculate various financial metrics and return them as a DataFrame.
 
         Returns:
             pl.DataFrame: A DataFrame containing financial metrics as rows and assets as columns.
                           The first column is 'Metric' containing the name of each metric.
+
         """
         metrics: dict[str, dict[str, float]] = {
             "Sharpe Ratio": self.data.stats.sharpe(periods=periods),

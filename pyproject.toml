@@ -38,7 +38,7 @@ exclude = [
 #lint.extend-ignore = ["F821"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I"]
+select = ["E", "F", "I", "D"]
 ignore = ["F821"]
 
 [build-system]

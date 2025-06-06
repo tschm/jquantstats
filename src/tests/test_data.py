@@ -1,3 +1,4 @@
+"""Tests for the Data class functionality and methods."""
 from datetime import date
 
 import polars as pl
@@ -8,8 +9,7 @@ from jquantstats.api import build_data
 
 
 def test_head(data):
-    """
-    Tests that the head() method returns a Data object with the first n rows.
+    """Tests that the head() method returns a Data object with the first n rows.
 
     Args:
         data (_Data): The data fixture containing a Data object.
@@ -17,6 +17,7 @@ def test_head(data):
     Verifies:
         1. The return value is a Data object.
         2. The content matches the first n rows of the original data.
+
     """
     x = data.head()
     assert_frame_equal(x.returns, data.returns.head(5))
@@ -25,8 +26,7 @@ def test_head(data):
 
 
 def test_tail(data):
-    """
-    Tests that the tail() method returns a Data object with the last n rows.
+    """Tests that the tail() method returns a Data object with the last n rows.
 
     Args:
         data (_Data): The data fixture containing a Data object.
@@ -34,65 +34,65 @@ def test_tail(data):
     Verifies:
         1. The return value is a Data object.
         2. The content matches the last n rows of the original data.
+
     """
     x = data.tail()
     assert_frame_equal(x.returns, data.returns.tail(5))
 
 def test_all(data):
-    """
-    Tests that the all property returns a DataFrame with all data.
+    """Tests that the all property returns a DataFrame with all data.
 
     Args:
         data (_Data): The data fixture containing a Data object.
 
     Verifies:
         The all property returns a DataFrame that includes all data.
+
     """
     print(data.returns.head(5))
     x = data.all
     print(x)
 
 def test_assets(data):
-    """
-    Tests that the assets property returns the correct list of asset names.
+    """Tests that the assets property returns the correct list of asset names.
 
     Args:
         data (_Data): The data fixture containing a Data object.
 
     Verifies:
         The assets property returns the expected list of asset names.
+
     """
     x = data.assets
     assert x == ['AAPL', 'META', 'SPY -- Benchmark']
 
 def test_date_col(data):
-    """
-    Tests that the date_col property returns the correct date column name.
+    """Tests that the date_col property returns the correct date column name.
 
     Args:
         data (_Data): The data fixture containing a Data object.
 
     Verifies:
         The date_col property returns the expected date column name.
+
     """
     x = data.date_col
     assert x == ["Date"]
 
 def test_periods(data):
-    """
-    Tests that the _periods_per_year property returns the correct number of periods.
+    """Tests that the _periods_per_year property returns the correct number of periods.
 
     Args:
         data (_Data): The data fixture containing a Data object.
 
     Verifies:
         The _periods_per_year property returns the expected number of periods (252 for daily data).
+
     """
     assert data._periods_per_year == pytest.approx(251.56913616203425)
 
 def test_periods_edge_cases(data):
-    """
-    Tests edge cases for the _periods_per_year property.
+    """Tests edge cases for the _periods_per_year property.
 
     Args:
         data (Data): The data fixture containing a Data object.
@@ -101,6 +101,7 @@ def test_periods_edge_cases(data):
         1. ValueError is raised when index has less than 2 timestamps
         2. Different frequencies return different period counts
         3. Unsorted data is handled correctly
+
     """
     # Weekly data
     # Create dates with weekly intervals
@@ -126,8 +127,7 @@ def test_periods_edge_cases(data):
 
 
 def test_post_init():
-    """
-    Tests the validation checks in the __post_init__ method of the Data class.
+    """Tests the validation checks in the __post_init__ method of the Data class.
 
     Verifies:
         1. ValueError is raised when index has less than 2 timestamps
@@ -187,8 +187,7 @@ def test_post_init():
 
 
 def test_copy(data):
-    """
-    Tests that the copy() method creates a proper deep copy of the Data object.
+    """Tests that the copy() method creates a proper deep copy of the Data object.
 
     Args:
         data (_Data): The data fixture containing a Data object.
@@ -198,6 +197,7 @@ def test_copy(data):
         2. The copied object has the same returns and benchmark data as the original.
         3. Modifying the copied object does not affect the original.
         4. The copy works correctly when there's a benchmark.
+
     """
     # Create a copy of the data object
     data_copy = data.copy()
@@ -215,8 +215,7 @@ def test_copy(data):
 
 
 def test_resample(data):
-    """
-    Tests that the resample() method correctly resamples data to different time periods.
+    """Tests that the resample() method correctly resamples data to different time periods.
 
     Args:
         data (_Data): The data fixture containing a Data object.
@@ -226,6 +225,7 @@ def test_resample(data):
         2. The resampled object has the correct frequency.
         3. The resampling works with both compounded=False and compounded=True.
         4. The resampling works with different resample rules (YE, ME, etc.).
+
     """
     # Test resampling to yearly frequency
     yearly_data = data.resample(every="1y")
@@ -241,56 +241,55 @@ def test_resample(data):
     #assert monthly_data.returns.index.freq == 'ME'  # Monthly frequency
 
 def test_stats(data):
-    """
-    Tests that the stats property returns a non-None value.
+    """Tests that the stats property returns a non-None value.
 
     Args:
         data (_Data): The data fixture containing a Data object.
 
     Verifies:
         The stats property returns a non-None value.
+
     """
     assert data.stats is not None
 
 def test_plots(data):
-    """
-    Tests that the plots property returns a non-None value.
+    """Tests that the plots property returns a non-None value.
 
     Args:
         data (_Data): The data fixture containing a Data object.
 
     Verifies:
         The plots property returns a non-None value.
+
     """
     assert data.plots is not None
 
 def test_all_no_benchmark(data_no_benchmark):
-    """
-    Tests that the all property works correctly when there is no benchmark.
+    """Tests that the all property works correctly when there is no benchmark.
 
     Args:
         data_no_benchmark (_Data): The data_no_benchmark fixture containing a Data object with no benchmark.
 
     Verifies:
         The all property returns a non-None value when there is no benchmark.
+
     """
     assert data_no_benchmark.all is not None
 
 def test_assets_no_benchmark(data_no_benchmark):
-    """
-    Tests that the assets property works correctly when there is no benchmark.
+    """Tests that the assets property works correctly when there is no benchmark.
 
     Args:
         data_no_benchmark (_Data): The data_no_benchmark fixture containing a Data object with no benchmark.
 
     Verifies:
         The assets property returns a non-None value when there is no benchmark.
+
     """
     assert data_no_benchmark.assets is not None
 
 def test_copy_no_benchmark(data_no_benchmark):
-    """
-    Tests that the copy method works correctly when there is no benchmark.
+    """Tests that the copy method works correctly when there is no benchmark.
 
     Args:
         data_no_benchmark (_Data): The data_no_benchmark fixture containing a Data object with no benchmark.
@@ -298,6 +297,7 @@ def test_copy_no_benchmark(data_no_benchmark):
     Verifies:
         1. The copied object has non-None returns.
         2. The copied object has None benchmark.
+
     """
     x = data_no_benchmark.copy()
     assert x.returns is not None
