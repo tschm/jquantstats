@@ -1,6 +1,7 @@
 import dataclasses
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from functools import wraps
+from typing import cast
 
 import numpy as np
 import polars as pl
@@ -31,7 +32,7 @@ class Stats:
     """
 
     data: "Data"  # type: ignore
-    all: pl.DataFrame = None  # Default is None; will be set in __post_init__
+    all: pl.DataFrame | None = None  # Default is None; will be set in __post_init__
 
     def __post_init__(self):
         object.__setattr__(self, "all", self.data.all)
@@ -84,7 +85,7 @@ class Stats:
         return wrapper
 
     @columnwise_stat
-    def skew(self, series: pl.Series) -> float:
+    def skew(self, series: pl.Series) -> int | float | None:
         """Calculate skewness (asymmetry) for each numeric column.
 
         Args:
@@ -97,7 +98,7 @@ class Stats:
         return series.skew(bias=False)
 
     @columnwise_stat
-    def kurtosis(self, series: pl.Series) -> float:
+    def kurtosis(self, series: pl.Series) -> int | float | None:
         """Calculate the kurtosis of returns.
 
         The degree to which a distribution peak compared to a normal distribution.
@@ -151,7 +152,7 @@ class Stats:
         return self._mean_negative_expr(series)
 
     @columnwise_stat
-    def volatility(self, series: pl.Series, periods: float = None, annualize: bool = True) -> float:
+    def volatility(self, series: pl.Series, periods: int | float | None = None, annualize: bool = True) -> float:
         """Calculate the volatility of returns.
 
         - Std dev of returns
@@ -166,9 +167,18 @@ class Stats:
             float: The volatility value.
 
         """
-        periods = periods or self.data._periods_per_year
-        factor = np.sqrt(periods) if annualize else 1
-        return series.std() * factor
+        raw_periods = periods or self.data._periods_per_year
+
+        # Ensure it's numeric
+        if not isinstance(raw_periods, (int, float)):
+            raise TypeError(f"Expected int or float for periods, got {type(raw_periods).__name__}")
+
+        factor = np.sqrt(raw_periods) if annualize else 1.0
+        return float(series.std()) * factor
+
+        # periods = periods or self.data._periods_per_year
+        # factor = np.sqrt(periods) if annualize else 1
+        # return series.std() * factor
 
     @columnwise_stat
     def payoff_ratio(self, series: pl.Series) -> float:
@@ -241,7 +251,7 @@ class Stats:
         return np.abs(wins.sum() / losses.sum())
 
     @columnwise_stat
-    def value_at_risk(self, series: pl.Series, sigma=1, alpha: float = 0.05) -> float:
+    def value_at_risk(self, series: pl.Series, sigma: float = 1.0, alpha: float = 0.05) -> float:
         """Calculate the daily value-at-risk.
 
         Uses variance-covariance calculation with confidence level.
@@ -255,13 +265,13 @@ class Stats:
             float: The value at risk.
 
         """
-        mu = series.mean()
-        sigma *= series.std()
+        mu = float(series.mean())
+        sigma *= float(series.std())
 
         return norm.ppf(alpha, mu, sigma)
 
     @columnwise_stat
-    def conditional_value_at_risk(self, series: pl.Series, sigma=1, alpha: float = 0.05) -> float:
+    def conditional_value_at_risk(self, series: pl.Series, sigma: float = 1.0, alpha: float = 0.05) -> float:
         """Calculate the conditional value-at-risk.
 
         Also known as CVaR or expected shortfall, calculated for each numeric column.
@@ -275,13 +285,19 @@ class Stats:
             float: The conditional value at risk.
 
         """
-        mu = series.mean()
-        sigma *= series.std()
+        mu = float(series.mean())
+        sigma *= float(series.std())
 
         var = norm.ppf(alpha, mu, sigma)
 
         # Compute mean of returns less than or equal to VaR
-        return series.filter(series < var).mean()
+        # Cast to Any or pl.Series to suppress Ty error
+        # Cast the mask to pl.Expr to satisfy type checker
+        mask = cast(Iterable[bool], series < var)
+        return series.filter(mask).mean()
+
+        # filtered_series = cast(pl.Series, series.filter(series < var))
+        # return filtered_series.mean()
 
     @columnwise_stat
     def win_rate(self, series: pl.Series) -> float:
@@ -331,7 +347,7 @@ class Stats:
             float: The risk return ratio value.
 
         """
-        return series.mean() / series.std()
+        return float(series.mean()) / float(series.std())
 
     def kelly_criterion(self) -> dict[str, float]:
         """Calculate the optimal capital allocation per column.
@@ -356,7 +372,7 @@ class Stats:
         }
 
     @columnwise_stat
-    def best(self, series: pl.Series) -> float:
+    def best(self, series: pl.Series) -> float | None:
         """Find the maximum return per column (best period).
 
         Args:
@@ -369,7 +385,7 @@ class Stats:
         return series.max()  # .alias(series.meta.output_name)
 
     @columnwise_stat
-    def worst(self, series: pl.Series) -> float:
+    def worst(self, series: pl.Series) -> float | None:
         """Find the minimum return per column (worst period).
 
         Args:
@@ -395,7 +411,7 @@ class Stats:
         return np.round((series.filter(series != 0).count() / self.all.height), decimals=2)
 
     @columnwise_stat
-    def sharpe(self, series: pl.Series, periods: float = None) -> float:
+    def sharpe(self, series: pl.Series, periods: int | float | None = None) -> float:
         """Calculate the Sharpe ratio of asset returns.
 
         Args:
@@ -408,14 +424,14 @@ class Stats:
         """
         periods = periods or self.data._periods_per_year
 
-        divisor = series.std(ddof=1)
+        divisor = float(series.std(ddof=1))
 
-        res = series.mean() / divisor
+        res = float(series.mean()) / divisor
         factor = periods or 1
         return res * np.sqrt(factor)
 
     @columnwise_stat
-    def sortino(self, series: pl.Series, periods: float = None) -> float:
+    def sortino(self, series: pl.Series, periods: int | float | None = None) -> float:
         """Calculate the Sortino ratio.
 
         The Sortino ratio is the mean return divided by downside deviation.
@@ -435,7 +451,9 @@ class Stats:
         return ratio * np.sqrt(periods)
 
     @to_frame
-    def rolling_sortino(self, series: pl.Expr, rolling_period: int = 126, periods_per_year: float = None) -> pl.Expr:
+    def rolling_sortino(
+        self, series: pl.Expr, rolling_period: int = 126, periods_per_year: int | float | None = None
+    ) -> pl.Expr:
         """Calculate the rolling Sortino ratio.
 
         Args:
@@ -459,7 +477,9 @@ class Stats:
         return sortino * (periods_per_year**0.5)
 
     @to_frame
-    def rolling_sharpe(self, series: pl.Expr, rolling_period: int = 126, periods_per_year: float = None) -> pl.Expr:
+    def rolling_sharpe(
+        self, series: pl.Expr, rolling_period: int = 126, periods_per_year: int | float | None = None
+    ) -> pl.Expr:
         """Calculate the rolling Sharpe ratio.
 
         Args:
@@ -476,7 +496,9 @@ class Stats:
         return res * np.sqrt(periods_per_year)
 
     @to_frame
-    def rolling_volatility(self, series: pl.Expr, rolling_period=126, periods_per_year: float = None) -> pl.Expr:
+    def rolling_volatility(
+        self, series: pl.Expr, rolling_period=126, periods_per_year: int | float | None = None
+    ) -> pl.Expr:
         """Calculate the rolling volatility of returns.
 
         Args:
@@ -538,7 +560,7 @@ class Stats:
         """
         return Stats.max_drawdown_single_series(series)
 
-    def adjusted_sortino(self, periods: float = None) -> dict[str, float]:
+    def adjusted_sortino(self, periods: int | float | None = None) -> dict[str, float]:
         """Calculate Jack Schwager's adjusted Sortino ratio.
 
         This adjustment allows for direct comparison to Sharpe ratio.
@@ -555,7 +577,7 @@ class Stats:
         return {k: v / np.sqrt(2) for k, v in sortino_data.items()}
 
     @columnwise_stat
-    def r_squared(self, series: pl.Series, benchmark: str = None) -> float:
+    def r_squared(self, series: pl.Series, benchmark: str | None = None) -> float:
         """Measure the straight line fit of the equity curve.
 
         Args:
@@ -602,7 +624,9 @@ class Stats:
         return self.r_squared()
 
     @columnwise_stat
-    def information_ratio(self, series: pl.Series, periods_per_year: float = None, benchmark: str = None) -> float:
+    def information_ratio(
+        self, series: pl.Series, periods_per_year: int | float | None = None, benchmark: str | None = None
+    ) -> float:
         """Calculate the information ratio.
 
         This is essentially the risk return ratio of the net profits.
@@ -631,7 +655,9 @@ class Stats:
             return 0.0
 
     @columnwise_stat
-    def greeks(self, series: pl.Series, periods_per_year: float = None, benchmark: str = None) -> dict[str, float]:
+    def greeks(
+        self, series: pl.Series, periods_per_year: int | float | None = None, benchmark: str | None = None
+    ) -> dict[str, float]:
         """Calculate alpha and beta of the portfolio.
 
         Args:

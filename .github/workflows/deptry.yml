@@ -26,22 +26,15 @@ jobs:
       - name: Checkout ${{ github.repository }}
         uses: actions/checkout@v4
 
-      # Step: Set up Python environment
-      # Uses the latest available Python 3.x version
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
 
-      # Step: Install deptry tool
-      # Updates pip and installs deptry without caching to ensure latest version
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install --no-cache-dir deptry
+      # Set up Python environment with dependencies
+      - name: "Build the virtual environment for ${{ github.repository }}"
+        uses: tschm/cradle/actions/environment@v0.1.71
 
-      # Step: Run deptry analysis
-      # Analyzes the src/jquantstats directory for dependency issues
-      - name: Run Deptry
-        shell: bash
-        run: deptry src/jquantstats
+      - name: Run deptry
+        run : |
+          uvx deptry src/jquantstats
+
+      - name: Run ty
+        run : |
+          uvx ty check src

@@ -74,7 +74,7 @@ from ._data import Data
 def build_data(
     returns: pl.DataFrame | pd.DataFrame | pd.Series,
     rf: float | pl.DataFrame | pd.DataFrame | pd.Series = 0.0,
-    benchmark: pl.DataFrame | pd.DataFrame | pd.Series = None,
+    benchmark: pl.DataFrame | pd.DataFrame | pd.Series | None = None,
     date_col: str = "Date",
 ) -> Data:
     """Build a Data object from returns and optional benchmark using Polars.
@@ -224,7 +224,7 @@ def build_data(
             + [
                 (pl.col(col) - pl.col("rf")).alias(col)
                 for col in df.columns
-                if col not in {date_col, "rf"} and df.schema[col] in pl.NUMERIC_DTYPES
+                if col not in {date_col, "rf"} and col != date_col
             ]
         )
 

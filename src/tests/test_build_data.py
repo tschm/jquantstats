@@ -84,4 +84,8 @@ def test_with_benchmark(returns, benchmark):
 
     """
     result = build_data(returns=returns, benchmark=benchmark)
-    assert result.benchmark.columns == ["SPY -- Benchmark"]
+    b = result.benchmark
+    if b is not None:
+        assert b.columns == ["SPY -- Benchmark"]
+    else:
+        raise AssertionError("No benchmark data available")
