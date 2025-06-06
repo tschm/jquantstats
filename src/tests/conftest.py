@@ -54,3 +54,29 @@ def edge(data):
     benchmark = pl.DataFrame({"index": index, "benchmark": [0.0] * len(index)})
 
     return build_data(returns=returns, benchmark=benchmark, date_col="index")
+
+@pytest.fixture()
+def readme_path() -> Path:
+    """Provide the path to the project's README.md file.
+
+    This fixture searches for the README.md file by starting in the current
+    directory and moving up through parent directories until it finds the file.
+
+    Returns
+    -------
+    Path
+        Path to the README.md file
+
+    Raises
+    ------
+    FileNotFoundError
+        If the README.md file cannot be found in any parent directory
+
+    """
+    current_dir = Path(__file__).resolve().parent
+    while current_dir != current_dir.parent:
+        candidate = current_dir / "README.md"
+        if candidate.is_file():
+            return candidate
+        current_dir = current_dir.parent
+    raise FileNotFoundError("README.md not found in any parent directory")
