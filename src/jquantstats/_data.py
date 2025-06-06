@@ -1,4 +1,5 @@
 import dataclasses
+from collections.abc import Iterator
 from datetime import timedelta
 
 import polars as pl
@@ -210,7 +211,7 @@ class Data:
 
         return (365 * 24 * 60 * 60) / seconds
 
-    def items(self) -> tuple[str, pl.Series]:
+    def items(self) -> Iterator[tuple[str, pl.Series]]:
         """Iterate over all assets and their corresponding data series.
 
         This method provides a convenient way to iterate over all assets in the data,

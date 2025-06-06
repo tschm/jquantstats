@@ -14,6 +14,10 @@ fmt:  install ## Run autoformatting and linting
 	@uvx pre-commit install
 	@uvx pre-commit run --all-files
 
+.PHONY: ty
+ty: install
+	@uvx ty check src  #/jquantstats
+
 .PHONY: test
 test: install ## Run tests
 	@uv pip install pytest
