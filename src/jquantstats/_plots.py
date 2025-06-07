@@ -22,8 +22,8 @@ def _plot_performance_dashboard(returns: pl.DataFrame, log_scale=False) -> go.Fi
     prices = returns.with_columns([((1 + pl.col(ticker)).cum_prod()).alias(f"{ticker}_price") for ticker in tickers])
 
     palette = px.colors.qualitative.Plotly
-    COLORS = {ticker: palette[i % len(palette)] for i, ticker in enumerate(tickers)}
-    COLORS.update({f"{ticker}_light": hex_to_rgba(COLORS[ticker]) for ticker in tickers})
+    colors = {ticker: palette[i % len(palette)] for i, ticker in enumerate(tickers)}
+    colors.update({f"{ticker}_light": hex_to_rgba(colors[ticker]) for ticker in tickers})
 
     # Resample to monthly returns
     monthly_returns = returns.group_by_dynamic(
@@ -50,7 +50,7 @@ def _plot_performance_dashboard(returns: pl.DataFrame, log_scale=False) -> go.Fi
                 mode="lines",
                 name=ticker,
                 legendgroup=ticker,
-                line=dict(color=COLORS[ticker], width=2),
+                line={"color": colors[ticker], "width": 2},
                 hovertemplate=f"<b>%{{x|%b %Y}}</b><br>{ticker}: %{{y:.2f}}x",
                 showlegend=True,
             ),
@@ -72,8 +72,8 @@ def _plot_performance_dashboard(returns: pl.DataFrame, log_scale=False) -> go.Fi
                 y=dd_values,
                 mode="lines",
                 fill="tozeroy",
-                fillcolor=COLORS[f"{ticker}_light"],
-                line=dict(color=COLORS[ticker], width=1),
+                fillcolor=colors[f"{ticker}_light"],
+                line={"color": colors[ticker], "width": 1},
                 name=ticker,
                 legendgroup=ticker,
                 hovertemplate=f"{ticker} Drawdown: %{{y:.2%}}",
@@ -94,7 +94,7 @@ def _plot_performance_dashboard(returns: pl.DataFrame, log_scale=False) -> go.Fi
         if len(tickers) == 1:
             bar_colors = ["green" if val > 0 else "red" for val in monthly_values]
         else:
-            bar_colors = [COLORS[ticker] if val > 0 else COLORS[f"{ticker}_light"] for val in monthly_values]
+            bar_colors = [colors[ticker] if val > 0 else colors[f"{ticker}_light"] for val in monthly_values]
 
         fig.add_trace(
             go.Bar(
@@ -102,10 +102,10 @@ def _plot_performance_dashboard(returns: pl.DataFrame, log_scale=False) -> go.Fi
                 y=monthly_returns[ticker],
                 name=ticker,
                 legendgroup=ticker,
-                marker=dict(
-                    color=bar_colors,
-                    line=dict(width=0),
-                ),
+                marker={
+                    "color": bar_colors,
+                    "line": {"width": 0},
+                },
                 opacity=0.8,
                 hovertemplate=f"{ticker} Monthly Return: %{{y:.2%}}",
                 showlegend=False,
@@ -120,22 +120,20 @@ def _plot_performance_dashboard(returns: pl.DataFrame, log_scale=False) -> go.Fi
         height=1200,
         hovermode="x unified",
         plot_bgcolor="white",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        xaxis=dict(
-            rangeselector=dict(
-                buttons=list(
-                    [
-                        dict(count=6, label="6m", step="month", stepmode="backward"),
-                        dict(count=1, label="1y", step="year", stepmode="backward"),
-                        dict(count=3, label="3y", step="year", stepmode="backward"),
-                        dict(step="year", stepmode="todate", label="YTD"),
-                        dict(step="all", label="All"),
-                    ]
-                )
-            ),
-            rangeslider=dict(visible=False),
-            type="date",
-        ),
+        legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
+        xaxis={
+            "rangeselector": {
+                "buttons": [
+                    {"count": 6, "label": "6m", "step": "month", "stepmode": "backward"},
+                    {"count": 1, "label": "1y", "step": "year", "stepmode": "backward"},
+                    {"count": 3, "label": "3y", "step": "year", "stepmode": "backward"},
+                    {"step": "year", "stepmode": "todate", "label": "YTD"},
+                    {"step": "all", "label": "All"},
+                ]
+            },
+            "rangeslider": {"visible": False},
+            "type": "date",
+        },
     )
 
     fig.update_yaxes(title_text="Cumulative Return", row=1, col=1, tickformat=".2f")

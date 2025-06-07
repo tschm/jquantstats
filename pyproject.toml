@@ -1,3 +1,4 @@
+# Main project metadata
 [project]
 name = 'jquantstats'
 version = "0.0.0"
@@ -14,9 +15,11 @@ dependencies = [
     "scipy>=1.14.1"
 ]
 
+# Project URLs for documentation and reference
 [project.urls]
 repository = "https://github.com/tschm/jquantstats"
 
+# Optional dependencies that can be installed with extras (e.g., pip install jquantstats[plot])
 [project.optional-dependencies]
 plot = ["kaleido==0.2.1"]
 
@@ -29,25 +32,75 @@ dev = [
 ]
 
 
+# Ruff configuration for code linting and formatting
 [tool.ruff]
 line-length = 120
 target-version = "py312"
 exclude = [
     "*__init__.py"
 ]
-#lint.extend-ignore = ["F821"]
 
+
+# Linting rules configuration
 [tool.ruff.lint]
-select = ["E", "F", "I", "D"]
-ignore = ["F821"]
+# Available rule sets in Ruff:
+# A: flake8-builtins - Check for python builtins being used as variables or parameters
+# B: flake8-bugbear - Find likely bugs and design problems
+# C4: flake8-comprehensions - Helps write better list/set/dict comprehensions
+# D: pydocstyle - Check docstring style
+# E: pycodestyle errors - PEP 8 style guide
+# ERA: eradicate - Find commented out code
+# F: pyflakes - Detect logical errors
+# I: isort - Sort imports
+# N: pep8-naming - Check PEP 8 naming conventions
+# PT: flake8-pytest-style - Check pytest best practices
+# RUF: Ruff-specific rules
+# S: flake8-bandit - Find security issues
+# SIM: flake8-simplify - Simplify code
+# T10: flake8-debugger - Check for debugger imports and calls
+# UP: pyupgrade - Upgrade syntax for newer Python
+# W: pycodestyle warnings - PEP 8 style guide warnings
+# ANN: flake8-annotations - Type annotation checks
+# ARG: flake8-unused-arguments - Unused arguments
+# BLE: flake8-blind-except - Check for blind except statements
+# COM: flake8-commas - Trailing comma enforcement
+# DTZ: flake8-datetimez - Ensure timezone-aware datetime objects
+# EM: flake8-errmsg - Check error message strings
+# FBT: flake8-boolean-trap - Boolean argument checks
+# ICN: flake8-import-conventions - Import convention enforcement
+# ISC: flake8-implicit-str-concat - Implicit string concatenation
+# NPY: NumPy-specific rules
+# PD: pandas-specific rules
+# PGH: pygrep-hooks - Grep-based checks
+# PIE: flake8-pie - Miscellaneous rules
+# PL: Pylint rules
+# Q: flake8-quotes - Quotation style enforcement
+# RSE: flake8-raise - Raise statement checks
+# RET: flake8-return - Return statement checks
+# SLF: flake8-self - Check for self references
+# TCH: flake8-type-checking - Type checking imports
+# TID: flake8-tidy-imports - Import tidying
+# TRY: flake8-try-except-raise - Try/except/raise checks
+# YTT: flake8-2020 - Python 2020+ compatibility
 
+# Current configuration:
+select = ["E", "F", "I", "N", "D", "UP", "NPY", "PD", "C4", "B", "S", "W"]
+
+# Per-file rule ignores
+[tool.ruff.lint.per-file-ignores]
+"src/tests/**/*.py" = ["S101"]  # Allow assert statements in tests
+"book/marimo/*.py" = ["B018"]
+"**/*.py" = ["F821"]
+# Build system configuration
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+# Configuration for wheel build
 [tool.hatch.build.targets.wheel]
 packages = ["src/jquantstats"]
 
+# Configuration for what files to include in the build
 [tool.hatch.build]
 include = [
     "LICENSE",    # Ensure the LICENSE file is included in your package
@@ -55,13 +108,15 @@ include = [
     "src/jquantstats"
 ]
 
+# Bandit security linter configuration
 [tool.bandit]
-exclude_dirs = ["src/tests"]
+exclude_dirs = ["src/tests"]  # Exclude test directories from security scanning
 
-
+# Deptry dependency checker configuration
 [tool.deptry]
 # see https://deptry.com/usage/#pep-621-dev-dependency-groups
-pep621_dev_dependency_groups = ["dev"]
+pep621_dev_dependency_groups = ["dev"]  # Specify which groups are development dependencies
 
+# Ignore specific dependency issues
 [tool.deptry.per_rule_ignores]
-DEP002 = ["kaleido", "pyarrow"]
+DEP002 = ["kaleido", "pyarrow"]  # DEP002: Unused direct dependencies

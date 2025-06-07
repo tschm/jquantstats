@@ -17,9 +17,9 @@ def _():
             params["start"] = period[0]
         else:
             params["period"] = period
-        df = yf.download(**params)["Close"].pct_change()
-        df = df.tz_localize(None)
-        return df
+        dframe = yf.download(**params)["Close"].pct_change()
+        dframe = dframe.tz_localize(None)
+        return dframe
 
     return (download_returns,)
 
