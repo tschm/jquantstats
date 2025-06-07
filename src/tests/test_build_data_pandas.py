@@ -17,9 +17,9 @@ def returns_pd(returns):
 
     """
     # Convert to pandas and ensure Date column is datetime
-    df = returns.to_pandas()
-    df["Date"] = pd.to_datetime(df["Date"])
-    return df
+    dframe = returns.to_pandas()
+    dframe["Date"] = pd.to_datetime(dframe["Date"])
+    return dframe
 
 
 @pytest.fixture
@@ -48,9 +48,9 @@ def benchmark_pd(benchmark):
 
     """
     # Convert to pandas and ensure Date column is datetime
-    df = benchmark.to_pandas()
-    df["Date"] = pd.to_datetime(df["Date"])
-    return df
+    dframe = benchmark.to_pandas()
+    dframe["Date"] = pd.to_datetime(dframe["Date"])
+    return dframe
 
 
 @pytest.fixture
@@ -323,16 +323,16 @@ def test_build_data_error_no_overlapping_dates():
     returns_dates = pd.date_range(start="2020-01-01", periods=10)
     benchmark_dates = pd.date_range(start="2021-01-01", periods=10)
 
-    returns_df = pd.DataFrame({
+    returns_dframe = pd.DataFrame({
         "Date": returns_dates,
         "Asset": [0.01] * 10
     })
 
-    benchmark_df = pd.DataFrame({
+    benchmark_dframe = pd.DataFrame({
         "Date": benchmark_dates,
         "Benchmark": [0.02] * 10
     })
 
     # Test that a ValueError is raised
     with pytest.raises(ValueError, match="No overlapping dates between returns and benchmark"):
-        build_data(returns=returns_df, benchmark=benchmark_df)
+        build_data(returns=returns_dframe, benchmark=benchmark_dframe)

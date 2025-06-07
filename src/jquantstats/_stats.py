@@ -170,7 +170,7 @@ class Stats:
         raw_periods = periods or self.data._periods_per_year
 
         # Ensure it's numeric
-        if not isinstance(raw_periods, (int, float)):
+        if not isinstance(raw_periods, int | float):
             raise TypeError(f"Expected int or float for periods, got {type(raw_periods).__name__}")
 
         factor = np.sqrt(raw_periods) if annualize else 1.0
@@ -599,12 +599,12 @@ class Stats:
         # if self.data.benchmark is None:
         #    raise AttributeError("No benchmark data available")
         # Evaluate both series and benchmark as Series
-        df = self.all.select([series, pl.col(benchmark_col).alias("benchmark")])
+        dframe = self.all.select([series, pl.col(benchmark_col).alias("benchmark")])
 
         # Drop nulls
-        df = df.drop_nulls()
+        dframe = dframe.drop_nulls()
 
-        matrix = df.to_numpy()
+        matrix = dframe.to_numpy()
         # Get actual Series
 
         strategy_np = matrix[:, 0]
@@ -677,11 +677,11 @@ class Stats:
         benchmark_col = benchmark or self.data.benchmark.columns[0]
 
         # Evaluate both series and benchmark as Series
-        df = self.all.select([series, pl.col(benchmark_col).alias("benchmark")])
+        dframe = self.all.select([series, pl.col(benchmark_col).alias("benchmark")])
 
         # Drop nulls
-        df = df.drop_nulls()
-        matrix = df.to_numpy()
+        dframe = dframe.drop_nulls()
+        matrix = dframe.to_numpy()
 
         # Get actual Series
         strategy_np = matrix[:, 0]

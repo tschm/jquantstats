@@ -169,7 +169,7 @@ def build_data(
 
     """
 
-    def subtract_risk_free(df: pl.DataFrame, rf: float | pl.DataFrame, date_col: str) -> pl.DataFrame:
+    def subtract_risk_free(dframe: pl.DataFrame, rf: float | pl.DataFrame, date_col: str) -> pl.DataFrame:
         """Subtract the risk-free rate from all numeric columns in the DataFrame.
 
         Description
@@ -181,7 +181,7 @@ def build_data(
 
         Parameters
         ----------
-        df : pl.DataFrame
+        dframe : pl.DataFrame
             DataFrame containing returns data with a date column
             and one or more numeric columns representing asset returns.
 
@@ -213,17 +213,17 @@ def build_data(
         """
         # Handle scalar rf case
         if isinstance(rf, float):
-            rf_df = df.select([pl.col(date_col), pl.lit(rf).alias("rf")])
+            rf_dframe = dframe.select([pl.col(date_col), pl.lit(rf).alias("rf")])
         else:
-            rf_df = rf.rename({rf.columns[1]: "rf"}) if rf.columns[1] != "rf" else rf
+            rf_dframe = rf.rename({rf.columns[1]: "rf"}) if rf.columns[1] != "rf" else rf
 
         # Join and subtract
-        df = df.join(rf_df, on=date_col, how="inner")
-        return df.select(
+        dframe = dframe.join(rf_dframe, on=date_col, how="inner")
+        return dframe.select(
             [pl.col(date_col)]
             + [
                 (pl.col(col) - pl.col("rf")).alias(col)
-                for col in df.columns
+                for col in dframe.columns
                 if col not in {date_col, "rf"} and col != date_col
             ]
         )

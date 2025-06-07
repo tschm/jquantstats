@@ -58,10 +58,6 @@ jobs:
       id-token: write
 
     steps:
-      # Step: Checkout the repository code
-      - name: Checkout [${{ github.repository }}]
-        uses: actions/checkout@v4
-
       # Step: Download the built distribution files from the build job
       - uses: actions/download-artifact@v4
         with:

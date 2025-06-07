@@ -28,8 +28,8 @@ def returns(resource_dir) -> pl.DataFrame:
 
     """
     # Only feed in frames. No series.
-    df = pl.read_csv(resource_dir / "meta.csv", try_parse_dates=True)
-    return df.select(["Date", "Meta"])
+    dframe = pl.read_csv(resource_dir / "meta.csv", try_parse_dates=True)
+    return dframe.select(["Date", "Meta"])
 
 
 @pytest.fixture
@@ -43,8 +43,8 @@ def benchmark(resource_dir) -> pl.DataFrame:
         pl.DataFrame: A DataFrame containing Date and SPY benchmark returns.
 
     """
-    df = pl.read_csv(resource_dir / "benchmark.csv", try_parse_dates=True)
-    return df.select(["Date", "SPY -- Benchmark"])
+    dframe = pl.read_csv(resource_dir / "benchmark.csv", try_parse_dates=True)
+    return dframe.select(["Date", "SPY -- Benchmark"])
 
 
 

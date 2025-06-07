@@ -132,13 +132,17 @@ class Data:
 
         """
 
-        def resample_frame(df: pl.DataFrame) -> pl.DataFrame:
-            df = self.index.hstack(df)  # Add the date column for resampling
+        def resample_frame(dframe: pl.DataFrame) -> pl.DataFrame:
+            dframe = self.index.hstack(dframe)  # Add the date column for resampling
 
-            return df.group_by_dynamic(
+            return dframe.group_by_dynamic(
                 index_column=self.index.columns[0], every=every, period=every, closed="right", label="right"
             ).agg(
-                [((pl.col(col) + 1.0).product() - 1.0).alias(col) for col in df.columns if col != self.index.columns[0]]
+                [
+                    ((pl.col(col) + 1.0).product() - 1.0).alias(col)
+                    for col in dframe.columns
+                    if col != self.index.columns[0]
+                ]
             )
 
         resampled_returns = resample_frame(self.returns)
