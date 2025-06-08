@@ -5,19 +5,25 @@ import marimo
 __generated_with = "0.13.15"
 app = marimo.App(width="medium")
 
+with app.setup:
+    import plotly.io as pio
+    import polars as pl
+
+    import jquantstats as jqs
+
+    # Ensure Plotly works with Marimo
+    pio.renderers.default = "plotly_mimetype"
+
 
 @app.cell
 def _():
     import marimo as mo
-    import polars as pl
 
-    from jquantstats.api import build_data
-
-    return build_data, mo, pl
+    return (mo,)
 
 
 @app.cell
-def _(mo, pl):
+def _download(mo):
     returns = pl.read_csv(str(mo.notebook_location() / "public" / "portfolio.csv"), try_parse_dates=True).with_columns(
         [
             pl.col("AAPL").cast(pl.Float64, strict=False),
@@ -27,49 +33,17 @@ def _(mo, pl):
     )
 
     benchmark = pl.read_csv(str(mo.notebook_location() / "public" / "benchmark.csv"), try_parse_dates=True)
-
-    return benchmark, returns
-
-
-@app.cell
-def _(benchmark, build_data, returns):
-    data = build_data(returns=returns, benchmark=benchmark, date_col="Date")
-    return (data,)
+    return returns, benchmark
 
 
 @app.cell
-def _(data):
-    data.all
-    return
+def _(benchmark, returns):
+    data = jqs.build_data(returns=returns, benchmark=benchmark, date_col="Date")
+    return data
 
 
 @app.cell
 def _(data):
-    data.assets
-    return
-
-
-@app.cell
-def _(data):
-    data.date_col
-    return
-
-
-@app.cell
-def _(data):
-    data.returns
-    return
-
-
-@app.cell
-def _(data):
-    data.stats.sharpe()
-    return
-
-
-@app.cell
-def _(data):
-    data
     fig = data.plots.plot_snapshot(log_scale=True)
     fig
     return
