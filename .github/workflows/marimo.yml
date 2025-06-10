@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: "Build the virtual environment for ${{ github.repository }}"
-        uses: tschm/cradle/actions/environment@v0.1.71
+        uses: tschm/cradle/actions/environment@v0.1.72
 
       - name: Run notebooks
         run: |
