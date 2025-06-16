@@ -24,7 +24,7 @@ repository = "https://github.com/tschm/jquantstats"
 plot = ["kaleido==0.2.1"]
 
 dev = [
-    "pytest-cov==6.1.1",
+    "pytest-cov==6.2.1",
     "pytest==8.4.0",
     "yfinance==0.2.63",
     "ipython==8.37.0",
