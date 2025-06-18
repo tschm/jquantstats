@@ -16,29 +16,13 @@ permissions:
     contents: read
 
 jobs:
-  # Job: pdoc
-  # Purpose: Generates API documentation using pdoc
   marimo:
     runs-on: "ubuntu-latest"
     steps:
-      # Step: Set up the virtual environment
-      - name: "Build the virtual environment"
-        uses: tschm/cradle/actions/environment@v0.1.72
-
-      - name: Export notebook via wasm
-        run: |
-          uv pip install --no-cache-dir marimo
-          mkdir -p artifacts/notebooks
-          # export as readonly, with code locked
-          uv run marimo export html-wasm book/marimo/demo.py -o artifacts/marimo/demo/index.html --mode edit
-
-      - name: Upload documentation
-        uses: actions/upload-artifact@v4
+      - uses: jebel-quant/marimushka@v0.1.1
         with:
-          name: marimo
-          path: artifacts/marimo
-          retention-days: 1
-
+          notebooks: 'book/marimo'
+          notebooks-wasm: 'book/marimo'
 
   pdoc:
     runs-on: "ubuntu-latest"
