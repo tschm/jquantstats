@@ -13,4 +13,4 @@ jobs:
   test:
     uses: jebel-quant/marimushka/.github/workflows/test.yml@v0.1.1
     with:
-      notebook-dir: apps
+      notebook-dir: book/marimo
