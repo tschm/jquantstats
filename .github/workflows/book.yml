@@ -73,3 +73,13 @@ jobs:
       # Step: Upload the generated documentation book
       - name: Upload the book
         uses: tschm/minibook/.github/actions/book@v0.0.15
+        with:
+          title: 'jquantstats'
+          links: |
+            links: |
+              {
+                "API": "./pdoc/index.html",
+                "Coverage": "./tests/html-coverage/index.html",
+                "Test Report": "./tests/html-report/report.html"
+                "Notebooks": "./marimushka/index.html"
+              }
