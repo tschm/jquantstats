@@ -28,7 +28,7 @@ jobs:
 
       - name: Install uv/uvx
         uses: astral-sh/setup-uv@v6
-      
+
       # Set up Python environment with dependencies
       # - name: "Build the virtual environment for ${{ github.repository }}"
       #   uses: tschm/cradle/actions/environment@v0.1.72
