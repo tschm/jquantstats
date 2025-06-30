@@ -548,11 +548,11 @@ class Stats:
         return -drawdown.min()
 
     @columnwise_stat
-    def max_drawdown(self, series: pl.Expr) -> float:
+    def max_drawdown(self, series: pl.Series) -> float:
         """Calculate the maximum drawdown for each column.
 
         Args:
-            series (pl.Expr): The series to calculate maximum drawdown for.
+            series (pl.Series): The series to calculate maximum drawdown for.
 
         Returns:
             float: The maximum drawdown value.

@@ -215,6 +215,9 @@ def build_data(
         if isinstance(rf, float):
             rf_dframe = dframe.select([pl.col(date_col), pl.lit(rf).alias("rf")])
         else:
+            # At this point, rf must be a DataFrame
+            if not isinstance(rf, pl.DataFrame):
+                raise TypeError("rf must be a float or DataFrame")
             rf_dframe = rf.rename({rf.columns[1]: "rf"}) if rf.columns[1] != "rf" else rf
 
         # Join and subtract
