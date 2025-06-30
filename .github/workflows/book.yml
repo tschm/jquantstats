@@ -76,7 +76,6 @@ jobs:
         with:
           title: 'jquantstats'
           links: |
-            links: |
               {
                 "API": "./pdoc/index.html",
                 "Coverage": "./tests/html-coverage/index.html",
