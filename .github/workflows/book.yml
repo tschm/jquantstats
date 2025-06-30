@@ -54,25 +54,12 @@ jobs:
           source-folder: src/jquantstats
           coveralls: 'true'
 
-  # Job: jupyter
-  # Purpose: Processes Jupyter notebooks for inclusion in documentation
-  jupyter:
-    runs-on: "ubuntu-latest"
-    steps:
-      # Step: Set up the virtual environment
-      - name: "Build the virtual environment"
-        uses: tschm/cradle/actions/environment@v0.1.72
-
-      # Step: Process Jupyter notebooks
-      # Executes and prepares notebooks for documentation
-      - uses: tschm/cradle/actions/jupyter@v0.1.72
-
   # Job: book
   # Purpose: Combines and publishes the documentation
   book:
     runs-on: "ubuntu-latest"
     # This job depends on the completion of test, pdoc, and jupyter jobs
-    needs: [test, pdoc, jupyter, marimo]
+    needs: [test, pdoc, marimo]
 
     environment:
       name: github-pages
@@ -85,4 +72,4 @@ jobs:
     steps:
       # Step: Upload the generated documentation book
       - name: Upload the book
-        uses: tschm/cradle/actions/book@v0.1.72
+        uses: tschm/minibook/.github/actions/book@v0.0.15
