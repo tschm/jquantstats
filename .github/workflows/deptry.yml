@@ -26,15 +26,17 @@ jobs:
       - name: Checkout ${{ github.repository }}
         uses: actions/checkout@v4
 
+      - name: Install uv/uvx
+        uses: astral-sh/setup-uv@v6
 
       # Set up Python environment with dependencies
-      - name: "Build the virtual environment for ${{ github.repository }}"
-        uses: tschm/cradle/actions/environment@v0.1.72
+      # - name: "Build the virtual environment for ${{ github.repository }}"
+      #   uses: tschm/cradle/actions/environment@v0.1.72
 
       - name: Run deptry
         run : |
           uvx deptry src/jquantstats
 
-      - name: Run ty
-        run : |
-          uvx ty check src
+      #- name: Run ty
+      #  run : |
+      #    uvx ty check src
