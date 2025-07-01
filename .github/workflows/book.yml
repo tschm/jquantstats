@@ -29,11 +29,11 @@ jobs:
     steps:
       # Step: Set up the virtual environment
       - name: "Build the virtual environment"
-        uses: tschm/cradle/actions/environment@v0.1.72
+        uses: tschm/cradle/actions/environment@v0.1.73
 
       # Step: Generate API documentation with pdoc
       # Creates documentation from the source code in src/jquantstats
-      - uses: tschm/cradle/actions/pdoc@v0.1.72
+      - uses: tschm/cradle/actions/pdoc@v0.1.73
         with:
           source-folder: src/jquantstats
 
@@ -44,7 +44,7 @@ jobs:
     steps:
       # Step: Set up the virtual environment
       - name: "Build the virtual environment"
-        uses: tschm/cradle/actions/environment@v0.1.72
+        uses: tschm/cradle/actions/environment@v0.1.73
 
       # Step: Run tests and generate coverage reports
       # Also uploads coverage data to Coveralls if enabled
