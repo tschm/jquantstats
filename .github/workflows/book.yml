@@ -72,7 +72,7 @@ jobs:
     steps:
       # Step: Upload the generated documentation book
       - name: Upload the book
-        uses: tschm/cradle/actions/book@0.1.73
+        uses: tschm/cradle/actions/book@v0.1.73
         with:
           title: 'jquantstats'
           links: |
