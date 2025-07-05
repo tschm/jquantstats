@@ -20,4 +20,4 @@ jobs:
     steps:
       # Step: Run pre-commit checks using the cradle action
       # This action handles the checkout of code and runs all pre-commit hooks
-      - uses: tschm/cradle/actions/pre-commit@v0.1.73
+      - uses: tschm/cradle/actions/pre-commit@v0.1.80
