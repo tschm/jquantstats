@@ -11,6 +11,6 @@ permissions:
 
 jobs:
   test:
-    uses: jebel-quant/marimushka/.github/workflows/test.yml@v0.1.2
+    uses: jebel-quant/marimushka/.github/workflows/test.yml@v0.1.3
     with:
       notebook-dir: book/marimo
