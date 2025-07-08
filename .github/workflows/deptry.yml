@@ -24,3 +24,5 @@ jobs:
     steps:
       - name: Run deptry
         uses: tschm/cradle/actions/deptry@v0.2.1
+        with:
+          source-folder: src/jquantstats
