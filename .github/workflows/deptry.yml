@@ -22,13 +22,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step: Checkout the repository code
-      - name: Checkout ${{ github.repository }}
-        uses: actions/checkout@v4
-
-      - name: Install uv/uvx
-        uses: astral-sh/setup-uv@v6
-
       - name: Run deptry
-        run : |
-          uvx deptry src/jquantstats
+        uses: tschm/cradle/actions/deptry@v0.2.1
+        with:
+          source-folder: src/jquantstats
