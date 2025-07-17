@@ -1,5 +1,6 @@
 docs
 .DS_Store
+pdoc
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
