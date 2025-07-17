@@ -3,35 +3,28 @@ repos:
     rev: v5.0.0
     hooks:
       - id: check-toml
-      - id: end-of-file-fixer
-      - id: trailing-whitespace
+      - id: check-yaml
 
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
+  - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: 'v0.12.3'
     hooks:
       - id: ruff
-        args: [ --fix, --exit-non-zero-on-fix, --unsafe-fixes ]
+        args: [ --fix, --exit-non-zero-on-fix ]
+
       # Run the formatter
       - id: ruff-format
-        exclude: src/tests
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.45.0
     hooks:
       - id: markdownlint
-        args: [ "--ignore", "book/**/*.md", "--ignore", "opinion.md" ]
-
-  - repo: https://github.com/asottile/pyupgrade
-    rev: v3.20.0
-    hooks:
-      - id: pyupgrade
-        args: [--py311-plus]
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.33.2
     hooks:
       - id: check-renovate
-        args: ["--verbose"]
+        args: [ "--verbose" ]
+
       - id: check-github-workflows
         args: ["--verbose"]
 
@@ -39,7 +32,7 @@ repos:
     rev: v1.7.7
     hooks:
       - id: actionlint
-        args: [-ignore, SC]
+        args: [ -ignore, SC ]
 
   - repo: https://github.com/abravalheri/validate-pyproject
     rev: v0.24.1
