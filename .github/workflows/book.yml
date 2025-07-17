@@ -1,84 +1,95 @@
-# Workflow: Documentation Book
-# Purpose: This workflow generates comprehensive documentation for the project, including
-#          API documentation, test coverage reports, and processed Jupyter notebooks.
-#          It then combines these into a documentation book and publishes it.
-name: "book"
+name: "BOOK"
 
-# Trigger: This workflow runs on every push to the repository
 on:
   push:
     branches:
       - main
 
-# Permissions: Write access to checks for test reports and read access to repository contents
-permissions:
-    checks: write
-    contents: read
 
 jobs:
+  parse-env:
+    if: github.repository != 'tschm/.config-templates'
+    runs-on: ubuntu-latest
+    outputs:
+      source-folder: ${{ steps.export.outputs.SOURCE_FOLDER }}
+      tests-folder: ${{ steps.export.outputs.TESTS_FOLDER }}
+      marimo-folder: ${{ steps.export.outputs.MARIMO_FOLDER }}
+      title: ${{ steps.export.outputs.TITLE }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse .env and export variables
+        id: export
+        run: |
+          set -a
+          source .env
+          echo "SOURCE_FOLDER=$SOURCE_FOLDER" >> "$GITHUB_OUTPUT"
+          echo "TESTS_FOLDER=$TESTS_FOLDER" >> "$GITHUB_OUTPUT"
+          echo "MARIMO_FOLDER=$MARIMO_FOLDER" >> "$GITHUB_OUTPUT"
+          echo "TITLE=$TITLE" >> "$GITHUB_OUTPUT"
+          set +a
+        shell: bash
+
   marimo:
+    if: github.repository != 'tschm/.config-templates'
     runs-on: "ubuntu-latest"
+    needs: parse-env
+    permissions:
+      contents: read
     steps:
       - uses: jebel-quant/marimushka@v0.1.4
         with:
-          notebooks: 'book/marimo'
-          notebooks-wasm: 'book/marimo'
+          notebooks: ${{ needs.parse-env.outputs.marimo-folder }}
 
   pdoc:
+    if: github.repository != 'tschm/.config-templates'
     runs-on: "ubuntu-latest"
-    steps:
-      # Step: Set up the virtual environment
-      - name: "Build the virtual environment"
-        uses: tschm/cradle/actions/environment@v0.3.01
-
-      # Step: Generate API documentation with pdoc
-      # Creates documentation from the source code in src/jquantstats
-      - uses: tschm/cradle/actions/pdoc@v0.3.01
-        with:
-          source-folder: src/jquantstats
-
-  # Job: test
-  # Purpose: Runs tests and generates coverage reports
-  test:
-    runs-on: "ubuntu-latest"
-    steps:
-      # Step: Set up the virtual environment
-      - name: "Build the virtual environment"
-        uses: tschm/cradle/actions/environment@v0.3.01
-
-      # Step: Run tests and generate coverage reports
-      # Also uploads coverage data to Coveralls if enabled
-      - uses: tschm/cradle/actions/coverage@main
-        with:
-          tests-folder: src/tests
-          source-folder: src/jquantstats
-          coveralls: 'true'
-
-  # Job: book
-  # Purpose: Combines and publishes the documentation
-  book:
-    runs-on: "ubuntu-latest"
-    # This job depends on the completion of test, pdoc, and jupyter jobs
-    needs: [test, pdoc, marimo]
-
-    environment:
-      name: github-pages
-
+    needs: parse-env
     permissions:
       contents: read
-      pages: write
-      id-token: write
+    steps:
+      - name: "Build the virtual environment for ${{ github.repository }}"
+        uses: tschm/cradle/actions/environment@v0.3.01
+
+      - uses: tschm/cradle/actions/pdoc@v0.3.01
+        with:
+          source-folder: ${{ needs.parse-env.outputs.source-folder }}
+
+  test:
+    if: github.repository != 'tschm/.config-templates'
+    runs-on: "ubuntu-latest"
+    needs: parse-env
+    permissions:
+      contents: read
+    steps:
+      - name: "Build the virtual environment for ${{ github.repository }}"
+        uses: tschm/cradle/actions/environment@v0.3.01
+
+      - uses: tschm/cradle/actions/coverage@v0.3.01
+        with:
+          tests-folder: ${{ needs.parse-env.outputs.tests-folder }}
+          source-folder: ${{ needs.parse-env.outputs.source-folder }}
+
+  book:
+    if: github.repository != 'tschm/.config-templates'
+    runs-on: "ubuntu-latest"
+    needs: [test, pdoc, marimo, parse-env]
+
+    environment:
+      name: github-pages  # 👈 this is the critical missing piece
+
+    permissions:
+      pages: write            # Permission to deploy to Pages
+      id-token: write         # Permission to verify deployment origin
 
     steps:
-      # Step: Upload the generated documentation book
-      - name: Upload the book
-        uses: tschm/cradle/actions/book@v0.3.01
+      - uses: tschm/cradle/actions/book@v0.3.01
         with:
-          title: 'jquantstats'
+          title: ${{ needs.parse-env.outputs.title }}
           links: |
-              {
-                "API": "./pdoc/index.html",
-                "Coverage": "./tests/html-coverage/index.html",
-                "Test Report": "./tests/html-report/report.html",
-                "Notebooks": "./marimushka/index.html"
-              }
+            {
+              "API": "./pdoc/index.html",
+              "Coverage": "./tests/html-coverage/index.html",
+              "Test Report": "./tests/html-report/report.html",
+              "Notebooks": "./marimushka/index.html"
+            }

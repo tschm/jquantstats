@@ -1,69 +1,55 @@
-# Workflow: Bump version and publish
-# Purpose: This workflow automates the process of creating a new version tag, building the package,
-#          and publishing it to PyPI. It ensures consistent versioning and release processes.
 name: Bump version and publish
 
-# Trigger: This workflow is only triggered manually via the GitHub Actions UI
 on:
   workflow_dispatch:
 
-# Permissions: Write access to repository contents is needed for creating tags
 permissions:
   contents: write
 
 jobs:
-  # Job: tagging
-  # Purpose: Creates a new version tag based on the repository's commit history
   tagging:
+    if: github.repository != 'tschm/.config-templates'
     runs-on: ubuntu-latest
-    # Output the new tag to be used by downstream jobs
     outputs:
       new_tag: ${{ steps.tag_step.outputs.new_tag }}
 
     steps:
-      # Step: Generate a new version tag using the cradle action
       - name: Generate Tag
         id: tag_step
         uses: tschm/cradle/actions/tag@v0.3.01
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
-  # Job: build
-  # Purpose: Builds the Python package using the newly created tag
   build:
+    if: github.repository != 'tschm/.config-templates'
     runs-on: ubuntu-latest
-    # This job depends on the tagging job to complete first
     needs: tagging
     steps:
-      # Step: Build the package using the cradle build action
       - name: build
         uses: tschm/cradle/actions/build@v0.3.01
         with:
-          # Use the tag generated in the previous job
           tag: ${{ needs.tagging.outputs.new_tag }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
-  # Job: publish
-  # Purpose: Publishes the built package to PyPI
   publish:
-    # This job depends on the build job to complete first
+    if: github.repository != 'tschm/.config-templates'
     needs: build
     runs-on: ubuntu-latest
-    # Use the release environment for additional security
     environment: release
 
-    # Permissions needed for PyPI publishing
     permissions:
-      contents: read
-      # This permission is required for trusted publishing to PyPI
-      id-token: write
+       contents: read
+       # This permission is required for trusted publishing.
+       id-token: write
 
     steps:
-      # Step: Download the built distribution files from the build job
+      - name: Checkout [${{ github.repository }}]
+        uses: actions/checkout@v4
+
       - uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist
 
-      # Step: Publish the package to PyPI using the official PyPA action
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
