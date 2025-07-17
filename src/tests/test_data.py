@@ -1,4 +1,5 @@
 """Tests for the Data class functionality and methods."""
+
 from datetime import date
 
 import polars as pl
@@ -22,7 +23,7 @@ def test_head(data):
     x = data.head()
     assert_frame_equal(x.returns, data.returns.head(5))
 
-    #pd.testing.assert_frame_equal(x.all(), data.all().head())
+    # pd.testing.assert_frame_equal(x.all(), data.all().head())
 
 
 def test_tail(data):
@@ -39,6 +40,7 @@ def test_tail(data):
     x = data.tail()
     assert_frame_equal(x.returns, data.returns.tail(5))
 
+
 def test_all(data):
     """Tests that the all property returns a DataFrame with all data.
 
@@ -53,6 +55,7 @@ def test_all(data):
     x = data.all
     print(x)
 
+
 def test_assets(data):
     """Tests that the assets property returns the correct list of asset names.
 
@@ -64,7 +67,8 @@ def test_assets(data):
 
     """
     x = data.assets
-    assert x == ['AAPL', 'META', 'SPY -- Benchmark']
+    assert x == ["AAPL", "META", "SPY -- Benchmark"]
+
 
 def test_date_col(data):
     """Tests that the date_col property returns the correct date column name.
@@ -79,6 +83,7 @@ def test_date_col(data):
     x = data.date_col
     assert x == ["Date"]
 
+
 def test_periods(data):
     """Tests that the _periods_per_year property returns the correct number of periods.
 
@@ -90,6 +95,7 @@ def test_periods(data):
 
     """
     assert data._periods_per_year == pytest.approx(251.56913616203425)
+
 
 def test_periods_edge_cases(data):
     """Tests edge cases for the _periods_per_year property.
@@ -105,23 +111,37 @@ def test_periods_edge_cases(data):
     """
     # Weekly data
     # Create dates with weekly intervals
-    weekly_dates = [date(2023, 1, 1), date(2023, 1, 8), date(2023, 1, 15), date(2023, 1, 22), date(2023, 1, 29),
-                   date(2023, 2, 5), date(2023, 2, 12), date(2023, 2, 19), date(2023, 2, 26), date(2023, 3, 5)]
-    weekly_returns = pl.DataFrame({
-        "Date": weekly_dates,
-        "returns": [0.01] * 10
-    })
+    weekly_dates = [
+        date(2023, 1, 1),
+        date(2023, 1, 8),
+        date(2023, 1, 15),
+        date(2023, 1, 22),
+        date(2023, 1, 29),
+        date(2023, 2, 5),
+        date(2023, 2, 12),
+        date(2023, 2, 19),
+        date(2023, 2, 26),
+        date(2023, 3, 5),
+    ]
+    weekly_returns = pl.DataFrame({"Date": weekly_dates, "returns": [0.01] * 10})
     weekly_data = build_data(returns=weekly_returns)
     print(weekly_data._periods_per_year)
     assert weekly_data._periods_per_year == pytest.approx(52.142857142857146)
     # Monthly data
     # Create dates with monthly intervals
-    monthly_dates = [date(2023, 1, 1), date(2023, 2, 1), date(2023, 3, 1), date(2023, 4, 1), date(2023, 5, 1),
-                    date(2023, 6, 1), date(2023, 7, 1), date(2023, 8, 1), date(2023, 9, 1), date(2023, 10, 1)]
-    monthly_returns = pl.DataFrame({
-        "Date": monthly_dates,
-        "returns": [0.01] * 10
-    })
+    monthly_dates = [
+        date(2023, 1, 1),
+        date(2023, 2, 1),
+        date(2023, 3, 1),
+        date(2023, 4, 1),
+        date(2023, 5, 1),
+        date(2023, 6, 1),
+        date(2023, 7, 1),
+        date(2023, 8, 1),
+        date(2023, 9, 1),
+        date(2023, 10, 1),
+    ]
+    monthly_returns = pl.DataFrame({"Date": monthly_dates, "returns": [0.01] * 10})
     monthly_data = build_data(returns=monthly_returns)
     assert monthly_data._periods_per_year == pytest.approx(12.032967032967033)
 
@@ -137,53 +157,38 @@ def test_post_init():
     """
     # Test case 1: Index with less than 2 timestamps
     single_date = [date(2023, 1, 1)]
-    single_returns = pl.DataFrame({
-        "Date": single_date,
-        "returns": [0.01]
-    })
+    single_returns = pl.DataFrame({"Date": single_date, "returns": [0.01]})
 
     with pytest.raises(ValueError, match="Index must contain at least two timestamps."):
         build_data(returns=single_returns, date_col="Date")
 
     # Test case 2: Unsorted index
     unsorted_dates = [date(2023, 1, 15), date(2023, 1, 1), date(2023, 1, 30)]
-    unsorted_returns = pl.DataFrame({
-        "Date": unsorted_dates,
-        "returns": [0.01, 0.02, 0.03]
-    })
+    unsorted_returns = pl.DataFrame({"Date": unsorted_dates, "returns": [0.01, 0.02, 0.03]})
 
     with pytest.raises(ValueError, match="Index must be monotonically increasing."):
         build_data(returns=unsorted_returns)
 
     # Test case 3: Returns and index with different row counts
     dates = [date(2023, 1, 1), date(2023, 1, 15), date(2023, 1, 30)]
-    returns = pl.DataFrame({
-        "returns": [0.01, 0.02]
-    })
-    index = pl.DataFrame({
-        "Date": dates
-    })
+    returns = pl.DataFrame({"returns": [0.01, 0.02]})
+    index = pl.DataFrame({"Date": dates})
 
     with pytest.raises(ValueError, match="Returns and index must have the same number of rows."):
         from jquantstats._data import Data
+
         Data(returns=returns, index=index)
 
     # Test case 4: Benchmark and index with different row counts
     dates = [date(2023, 1, 1), date(2023, 1, 15), date(2023, 1, 30)]
-    returns = pl.DataFrame({
-        "returns": [0.01, 0.02, 0.03]
-    })
-    benchmark = pl.DataFrame({
-        "benchmark": [0.01, 0.02]
-    })
-    index = pl.DataFrame({
-        "Date": dates
-    })
+    returns = pl.DataFrame({"returns": [0.01, 0.02, 0.03]})
+    benchmark = pl.DataFrame({"benchmark": [0.01, 0.02]})
+    index = pl.DataFrame({"Date": dates})
 
     with pytest.raises(ValueError, match="Benchmark and index must have the same number of rows."):
         from jquantstats._data import Data
-        Data(returns=returns, benchmark=benchmark, index=index)
 
+        Data(returns=returns, benchmark=benchmark, index=index)
 
 
 def test_copy(data):
@@ -232,13 +237,14 @@ def test_resample(data):
 
     # Verify the resampled data has the correct structure
     assert yearly_data.returns.shape[1] == data.returns.shape[1]  # Same number of columns
-    #assert yearly_data.returns.index.freq == 'YE'  # Yearly frequency
+    # assert yearly_data.returns.index.freq == 'YE'  # Yearly frequency
 
     # Test resampling to monthly frequency with compounded=True
     monthly_data = data.resample(every="1mo")
     # Verify the resampled data has the correct structure
     assert monthly_data.returns.shape[1] == data.returns.shape[1]  # Same number of columns
-    #assert monthly_data.returns.index.freq == 'ME'  # Monthly frequency
+    # assert monthly_data.returns.index.freq == 'ME'  # Monthly frequency
+
 
 def test_stats(data):
     """Tests that the stats property returns a non-None value.
@@ -252,6 +258,7 @@ def test_stats(data):
     """
     assert data.stats is not None
 
+
 def test_plots(data):
     """Tests that the plots property returns a non-None value.
 
@@ -263,6 +270,7 @@ def test_plots(data):
 
     """
     assert data.plots is not None
+
 
 def test_all_no_benchmark(data_no_benchmark):
     """Tests that the all property works correctly when there is no benchmark.
@@ -276,6 +284,7 @@ def test_all_no_benchmark(data_no_benchmark):
     """
     assert data_no_benchmark.all is not None
 
+
 def test_assets_no_benchmark(data_no_benchmark):
     """Tests that the assets property works correctly when there is no benchmark.
 
@@ -287,6 +296,7 @@ def test_assets_no_benchmark(data_no_benchmark):
 
     """
     assert data_no_benchmark.assets is not None
+
 
 def test_copy_no_benchmark(data_no_benchmark):
     """Tests that the copy method works correctly when there is no benchmark.

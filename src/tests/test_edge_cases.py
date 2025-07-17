@@ -72,17 +72,15 @@ def test_non_overlapping_dates():
     """
     # Create returns data with dates in 2020
     returns_dates = [f"2020-01-{i:02d}" for i in range(1, 11)]
-    returns = pl.DataFrame({
-        "Date": returns_dates,
-        "Asset": [0.01] * len(returns_dates)
-    }).with_columns(pl.col("Date").str.to_date())
+    returns = pl.DataFrame({"Date": returns_dates, "Asset": [0.01] * len(returns_dates)}).with_columns(
+        pl.col("Date").str.to_date()
+    )
 
     # Create benchmark data with dates in 2010
     benchmark_dates = [f"2010-01-{i:02d}" for i in range(1, 11)]
-    benchmark = pl.DataFrame({
-        "Date": benchmark_dates,
-        "Benchmark": [0.01] * len(benchmark_dates)
-    }).with_columns(pl.col("Date").str.to_date())
+    benchmark = pl.DataFrame({"Date": benchmark_dates, "Benchmark": [0.01] * len(benchmark_dates)}).with_columns(
+        pl.col("Date").str.to_date()
+    )
 
     # Verify that calling build_data raises a ValueError
     with pytest.raises(ValueError, match="No overlapping dates between returns and benchmark."):

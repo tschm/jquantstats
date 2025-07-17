@@ -1,8 +1,10 @@
 """Download some data needed for the tests."""
+
 import pandas as pd
 import yfinance as yf
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+
     def download_returns(ticker, period="max", proxy=None):
         """Download historical returns for a specified ticker or tickers.
 

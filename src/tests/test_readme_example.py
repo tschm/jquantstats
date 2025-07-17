@@ -1,4 +1,5 @@
 """Tests for the code example in the README.md file using doctest."""
+
 import doctest
 from pathlib import Path
 
@@ -15,12 +16,7 @@ def test_readme_examples():
     readme_path = Path(__file__).parent.parent.parent / "README.md"
 
     # Set up the globals for doctest
-    globs = {
-        'pl': pl,
-        'build_data': build_data,
-        'plotly': plotly,
-        'np': np
-    }
+    globs = {"pl": pl, "build_data": build_data, "plotly": plotly, "np": np}
 
     # Run doctest on the README.md file
     # Set optionflags to ignore whitespace differences and normalize whitespace
@@ -28,7 +24,7 @@ def test_readme_examples():
         str(readme_path),
         module_relative=False,
         globs=globs,
-        optionflags=doctest.NORMALIZE_WHITESPACE | doctest.ELLIPSIS
+        optionflags=doctest.NORMALIZE_WHITESPACE | doctest.ELLIPSIS,
     )
 
     # Check if there were any failures

@@ -1,4 +1,5 @@
 """Tests for the build_data function with pandas input types."""
+
 import pandas as pd
 import pytest
 
@@ -79,10 +80,7 @@ def rf_pd(returns_pd):
 
     """
     # The Date column from returns_pd is already datetime
-    return pd.DataFrame({
-        "Date": returns_pd["Date"],
-        "rf": 0.001
-    })
+    return pd.DataFrame({"Date": returns_pd["Date"], "rf": 0.001})
 
 
 @pytest.fixture
@@ -121,7 +119,7 @@ def test_build_data_with_pd_dataframe_returns(returns_pd):
     pd.testing.assert_frame_equal(
         pl_returns.reset_index(drop=True),
         result_returns.reset_index(drop=True),
-        check_dtype=False  # Ignore dtype differences between pandas and polars
+        check_dtype=False,  # Ignore dtype differences between pandas and polars
     )
 
 
@@ -148,7 +146,7 @@ def test_build_data_with_pd_series_returns(returns_series_pd):
     pd.testing.assert_series_equal(
         returns_series_pd.reset_index(drop=True),
         result_returns.iloc[:, 0].reset_index(drop=True),
-        check_dtype=False  # Ignore dtype differences between pandas and polars
+        check_dtype=False,  # Ignore dtype differences between pandas and polars
     )
 
 
@@ -239,7 +237,7 @@ def test_build_data_with_pd_dataframe_rf(returns_pd, rf_pd):
     pd.testing.assert_frame_equal(
         expected_returns.reset_index(drop=True),
         result_returns.reset_index(drop=True),
-        check_dtype=False  # Ignore dtype differences between pandas and polars
+        check_dtype=False,  # Ignore dtype differences between pandas and polars
     )
 
 
@@ -270,7 +268,7 @@ def test_build_data_with_pd_series_rf(returns_pd, rf_series_pd):
     pd.testing.assert_frame_equal(
         expected_returns.reset_index(drop=True),
         result_returns.reset_index(drop=True),
-        check_dtype=False  # Ignore dtype differences between pandas and polars
+        check_dtype=False,  # Ignore dtype differences between pandas and polars
     )
 
 
@@ -294,7 +292,7 @@ def test_build_data_with_pd_all_inputs(returns_series_pd, benchmark_series_pd, r
     assert result.returns is not None
     b = result.benchmark
 
-    #assert result.benchmark is not None
+    # assert result.benchmark is not None
 
     # Verify the returns and benchmark have the expected structure (1 column each)
     assert result.returns.shape[1] == 1
@@ -323,15 +321,9 @@ def test_build_data_error_no_overlapping_dates():
     returns_dates = pd.date_range(start="2020-01-01", periods=10)
     benchmark_dates = pd.date_range(start="2021-01-01", periods=10)
 
-    returns_dframe = pd.DataFrame({
-        "Date": returns_dates,
-        "Asset": [0.01] * 10
-    })
+    returns_dframe = pd.DataFrame({"Date": returns_dates, "Asset": [0.01] * 10})
 
-    benchmark_dframe = pd.DataFrame({
-        "Date": benchmark_dates,
-        "Benchmark": [0.02] * 10
-    })
+    benchmark_dframe = pd.DataFrame({"Date": benchmark_dates, "Benchmark": [0.02] * 10})
 
     # Test that a ValueError is raised
     with pytest.raises(ValueError, match="No overlapping dates between returns and benchmark"):

@@ -1,4 +1,5 @@
 """Tests for the reports module functionality."""
+
 import polars as pl
 import pytest
 from polars.testing import assert_frame_equal
@@ -17,6 +18,7 @@ def reports(data):
     """
     return data.reports
 
+
 @pytest.fixture
 def metrics(resource_dir):
     """Fixture that returns the metrics CSV file as a DataFrame.
@@ -28,7 +30,7 @@ def metrics(resource_dir):
         pl.DataFrame: A DataFrame containing the metrics data.
 
     """
-    return pl.read_csv(resource_dir / 'metrics.csv')
+    return pl.read_csv(resource_dir / "metrics.csv")
 
 
 def test_metric(reports, metrics):
@@ -42,5 +44,5 @@ def test_metric(reports, metrics):
         The metrics method returns a DataFrame that matches the expected metrics.
 
     """
-    #reports.metrics().write_csv("metrics.csv")
+    # reports.metrics().write_csv("metrics.csv")
     assert_frame_equal(metrics, reports.metrics())

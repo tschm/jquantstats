@@ -1,4 +1,5 @@
 """Tests for the plots module."""
+
 import pytest
 
 from jquantstats import build_data
@@ -33,15 +34,16 @@ def test_plot_snapshot(plots):
     # Test with default parameters
     fig = plots.plot_snapshot()
     assert fig is not None
-    assert hasattr(fig, 'show')
+    assert hasattr(fig, "show")
 
     # Test with custom parameters
     fig = plots.plot_snapshot(title="Custom Title", log_scale=True)
     assert fig is not None
-    assert hasattr(fig, 'show')
+    assert hasattr(fig, "show")
 
     # causing sometimes problems
     # fig.show()
+
 
 def test_plot_snapshot_one_symbol(returns):
     """Tests that the plot_snapshot method works correctly with a single symbol.
@@ -57,6 +59,6 @@ def test_plot_snapshot_one_symbol(returns):
     fig = build_data(returns=returns).plots.plot_snapshot()
 
     assert fig is not None
-    assert hasattr(fig, 'show')
+    assert hasattr(fig, "show")
     # causing sometimes problems
     # fig.show()

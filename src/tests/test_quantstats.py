@@ -1,4 +1,5 @@
 """Tests for comparing jquantstats with quantstats library functionality."""
+
 import numpy as np
 import pytest
 import quantstats as qs
@@ -17,6 +18,7 @@ def stats(data):
     """
     return data.stats
 
+
 @pytest.fixture
 def pandas_frame(data):
     """Fixture that returns the data as a pandas DataFrame with Date as index.
@@ -30,6 +32,7 @@ def pandas_frame(data):
     """
     return data.all.to_pandas().set_index("Date")
 
+
 @pytest.fixture
 def aapl(pandas_frame):
     """Fixture that returns the AAPL returns from the data fixture.
@@ -42,6 +45,7 @@ def aapl(pandas_frame):
 
     """
     return pandas_frame["AAPL"]
+
 
 @pytest.fixture
 def benchmark_pd(pandas_frame):
@@ -73,6 +77,7 @@ def test_sharpe_ratio(stats, aapl):
 
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
 
+
 def test_skew(stats, aapl):
     """Tests that the skew method produces the same results as quantstats.
 
@@ -87,6 +92,7 @@ def test_skew(stats, aapl):
     x = stats.skew()
     y = qs.stats.skew(aapl)
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
+
 
 def test_kurtosis(stats, aapl):
     """Tests that the kurtosis method produces the same results as quantstats.
@@ -103,6 +109,7 @@ def test_kurtosis(stats, aapl):
     y = qs.stats.kurtosis(aapl)
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
 
+
 def test_avg_return(stats, aapl):
     """Tests that the avg_return method produces the same results as quantstats.
 
@@ -117,6 +124,7 @@ def test_avg_return(stats, aapl):
     x = stats.avg_return()
     y = qs.stats.avg_return(aapl)
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
+
 
 def test_avg_win(stats, aapl):
     """Tests that the avg_win method produces the same results as quantstats.
@@ -133,6 +141,7 @@ def test_avg_win(stats, aapl):
     y = qs.stats.avg_win(aapl)
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
 
+
 def test_avg_loss(stats, aapl):
     """Tests that the avg_loss method produces the same results as quantstats.
 
@@ -147,6 +156,7 @@ def test_avg_loss(stats, aapl):
     x = stats.avg_loss()
     y = qs.stats.avg_loss(aapl)
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
+
 
 def test_volatility(stats, aapl):
     """Tests that the volatility method produces the same results as quantstats.
@@ -163,6 +173,7 @@ def test_volatility(stats, aapl):
     y = qs.stats.volatility(aapl, periods=252)
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
 
+
 def test_payoff_ratio(stats, aapl):
     """Tests that the payoff_ratio method produces the same results as quantstats.
 
@@ -177,6 +188,7 @@ def test_payoff_ratio(stats, aapl):
     x = stats.payoff_ratio()
     y = qs.stats.payoff_ratio(aapl)
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
+
 
 def test_win_loss_ratio(stats, aapl):
     """Tests that the win_loss_ratio method produces the same results as quantstats.
@@ -193,6 +205,7 @@ def test_win_loss_ratio(stats, aapl):
     y = qs.stats.win_loss_ratio(aapl)
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
 
+
 def test_profit_ratio(stats, aapl):
     """Tests that the profit_ratio method produces the same results as quantstats.
 
@@ -207,6 +220,7 @@ def test_profit_ratio(stats, aapl):
     x = stats.profit_ratio()
     y = qs.stats.profit_ratio(aapl)
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
+
 
 def test_profit_factor(stats, aapl):
     """Tests that the profit_factor method produces the same results as quantstats.
@@ -223,6 +237,7 @@ def test_profit_factor(stats, aapl):
     y = qs.stats.profit_factor(aapl)
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
 
+
 def test_value_at_risk(stats, aapl):
     """Tests that the value_at_risk method produces the same results as quantstats.
 
@@ -238,6 +253,7 @@ def test_value_at_risk(stats, aapl):
     y = qs.stats.value_at_risk(aapl)
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
 
+
 def test_conditional_value_at_risk(stats, aapl):
     """Tests that the conditional_value_at_risk method produces the same results as quantstats.
 
@@ -249,9 +265,10 @@ def test_conditional_value_at_risk(stats, aapl):
         The conditional value at risk calculated by our library matches the one from quantstats.
 
     """
-    x = stats.conditional_value_at_risk( alpha=0.05)
+    x = stats.conditional_value_at_risk(alpha=0.05)
     y = qs.stats.conditional_value_at_risk(aapl, confidence=0.95)
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
+
 
 def test_win_rate(stats, aapl):
     """Tests that the win_rate method produces the same results as quantstats.
@@ -268,6 +285,7 @@ def test_win_rate(stats, aapl):
     y = qs.stats.win_rate(aapl)
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
 
+
 def test_kelly_criterion(stats, aapl):
     """Tests that the kelly_criterion method produces the same results as quantstats.
 
@@ -282,6 +300,7 @@ def test_kelly_criterion(stats, aapl):
     x = stats.kelly_criterion()
     y = qs.stats.kelly_criterion(aapl)
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
+
 
 def test_gain_to_pain_ratio(stats, aapl):
     """Tests that the gain_to_pain_ratio method produces the same results as quantstats.
@@ -298,6 +317,7 @@ def test_gain_to_pain_ratio(stats, aapl):
     y = qs.stats.gain_to_pain_ratio(aapl)
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
 
+
 def test_risk_return_ratio(stats, aapl):
     """Tests that the risk_return_ratio method produces the same results as quantstats.
 
@@ -312,6 +332,7 @@ def test_risk_return_ratio(stats, aapl):
     x = stats.risk_return_ratio()
     y = qs.stats.risk_return_ratio(aapl)
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
+
 
 def test_best(stats, aapl):
     """Tests that the best method produces the same results as quantstats.
@@ -328,6 +349,7 @@ def test_best(stats, aapl):
     y = qs.stats.best(aapl)
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
 
+
 def test_worst(stats, aapl):
     """Tests that the worst method produces the same results as quantstats.
 
@@ -342,6 +364,7 @@ def test_worst(stats, aapl):
     x = stats.worst()
     y = qs.stats.worst(aapl)
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
+
 
 def test_exposure(stats, aapl):
     """Tests that the exposure method produces the same results as quantstats.
@@ -358,6 +381,7 @@ def test_exposure(stats, aapl):
     y = qs.stats.exposure(aapl)
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
 
+
 def test_sortino(stats, aapl):
     """Tests that the sortino method produces the same results as quantstats.
 
@@ -373,6 +397,7 @@ def test_sortino(stats, aapl):
     y = qs.stats.sortino(aapl)
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
 
+
 def test_information_ratio(stats, aapl, benchmark_pd):
     """Tests that the information_ratio method produces the same results as quantstats.
 
@@ -386,5 +411,5 @@ def test_information_ratio(stats, aapl, benchmark_pd):
 
     """
     x = stats.information_ratio(periods_per_year=252)
-    y = np.sqrt(252)*qs.stats.information_ratio(aapl, benchmark=benchmark_pd)
+    y = np.sqrt(252) * qs.stats.information_ratio(aapl, benchmark=benchmark_pd)
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)

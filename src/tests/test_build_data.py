@@ -1,4 +1,5 @@
 """Tests for the build_data function."""
+
 import polars as pl
 from polars.testing import assert_frame_equal, assert_series_equal
 
@@ -58,10 +59,7 @@ def test_with_series_rf(returns):
     # Create a Series with a constant risk-free rate
     date_col = "Date"
     rf_scalar = 0.001
-    rf = returns.select([
-        pl.col(date_col),
-        pl.lit(rf_scalar).alias("rf")
-    ])
+    rf = returns.select([pl.col(date_col), pl.lit(rf_scalar).alias("rf")])
 
     result = build_data(returns=returns, rf=rf)
 

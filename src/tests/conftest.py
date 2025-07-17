@@ -47,7 +47,6 @@ def benchmark(resource_dir) -> pl.DataFrame:
     return dframe.select(["Date", "SPY -- Benchmark"])
 
 
-
 @pytest.fixture
 def portfolio(resource_dir):
     """Fixture that returns a DataFrame with portfolio returns.
@@ -60,11 +59,14 @@ def portfolio(resource_dir):
 
     """
     # that's interesting, polars thinks META is a str type
-    return pl.read_csv(resource_dir / "portfolio.csv", try_parse_dates=True).with_columns([
-        pl.col("AAPL").cast(pl.Float64, strict=False),
-        pl.col("META").cast(pl.Float64, strict=False),
-        pl.col("Date").cast(pl.Date, strict=False)
-    ])
+    return pl.read_csv(resource_dir / "portfolio.csv", try_parse_dates=True).with_columns(
+        [
+            pl.col("AAPL").cast(pl.Float64, strict=False),
+            pl.col("META").cast(pl.Float64, strict=False),
+            pl.col("Date").cast(pl.Date, strict=False),
+        ]
+    )
+
 
 @pytest.fixture
 def data(portfolio, benchmark):
@@ -80,6 +82,7 @@ def data(portfolio, benchmark):
     """
     return build_data(returns=portfolio, benchmark=benchmark)
 
+
 @pytest.fixture
 def data_no_benchmark(portfolio):
     """Fixture that returns a Data object with portfolio data but no benchmark.
@@ -92,6 +95,7 @@ def data_no_benchmark(portfolio):
 
     """
     return build_data(returns=portfolio)
+
 
 @pytest.fixture
 def edge(data):
@@ -112,6 +116,7 @@ def edge(data):
     benchmark = pl.DataFrame({"index": index, "benchmark": [0.0] * len(index)})
 
     return build_data(returns=returns, benchmark=benchmark, date_col="index")
+
 
 @pytest.fixture()
 def readme_path() -> Path:
