@@ -48,7 +48,8 @@ change on a Github issue, to make sure
 that your priorities align with ours.
 
 If you'd like to contribute code but don't know where to start,
-try one of the following:
+try one of the
+following:
 
 - Read the source and enhance the documentation,
   or address TODOs
@@ -62,8 +63,7 @@ A license is added to new files automatically as a pre-commit hook.
 ## Code style
 
 We use black and ruff to enforce our Python coding style.
-Before sending us a pull request, navigate to the project root
-and run
+Before sending us a pull request, navigate to the project root and run
 
 ```bash
 make fmt

@@ -8,7 +8,6 @@ permissions:
 
 jobs:
   pre-commit:
-    if: github.repository != 'tschm/.config-templates'
     runs-on: ubuntu-latest
     steps:
       - uses: tschm/cradle/actions/pre-commit@v0.3.01
