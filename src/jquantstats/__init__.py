@@ -1,5 +1,4 @@
-"""
-jQuantStats: Portfolio analytics for quants
+"""jQuantStats: Portfolio analytics for quants.
 
 Overview
 --------
@@ -55,8 +54,9 @@ fig.show()
 
 For more information, visit the [jQuantStats Documentation](https://tschm.github.io/jquantstats/book).
 """
+
 import importlib.metadata
 
-from .api import build_data
+from .api import build_data  # noqa: F401
 
 __version__ = importlib.metadata.version("jquantstats")

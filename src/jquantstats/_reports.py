@@ -15,7 +15,7 @@ class Reports:
 
     """
 
-    data: "Data"  # type: ignore
+    data: "Data"  # noqa: F821
 
     def metrics(self, periods=None) -> pl.DataFrame:
         """Calculate various financial metrics and return them as a DataFrame.

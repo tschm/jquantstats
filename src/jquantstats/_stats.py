@@ -31,7 +31,7 @@ class Stats:
 
     """
 
-    data: "Data"  # type: ignore
+    data: "Data"  # noqa: F821
     all: pl.DataFrame | None = None  # Default is None; will be set in __post_init__
 
     def __post_init__(self):

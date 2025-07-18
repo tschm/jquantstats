@@ -113,18 +113,18 @@ def build_data(
     date_col : str, optional
         Name of the date column in the DataFrames. Default is "Date".
 
-    Returns
+    Returns:
     -------
     Data
         Object containing excess returns and benchmark (if any), with methods for
         analysis and visualization through the `stats` and `plots` properties.
 
-    Raises
+    Raises:
     ------
     ValueError
         If there are no overlapping dates between returns and benchmark.
 
-    Examples
+    Examples:
     --------
     Basic usage with polars DataFrame:
 
@@ -196,14 +196,14 @@ def build_data(
             Name of the date column in both DataFrames for joining
             when rf is a DataFrame.
 
-        Returns
+        Returns:
         -------
         pl.DataFrame
             DataFrame with the risk-free rate subtracted from all numeric columns,
             preserving the original column names. The resulting DataFrame includes the
             date column and all numeric columns from the input DataFrame.
 
-        Notes
+        Notes:
         -----
         - The function performs an inner join when rf is a DataFrame, which means
           only dates present in both DataFrames will be included in the result.
