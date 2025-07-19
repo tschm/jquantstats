@@ -16,22 +16,8 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout target repo
-        uses: actions/checkout@v4
-
-      - name: Run config sync script
-        run: |
-          curl -sSL https://raw.githubusercontent.com/tschm/.config-templates/main/scripts/up.sh | bash
-
-      - name: Remove the up script
-        run: |
-          rm -f scripts/up.sh
-
-      - name: Create Pull Request if needed
-        uses: peter-evans/create-pull-request@v6
+      - name: Run sync action
+        uses: tschm/.config-templates@main  # Or @v1 if you tag it
         with:
-          commit-message: "chore: sync config files from .config-templates"
           branch: sync/update-configs
-          title: "chore: sync config files from .config-templates"
-          body: "This PR updates config files from [tschm/.config-templates](https://github.com/tschm/.config-templates)."
-          delete-branch: true
+          commit-message: "chore: sync config files from .config-templates"
