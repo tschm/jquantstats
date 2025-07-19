@@ -144,6 +144,7 @@ jobs:
   pypi:
     name: Publish to PyPI
     runs-on: ubuntu-latest
+    environment: release
     needs: [build, tag]
     if: needs.build.outputs.built == 'true'
 

@@ -65,9 +65,9 @@ jobs:
       contents: read
     steps:
       - name: "Build the virtual environment for ${{ github.repository }}"
-        uses: tschm/cradle/actions/environment@v0.3.02
+        uses: tschm/cradle/actions/environment@v0.3.04
 
-      - uses: tschm/cradle/actions/pdoc@v0.3.02
+      - uses: tschm/cradle/actions/pdoc@v0.3.04
         with:
           source-folder: ${{ needs.parse-env.outputs.source-folder }}
 
@@ -79,9 +79,9 @@ jobs:
       contents: read
     steps:
       - name: "Build the virtual environment for ${{ github.repository }}"
-        uses: tschm/cradle/actions/environment@v0.3.02
+        uses: tschm/cradle/actions/environment@v0.3.04
 
-      - uses: tschm/cradle/actions/coverage@v0.3.02
+      - uses: tschm/cradle/actions/coverage@v0.3.04
         with:
           tests-folder: ${{ needs.parse-env.outputs.tests-folder }}
           source-folder: ${{ needs.parse-env.outputs.source-folder }}
@@ -99,7 +99,7 @@ jobs:
       id-token: write         # Permission to verify deployment origin
 
     steps:
-      - uses: tschm/cradle/actions/book@v0.3.02
+      - uses: tschm/cradle/actions/book@v0.3.04
         with:
           title: ${{ needs.parse-env.outputs.title }}
           links: |
