@@ -1,5 +1,8 @@
 """Tests for the .env file and the paths it points to.
 
+This file is part of the tschm/.config-templates repository
+(https://github.com/tschm/.config-templates).
+
 This module verifies that:
 1. The .env file exists in the project root
 2. The folder paths specified in the .env file (MARIMO_FOLDER, SOURCE_FOLDER, TESTS_FOLDER)
