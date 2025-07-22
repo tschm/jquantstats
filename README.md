@@ -106,15 +106,11 @@ shape: (3, 2)
 >>> # Calculate statistics
 >>> sharpe = data.stats.sharpe()
 >>> sharpe
-{'Asset1': np.float64(4.909200099205072),
- 'Asset2': np.float64(8.08795106197808),
- 'Market': np.float64(6.113591415853696)}
+{'Asset1': np.float64(4.909200099205072), 'Asset2': np.float64(8.08795106197808), 'Market': np.float64(6.113591415853696)}
 
 >>> volatility = data.stats.volatility()
 >>> volatility
-{'Asset1': np.float64(0.4807979478602905),
- 'Asset2': np.float64(0.2918332857414772),
- 'Market': np.float64(0.286574597618142)}
+{'Asset1': np.float64(0.4807979478602905), 'Asset2': np.float64(0.2918332857414772), 'Market': np.float64(0.286574597618142)}
 
 >>> # Create visualizations
 >>> fig = data.plots.plot_snapshot(title="Portfolio Performance")
