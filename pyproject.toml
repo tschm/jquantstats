@@ -28,7 +28,7 @@ dev = [
     "pytest==8.4.1",
     "yfinance==0.2.65",
     "ipython==8.37.0",
-    "quantstats==0.0.64",
+    "quantstats==0.0.69",
     "marimo>=0.13.15",
     "python-dotenv==1.1.1"
 ]
