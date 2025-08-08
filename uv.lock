@@ -692,7 +692,7 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'dev'", specifier = "==8.4.1" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = "==6.2.1" },
     { name = "python-dotenv", marker = "extra == 'dev'", specifier = "==1.1.1" },
-    { name = "quantstats", marker = "extra == 'dev'", specifier = "==0.0.69" },
+    { name = "quantstats", marker = "extra == 'dev'", specifier = "==0.0.70" },
     { name = "scipy", specifier = ">=1.14.1" },
     { name = "yfinance", marker = "extra == 'dev'", specifier = "==0.2.65" },
 ]
@@ -1749,7 +1749,7 @@ wheels = [
 
 [[package]]
 name = "quantstats"
-version = "0.0.69"
+version = "0.0.70"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "matplotlib" },
@@ -1764,9 +1764,9 @@ dependencies = [
     { name = "tabulate" },
     { name = "yfinance" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/06/0b/ac7af0acbcef0efe7f64663c1d64a5e34a8bc2dbd509f171b6f1fbe32858/quantstats-0.0.69.tar.gz", hash = "sha256:06ebf16de3b819c6e137bbb7d96349aed1479719f2918b4a60d0cc5c08930a2e", size = 74291, upload-time = "2025-07-30T18:09:34.608Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/86/54/9167099e41568a770938f26653e6781372fcd0a9e6d2874406fb5e962a7a/quantstats-0.0.70.tar.gz", hash = "sha256:1f0a0ab5b31b40527285f7d97c10857cabc3cf04cf5a29337afc8bc327c14a56", size = 74474, upload-time = "2025-08-07T20:34:03.547Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a3/f0/97f318681f5e534f63a1776e37efb3dd14e596eb114f35b13aa4c841f152/quantstats-0.0.69-py2.py3-none-any.whl", hash = "sha256:2654fa3b9d7dcca74b0dfa254f6722ac8e3ea54c3d4f302d71abcfae303c138d", size = 79445, upload-time = "2025-07-30T18:09:33.265Z" },
+    { url = "https://files.pythonhosted.org/packages/fd/0c/8f15bb70a578ebf890b236a6e973ec1d64cf0cd046120ca508542e8c84f8/quantstats-0.0.70-py2.py3-none-any.whl", hash = "sha256:f2fc3dbd06a0cf953992415c3815906eb9958370691eb7dc65c38fe1a887ace2", size = 79684, upload-time = "2025-08-07T20:34:02.5Z" },
 ]
 
 [[package]]
