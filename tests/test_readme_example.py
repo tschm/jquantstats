@@ -13,7 +13,7 @@ from jquantstats.api import build_data
 def test_readme_examples():
     """Test the examples from the README using doctest."""
     # Get the path to the README.md file
-    readme_path = Path(__file__).parent.parent.parent / "README.md"
+    readme_path = Path(__file__).parent.parent / "README.md"
 
     # Set up the globals for doctest
     globs = {"pl": pl, "build_data": build_data, "plotly": plotly, "np": np}
