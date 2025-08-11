@@ -29,8 +29,7 @@ dev = [
     "yfinance==0.2.65",
     "ipython==8.37.0",
     "quantstats==0.0.70",
-    "marimo>=0.13.15",
-    "python-dotenv==1.1.1"
+    "marimo>=0.13.15"
 ]
 
 

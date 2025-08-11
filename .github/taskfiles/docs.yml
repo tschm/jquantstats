@@ -12,12 +12,6 @@ tasks:
       - task build:install -s
       - printf "${BLUE}[INFO] Running tests...${RESET}\n"
       - |
-        # Create README.md if it doesn't exist
-        if [ ! -f "README.md" ]; then
-          printf "${BLUE}[INFO] No README.md file found, creating one with '# Hello World' content${RESET}\n"
-          echo "# Hello World" > README.md
-        fi
-        
         # Find source folder
         SOURCE_FOLDER="src/$(find src -mindepth 1 -maxdepth 1 -type d -not -path '*/\.*' | head -1 | sed 's|^src/||')"
         
