@@ -693,7 +693,7 @@ requires-dist = [
     { name = "pyarrow", specifier = ">=18.0.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = "==8.4.1" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = "==6.2.1" },
-    { name = "quantstats", marker = "extra == 'dev'", specifier = "==0.0.70" },
+    { name = "quantstats", marker = "extra == 'dev'", specifier = "==0.0.73" },
     { name = "scipy", specifier = ">=1.14.1" },
     { name = "yfinance", marker = "extra == 'dev'", specifier = "==0.2.65" },
 ]
@@ -1762,7 +1762,7 @@ wheels = [
 
 [[package]]
 name = "quantstats"
-version = "0.0.70"
+version = "0.0.73"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "matplotlib" },
@@ -1777,9 +1777,9 @@ dependencies = [
     { name = "tabulate" },
     { name = "yfinance" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/86/54/9167099e41568a770938f26653e6781372fcd0a9e6d2874406fb5e962a7a/quantstats-0.0.70.tar.gz", hash = "sha256:1f0a0ab5b31b40527285f7d97c10857cabc3cf04cf5a29337afc8bc327c14a56", size = 74474, upload-time = "2025-08-07T20:34:03.547Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/21/9e/ea4b6da0a59373b4c2e41518d6c1217d5bd494742be5af3883ce32208534/quantstats-0.0.73.tar.gz", hash = "sha256:42451b6a02f8f388b819a8f681ab4359c8c45ee0bdaab69e69d131f28bf97cf0", size = 75051, upload-time = "2025-08-15T08:56:13.043Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/fd/0c/8f15bb70a578ebf890b236a6e973ec1d64cf0cd046120ca508542e8c84f8/quantstats-0.0.70-py2.py3-none-any.whl", hash = "sha256:f2fc3dbd06a0cf953992415c3815906eb9958370691eb7dc65c38fe1a887ace2", size = 79684, upload-time = "2025-08-07T20:34:02.5Z" },
+    { url = "https://files.pythonhosted.org/packages/c1/31/9a92eba1662dadf5020ad2876b4b91a601be82d8ea039e2d45c72ca7d861/quantstats-0.0.73-py2.py3-none-any.whl", hash = "sha256:f076b33c8664c23c7ba1b2c263ad3ac61f23b557548fe601ee08727ce9d70147", size = 80326, upload-time = "2025-08-15T08:56:11.644Z" },
 ]
 
 [[package]]
