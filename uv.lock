@@ -709,7 +709,7 @@ requires-dist = [
     { name = "pyarrow", specifier = ">=18.0.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = "==8.4.1" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = "==6.3.0" },
-    { name = "quantstats", marker = "extra == 'dev'", specifier = "==0.0.76" },
+    { name = "quantstats", marker = "extra == 'dev'", specifier = "==0.0.77" },
     { name = "scipy", specifier = ">=1.14.1" },
     { name = "yfinance", marker = "extra == 'dev'", specifier = "==0.2.65" },
 ]
@@ -1784,7 +1784,7 @@ wheels = [
 
 [[package]]
 name = "quantstats"
-version = "0.0.76"
+version = "0.0.77"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "matplotlib" },
@@ -1799,9 +1799,9 @@ dependencies = [
     { name = "tabulate" },
     { name = "yfinance" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d2/82/a3007cdb249663efe64199f0af16ac00f28f31a933a693398aa4c24ea245/quantstats-0.0.76.tar.gz", hash = "sha256:18b34f4aa72464a4f6a63c35e0657b712e89fb50ce483c23b15df4f75d5ac631", size = 75956, upload-time = "2025-08-20T11:41:28.468Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/dc/d7/8a8712d614558b4a627099412093e0c230ea8784f210e456e6852932d08c/quantstats-0.0.77.tar.gz", hash = "sha256:55213fce012b5455a25cf328424c33a395b20cc362408e5e5a9b1f0e5e03e33d", size = 76054, upload-time = "2025-09-05T18:02:28.794Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f1/c4/d3759e3131ee0c84a8ff0accee76af2b7abefa11e191fde13c5f8f7b0355/quantstats-0.0.76-py2.py3-none-any.whl", hash = "sha256:8c207acdb709437bdde1b1b858a01762a7cb46d2d273148818f51ba805420244", size = 81327, upload-time = "2025-08-20T11:41:27.019Z" },
+    { url = "https://files.pythonhosted.org/packages/87/f2/3fca407f2724860244647413de013565cbe3d5c9ee4299a94be11de3f536/quantstats-0.0.77-py2.py3-none-any.whl", hash = "sha256:d0cb5b6378010e5124ec482f1945d8b852fbaabe7c3f7f51d77082e5604b0050", size = 81417, upload-time = "2025-09-05T18:02:27.39Z" },
 ]
 
 [[package]]
