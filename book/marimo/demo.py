@@ -6,6 +6,7 @@ __generated_with = "0.13.15"
 app = marimo.App(width="medium")
 
 with app.setup:
+    import marimo as mo
     import plotly.io as pio
     import polars as pl
 
@@ -16,14 +17,7 @@ with app.setup:
 
 
 @app.cell
-def _():
-    import marimo as mo
-
-    return (mo,)
-
-
-@app.cell
-def _download(mo):
+def _download():
     returns = pl.read_csv(str(mo.notebook_location() / "public" / "portfolio.csv"), try_parse_dates=True).with_columns(
         [
             pl.col("AAPL").cast(pl.Float64, strict=False),
