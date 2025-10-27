@@ -8,7 +8,7 @@ import polars as pl
 from scipy.stats import norm
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True)  # noqa: PLR0904
 class Stats:
     """Statistical analysis tools for financial returns data.
 
@@ -429,6 +429,65 @@ class Stats:
         res = float(series.mean()) / divisor
         factor = periods or 1
         return res * np.sqrt(factor)
+
+    @columnwise_stat
+    def hhi_positive(self, series: pl.Series) -> float:
+        r"""Calculate the Herfindahl-Hirschman Index (HHI) for positive returns.
+
+        This quantifies how concentrated the positive returns are in a series.
+
+        .. math::
+            w^{\plus} = \frac{r_{t}^{\plus}}{\sum{r_{t}^{\plus}}} \\
+            HHI^{\plus} = \frac{N_{\plus} \sum{(w^{\plus})^2} - 1}{N_{\plus} - 1}
+
+        where:
+            - \(r_{t}^{\plus}\) are the positive returns
+            - \(N_{\plus}\) is the number of positive returns
+            - \(w^{\plus}\) are the weights of positive returns
+
+        Args:
+            series (pl.Series): The series to calculate HHI for.
+
+        Returns:
+            float: The HHI value for positive returns.
+        """
+        positive_returns = series.filter(series > 0).drop_nans()
+        if positive_returns.len() <= 2:  # noqa: PLR2004
+            return np.nan
+        weight = positive_returns / positive_returns.sum()
+        return (weight.len() * (weight**2).sum() - 1) / (weight.len() - 1)
+
+    @columnwise_stat
+    def hhi_negative(self, series: pl.Series) -> float:
+        r"""Calculate the Herfindahl-Hirschman Index (HHI) for negative returns.
+
+        This quantifies how concentrated the negative returns are in a series.
+
+        .. math::
+            w^{\minus} = \frac{r_{t}^{\minus}}{\sum{r_{t}^{\minus}}} \\
+            HHI^{\minus} = \frac{N_{\minus} \sum{(w^{\minus})^2} - 1}{N_{\minus} - 1}
+
+        where:
+            - \(r_{t}^{\minus}\) are the negative returns
+            - \(N_{\minus}\) is the number of negative returns
+            - \(w^{\minus}\) are the weights of negative returns
+
+        Args:
+            series (pl.Series): The returns series to calculate HHI for.
+
+        Returns:
+            float: The HHI value for negative returns. Returns NaN if fewer than 3 
+                negative returns are present.
+
+        Note:
+            Values range from 0 (perfectly diversified losses) to 1 (all losses 
+            concentrated in a single period).
+        """
+        negative_returns = series.filter(series < 0).drop_nans()
+        if negative_returns.len() <= 2:  # noqa: PLR2004
+            return np.nan
+        weight = negative_returns / negative_returns.sum()
+        return (weight.len() * (weight**2).sum() - 1) / (weight.len() - 1)
 
     @columnwise_stat
     def sortino(self, series: pl.Series, periods: int | float | None = None) -> float:

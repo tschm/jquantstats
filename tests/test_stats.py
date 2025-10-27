@@ -314,6 +314,32 @@ def test_sharpe(stats):
     assert result["META"] == pytest.approx(0.7158755672867543)
 
 
+def test_hhi_positive(stats):
+    """Tests that the hhi_positive method calculates positive HHI correctly.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        The positive HHI value for META matches the expected value.
+    """
+    result = stats.hhi_positive()
+    assert result["META"] == pytest.approx(0.0008093666220006002)
+
+
+def test_hhi_negative(stats):
+    """Tests that the hhi_negative method calculates negative HHI correctly.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        The negative HHI value for META matches the expected value.
+    """
+    result = stats.hhi_negative()
+    assert result["META"] == pytest.approx(0.0008748322510113375)
+
+
 def test_rolling_sharpe(stats):
     """Tests that the rolling_sharpe method calculates rolling Sharpe ratio correctly.
 
