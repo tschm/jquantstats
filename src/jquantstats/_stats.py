@@ -449,7 +449,12 @@ class Stats:
             series (pl.Series): The series to calculate HHI for.
 
         Returns:
-            float: The HHI value for positive returns.
+            float: The HHI value for positive returns. Returns NaN if fewer than 3 
+                positive returns are present.
+
+        Note:
+            Values range from 0 (perfectly diversified gains) to 1 (all gains 
+            concentrated in a single period).
         """
         positive_returns = series.filter(series > 0).drop_nans()
         if positive_returns.len() <= 2:  # noqa: PLR2004
