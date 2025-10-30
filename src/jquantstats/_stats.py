@@ -449,15 +449,15 @@ class Stats:
             series (pl.Series): The series to calculate HHI for.
 
         Returns:
-            float: The HHI value for positive returns. Returns NaN if fewer than 3 
+            float: The HHI value for positive returns. Returns NaN if fewer than 3
                 positive returns are present.
 
         Note:
-            Values range from 0 (perfectly diversified gains) to 1 (all gains 
+            Values range from 0 (perfectly diversified gains) to 1 (all gains
             concentrated in a single period).
         """
         positive_returns = series.filter(series > 0).drop_nans()
-        if positive_returns.len() <= 2:  # noqa: PLR2004
+        if positive_returns.len() <= 2:
             return np.nan
         weight = positive_returns / positive_returns.sum()
         return (weight.len() * (weight**2).sum() - 1) / (weight.len() - 1)
@@ -481,15 +481,15 @@ class Stats:
             series (pl.Series): The returns series to calculate HHI for.
 
         Returns:
-            float: The HHI value for negative returns. Returns NaN if fewer than 3 
+            float: The HHI value for negative returns. Returns NaN if fewer than 3
                 negative returns are present.
 
         Note:
-            Values range from 0 (perfectly diversified losses) to 1 (all losses 
+            Values range from 0 (perfectly diversified losses) to 1 (all losses
             concentrated in a single period).
         """
         negative_returns = series.filter(series < 0).drop_nans()
-        if negative_returns.len() <= 2:  # noqa: PLR2004
+        if negative_returns.len() <= 2:
             return np.nan
         weight = negative_returns / negative_returns.sum()
         return (weight.len() * (weight**2).sum() - 1) / (weight.len() - 1)

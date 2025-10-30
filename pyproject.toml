@@ -12,7 +12,9 @@ dependencies = [
     "polars>=1.18.0",
     "pandas>=2.2.3",
     "pyarrow>=18.0.0",
-    "scipy>=1.14.1"
+    "scipy>=1.14.1",
+    "pdoc>=15.0.4",
+    "marimo>=0.16.5",
 ]
 
 # Project URLs for documentation and reference
@@ -30,7 +32,6 @@ dev = [
     "ipython==8.37.0",
     "quantstats==0.0.77",
     "marimo>=0.13.15",
-    "ruff==0.14.2"
 ]
 
 
