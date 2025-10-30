@@ -29,7 +29,7 @@ dev = [
     "yfinance==0.2.66",
     "ipython==8.37.0",
     "quantstats==0.0.77",
-    "marimo>=0.13.15"
+    "marimo>=0.13.15",
 ]
 
 
