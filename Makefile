@@ -8,6 +8,7 @@
 BLUE := \033[36m
 BOLD := \033[1m
 GREEN := \033[32m
+RED := \033[31m
 RESET := \033[0m
 
 # Default goal when running `make` with no target
@@ -16,58 +17,56 @@ RESET := \033[0m
 # Declare phony targets (they don't produce files)
 .PHONY: install-task install clean test marimo book fmt deptry help all
 
+UV_INSTALL_DIR := "./bin"
+
 ##@ Bootstrap
 install-task: ## ensure go-task (Taskfile) is installed
-	@mkdir -p ./bin;
-	export PATH=".bin:$$PATH"
-	# install task
-	@if command -v ./bin/task >/dev/null 2>&1; then \
-		printf "$(GREEN)task is already installed$(RESET)\n"; \
-	else \
+	@mkdir -p ${UV_INSTALL_DIR}
+
+	@if [ ! -x "${UV_INSTALL_DIR}/task" ]; then \
 		printf "$(BLUE)Installing go-task (Taskfile)$(RESET)\n"; \
-		sh -c "$$(curl --location https://taskfile.dev/install.sh)" -- -d -b ./bin; \
+		curl --location https://taskfile.dev/install.sh | sh -s -- -d -b ${UV_INSTALL_DIR}; \
 	fi
-	# install uv
-	@if [ -x "./bin/uv" ]; then \
-		printf "${BLUE}[INFO] uv already present in ./bin, skipping installation${RESET}\n"; \
-	else \
-		curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR="./bin" sh || { printf "${RED}[ERROR] Failed to install uv${RESET}\n"; exit 1; }; \
-	fi
-	# verify task is installed
-	./bin/task --version
+
 
 install: install-task ## install
-	./bin/task build:install
+	@./bin/task build:install --silent
 
 clean: install-task ## clean
-	./bin/task cleanup:clean
+	@./bin/task cleanup:clean --silent
 
 ##@ Development and Testing
-test: install ## run all tests
-	./bin/task docs:test
+test: install-task ## run all tests
+	@./bin/task docs:test --silent
 
-marimo: install ## fire up Marimo server
-	./bin/task docs:marimo
+marimo: install-task ## fire up Marimo server
+	@./bin/task docs:marimo --silent
 
 ##@ Documentation
-book: test ## compile the companion book
-	./bin/task docs:docs
-	./bin/task docs:marimushka
-	./bin/task docs:book
+book: install-task ## compile the companion book
+	@./bin/task docs:test --silent
+	@./bin/task docs:docs --silent
+	@./bin/task docs:marimushka --silent
+	@./bin/task docs:book --silent
 
-fmt: install ## check the pre-commit hooks and the linting
-	./bin/task quality:fmt
-	./bin/task quality:lint
+fmt: install-task ## check the pre-commit hooks and the linting
+	@./bin/task quality:lint --silent
 
-deptry: install  ## check deptry
-	./bin/task quality:deptry
+deptry: install-task ## run deptry if pyproject.toml exists
+	@if [ -f pyproject.toml ]; then \
+		./bin/task build:uv --silent; \
+  		echo "→ Running deptry..."; \
+		./bin/task quality:deptry --silent; \
+	else \
+		echo "${GREEN} ⚠ Skipping deptry (no pyproject.toml)"; \
+	fi
 
 all: fmt deptry test book ## Run everything
 	echo "Run fmt, deptry, test and book"
 
 ##@ Meta
 help: ## Display this help message
-	@printf "$(BOLD)Usage:$(RESET)\n"
-	@printf "  make $(BLUE)<target>$(RESET)\n\n"
-	@printf "$(BOLD)Targets:$(RESET)\n"
-	@awk 'BEGIN {FS = ":.*##"; printf ""} /^[a-zA-Z_-]+:.*?##/ { printf "  $(BLUE)%-15s$(RESET) %s\n", $$1, $$2 } /^##@/ { printf "\n$(BOLD)%s$(RESET)\n", substr($$0, 5) }' $(MAKEFILE_LIST)
+	+@printf "$(BOLD)Usage:$(RESET)\n"
+	+@printf "  make $(BLUE)<target>$(RESET)\n\n"
+	+@printf "$(BOLD)Targets:$(RESET)\n"
+	+@awk 'BEGIN {FS = ":.*##"; printf ""} /^[a-zA-Z_-]+:.*?##/ { printf "  $(BLUE)%-15s$(RESET) %s\n", $$1, $$2 } /^##@/ { printf "\n$(BOLD)%s$(RESET)\n", substr($$0, 5) }' $(MAKEFILE_LIST)

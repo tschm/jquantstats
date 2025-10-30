@@ -1,13 +1,26 @@
 # This file is part of the tschm/.config-templates repository
 # (https://github.com/tschm/.config-templates).
 #
+# Taskfile: Root Taskfile
+#
+# Purpose: Provide a unified entry point for developer tasks by grouping
+#          build, quality, documentation, and cleanup commands. Exposes
+#          helpful default and help targets.
+#
+# Components:
+#   - includes: build, quality, docs, cleanup
+#   - tasks:
+#       - default: show top-level tasks
+#       - help: show all tasks including nested ones
+
 version: '3'
+silent: true
 
 # Variables
 vars:
   TESTS_FOLDER: tests
   MARIMO_FOLDER: book/marimo
-  BOOK_TITLE: '{{.REPO_NAME}}'
+  BOOK_TITLE: '{{env "REPO_NAME"}}'   # defined below env section
   BOOK_SUBTITLE: 'Documentation and Reports'
   OPTIONS: ''
 
@@ -26,9 +39,9 @@ env:
   REPO_NAME:
     sh: basename $(pwd)
 
-  LOG_INFO: 'printf "${BLUE}[INFO] %s${RESET}\n"'
-  LOG_SUCCESS: 'printf "${GREEN}[SUCCESS] %s${RESET}\n"'
-  LOG_ERROR: 'printf "${RED}[ERROR] %s${RESET}\n"'
+  #LOG_INFO: 'printf "${BLUE}[INFO] %s${RESET}\n"'
+  #LOG_SUCCESS: 'printf "${GREEN}[SUCCESS] %s${RESET}\n"'
+  #LOG_ERROR: 'printf "${RED}[ERROR] %s${RESET}\n"'
 
 
 # Include task groups
