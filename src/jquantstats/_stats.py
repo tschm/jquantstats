@@ -448,7 +448,8 @@ class Stats:
             periods (int | float, optional): Number of periods per year. Defaults to data periods.
 
         Returns:
-            float: The asymptotic variance of the Sharpe ratio (annualized if requested).
+            float: The asymptotic variance of the Sharpe ratio.
+            If number of periods per year is provided or inferred from the data, the result is annualized.
 
         """
         t = series.count()
@@ -477,7 +478,7 @@ class Stats:
 
         Args:
             series (pl.Series): The series to calculate probabilistic Sharpe ratio for.
-            benchmark_sr (float): The target Sharpe ratio to compare against.
+            benchmark_sr (float): The target Sharpe ratio to compare against. This should be unannualized.
 
         Returns:
             float: Probabilistic Sharpe Ratio.
@@ -494,7 +495,8 @@ class Stats:
         std_val = series.std(ddof=1)
         if mean_val is None or std_val is None or std_val == 0:
             return np.nan
-        observed_sr = float(mean_val) / float(std_val)  # Always unannualized for variance calc
+        # Unannualized observed Sharpe ratio
+        observed_sr = float(mean_val) / float(std_val)
 
         skew_val = series.skew(bias=False)
         kurt_val = series.kurtosis(bias=False)
