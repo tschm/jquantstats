@@ -21,13 +21,13 @@ repository = "https://github.com/tschm/jquantstats"
 
 # Optional dependencies that can be installed with extras (e.g., pip install jquantstats[plot])
 [project.optional-dependencies]
-plot = ["kaleido==1.1.0"]
+plot = ["kaleido==1.2.0"]
 
 dev = [
     "pytest-cov==7.0.0",
     "pytest==8.4.2",
     "yfinance==0.2.66",
-    "ipython==9.6.0",
+    "ipython==9.7.0",
     "quantstats==0.0.77",
     "marimo>=0.13.15",
 ]
