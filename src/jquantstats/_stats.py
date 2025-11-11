@@ -8,7 +8,7 @@ import polars as pl
 from scipy.stats import norm
 
 
-@dataclasses.dataclass(frozen=True)  # noqa: PLR0904
+@dataclasses.dataclass(frozen=True)
 class Stats:
     """Statistical analysis tools for financial returns data.
 
