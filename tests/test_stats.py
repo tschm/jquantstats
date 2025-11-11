@@ -3,6 +3,7 @@
 import numpy as np
 import polars as pl
 import pytest
+from scipy.stats import norm
 
 
 @pytest.fixture
@@ -312,6 +313,44 @@ def test_sharpe(stats):
     """
     result = stats.sharpe(periods=252)
     assert result["META"] == pytest.approx(0.7158755672867543)
+
+
+def test_sharpe_var(stats):
+    """Tests that the sharpe_var method calculates Sharpe ratio variance correctly.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        The Sharpe ratio variance value for META matches the expected value.
+
+    """
+    result = stats.sharpe_variance()
+    skew = stats.skew()["META"]
+    kurt = stats.kurtosis()["META"]
+    # Get unannualized Sharpe ratio
+    sr = stats.sharpe(periods=1)["META"]
+    t_meta_not_nan = stats.data.returns["META"].drop_nulls().shape[0]
+    period = stats.data._periods_per_year
+    # Expected base variance (unannualized)
+    expected_base_var = (1 + (skew * sr) / 2 + ((kurt - 3) / 4) * sr**2) / t_meta_not_nan
+    # Expected annualized variance
+    expected_var = period * expected_base_var
+    assert result["META"] == pytest.approx(expected_var)
+
+
+@pytest.mark.parametrize("benchmark_sr", [0.0, 0.5, 1.0])
+def test_prob_sharpe_ratio(stats, benchmark_sr):
+    """Tests that the prob_sharpe_ratio method calculates probabilistic Sharpe ratio correctly."""
+    result = stats.prob_sharpe_ratio(benchmark_sr=benchmark_sr)
+    # Unannualized Sharpe ratio
+    observed_sr = stats.sharpe(periods=1)["META"]
+    skew = stats.skew()["META"]
+    kurt = stats.kurtosis()["META"]
+    t_meta_not_nan = stats.data.returns["META"].drop_nulls().shape[0]
+    var_bench_sr = (1 + (float(skew) * benchmark_sr) / 2 + ((float(kurt) - 3) / 4) * benchmark_sr**2) / t_meta_not_nan
+    expected_prob_sr = norm.cdf((observed_sr - benchmark_sr) / np.sqrt(var_bench_sr))
+    assert result["META"] == pytest.approx(expected_prob_sr)
 
 
 def test_hhi_positive(stats):

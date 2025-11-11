@@ -431,6 +431,87 @@ class Stats:
         return res * np.sqrt(factor)
 
     @columnwise_stat
+    def sharpe_variance(self, series: pl.Series, periods: int | float | None = None) -> float:
+        r"""Calculate the asymptotic variance of the Sharpe Ratio.
+
+        .. math::
+            \text{Var}(SR) = \frac{1 + \frac{S \cdot SR}{2} + \frac{(K - 3) \cdot SR^2}{4}}{T}
+
+        where:
+            - \(S\) is the skewness of returns
+            - \(K\) is the kurtosis of returns
+            - \(SR\) is the Sharpe ratio (unannualized)
+            - \(T\) is the number of observations
+
+        Args:
+            series (pl.Series): The series to calculate Sharpe ratio variance for.
+            periods (int | float, optional): Number of periods per year. Defaults to data periods.
+
+        Returns:
+            float: The asymptotic variance of the Sharpe ratio.
+            If number of periods per year is provided or inferred from the data, the result is annualized.
+
+        """
+        t = series.count()
+        mean_val = series.mean()
+        std_val = series.std(ddof=1)
+        if mean_val is None or std_val is None or std_val == 0:
+            return np.nan
+        sr = float(mean_val) / float(std_val)
+
+        skew_val = series.skew(bias=False)
+        kurt_val = series.kurtosis(bias=False)
+
+        if skew_val is None or kurt_val is None:
+            return np.nan
+        # Base variance calculation using unannualized Sharpe ratio
+        # Formula: (1 + skew*SR/2 + (kurt-3)*SR²/4) / T
+        base_variance = (1 + (float(skew_val) * sr) / 2 + ((float(kurt_val) - 3) / 4) * sr**2) / t
+        # Annualize by scaling with the number of periods
+        periods = periods or self.data._periods_per_year
+        factor = periods or 1
+        return base_variance * factor
+
+    @columnwise_stat
+    def prob_sharpe_ratio(self, series: pl.Series, benchmark_sr: float) -> float:
+        r"""Calculate the probabilistic sharpe ratio (PSR).
+
+        Args:
+            series (pl.Series): The series to calculate probabilistic Sharpe ratio for.
+            benchmark_sr (float): The target Sharpe ratio to compare against. This should be unannualized.
+
+        Returns:
+            float: Probabilistic Sharpe Ratio.
+
+        Note:
+            PSR is the probability that the observed Sharpe ratio is greater than a
+            given benchmark Sharpe ratio.
+
+        """
+        t = series.count()
+
+        # Calculate observed unannualized Sharpe ratio
+        mean_val = series.mean()
+        std_val = series.std(ddof=1)
+        if mean_val is None or std_val is None or std_val == 0:
+            return np.nan
+        # Unannualized observed Sharpe ratio
+        observed_sr = float(mean_val) / float(std_val)
+
+        skew_val = series.skew(bias=False)
+        kurt_val = series.kurtosis(bias=False)
+
+        if skew_val is None or kurt_val is None:
+            return np.nan
+
+        # Calculate variance using unannualized benchmark Sharpe ratio
+        var_bench_sr = (1 + (float(skew_val) * benchmark_sr) / 2 + ((float(kurt_val) - 3) / 4) * benchmark_sr**2) / t
+
+        if var_bench_sr <= 0:
+            return np.nan
+        return norm.cdf((observed_sr - benchmark_sr) / np.sqrt(var_bench_sr))
+
+    @columnwise_stat
     def hhi_positive(self, series: pl.Series) -> float:
         r"""Calculate the Herfindahl-Hirschman Index (HHI) for positive returns.
 
