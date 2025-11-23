@@ -55,68 +55,42 @@ pip install jquantstats[dev]
 ## 🚀 Quick Start
 
 ```python
->>> # Import jquantstats
->>> import polars as pl
->>> from jquantstats import build_data
+# Import jquantstats
+import polars as pl
+from jquantstats import build_data
 
->>> # Create sample returns data
->>> returns = pl.DataFrame({
-...     "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
-...     "Asset1": [0.01, -0.02, 0.03],
-...     "Asset2": [0.02, 0.01, -0.01]
-... }).with_columns(pl.col("Date").str.to_date())
->>> returns
-shape: (3, 3)
-┌────────────┬────────┬────────┐
-│ Date       ┆ Asset1 ┆ Asset2 │
-│ ---        ┆ ---    ┆ ---    │
-│ date       ┆ f64    ┆ f64    │
-╞════════════╪════════╪════════╡
-│ 2023-01-01 ┆ 0.01   ┆ 0.02   │
-│ 2023-01-02 ┆ -0.02  ┆ 0.01   │
-│ 2023-01-03 ┆ 0.03   ┆ -0.01  │
-└────────────┴────────┴────────┘
+# Create sample returns data
+returns = pl.DataFrame({
+	"Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+	"Asset1": [0.01, -0.02, 0.03],
+	"Asset2": [0.02, 0.01, -0.01]
+}).with_columns(pl.col("Date").str.to_date())
 
->>> # Basic usage
->>> data = build_data(returns=returns)
->>>
->>> # With benchmark and risk-free rate
->>> benchmark = pl.DataFrame({
-...     "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
-...     "Market": [0.005, -0.01, 0.02]
-... }).with_columns(pl.col("Date").str.to_date())
->>> benchmark
-shape: (3, 2)
-┌────────────┬────────┐
-│ Date       ┆ Market │
-│ ---        ┆ ---    │
-│ date       ┆ f64    │
-╞════════════╪════════╡
-│ 2023-01-01 ┆ 0.005  │
-│ 2023-01-02 ┆ -0.01  │
-│ 2023-01-03 ┆ 0.02   │
-└────────────┴────────┘
+# Basic usage
+data = build_data(returns=returns)
 
->>> data = build_data(
-...     returns=returns,
-...     benchmark=benchmark,
-...     rf=0.0002,  # risk-free rate (e.g., 0.02% per day)
-... )
+# With benchmark and risk-free rate
+benchmark = pl.DataFrame({
+	"Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+	"Market": [0.005, -0.01, 0.02]
+}).with_columns(pl.col("Date").str.to_date())
 
->>> # Calculate statistics
->>> sharpe = data.stats.sharpe()
->>> sharpe
-{'Asset1': np.float64(4.909200099205072), 'Asset2': np.float64(8.08795106197808), 'Market': np.float64(6.113591415853696)}
+data = build_data(
+	returns=returns,
+	benchmark=benchmark,
+	rf=0.0002,  # risk-free rate (e.g., 0.02% per day)
+)
 
->>> volatility = data.stats.volatility()
->>> volatility
-{'Asset1': np.float64(0.4807979478602905), 'Asset2': np.float64(0.2918332857414772), 'Market': np.float64(0.286574597618142)}
+# Calculate statistics
+sharpe = data.stats.sharpe()
 
->>> # Create visualizations
->>> fig = data.plots.plot_snapshot(title="Portfolio Performance")
->>> type(fig)
-<class 'plotly.graph_objs._figure.Figure'>
->>> # End of example
+volatility = data.stats.volatility()
+
+fig = data.plots.plot_snapshot(title="Portfolio Performance")
+fig.show()
+```
+
+```result
 ```
 
 ## 📚 Documentation
