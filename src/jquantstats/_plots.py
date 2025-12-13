@@ -190,12 +190,17 @@ class Plots:
             go.Figure: A Plotly figure object containing the dashboard.
 
         Example:
-            >>> from jquantstats._data import Data
             >>> import polars as pl
-            >>> returns = pl.DataFrame(...)
-            >>> data = Data(returns=returns)
+            >>> from jquantstats.api import build_data
+            >>> # minimal demo dataset with a Date column and one asset
+            >>> returns = pl.DataFrame({
+            ...     "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+            ...     "Asset": [0.01, -0.02, 0.03],
+            ... }).with_columns(pl.col("Date").str.to_date())
+            >>> data = build_data(returns=returns)
             >>> fig = data.plots.plot_snapshot(title="My Portfolio Performance")
-            >>> fig.show()
+            >>> # Optional: display the interactive figure
+            >>> fig.show()  # doctest: +SKIP
 
         """
         fig = _plot_performance_dashboard(returns=self.data.all, log_scale=log_scale)
