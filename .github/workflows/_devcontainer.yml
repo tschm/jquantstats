@@ -1,7 +1,7 @@
 # Github Actions workflow to build and optionally publish a devcontainer image
 #
-# This file is part of the tschm/.config-templates repository
-# (https://github.com/tschm/.config-templates).
+# This file is part of the jebel-quant/rhiza repository
+# (https://github.com/jebel-quant/rhiza).
 #
 # Workflow: DEVCONTAINER
 #

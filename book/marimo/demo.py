@@ -1,8 +1,19 @@
 """Demo for jquantstats."""
 
+# /// script
+# dependencies = [
+#     "marimo==0.18.4",
+#     "jquantstats",
+# ]
+#
+# [tool.uv.sources]
+# jquantstats = { path = "../..", editable=true }
+#
+# ///
+
 import marimo
 
-__generated_with = "0.13.15"
+__generated_with = "0.18.4"
 app = marimo.App(width="medium")
 
 with app.setup:
