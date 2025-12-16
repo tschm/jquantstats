@@ -1,5 +1,8 @@
 """Tests for the Makefile targets and help output using safe dry‑runs.
 
+This file and its associated tests flow down via a SYNC action from the jebel-quant/rhiza repository
+(https://github.com/jebel-quant/rhiza).
+
 These tests validate that the Makefile exposes expected targets and emits
 the correct commands without actually executing them, by invoking `make -n`
 (dry-run). We also pass `-s` to reduce noise in CI logs. This approach keeps

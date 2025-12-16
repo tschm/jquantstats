@@ -191,7 +191,7 @@ post-release: install-uv ## perform post-release tasks
 
 ##@ Meta
 sync: ## sync with template repository as defined in .github/template.yml
-	@/bin/sh "${SCRIPTS_FOLDER}/sync.sh"
+	@UVX_BIN rhisa inject .
 
 help: ## Display this help message
 	+@printf "$(BOLD)Usage:$(RESET)\n"

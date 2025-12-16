@@ -1,4 +1,10 @@
-"""Pytest configuration and fixtures for setting up a mock git repository with versioning."""
+"""Pytest configuration and fixtures for setting up a mock git repository with versioning.
+
+This file and its associated tests flow down via a SYNC action from the jebel-quant/rhiza repository
+(https://github.com/jebel-quant/rhiza).
+
+Provides test fixtures for testing git-based workflows and version management.
+"""
 
 import logging
 import os
