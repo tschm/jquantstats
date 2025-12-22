@@ -61,7 +61,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          #git checkout -B "${{ steps.branch.outputs.name }}"
+          git checkout -B "${{ steps.branch.outputs.name }}"
 
           uvx rhiza materialize --force .
 
@@ -79,7 +79,7 @@ jobs:
 
           git commit -m "chore: Update via rhiza"
 
-          # git push origin HEAD:${{ steps.branch.outputs.name }} --force-with-lease
+          git push origin HEAD:${{ steps.branch.outputs.name }} --force-with-lease
 
       - name: Create pull request
         if: >
