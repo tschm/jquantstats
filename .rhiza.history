@@ -36,6 +36,7 @@ Makefile
 book/Makefile.book
 book/minibook-templates/custom.html.jinja2
 book/pdoc-templates/module.html.jinja2
+presentation/Makefile.presentation
 pytest.ini
 ruff.toml
 tests/Makefile.tests
