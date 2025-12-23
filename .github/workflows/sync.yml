@@ -31,7 +31,7 @@ jobs:
           token: ${{ secrets.PAT_TOKEN || github.token }}
           fetch-depth: 0
 
-      - name: Define sync branch
+      - name: Define sync branch name
         id: branch
         run: |
           echo "name=rhiza/${{ github.run_id }}" >> "$GITHUB_OUTPUT"
@@ -52,16 +52,11 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
 
-      - name: Validate repository
-        run: uvx rhiza validate .
-
       - name: Sync template
         id: sync
         shell: bash
         run: |
           set -euo pipefail
-
-          git checkout -B "${{ steps.branch.outputs.name }}"
 
           uvx rhiza materialize --force .
 
@@ -78,9 +73,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git commit -m "chore: Update via rhiza"
-
-          git push origin HEAD:${{ steps.branch.outputs.name }} --force-with-lease
-
+          
       - name: Create pull request
         if: >
           (github.event_name == 'schedule' || inputs.create-pr == true)
