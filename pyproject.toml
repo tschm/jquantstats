@@ -30,6 +30,7 @@ dev = [
     "ipython==9.8.0",
     "quantstats==0.0.77",
     "marimo>=0.13.15",
+    "python-dotenv>=1.2.1"
 ]
 
 
