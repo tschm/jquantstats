@@ -25,6 +25,7 @@ plot = ["kaleido==1.2.0"]
 
 dev = [
     "pytest-cov==7.0.0",
+    "pytest-html>=4.0",
     "pytest==9.0.2",
     "yfinance==1.0",
     "ipython==9.8.0",
