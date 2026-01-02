@@ -23,15 +23,12 @@ repository = "https://github.com/tschm/jquantstats"
 [project.optional-dependencies]
 plot = ["kaleido==1.2.0"]
 
+[dependency-groups]
 dev = [
-    "pytest-cov>=7.0",
-    "pytest>=9.0",
-    "pytest-html>=4.0",
     "yfinance==1.0",
     "ipython==9.8.0",
     "quantstats==0.0.77",
     "marimo>=0.13.15",
-    "python-dotenv>=1.2.1"
 ]
 
 
@@ -55,11 +52,6 @@ include = [
 # Bandit security linter configuration
 [tool.bandit]
 exclude_dirs = ["src/tests"]  # Exclude test directories from security scanning
-
-# Deptry dependency checker configuration
-[tool.deptry]
-# see https://deptry.com/usage/#pep-621-dev-dependency-groups
-pep621_dev_dependency_groups = ["dev"]  # Specify which groups are development dependencies
 
 # Ignore specific dependency issues
 [tool.deptry.per_rule_ignores]
