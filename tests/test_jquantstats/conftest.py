@@ -94,18 +94,18 @@ def portfolio(resource_dir):
 
 
 @pytest.fixture
-def data(portfolio, benchmark):
+def data(portfolio, benchmark_frame):
     """Fixture that returns a Data object with portfolio and benchmark data.
 
     Args:
         portfolio: The portfolio fixture containing portfolio returns.
-        benchmark: The benchmark fixture containing benchmark returns.
+        benchmark_frame: The benchmark fixture containing benchmark returns.
 
     Returns:
         Data: A Data object containing portfolio returns and benchmark data.
 
     """
-    return build_data(returns=portfolio, benchmark=benchmark)
+    return build_data(returns=portfolio, benchmark=benchmark_frame)
 
 
 @pytest.fixture
