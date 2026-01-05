@@ -58,7 +58,7 @@ def returns(resource_dir) -> pl.DataFrame:
 
 
 @pytest.fixture
-def benchmark(resource_dir) -> pl.DataFrame:
+def benchmark_frame(resource_dir) -> pl.DataFrame:
     """Fixture that returns a DataFrame with benchmark returns.
 
     Args:
