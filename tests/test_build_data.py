@@ -67,12 +67,12 @@ def test_with_series_rf(returns):
     assert_series_equal(result.returns["Meta"], returns["Meta"] - rf_scalar)
 
 
-def test_with_benchmark(returns, benchmark):
+def test_with_benchmark(returns, benchmark_frame):
     """Tests that build_data correctly handles a benchmark.
 
     Args:
         returns (pd.DataFrame): The returns fixture containing asset returns.
-        benchmark (pd.Series): The benchmark fixture containing benchmark returns.
+        benchmark_frame (pd.Series): The benchmark fixture containing benchmark returns.
 
     Verifies:
         1. The function returns a Data object with both returns and benchmark.
@@ -81,7 +81,7 @@ def test_with_benchmark(returns, benchmark):
         4. The indices of the returns and benchmark are aligned.
 
     """
-    result = build_data(returns=returns, benchmark=benchmark)
+    result = build_data(returns=returns, benchmark=benchmark_frame)
     b = result.benchmark
     if b is not None:
         assert b.columns == ["SPY -- Benchmark"]
