@@ -38,18 +38,18 @@ def returns_series_pd(returns_pd):
 
 
 @pytest.fixture
-def benchmark_pd(benchmark):
+def benchmark_pd(benchmark_frame):
     """Fixture that returns a pandas DataFrame version of the benchmark fixture.
 
     Args:
-        benchmark (pl.DataFrame): The polars DataFrame benchmark fixture.
+        benchmark_frame (pl.DataFrame): The polars DataFrame benchmark fixture.
 
     Returns:
         pd.DataFrame: A pandas DataFrame containing the same data as the benchmark fixture.
 
     """
     # Convert to pandas and ensure Date column is datetime
-    dframe = benchmark.to_pandas()
+    dframe = benchmark_frame.to_pandas()
     dframe["Date"] = pd.to_datetime(dframe["Date"])
     return dframe
 
