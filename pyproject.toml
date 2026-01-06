@@ -26,7 +26,7 @@ plot = ["kaleido==1.2.0"]
 [dependency-groups]
 dev = [
     "yfinance==1.0",
-    "ipython==9.8.0",
+    "ipython==9.9.0",
     "quantstats==0.0.77",
     "marimo>=0.13.15",
 ]
