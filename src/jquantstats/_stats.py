@@ -171,7 +171,7 @@ class Stats:
 
         # Ensure it's numeric
         if not isinstance(raw_periods, int | float):
-            raise TypeError(f"Expected int or float for periods, got {type(raw_periods).__name__}")
+            raise TypeError(f"Expected int or float for periods, got {type(raw_periods).__name__}")  # noqa: TRY003
 
         factor = np.sqrt(raw_periods) if annualize else 1.0
         return float(series.std()) * factor
@@ -737,7 +737,7 @@ class Stats:
 
         """
         if self.data.benchmark is None:
-            raise AttributeError("No benchmark data available")
+            raise AttributeError("No benchmark data available")  # noqa: TRY003
 
         benchmark_col = benchmark or self.data.benchmark.columns[0]
 

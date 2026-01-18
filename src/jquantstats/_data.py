@@ -33,20 +33,20 @@ class Data:
     def __post_init__(self):
         # You need at least two points
         if self.index.shape[0] < 2:
-            raise ValueError("Index must contain at least two timestamps.")
+            raise ValueError("Index must contain at least two timestamps.")  # noqa: TRY003
 
         # Check index is monotonically increasing
         datetime_col = self.index[self.index.columns[0]]
         if not datetime_col.is_sorted():
-            raise ValueError("Index must be monotonically increasing.")
+            raise ValueError("Index must be monotonically increasing.")  # noqa: TRY003
 
         # Check row count matches returns
         if self.returns.shape[0] != self.index.shape[0]:
-            raise ValueError("Returns and index must have the same number of rows.")
+            raise ValueError("Returns and index must have the same number of rows.")  # noqa: TRY003
 
         # Check row count matches benchmark (if provided)
         if self.benchmark is not None and self.benchmark.shape[0] != self.index.shape[0]:
-            raise ValueError("Benchmark and index must have the same number of rows.")
+            raise ValueError("Benchmark and index must have the same number of rows.")  # noqa: TRY003
 
     @property
     def plots(self) -> "Plots":

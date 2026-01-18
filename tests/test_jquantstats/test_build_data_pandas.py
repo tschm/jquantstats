@@ -177,7 +177,7 @@ def test_build_data_with_pd_dataframe_benchmark(returns_pd, benchmark_pd):
         # Verify the number of rows matches
         assert b.shape[0] == result.returns.shape[0]
     else:
-        raise AssertionError("No benchmark data available")
+        raise AssertionError("No benchmark data available")  # noqa: TRY003
 
 
 def test_build_data_with_pd_series_benchmark(returns_pd, benchmark_series_pd):
@@ -207,7 +207,7 @@ def test_build_data_with_pd_series_benchmark(returns_pd, benchmark_series_pd):
         # Verify the number of rows matches
         assert b.shape[0] == result.returns.shape[0]
     else:
-        raise AssertionError("No benchmark data available")
+        raise AssertionError("No benchmark data available")  # noqa: TRY003
 
 
 def test_build_data_with_pd_dataframe_rf(returns_pd, rf_pd):

@@ -217,7 +217,7 @@ def build_data(
         else:
             # At this point, rf must be a DataFrame
             if not isinstance(rf, pl.DataFrame):
-                raise TypeError("rf must be a float or DataFrame")
+                raise TypeError("rf must be a float or DataFrame")  # noqa: TRY003
             rf_dframe = rf.rename({rf.columns[1]: "rf"}) if rf.columns[1] != "rf" else rf
 
         # Join and subtract
@@ -253,7 +253,7 @@ def build_data(
     if benchmark is not None:
         joined_dates = returns.join(benchmark, on=date_col, how="inner").select(date_col)
         if joined_dates.is_empty():
-            raise ValueError("No overlapping dates between returns and benchmark.")
+            raise ValueError("No overlapping dates between returns and benchmark.")  # noqa: TRY003
         returns = returns.join(joined_dates, on=date_col, how="inner")
         benchmark = benchmark.join(joined_dates, on=date_col, how="inner")
 

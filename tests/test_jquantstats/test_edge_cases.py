@@ -83,5 +83,5 @@ def test_non_overlapping_dates():
     )
 
     # Verify that calling build_data raises a ValueError
-    with pytest.raises(ValueError, match="No overlapping dates between returns and benchmark."):
+    with pytest.raises(ValueError, match=r"No overlapping dates between returns and benchmark\."):
         build_data(returns=returns, benchmark=benchmark)

@@ -86,4 +86,4 @@ def test_with_benchmark(returns, benchmark_frame):
     if b is not None:
         assert b.columns == ["SPY -- Benchmark"]
     else:
-        raise AssertionError("No benchmark data available")
+        raise AssertionError("No benchmark data available")  # noqa: TRY003

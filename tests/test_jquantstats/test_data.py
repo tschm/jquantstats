@@ -159,14 +159,14 @@ def test_post_init():
     single_date = [date(2023, 1, 1)]
     single_returns = pl.DataFrame({"Date": single_date, "returns": [0.01]})
 
-    with pytest.raises(ValueError, match="Index must contain at least two timestamps."):
+    with pytest.raises(ValueError, match=r"Index must contain at least two timestamps\."):
         build_data(returns=single_returns, date_col="Date")
 
     # Test case 2: Unsorted index
     unsorted_dates = [date(2023, 1, 15), date(2023, 1, 1), date(2023, 1, 30)]
     unsorted_returns = pl.DataFrame({"Date": unsorted_dates, "returns": [0.01, 0.02, 0.03]})
 
-    with pytest.raises(ValueError, match="Index must be monotonically increasing."):
+    with pytest.raises(ValueError, match=r"Index must be monotonically increasing\."):
         build_data(returns=unsorted_returns)
 
     # Test case 3: Returns and index with different row counts
@@ -174,9 +174,9 @@ def test_post_init():
     returns = pl.DataFrame({"returns": [0.01, 0.02]})
     index = pl.DataFrame({"Date": dates})
 
-    with pytest.raises(ValueError, match="Returns and index must have the same number of rows."):
-        from jquantstats._data import Data
+    from jquantstats._data import Data
 
+    with pytest.raises(ValueError, match=r"Returns and index must have the same number of rows\."):
         Data(returns=returns, index=index)
 
     # Test case 4: Benchmark and index with different row counts
@@ -185,9 +185,7 @@ def test_post_init():
     benchmark = pl.DataFrame({"benchmark": [0.01, 0.02]})
     index = pl.DataFrame({"Date": dates})
 
-    with pytest.raises(ValueError, match="Benchmark and index must have the same number of rows."):
-        from jquantstats._data import Data
-
+    with pytest.raises(ValueError, match=r"Benchmark and index must have the same number of rows\."):
         Data(returns=returns, benchmark=benchmark, index=index)
 
 
