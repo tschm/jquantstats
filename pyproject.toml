@@ -56,3 +56,17 @@ exclude_dirs = ["src/tests"]  # Exclude test directories from security scanning
 # Ignore specific dependency issues
 [tool.deptry.per_rule_ignores]
 DEP002 = ["kaleido", "pyarrow"]  # DEP002: Unused direct dependencies
+
+# Package to module name mapping
+[tool.deptry.package_module_name_map]
+numpy = "numpy"
+plotly = "plotly"
+polars = "polars"
+pandas = "pandas"
+pyarrow = "pyarrow"
+scipy = "scipy"
+kaleido = "kaleido"
+yfinance = "yfinance"
+ipython = "ipython"
+quantstats = "quantstats"
+marimo = "marimo"
