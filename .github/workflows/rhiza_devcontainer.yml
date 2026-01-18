@@ -32,7 +32,7 @@
 #   or this workflow file itself is changed (in which case it skips gracefully).
 
 
-name: DEVCONTAINER
+name: (RHIZA) DEVCONTAINER
 
 on:
   push:

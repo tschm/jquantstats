@@ -7,7 +7,7 @@
 # Notes:
 #  - The image is built locally for validation only; it is not pushed to any registry.
 #  - Permissions are minimized (read-only) since no repository writes occur.
-name: DOCKER
+name: (RHIZA) DOCKER
 
 permissions:
   contents: read
