@@ -33,4 +33,6 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Run security scans
+        env:
+          UV_EXTRA_INDEX_URL: ${{ secrets.uv-extra-index-url }}
         run: make security
