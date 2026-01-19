@@ -1,12 +1,18 @@
+from __future__ import annotations
+
 import dataclasses
+from typing import TYPE_CHECKING
 
-import plotly.express as px
-import plotly.graph_objects as go
+import plotly.express as px  # type: ignore[import-untyped]
+import plotly.graph_objects as go  # type: ignore[import-untyped]
 import polars as pl
-from plotly.subplots import make_subplots
+from plotly.subplots import make_subplots  # type: ignore[import-untyped]
+
+if TYPE_CHECKING:
+    from ._data import Data
 
 
-def _plot_performance_dashboard(returns: pl.DataFrame, log_scale=False) -> go.Figure:
+def _plot_performance_dashboard(returns: pl.DataFrame, log_scale: bool = False) -> go.Figure:
     def hex_to_rgba(hex_color: str, alpha: float = 0.5) -> str:
         hex_color = hex_color.lstrip("#")
         r, g, b = tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
@@ -168,7 +174,7 @@ class Plots:
 
     """
 
-    data: "Data"  # noqa: F821
+    data: Data
 
     def plot_snapshot(self, title: str = "Portfolio Summary", log_scale: bool = False) -> go.Figure:
         """Create a comprehensive dashboard with multiple plots for portfolio analysis.

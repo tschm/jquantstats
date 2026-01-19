@@ -1,12 +1,16 @@
+from __future__ import annotations
+
 import dataclasses
 from collections.abc import Iterator
 from datetime import timedelta
+from typing import TYPE_CHECKING, cast
 
 import polars as pl
 
-from ._plots import Plots
-from ._reports import Reports
-from ._stats import Stats
+if TYPE_CHECKING:
+    from ._plots import Plots
+    from ._reports import Reports
+    from ._stats import Stats
 
 
 @dataclasses.dataclass(frozen=True)
@@ -30,7 +34,7 @@ class Data:
     index: pl.DataFrame
     benchmark: pl.DataFrame | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # You need at least two points
         if self.index.shape[0] < 2:
             raise ValueError("Index must contain at least two timestamps.")  # noqa: TRY003
@@ -49,33 +53,39 @@ class Data:
             raise ValueError("Benchmark and index must have the same number of rows.")  # noqa: TRY003
 
     @property
-    def plots(self) -> "Plots":
+    def plots(self) -> Plots:
         """Provides access to visualization methods for the financial data.
 
         Returns:
             Plots: An instance of the Plots class initialized with this data.
 
         """
+        from ._plots import Plots
+
         return Plots(self)
 
     @property
-    def stats(self) -> "Stats":
+    def stats(self) -> Stats:
         """Provides access to statistical analysis methods for the financial data.
 
         Returns:
             Stats: An instance of the Stats class initialized with this data.
 
         """
+        from ._stats import Stats
+
         return Stats(self)
 
     @property
-    def reports(self) -> "Reports":
+    def reports(self) -> Reports:
         """Provides access to reporting methods for the financial data.
 
         Returns:
             Reports: An instance of the Reports class initialized with this data.
 
         """
+        from ._reports import Reports
+
         return Reports(self)
 
     @property
@@ -98,10 +108,9 @@ class Data:
                       (if available).
 
         """
-        try:
+        if self.benchmark is not None:
             return self.returns.columns + self.benchmark.columns
-        except AttributeError:
-            return self.returns.columns
+        return self.returns.columns
 
     @property
     def all(self) -> pl.DataFrame:
@@ -120,7 +129,7 @@ class Data:
         else:
             return pl.concat([self.index, self.returns, self.benchmark], how="horizontal")
 
-    def resample(self, every: str = "1mo") -> "Data":
+    def resample(self, every: str = "1mo") -> Data:
         """Resamples returns and benchmark to a different frequency using Polars.
 
         Args:
@@ -155,20 +164,18 @@ class Data:
             index=resampled_index,
         )
 
-    def copy(self) -> "Data":
+    def copy(self) -> Data:
         """Create a deep copy of the Data object.
 
         Returns:
             Data: A new Data object with copies of the returns and benchmark.
 
         """
-        try:
+        if self.benchmark is not None:
             return Data(returns=self.returns.clone(), benchmark=self.benchmark.clone(), index=self.index.clone())
-        except AttributeError:
-            # Handle case where benchmark is None
-            return Data(returns=self.returns.clone(), index=self.index.clone())
+        return Data(returns=self.returns.clone(), index=self.index.clone())
 
-    def head(self, n: int = 5) -> "Data":
+    def head(self, n: int = 5) -> Data:
         """Return the first n rows of the combined returns and benchmark data.
 
         Args:
@@ -178,9 +185,10 @@ class Data:
             Data: A new Data object containing the first n rows of the combined data.
 
         """
-        return Data(returns=self.returns.head(n), benchmark=self.benchmark.head(n), index=self.index.head(n))
+        benchmark_head = self.benchmark.head(n) if self.benchmark is not None else None
+        return Data(returns=self.returns.head(n), benchmark=benchmark_head, index=self.index.head(n))
 
-    def tail(self, n: int = 5) -> "Data":
+    def tail(self, n: int = 5) -> Data:
         """Return the last n rows of the combined returns and benchmark data.
 
         Args:
@@ -190,7 +198,8 @@ class Data:
             Data: A new Data object containing the last n rows of the combined data.
 
         """
-        return Data(returns=self.returns.tail(n), benchmark=self.benchmark.tail(n), index=self.index.tail(n))
+        benchmark_tail = self.benchmark.tail(n) if self.benchmark is not None else None
+        return Data(returns=self.returns.tail(n), benchmark=benchmark_tail, index=self.index.tail(n))
 
     @property
     def _periods_per_year(self) -> float:
@@ -211,7 +220,11 @@ class Data:
         mean_diff = diffs.mean()
 
         # Convert Duration (timedelta) to seconds
-        seconds = mean_diff.total_seconds() if isinstance(mean_diff, timedelta) else mean_diff / timedelta(seconds=1)
+        if isinstance(mean_diff, timedelta):
+            seconds = mean_diff.total_seconds()
+        else:
+            # Should not happen for datetime diff, but handle gracefully
+            seconds = cast(float, mean_diff) if mean_diff is not None else 1.0
 
         return (365 * 24 * 60 * 60) / seconds
 
