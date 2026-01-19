@@ -27,7 +27,7 @@ plot = ["kaleido==1.2.0"]
 dev = [
     "yfinance==1.0",
     "ipython==9.9.0",
-    "quantstats==0.0.77",
+    "quantstats==0.0.81",
     "marimo>=0.13.15",
 ]
 
