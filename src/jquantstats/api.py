@@ -65,7 +65,7 @@ data = build_data(
 
 """
 
-import pandas as pd
+import pandas as pd  # type: ignore[import-untyped]
 import polars as pl
 
 from ._data import Data

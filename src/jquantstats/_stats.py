@@ -1,11 +1,16 @@
+from __future__ import annotations
+
 import dataclasses
 from collections.abc import Callable, Iterable
 from functools import wraps
-from typing import cast
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 import polars as pl
-from scipy.stats import norm
+from scipy.stats import norm  # type: ignore[import-untyped]
+
+if TYPE_CHECKING:
+    from ._data import Data
 
 
 @dataclasses.dataclass(frozen=True)
@@ -31,22 +36,22 @@ class Stats:
 
     """
 
-    data: "Data"  # noqa: F821
+    data: Data
     all: pl.DataFrame | None = None  # Default is None; will be set in __post_init__
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         object.__setattr__(self, "all", self.data.all)
 
     @staticmethod
     def _mean_positive_expr(series: pl.Series) -> float:
-        return series.filter(series > 0).mean()
+        return cast(float, series.filter(series > 0).mean())
 
     @staticmethod
     def _mean_negative_expr(series: pl.Series) -> float:
-        return series.filter(series < 0).mean()
+        return cast(float, series.filter(series < 0).mean())
 
     @staticmethod
-    def columnwise_stat(func: Callable) -> Callable:
+    def columnwise_stat(func: Callable[..., Any]) -> Callable[..., dict[str, float]]:
         """Apply a column-wise statistical function to all numeric columns.
 
         Args:
@@ -58,13 +63,13 @@ class Stats:
         """
 
         @wraps(func)
-        def wrapper(self, *args, **kwargs) -> dict[str, float]:
+        def wrapper(self: Stats, *args: Any, **kwargs: Any) -> dict[str, float]:
             return {col: func(self, series, *args, **kwargs) for col, series in self.data.items()}
 
         return wrapper
 
     @staticmethod
-    def to_frame(func: Callable) -> Callable:
+    def to_frame(func: Callable[..., Any]) -> Callable[..., pl.DataFrame]:
         """Apply per-column expressions and evaluates with .with_columns(...).
 
         Args:
@@ -76,8 +81,8 @@ class Stats:
         """
 
         @wraps(func)
-        def wrapper(self, *args, **kwargs) -> pl.DataFrame:
-            return self.all.select(
+        def wrapper(self: Stats, *args: Any, **kwargs: Any) -> pl.DataFrame:
+            return cast(pl.DataFrame, self.all).select(
                 [pl.col(name) for name in self.data.date_col]
                 + [func(self, series, *args, **kwargs).alias(col) for col, series in self.data.items()]
             )
@@ -123,7 +128,7 @@ class Stats:
             float: The average return value.
 
         """
-        return series.filter(series.is_not_null() & (series != 0)).mean()
+        return cast(float, series.filter(series.is_not_null() & (series != 0)).mean())
 
     @columnwise_stat
     def avg_win(self, series: pl.Series) -> float:
@@ -173,8 +178,9 @@ class Stats:
         if not isinstance(raw_periods, int | float):
             raise TypeError(f"Expected int or float for periods, got {type(raw_periods).__name__}")  # noqa: TRY003
 
-        factor = np.sqrt(raw_periods) if annualize else 1.0
-        return float(series.std()) * factor
+        factor = float(np.sqrt(raw_periods)) if annualize else 1.0
+        std_val = cast(float, series.std())
+        return (std_val if std_val is not None else 0.0) * factor
 
         # periods = periods or self.data._periods_per_year
         # factor = np.sqrt(periods) if annualize else 1
@@ -193,9 +199,8 @@ class Stats:
             float: The payoff ratio value.
 
         """
-        avg_win = series.filter(series > 0).mean()
-        # avg_win = self.avg_win(series)
-        avg_loss = np.abs(series.filter(series < 0).mean())
+        avg_win = cast(float, series.filter(series > 0).mean())
+        avg_loss = float(np.abs(cast(float, series.filter(series < 0).mean())))
         return avg_win / avg_loss
 
     def win_loss_ratio(self) -> dict[str, float]:
@@ -224,13 +229,15 @@ class Stats:
         losses = series.filter(series < 0)
 
         try:
-            win_ratio = np.abs(wins.mean() / wins.count())
-            loss_ratio = np.abs(losses.mean() / losses.count())
+            win_mean = cast(float, wins.mean())
+            loss_mean = cast(float, losses.mean())
+            win_ratio = float(np.abs(win_mean / wins.count()))
+            loss_ratio = float(np.abs(loss_mean / losses.count()))
 
             return win_ratio / loss_ratio
 
         except TypeError:
-            return np.nan
+            return float(np.nan)
 
     @columnwise_stat
     def profit_factor(self, series: pl.Series) -> float:
@@ -247,8 +254,10 @@ class Stats:
         """
         wins = series.filter(series > 0)
         losses = series.filter(series < 0)
+        wins_sum = cast(float, wins.sum())
+        losses_sum = cast(float, losses.sum())
 
-        return np.abs(wins.sum() / losses.sum())
+        return float(np.abs(wins_sum / losses_sum))
 
     @columnwise_stat
     def value_at_risk(self, series: pl.Series, sigma: float = 1.0, alpha: float = 0.05) -> float:
@@ -265,10 +274,12 @@ class Stats:
             float: The value at risk.
 
         """
-        mu = float(series.mean())
-        sigma *= float(series.std())
+        mean_val = cast(float, series.mean())
+        std_val = cast(float, series.std())
+        mu = mean_val if mean_val is not None else 0.0
+        sigma *= std_val if std_val is not None else 0.0
 
-        return norm.ppf(alpha, mu, sigma)
+        return float(norm.ppf(alpha, mu, sigma))
 
     @columnwise_stat
     def conditional_value_at_risk(self, series: pl.Series, sigma: float = 1.0, alpha: float = 0.05) -> float:
@@ -285,8 +296,10 @@ class Stats:
             float: The conditional value at risk.
 
         """
-        mu = float(series.mean())
-        sigma *= float(series.std())
+        mean_val = cast(float, series.mean())
+        std_val = cast(float, series.std())
+        mu = mean_val if mean_val is not None else 0.0
+        sigma *= std_val if std_val is not None else 0.0
 
         var = norm.ppf(alpha, mu, sigma)
 
@@ -294,7 +307,7 @@ class Stats:
         # Cast to Any or pl.Series to suppress Ty error
         # Cast the mask to pl.Expr to satisfy type checker
         mask = cast(Iterable[bool], series < var)
-        return series.filter(mask).mean()
+        return cast(float, series.filter(mask).mean())
 
         # filtered_series = cast(pl.Series, series.filter(series < var))
         # return filtered_series.mean()
@@ -347,7 +360,9 @@ class Stats:
             float: The risk return ratio value.
 
         """
-        return float(series.mean()) / float(series.std())
+        mean_val = cast(float, series.mean())
+        std_val = cast(float, series.std())
+        return (mean_val if mean_val is not None else 0.0) / (std_val if std_val is not None else 1.0)
 
     def kelly_criterion(self) -> dict[str, float]:
         """Calculate the optimal capital allocation per column.
@@ -382,7 +397,8 @@ class Stats:
             float: The maximum return value.
 
         """
-        return series.max()  # .alias(series.meta.output_name)
+        val = cast(float, series.max())
+        return val if val is not None else None
 
     @columnwise_stat
     def worst(self, series: pl.Series) -> float | None:
@@ -395,7 +411,8 @@ class Stats:
             float: The minimum return value.
 
         """
-        return series.min()  # .alias(series.meta.output_name)
+        val = cast(float, series.min())
+        return val if val is not None else None
 
     @columnwise_stat
     def exposure(self, series: pl.Series) -> float:
@@ -408,7 +425,8 @@ class Stats:
             float: The exposure value.
 
         """
-        return np.round((series.filter(series != 0).count() / self.all.height), decimals=2)
+        all_data = cast(pl.DataFrame, self.all)
+        return float(np.round((series.filter(series != 0).count() / all_data.height), decimals=2))
 
     @columnwise_stat
     def sharpe(self, series: pl.Series, periods: int | float | None = None) -> float:
@@ -424,11 +442,13 @@ class Stats:
         """
         periods = periods or self.data._periods_per_year
 
-        divisor = float(series.std(ddof=1))
+        std_val = cast(float, series.std(ddof=1))
+        mean_val = cast(float, series.mean())
+        divisor = std_val if std_val is not None else 1.0
 
-        res = float(series.mean()) / divisor
+        res = (mean_val if mean_val is not None else 0.0) / divisor
         factor = periods or 1
-        return res * np.sqrt(factor)
+        return float(res * np.sqrt(factor))
 
     @columnwise_stat
     def sharpe_variance(self, series: pl.Series, periods: int | float | None = None) -> float:
@@ -453,24 +473,24 @@ class Stats:
 
         """
         t = series.count()
-        mean_val = series.mean()
-        std_val = series.std(ddof=1)
+        mean_val = cast(float, series.mean())
+        std_val = cast(float, series.std(ddof=1))
         if mean_val is None or std_val is None or std_val == 0:
-            return np.nan
-        sr = float(mean_val) / float(std_val)
+            return float(np.nan)
+        sr = mean_val / std_val
 
         skew_val = series.skew(bias=False)
         kurt_val = series.kurtosis(bias=False)
 
         if skew_val is None or kurt_val is None:
-            return np.nan
+            return float(np.nan)
         # Base variance calculation using unannualized Sharpe ratio
         # Formula: (1 + skew*SR/2 + (kurt-3)*SR²/4) / T
         base_variance = (1 + (float(skew_val) * sr) / 2 + ((float(kurt_val) - 3) / 4) * sr**2) / t
         # Annualize by scaling with the number of periods
         periods = periods or self.data._periods_per_year
         factor = periods or 1
-        return base_variance * factor
+        return float(base_variance * factor)
 
     @columnwise_stat
     def prob_sharpe_ratio(self, series: pl.Series, benchmark_sr: float) -> float:
@@ -491,25 +511,25 @@ class Stats:
         t = series.count()
 
         # Calculate observed unannualized Sharpe ratio
-        mean_val = series.mean()
-        std_val = series.std(ddof=1)
+        mean_val = cast(float, series.mean())
+        std_val = cast(float, series.std(ddof=1))
         if mean_val is None or std_val is None or std_val == 0:
-            return np.nan
+            return float(np.nan)
         # Unannualized observed Sharpe ratio
-        observed_sr = float(mean_val) / float(std_val)
+        observed_sr = mean_val / std_val
 
         skew_val = series.skew(bias=False)
         kurt_val = series.kurtosis(bias=False)
 
         if skew_val is None or kurt_val is None:
-            return np.nan
+            return float(np.nan)
 
         # Calculate variance using unannualized benchmark Sharpe ratio
         var_bench_sr = (1 + (float(skew_val) * benchmark_sr) / 2 + ((float(kurt_val) - 3) / 4) * benchmark_sr**2) / t
 
         if var_bench_sr <= 0:
-            return np.nan
-        return norm.cdf((observed_sr - benchmark_sr) / np.sqrt(var_bench_sr))
+            return float(np.nan)
+        return float(norm.cdf((observed_sr - benchmark_sr) / np.sqrt(var_bench_sr)))
 
     @columnwise_stat
     def hhi_positive(self, series: pl.Series) -> float:
@@ -591,9 +611,11 @@ class Stats:
 
         """
         periods = periods or self.data._periods_per_year
-        downside_deviation = np.sqrt(((series.filter(series < 0)) ** 2).sum() / series.count())
-        ratio = series.mean() / downside_deviation
-        return ratio * np.sqrt(periods)
+        downside_sum = cast(float, ((series.filter(series < 0)) ** 2).sum())
+        downside_deviation = float(np.sqrt(downside_sum / series.count()))
+        mean_val = cast(float, series.mean())
+        ratio = (mean_val if mean_val is not None else 0.0) / downside_deviation
+        return float(ratio * np.sqrt(periods))
 
     @to_frame
     def rolling_sortino(
@@ -610,16 +632,18 @@ class Stats:
             pl.Expr: The rolling Sortino ratio expression.
 
         """
-        periods_per_year = periods_per_year or self.data._periods_per_year
+        ppy = periods_per_year or self.data._periods_per_year
 
         mean_ret = series.rolling_mean(window_size=rolling_period)
 
         # Rolling downside deviation (squared negative returns averaged over window)
-        downside = series.map_elements(lambda x: x**2 if x < 0 else 0.0).rolling_mean(window_size=rolling_period)
+        downside = series.map_elements(lambda x: x**2 if x < 0 else 0.0, return_dtype=pl.Float64).rolling_mean(
+            window_size=rolling_period
+        )
 
         # Avoid division by zero
         sortino = mean_ret / downside.sqrt().fill_nan(0).fill_null(0)
-        return sortino * (periods_per_year**0.5)
+        return cast(pl.Expr, sortino * (ppy**0.5))
 
     @to_frame
     def rolling_sharpe(
@@ -636,13 +660,13 @@ class Stats:
             pl.Expr: The rolling Sharpe ratio expression.
 
         """
-        periods_per_year = periods_per_year or self.data._periods_per_year
+        ppy = periods_per_year or self.data._periods_per_year
         res = series.rolling_mean(window_size=rolling_period) / series.rolling_std(window_size=rolling_period)
-        return res * np.sqrt(periods_per_year)
+        return cast(pl.Expr, res * np.sqrt(ppy))
 
     @to_frame
     def rolling_volatility(
-        self, series: pl.Expr, rolling_period=126, periods_per_year: int | float | None = None
+        self, series: pl.Expr, rolling_period: int = 126, periods_per_year: int | float | None = None
     ) -> pl.Expr:
         """Calculate the rolling volatility of returns.
 
@@ -655,7 +679,8 @@ class Stats:
             pl.Expr: The rolling volatility expression.
 
         """
-        return series.rolling_std(window_size=rolling_period) * np.sqrt(periods_per_year)
+        ppy = periods_per_year or self.data._periods_per_year
+        return cast(pl.Expr, series.rolling_std(window_size=rolling_period) * np.sqrt(ppy))
 
     @to_frame
     def drawdown(self, series: pl.Series) -> pl.Series:
@@ -690,7 +715,8 @@ class Stats:
         price = Stats.prices(series)
         peak = price.cum_max()
         drawdown = price / peak - 1
-        return -drawdown.min()
+        dd_min = cast(float, drawdown.min())
+        return -dd_min if dd_min is not None else 0.0
 
     @columnwise_stat
     def max_drawdown(self, series: pl.Series) -> float:
@@ -741,10 +767,9 @@ class Stats:
 
         benchmark_col = benchmark or self.data.benchmark.columns[0]
 
-        # if self.data.benchmark is None:
-        #    raise AttributeError("No benchmark data available")
         # Evaluate both series and benchmark as Series
-        dframe = self.all.select([series, pl.col(benchmark_col).alias("benchmark")])
+        all_data = cast(pl.DataFrame, self.all)
+        dframe = all_data.select([series, pl.col(benchmark_col).alias("benchmark")])
 
         # Drop nulls
         dframe = dframe.drop_nulls()
@@ -757,7 +782,7 @@ class Stats:
 
         corr_matrix = np.corrcoef(strategy_np, benchmark_np)
         r = corr_matrix[0, 1]
-        return r**2
+        return float(r**2)
 
     def r2(self) -> dict[str, float]:
         """Shorthand for r_squared().
@@ -785,17 +810,20 @@ class Stats:
             float: The information ratio value.
 
         """
-        periods_per_year = periods_per_year or self.data.periods_per_year
+        ppy = periods_per_year or self.data._periods_per_year
 
-        benchmark_col = benchmark or self.data.benchmark.columns[0]
+        benchmark_data = cast(pl.DataFrame, self.data.benchmark)
+        benchmark_col = benchmark or benchmark_data.columns[0]
 
-        active = series - self.data.benchmark[benchmark_col]
+        active = series - benchmark_data[benchmark_col]
 
-        mean = active.mean()
-        std = active.std()
+        mean_val = cast(float, active.mean())
+        std_val = cast(float, active.std())
 
         try:
-            return (mean / std) * (periods_per_year**0.5)
+            mean_f = mean_val if mean_val is not None else 0.0
+            std_f = std_val if std_val is not None else 1.0
+            return float((mean_f / std_f) * (ppy**0.5))
         except ZeroDivisionError:
             return 0.0
 
@@ -814,15 +842,14 @@ class Stats:
             dict[str, float]: Dictionary containing alpha and beta values.
 
         """
-        periods_per_year = periods_per_year or self.data._periods_per_year
+        ppy = periods_per_year or self.data._periods_per_year
 
-        # period_col = benchmark or self.data.benchmark.columns[0]
-
-        # find covariance
-        benchmark_col = benchmark or self.data.benchmark.columns[0]
+        benchmark_data = cast(pl.DataFrame, self.data.benchmark)
+        benchmark_col = benchmark or benchmark_data.columns[0]
 
         # Evaluate both series and benchmark as Series
-        dframe = self.all.select([series, pl.col(benchmark_col).alias("benchmark")])
+        all_data = cast(pl.DataFrame, self.all)
+        dframe = all_data.select([series, pl.col(benchmark_col).alias("benchmark")])
 
         # Drop nulls
         dframe = dframe.drop_nulls()
@@ -838,7 +865,7 @@ class Stats:
         cov = cov_matrix[0, 1]
         var_benchmark = cov_matrix[1, 1]
 
-        beta = cov / var_benchmark if var_benchmark != 0 else float("nan")
-        alpha = np.mean(strategy_np) - beta * np.mean(benchmark_np)
+        beta = float(cov / var_benchmark) if var_benchmark != 0 else float("nan")
+        alpha = float(np.mean(strategy_np) - beta * np.mean(benchmark_np))
 
-        return {"alpha": alpha * periods_per_year, "beta": beta}
+        return {"alpha": float(alpha * ppy), "beta": beta}

@@ -1,6 +1,12 @@
+from __future__ import annotations
+
 import dataclasses
+from typing import TYPE_CHECKING
 
 import polars as pl
+
+if TYPE_CHECKING:
+    from ._data import Data
 
 
 @dataclasses.dataclass(frozen=True)
@@ -15,9 +21,9 @@ class Reports:
 
     """
 
-    data: "Data"  # noqa: F821
+    data: Data
 
-    def metrics(self, periods=None) -> pl.DataFrame:
+    def metrics(self, periods: int | float | None = None) -> pl.DataFrame:
         """Calculate various financial metrics and return them as a DataFrame.
 
         Returns:
