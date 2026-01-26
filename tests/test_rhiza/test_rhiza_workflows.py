@@ -17,7 +17,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from conftest import run_make, setup_rhiza_git_repo, strip_ansi
+from helpers import run_make, setup_rhiza_git_repo, strip_ansi
 
 
 @pytest.fixture(autouse=True)
