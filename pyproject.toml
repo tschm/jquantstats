@@ -70,3 +70,7 @@ yfinance = "yfinance"
 ipython = "ipython"
 quantstats = "quantstats"
 marimo = "marimo"
+
+# Mypy configuration
+[tool.mypy]
+ignore_missing_imports = true

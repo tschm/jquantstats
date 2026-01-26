@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 import polars as pl
-from scipy.stats import norm  # type: ignore[import-untyped]
+from scipy.stats import norm
 
 if TYPE_CHECKING:
     from ._data import Data
@@ -100,7 +100,7 @@ class Stats:
             float: The skewness value.
 
         """
-        return series.skew(bias=False)
+        return cast("int | float | None", series.skew(bias=False))
 
     @columnwise_stat
     def kurtosis(self, series: pl.Series) -> int | float | None:
@@ -115,7 +115,7 @@ class Stats:
             float: The kurtosis value.
 
         """
-        return series.kurtosis(bias=False)
+        return cast("int | float | None", series.kurtosis(bias=False))
 
     @columnwise_stat
     def avg_return(self, series: pl.Series) -> float:
@@ -325,7 +325,7 @@ class Stats:
         """
         num_pos = series.filter(series > 0).count()
         num_nonzero = series.filter(series != 0).count()
-        return num_pos / num_nonzero
+        return float(num_pos / num_nonzero)
 
     @columnwise_stat
     def gain_to_pain_ratio(self, series: pl.Series) -> float:
@@ -343,9 +343,9 @@ class Stats:
         total_gain = series.sum()
         total_pain = series.filter(series < 0).abs().sum()
         try:
-            return total_gain / total_pain
+            return float(total_gain / total_pain)
         except ZeroDivisionError:
-            return np.nan
+            return float(np.nan)
 
     @columnwise_stat
     def risk_return_ratio(self, series: pl.Series) -> float:
@@ -559,9 +559,9 @@ class Stats:
         """
         positive_returns = series.filter(series > 0).drop_nans()
         if positive_returns.len() <= 2:
-            return np.nan
+            return float(np.nan)
         weight = positive_returns / positive_returns.sum()
-        return (weight.len() * (weight**2).sum() - 1) / (weight.len() - 1)
+        return float((weight.len() * (weight**2).sum() - 1) / (weight.len() - 1))
 
     @columnwise_stat
     def hhi_negative(self, series: pl.Series) -> float:
@@ -591,9 +591,9 @@ class Stats:
         """
         negative_returns = series.filter(series < 0).drop_nans()
         if negative_returns.len() <= 2:
-            return np.nan
+            return float(np.nan)
         weight = negative_returns / negative_returns.sum()
-        return (weight.len() * (weight**2).sum() - 1) / (weight.len() - 1)
+        return float((weight.len() * (weight**2).sum() - 1) / (weight.len() - 1))
 
     @columnwise_stat
     def sortino(self, series: pl.Series, periods: int | float | None = None) -> float:
