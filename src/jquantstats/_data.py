@@ -97,7 +97,7 @@ class Data:
                       the date column name.
 
         """
-        return self.index.columns
+        return list(self.index.columns)
 
     @property
     def assets(self) -> list[str]:
@@ -109,8 +109,8 @@ class Data:
 
         """
         if self.benchmark is not None:
-            return self.returns.columns + self.benchmark.columns
-        return self.returns.columns
+            return list(self.returns.columns) + list(self.benchmark.columns)
+        return list(self.returns.columns)
 
     @property
     def all(self) -> pl.DataFrame:

@@ -9,6 +9,10 @@
 # Default directory for tests
 TESTS_FOLDER := tests
 
+# Minimum coverage percent for tests to pass
+# (Can be overridden in local.mk or via environment variable)
+COVERAGE_FAIL_UNDER ?= 90
+
 ##@ Development and Testing
 
 # The 'test' target runs the complete test suite.
@@ -21,14 +25,21 @@ test: install ## run all tests
 
 	@if [ -d ${TESTS_FOLDER} ]; then \
 	  mkdir -p _tests/html-coverage _tests/html-report; \
-	  ${VENV}/bin/python -m pytest ${TESTS_FOLDER} \
-	  --ignore=${TESTS_FOLDER}/benchmarks \
-	  --cov=${SOURCE_FOLDER} \
-	  --cov-report=term \
-	  --cov-report=html:_tests/html-coverage \
-	  --cov-fail-under=90 \
-	  --cov-report=json:_tests/coverage.json \
-	  --html=_tests/html-report/report.html; \
+	  if [ -d ${SOURCE_FOLDER} ]; then \
+	    ${VENV}/bin/python -m pytest ${TESTS_FOLDER} \
+	    --ignore=${TESTS_FOLDER}/benchmarks \
+	    --cov=${SOURCE_FOLDER} \
+	    --cov-report=term \
+	    --cov-report=html:_tests/html-coverage \
+	    --cov-fail-under=$(COVERAGE_FAIL_UNDER) \
+	    --cov-report=json:_tests/coverage.json \
+	    --html=_tests/html-report/report.html; \
+	  else \
+	    printf "${YELLOW}[WARN] Source folder ${SOURCE_FOLDER} not found, running tests without coverage${RESET}\n"; \
+	    ${VENV}/bin/python -m pytest ${TESTS_FOLDER} \
+	    --ignore=${TESTS_FOLDER}/benchmarks \
+	    --html=_tests/html-report/report.html; \
+	  fi \
 	else \
 	  printf "${YELLOW}[WARN] Test folder ${TESTS_FOLDER} not found, skipping tests${RESET}\n"; \
 	fi
@@ -51,7 +62,7 @@ security: install ## run security scans (pip-audit and bandit)
 	@printf "${BLUE}[INFO] Running pip-audit for dependency vulnerabilities...${RESET}\n"
 	@${UVX_BIN} pip-audit
 	@printf "${BLUE}[INFO] Running bandit security scan...${RESET}\n"
-	@${UVX_BIN} bandit -r ${SOURCE_FOLDER} -ll -q || true
+	@${UVX_BIN} bandit -r ${SOURCE_FOLDER} -ll -q
 
 # The 'mutate' target performs mutation testing using mutmut.
 # 1. Runs mutmut to apply mutations to the source code and check if tests fail.
@@ -59,7 +70,7 @@ security: install ## run security scans (pip-audit and bandit)
 mutate: install ## run mutation testing with mutmut (slow, for CI or thorough testing)
 	@printf "${BLUE}[INFO] Running mutation testing with mutmut...${RESET}\n"
 	@printf "${YELLOW}[WARN] This may take a while...${RESET}\n"
-	@${UVX_BIN} mutmut run --paths-to-mutate=${SOURCE_FOLDER} || true
+	@${UVX_BIN} mutmut run --paths-to-mutate=${SOURCE_FOLDER}
 	@${UVX_BIN} mutmut results
 
 # The 'benchmark' target runs performance benchmarks using pytest-benchmark.

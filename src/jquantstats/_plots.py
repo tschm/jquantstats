@@ -3,10 +3,10 @@ from __future__ import annotations
 import dataclasses
 from typing import TYPE_CHECKING
 
-import plotly.express as px  # type: ignore[import-untyped]
-import plotly.graph_objects as go  # type: ignore[import-untyped]
+import plotly.express as px
+import plotly.graph_objects as go
 import polars as pl
-from plotly.subplots import make_subplots  # type: ignore[import-untyped]
+from plotly.subplots import make_subplots
 
 if TYPE_CHECKING:
     from ._data import Data

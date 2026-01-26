@@ -36,6 +36,28 @@ To customise the API docs:
 
 See the [pdoc documentation](https://pdoc.dev/docs/pdoc.html#templates) for more details on templating.
 
+### Project Logo
+
+The documentation generation supports embedding a project logo in the sidebar.
+
+**Default Behavior:**
+By default, the build looks for `assets/rhiza-logo.svg`.
+
+**Customization:**
+You can change the logo by setting the `LOGO_FILE` variable in your project's `Makefile` or `local.mk`.
+
+```makefile
+# Example: Use a custom PNG logo
+LOGO_FILE := assets/my-company-logo.png
+```
+
+To disable the logo entirely, set the variable to an empty string:
+
+```makefile
+# Example: Disable logo
+LOGO_FILE :=
+```
+
 ### Companion Book (minibook)
 
 The `make book` command checks for a template at `book/minibook-templates/custom.html.jinja2`. If found, it uses this template for the minibook generation.
