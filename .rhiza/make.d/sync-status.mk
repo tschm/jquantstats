@@ -6,6 +6,11 @@
 
 ##@ Rhiza Sync Status
 
+# Note: This looks for standard Rhiza sync commit messages:
+# - "chore: Sync with rhiza" (from PR title)
+# - "chore: Update via rhiza" (from workflow commits)
+# These patterns are defined in .github/workflows/rhiza_sync.yml
+
 sync-status-local: ## show date of last Rhiza sync from local git history
 	@printf "${BLUE}[INFO] Last Rhiza Sync (Local Git History):${RESET}\n"
 	@LAST_SYNC=$$(git log --grep="Sync with rhiza\|Update via rhiza" --format="%ad - %s" --date=format:'%Y-%m-%d %H:%M:%S' -1 2>/dev/null); \
