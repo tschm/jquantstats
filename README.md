@@ -6,6 +6,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/tschm/jquantstats/badge.svg?branch=main)](https://coveralls.io/github/tschm/jquantstats?branch=main)
 [![CodeFactor](https://www.codefactor.io/repository/github/tschm/jquantstats/badge)](https://www.codefactor.io/repository/github/tschm/jquantstats)
 [![Renovate enabled](https://img.shields.io/badge/renovate-enabled-brightgreen.svg)](https://github.com/renovatebot/renovate)
+![Rhiza Sync](https://img.shields.io/badge/dynamic/json?label=rhiza%20sync&query=%24.workflow_runs%5B0%5D.updated_at&url=https%3A%2F%2Fapi.github.com%2Frepos%2Ftschm%2Fjquantstats%2Factions%2Fworkflows%2Frhiza_sync.yml%2Fruns%3Fbranch%3Dmain%26status%3Dcompleted%26per_page%3D1&color=2FA4A9)
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/tschm/jquantstats)
 
