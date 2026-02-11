@@ -25,6 +25,25 @@ navigate to its root, and run the following command:
 make install
 ```
 
+## Rhiza template synchronization
+
+This project uses [Rhiza](https://github.com/jebel-quant/rhiza) to keep project boilerplate synchronized with upstream templates. To check when the project was last synchronized with Rhiza:
+
+```bash
+make sync-status
+```
+
+This will show:
+- The date of the last local Rhiza sync commit
+- The status of the last Rhiza sync workflow run on GitHub Actions
+- The current Rhiza version
+
+To manually sync with the latest Rhiza templates:
+
+```bash
+make sync
+```
+
 ## Contributing code
 
 To contribute to the project, send us pull requests.
