@@ -98,3 +98,22 @@ jobs:
           delete-branch: true
           title: "chore: Sync with rhiza"
           body-path: ${{ runner.temp }}/pr-description.md
+
+      - name: Update sync badge
+        if: steps.sync.outputs.changes_detected == 'true'
+        run: |
+          mkdir -p .github/badges
+          SYNC_DATE=$(date -u +"%Y-%m-%d")
+          cat > .github/badges/rhiza-sync.json <<EOF
+          {
+            "schemaVersion": 1,
+            "label": "Last Rhiza Sync",
+            "message": "$SYNC_DATE",
+            "color": "success"
+          }
+          EOF
+          git add .github/badges/rhiza-sync.json
+          git diff --cached --quiet || (
+            git commit -m "chore: Update Rhiza sync badge [skip ci]" &&
+            git push origin HEAD
+          )
