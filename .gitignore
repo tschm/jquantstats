@@ -80,6 +80,9 @@ coverage.json
 .pytest_cache/
 cover/
 
+# Security scanning baselines (regenerate as needed)
+.bandit-baseline.json
+
 # Translations
 *.mo
 *.pot
