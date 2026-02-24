@@ -100,7 +100,7 @@ class Stats:
             float: The skewness value.
 
         """
-        return cast("int | float | None", series.skew(bias=False))
+        return series.skew(bias=False)
 
     @columnwise_stat
     def kurtosis(self, series: pl.Series) -> int | float | None:
@@ -115,7 +115,7 @@ class Stats:
             float: The kurtosis value.
 
         """
-        return cast("int | float | None", series.kurtosis(bias=False))
+        return series.kurtosis(bias=False)
 
     @columnwise_stat
     def avg_return(self, series: pl.Series) -> float:
@@ -254,8 +254,8 @@ class Stats:
         """
         wins = series.filter(series > 0)
         losses = series.filter(series < 0)
-        wins_sum = cast(float, wins.sum())
-        losses_sum = cast(float, losses.sum())
+        wins_sum = wins.sum()
+        losses_sum = losses.sum()
 
         return float(np.abs(wins_sum / losses_sum))
 
@@ -611,7 +611,7 @@ class Stats:
 
         """
         periods = periods or self.data._periods_per_year
-        downside_sum = cast(float, ((series.filter(series < 0)) ** 2).sum())
+        downside_sum = ((series.filter(series < 0)) ** 2).sum()
         downside_deviation = float(np.sqrt(downside_sum / series.count()))
         mean_val = cast(float, series.mean())
         ratio = (mean_val if mean_val is not None else 0.0) / downside_deviation
