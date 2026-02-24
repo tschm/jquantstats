@@ -16,7 +16,7 @@ include .rhiza/rhiza.mk
 
 book:: ## generate shields.io coverage-badge.json for GitHub Pages
 	@mkdir -p _book/tests
-	@${UVX_BIN} "rhiza-tools>=$(RHIZA_VERSION)" generate-coverage-badge
+	@${UVX_BIN} "rhiza-tools>=0.3.0" generate-coverage-badge
 	@printf "${GREEN}[SUCCESS] Coverage badge JSON saved to _book/tests/coverage-badge.json${RESET}\n"
 
 .PHONY: adr
