@@ -90,8 +90,6 @@ fig = data.plots.plot_snapshot(title="Portfolio Performance")
 fig.show()
 ```
 
-```result
-```
 
 ## 📚 Documentation
 
