@@ -5,6 +5,8 @@ and content validation tests.
 
 Security Notes:
 - S101 (assert usage): Asserts are used in pytest tests to validate conditions
+- S603/S607 (subprocess usage): Any subprocess calls are for testing sync targets
+  in isolated environments with controlled inputs
 - Test code operates in a controlled environment with trusted inputs
 """
 

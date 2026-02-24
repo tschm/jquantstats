@@ -1,7 +1,7 @@
 # Rhiza Template History
 # This file lists all files managed by the Rhiza template.
 # Template repository: jebel-quant/rhiza
-# Template branch: v0.8.2
+# Template branch: v0.8.3
 #
 # Files under template control:
 .editorconfig
@@ -50,6 +50,7 @@
 .rhiza/make.d/custom-env.mk
 .rhiza/make.d/custom-task.mk
 .rhiza/make.d/docs.mk
+.rhiza/make.d/gh-aw.mk
 .rhiza/make.d/github.mk
 .rhiza/make.d/marimo.mk
 .rhiza/make.d/quality.mk
@@ -77,7 +78,6 @@
 .rhiza/tests/integration/test_sbom.py
 .rhiza/tests/integration/test_test_mk.py
 .rhiza/tests/integration/test_virtual_env_unexport.py
-.rhiza/tests/security/__init__.py
 .rhiza/tests/security/test_security_patterns.py
 .rhiza/tests/shell/test_scripts.sh
 .rhiza/tests/stress/README.md

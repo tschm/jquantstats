@@ -8,6 +8,8 @@ This conftest provides:
 
 Security Notes:
 - S101 (assert usage): Asserts are used in pytest tests to validate conditions
+- S603/S607 (subprocess usage): Any subprocess calls (via run_make) are for testing
+  Makefile targets in isolated environments with controlled inputs
 - Test code operates in a controlled environment with trusted inputs
 """
 
