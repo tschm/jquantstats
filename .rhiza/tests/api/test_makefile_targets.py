@@ -159,7 +159,7 @@ class TestMakefile:
         assert "--cov-fail-under=42" in proc_override.stdout
 
     def test_coverage_badge_target_dry_run(self, logger, tmp_path):
-        """Coverage-badge target should invoke rhiza-tools generate-coverage-badge via uvx in dry-run output."""
+        """Coverage-badge target should invoke genbadge via uvx in dry-run output."""
         # Create a mock coverage JSON file so the target proceeds past the guard
         tests_dir = tmp_path / "_tests"
         tests_dir.mkdir(exist_ok=True)
@@ -167,9 +167,9 @@ class TestMakefile:
 
         proc = run_make(logger, ["coverage-badge"])
         out = proc.stdout
-        assert "generate-coverage-badge" in out
+        assert "genbadge coverage" in out
         assert "_tests/coverage.json" in out
-        assert "_book/tests" in out
+        assert "assets/coverage-badge.svg" in out
 
 
 class TestMakefileRootFixture:

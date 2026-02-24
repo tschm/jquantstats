@@ -64,10 +64,6 @@ jobs:
         run: |
           make book
 
-      - name: "Generate coverage badge"
-        run: |
-          make coverage-badge
-
       # Step 5: Package all artifacts for GitHub Pages deployment
       # This prepares the combined outputs for deployment by creating a single artifact
       - name: Upload static files as artifact

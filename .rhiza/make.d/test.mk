@@ -114,26 +114,21 @@ hypothesis-test:: install ## run property-based tests with Hypothesis
 	  --hypothesis-seed=0 \
 	  -m "hypothesis or property" \
 	  --tb=short \
-	  --html=_tests/hypothesis/report.html; \
-	code=$$?; \
-	if [ $$code -eq 5 ]; then \
-	  printf "${YELLOW}[WARN] No hypothesis/property tests found, skipping.${RESET}\n"; \
-	  exit 0; \
-	fi; \
-	exit $$code
+	  --html=_tests/hypothesis/report.html
 
-# The 'coverage-badge' target generates a shields.io endpoint JSON from the coverage report.
+# The 'coverage-badge' target generates an SVG coverage badge from the JSON coverage report.
 # 1. Checks if the coverage JSON file exists.
-# 2. Runs rhiza-tools generate-coverage-badge to produce the endpoint JSON.
-coverage-badge: test ## generate coverage badge JSON from _tests/coverage.json
+# 2. Creates the assets/ directory if needed.
+# 3. Runs genbadge via uvx to produce the SVG badge.
+coverage-badge: test ## generate coverage badge from _tests/coverage.json
 	@if [ ! -f _tests/coverage.json ]; then \
 	  printf "${RED}[ERROR] Coverage report not found at _tests/coverage.json, run 'make test' first.${RESET}\n"; \
 	  exit 1; \
 	fi; \
-	mkdir -p _book/tests; \
+	mkdir -p assets; \
 	printf "${BLUE}[INFO] Generating coverage badge...${RESET}\n"; \
-	${UVX_BIN} "rhiza-tools>=$(RHIZA_VERSION)" generate-coverage-badge; \
-	printf "${GREEN}[SUCCESS] Coverage badge JSON saved to _book/tests/coverage-badge.json${RESET}\n"
+	${UVX_BIN} genbadge coverage -i _tests/coverage.json -o assets/coverage-badge.svg; \
+	printf "${GREEN}[SUCCESS] Coverage badge saved to assets/coverage-badge.svg${RESET}\n"
 
 # The 'stress' target runs stress/load tests.
 # 1. Checks if stress tests exist in the tests/stress directory.
