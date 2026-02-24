@@ -130,6 +130,7 @@ coverage-badge: test ## generate coverage badge JSON from _tests/coverage.json
 	  printf "${RED}[ERROR] Coverage report not found at _tests/coverage.json, run 'make test' first.${RESET}\n"; \
 	  exit 1; \
 	fi; \
+	mkdir -p _book/tests; \
 	printf "${BLUE}[INFO] Generating coverage badge...${RESET}\n"; \
 	${UVX_BIN} "rhiza-tools>=$(RHIZA_VERSION)" generate-coverage-badge; \
 	printf "${GREEN}[SUCCESS] Coverage badge JSON saved to _book/tests/coverage-badge.json${RESET}\n"
