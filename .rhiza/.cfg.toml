@@ -5,7 +5,7 @@ search = "{current_version}"
 replace = "{new_version}"
 regex = false
 ignore_missing_version = false
-ignore_missing_files = true
+ignore_missing_files = false
 tag = true
 sign_tags = false
 tag_name = "v{new_version}"
@@ -33,10 +33,10 @@ filename = "pyproject.toml"
 search = 'version = "{current_version}"'
 replace = 'version = "{new_version}"'
 
-[[tool.bumpversion.files]]
-filename = ".rhiza/template-bundles.yml"
-version_template = "version: {current_version}"
-search = "version: {current_version}"
-replace = "version: {new_version}"
-regex = false
-ignore_missing_files = true
+#[[tool.bumpversion.files]]
+#filename = ".rhiza/template-bundles.yml"
+#version_template = "version: {current_version}"
+#search = "version: {current_version}"
+#replace = "version: {new_version}"
+#regex = false
+#ignore_missing_files = true
