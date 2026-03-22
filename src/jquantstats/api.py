@@ -30,8 +30,7 @@ the `stats` property and visualization through the `plots` property.
 
 Features
 --------
-- Support for both pandas and polars DataFrames as input
-- Automatic conversion to polars for efficient data processing
+- Support for polars DataFrames as input
 - Handling of risk-free rate adjustments
 - Benchmark comparison capabilities
 - Date alignment between returns and benchmark data
@@ -65,16 +64,15 @@ data = build_data(
 
 """
 
-import pandas as pd
 import polars as pl
 
 from ._data import Data
 
 
 def build_data(
-    returns: pl.DataFrame | pd.DataFrame | pd.Series,
-    rf: float | pl.DataFrame | pd.DataFrame | pd.Series = 0.0,
-    benchmark: pl.DataFrame | pd.DataFrame | pd.Series | None = None,
+    returns: pl.DataFrame,
+    rf: float | pl.DataFrame = 0.0,
+    benchmark: pl.DataFrame | None = None,
     date_col: str = "Date",
 ) -> Data:
     """Build a Data object from returns and optional benchmark using Polars.
@@ -84,31 +82,24 @@ def build_data(
 
     Description
     -----------
-    The `build_data` function handles the conversion of pandas DataFrames and Series to
-    polars DataFrames, aligns dates between returns and benchmark data, and subtracts
-    the risk-free rate to calculate excess returns.
+    The `build_data` function aligns dates between returns and benchmark data, and
+    subtracts the risk-free rate to calculate excess returns.
 
     Parameters
     ----------
-    returns : pl.DataFrame | pd.DataFrame | pd.Series
-        Financial returns data.
+    returns : pl.DataFrame
+        Financial returns data. First column should be the date column,
+        remaining columns are asset returns.
 
-        - If pl.DataFrame: First column should be the date column, remaining columns are asset returns.
-        - If pd.DataFrame: Index can be dates (will be included) or a date column should be present.
-        - If pd.Series: Index should be dates, values are returns for a single asset.
-
-    rf : float | pl.DataFrame | pd.DataFrame | pd.Series, optional
+    rf : float | pl.DataFrame, optional
         Risk-free rate. Default is 0.0 (no risk-free rate adjustment).
 
         - If float: Constant risk-free rate applied to all dates.
-        - If DataFrame/Series: Time-varying risk-free rate with dates matching returns.
+        - If pl.DataFrame: Time-varying risk-free rate with dates matching returns.
 
-    benchmark : pl.DataFrame | pd.DataFrame | pd.Series, optional
+    benchmark : pl.DataFrame, optional
         Benchmark returns. Default is None (no benchmark).
-
-        - If pl.DataFrame: First column should be the date column, remaining columns are benchmark returns.
-        - If pd.DataFrame: Index can be dates (will be included) or a date column should be present.
-        - If pd.Series: Index should be dates, values are returns for a single benchmark.
+        First column should be the date column, remaining columns are benchmark returns.
 
     date_col : str, optional
         Name of the date column in the DataFrames. Default is "Date".
@@ -139,21 +130,6 @@ def build_data(
     }).with_columns(pl.col("Date").str.to_date())
 
     data = build_data(returns=returns)
-    ```
-
-    With pandas DataFrame:
-
-    ```python
-    import pandas as pd
-    from jquantstats.api import build_data
-
-    returns_pd = pd.DataFrame({
-        "Date": pd.to_datetime(["2023-01-01", "2023-01-02", "2023-01-03"]),
-        "Asset1": [0.01, -0.02, 0.03],
-        "Asset2": [0.02, 0.01, -0.01]
-    })
-
-    data = build_data(returns=returns_pd)
     ```
 
     With benchmark and risk-free rate:
@@ -230,24 +206,6 @@ def build_data(
                 if col not in {date_col, "rf"} and col != date_col
             ]
         )
-
-    if isinstance(returns, pd.Series):
-        returns = pl.from_pandas(returns.to_frame(), include_index=True)
-
-    if isinstance(returns, pd.DataFrame):
-        returns = pl.from_pandas(returns, include_index=True)
-
-    if isinstance(rf, pd.Series):
-        rf = pl.from_pandas(rf.to_frame(), include_index=True)
-
-    if isinstance(rf, pd.DataFrame):
-        rf = pl.from_pandas(rf, include_index=True)
-
-    if isinstance(benchmark, pd.Series):
-        benchmark = pl.from_pandas(benchmark.to_frame(), include_index=True)
-
-    if isinstance(benchmark, pd.DataFrame):
-        benchmark = pl.from_pandas(benchmark, include_index=True)
 
     # Align returns and benchmark if both provided
     if benchmark is not None:

@@ -10,8 +10,6 @@ dependencies = [
     "numpy>=2.0.0",
     "plotly>=6.0.0",
     "polars>=1.18.0",
-    "pandas>=2.2.3",
-    "pyarrow>=22.0.0",
     "scipy>=1.14.1"
 ]
 license = "MIT"
@@ -27,6 +25,8 @@ plot = ["kaleido==1.2.0"]
 
 [dependency-groups]
 dev = [
+    "pandas>=2.2.3",
+    "pyarrow>=22.0.0",
     "yfinance==1.2.0",
     "ipython==9.10.0",
     "quantstats==0.0.81",
@@ -57,7 +57,7 @@ exclude_dirs = ["src/tests"]  # Exclude test directories from security scanning
 
 # Ignore specific dependency issues
 [tool.deptry.per_rule_ignores]
-DEP002 = ["kaleido", "pyarrow"]  # DEP002: Unused direct dependencies
+DEP002 = ["kaleido"]  # DEP002: Unused direct dependencies
 
 # Package to module name mapping
 [tool.deptry.package_module_name_map]
@@ -65,7 +65,6 @@ numpy = "numpy"
 plotly = "plotly"
 polars = "polars"
 pandas = "pandas"
-pyarrow = "pyarrow"
 scipy = "scipy"
 kaleido = "kaleido"
 yfinance = "yfinance"
