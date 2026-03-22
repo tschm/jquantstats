@@ -1,7 +1,7 @@
 # [jQuantStats](https://tschm.github.io/jquantstats/book): Portfolio Analytics for Quants
 
 [![PyPI version](https://badge.fury.io/py/jquantstats.svg)](https://badge.fury.io/py/jquantstats)
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE.txt)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Downloads](https://static.pepy.tech/personalized-badge/jquantstats?period=month&units=international_system&left_color=black&right_color=orange&left_text=PyPI%20downloads%20per%20month)](https://pepy.tech/project/jquantstats)
 [![Coverage](https://raw.githubusercontent.com/tschm/jquantstats/refs/heads/gh-pages/coverage-badge.svg)](https://tschm.github.io/jquantstats/tests/html-coverage/index.html)
 [![CodeFactor](https://www.codefactor.io/repository/github/tschm/jquantstats/badge)](https://www.codefactor.io/repository/github/tschm/jquantstats)
@@ -116,5 +116,5 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## ⚖️ License
 
-This project is licensed under the Apache
-License 2.0 - see the [LICENSE.txt](LICENSE.txt) file for details.
+This project is licensed under the MIT
+License - see the [LICENSE](LICENSE) file for details.
