@@ -1,9 +1,11 @@
 """Tests for edge cases in the jquantstats package."""
 
+import numpy as np
 import polars as pl
 import pytest
 from polars.testing import assert_frame_equal
 
+from jquantstats._data import Data
 from jquantstats.api import build_data
 
 
@@ -85,3 +87,114 @@ def test_non_overlapping_dates():
     # Verify that calling build_data raises a ValueError
     with pytest.raises(ValueError, match=r"No overlapping dates between returns and benchmark\."):
         build_data(returns=returns, benchmark=benchmark)
+
+
+def test_periods_per_year_non_date_index():
+    """Tests the else-branch in _periods_per_year when index is not a date type."""
+    index = pl.DataFrame({"i": [1, 2, 3, 4, 5]})
+    returns = pl.DataFrame({"asset": [0.01, -0.02, 0.03, 0.01, 0.02]})
+    data = Data(returns=returns, index=index)
+    # diff of integers has mean=1.0 (float, not timedelta) → else branch
+    result = data._periods_per_year
+    assert result == pytest.approx(365 * 24 * 60 * 60)
+
+
+def test_volatility_invalid_periods():
+    """Tests that volatility raises TypeError when periods is not numeric."""
+    from datetime import date
+
+    returns = pl.DataFrame(
+        {
+            "Date": [date(2023, 1, 1), date(2023, 1, 2), date(2023, 1, 3)],
+            "asset": [0.01, -0.02, 0.03],
+        }
+    )
+    data = build_data(returns=returns)
+    with pytest.raises(TypeError):
+        data.stats.volatility(periods="bad")
+
+
+def test_sharpe_variance_nan_zero_std(edge):
+    """Tests that sharpe_variance returns NaN when std is zero (all-zero returns)."""
+    result = edge.stats.sharpe_variance()
+    assert np.isnan(result["returns"])
+
+
+def test_sharpe_variance_nan_short_series():
+    """Tests that sharpe_variance returns NaN when kurtosis cannot be computed (< 4 obs)."""
+    from datetime import date
+
+    returns = pl.DataFrame(
+        {
+            "Date": [date(2023, 1, 1), date(2023, 1, 2), date(2023, 1, 3)],
+            "asset": [1.0, -0.5, 0.25],
+        }
+    )
+    data = build_data(returns=returns)
+    result = data.stats.sharpe_variance()
+    assert np.isnan(result["asset"])
+
+
+def test_prob_sharpe_ratio_nan_zero_std(edge):
+    """Tests that prob_sharpe_ratio returns NaN when std is zero (all-zero returns)."""
+    result = edge.stats.prob_sharpe_ratio(benchmark_sr=0.0)
+    assert np.isnan(result["returns"])
+
+
+def test_prob_sharpe_ratio_nan_short_series():
+    """Tests that prob_sharpe_ratio returns NaN when kurtosis cannot be computed (< 4 obs)."""
+    from datetime import date
+
+    returns = pl.DataFrame(
+        {
+            "Date": [date(2023, 1, 1), date(2023, 1, 2), date(2023, 1, 3)],
+            "asset": [1.0, -0.5, 0.25],
+        }
+    )
+    data = build_data(returns=returns)
+    result = data.stats.prob_sharpe_ratio(benchmark_sr=0.0)
+    assert np.isnan(result["asset"])
+
+
+def test_prob_sharpe_ratio_nan_negative_variance():
+    """Tests that prob_sharpe_ratio returns NaN when var_bench_sr <= 0.
+
+    [1,-1,1,-1] has excess kurtosis ≈ -6, making var_bench_sr negative for benchmark_sr=1.
+    """
+    from datetime import date
+
+    returns = pl.DataFrame(
+        {
+            "Date": [date(2023, 1, 1), date(2023, 1, 2), date(2023, 1, 3), date(2023, 1, 4)],
+            "asset": [1.0, -1.0, 1.0, -1.0],
+        }
+    )
+    data = build_data(returns=returns)
+    result = data.stats.prob_sharpe_ratio(benchmark_sr=1.0)
+    assert np.isnan(result["asset"])
+
+
+def test_hhi_positive_nan_few_positives(edge):
+    """Tests that hhi_positive returns NaN when there are <= 2 positive returns."""
+    result = edge.stats.hhi_positive()
+    assert np.isnan(result["returns"])
+
+
+def test_hhi_negative_nan_few_negatives(edge):
+    """Tests that hhi_negative returns NaN when there are <= 2 negative returns."""
+    result = edge.stats.hhi_negative()
+    assert np.isnan(result["returns"])
+
+
+def test_subtract_rf_invalid_type():
+    """Tests that build_data raises TypeError when rf is not a float or DataFrame."""
+    from datetime import date
+
+    returns = pl.DataFrame(
+        {
+            "Date": [date(2023, 1, 1), date(2023, 1, 2)],
+            "asset": [0.01, -0.02],
+        }
+    )
+    with pytest.raises(TypeError, match="rf must be a float or DataFrame"):
+        build_data(returns=returns, rf=1)  # int is not float
