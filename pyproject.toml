@@ -25,6 +25,7 @@ plot = ["kaleido==1.2.0"]
 
 [dependency-groups]
 dev = [
+    "pandas>=2.2.3",
     "pyarrow>=22.0.0",
     "yfinance==1.2.0",
     "ipython==9.10.0",
@@ -63,6 +64,7 @@ DEP002 = ["kaleido"]  # DEP002: Unused direct dependencies
 numpy = "numpy"
 plotly = "plotly"
 polars = "polars"
+pandas = "pandas"
 scipy = "scipy"
 kaleido = "kaleido"
 yfinance = "yfinance"

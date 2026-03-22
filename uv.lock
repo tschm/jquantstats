@@ -530,6 +530,7 @@ plot = [
 dev = [
     { name = "ipython" },
     { name = "marimo" },
+    { name = "pandas" },
     { name = "pyarrow" },
     { name = "quantstats" },
     { name = "yfinance" },
@@ -549,6 +550,7 @@ provides-extras = ["plot"]
 dev = [
     { name = "ipython", specifier = "==9.10.0" },
     { name = "marimo", specifier = ">=0.13.15" },
+    { name = "pandas", specifier = ">=2.2.3" },
     { name = "pyarrow", specifier = ">=22.0.0" },
     { name = "quantstats", specifier = "==0.0.81" },
     { name = "yfinance", specifier = "==1.2.0" },
