@@ -516,10 +516,8 @@ version = "0.0.35"
 source = { editable = "." }
 dependencies = [
     { name = "numpy" },
-    { name = "pandas" },
     { name = "plotly" },
     { name = "polars" },
-    { name = "pyarrow" },
     { name = "scipy" },
 ]
 
@@ -532,6 +530,7 @@ plot = [
 dev = [
     { name = "ipython" },
     { name = "marimo" },
+    { name = "pyarrow" },
     { name = "quantstats" },
     { name = "yfinance" },
 ]
@@ -540,10 +539,8 @@ dev = [
 requires-dist = [
     { name = "kaleido", marker = "extra == 'plot'", specifier = "==1.2.0" },
     { name = "numpy", specifier = ">=2.0.0" },
-    { name = "pandas", specifier = ">=2.2.3" },
     { name = "plotly", specifier = ">=6.0.0" },
     { name = "polars", specifier = ">=1.18.0" },
-    { name = "pyarrow", specifier = ">=22.0.0" },
     { name = "scipy", specifier = ">=1.14.1" },
 ]
 provides-extras = ["plot"]
@@ -552,6 +549,7 @@ provides-extras = ["plot"]
 dev = [
     { name = "ipython", specifier = "==9.10.0" },
     { name = "marimo", specifier = ">=0.13.15" },
+    { name = "pyarrow", specifier = ">=22.0.0" },
     { name = "quantstats", specifier = "==0.0.81" },
     { name = "yfinance", specifier = "==1.2.0" },
 ]
