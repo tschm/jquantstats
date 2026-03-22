@@ -1,4 +1,8 @@
-"""Fixtures for analytics tests."""
+"""Fixtures for analytics tests.
+
+Security note: Test files use assert statements (S101) which are safe here as
+they are only executed by pytest, never in production code.
+"""
 
 from datetime import date, timedelta
 
