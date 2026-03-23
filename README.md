@@ -37,7 +37,7 @@ enhanced visualization capabilities. Key improvements include:
 | **Visualisation** | Interactive [Plotly](https://plotly.com/python/) charts | Static matplotlib / seaborn |
 | **Input format** | `polars.DataFrame` | `pandas.Series` / `pandas.DataFrame` |
 | **Entry point — positions** | `Portfolio.from_cash_position(prices, cash_position, aum)` | — |
-| **Entry point — returns** | `build_data(returns, benchmark)` | `qs.reports.full(returns)` |
+| **Entry point — returns** | `Data.from_returns(returns, benchmark)` | `qs.reports.full(returns)` |
 | **HTML report** | `portfolio.report.full()` | `qs.reports.html(returns)` |
 | **Snapshot chart** | `data.plots.plot_snapshot()` | `qs.plots.snapshot(returns)` |
 | **Sharpe ratio** | `data.stats.sharpe()` | `qs.stats.sharpe(returns)` |
@@ -107,7 +107,7 @@ fig = pf.plots.snapshot()  # call fig.show() to display
 
 ```python
 import polars as pl
-from jquantstats import build_data
+from jquantstats import Data
 
 returns = pl.DataFrame({
     "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
@@ -115,7 +115,7 @@ returns = pl.DataFrame({
     "Asset2": [0.02, 0.01, -0.01]
 }).with_columns(pl.col("Date").str.to_date())
 
-data = build_data(returns=returns)
+data = Data.from_returns(returns=returns)
 
 sharpe = data.stats.sharpe()
 fig = data.plots.plot_snapshot(title="Portfolio Performance")  # call fig.show() to display
@@ -125,14 +125,14 @@ fig = data.plots.plot_snapshot(title="Portfolio Performance")  # call fig.show()
 
 ```python
 import polars as pl
-from jquantstats import build_data
+from jquantstats import Data
 
 returns = pl.DataFrame({
     "Date": ["2023-01-01", "2023-01-02", "2023-01-03", "2023-01-04", "2023-01-05"],
     "Strategy": [0.01, -0.03, 0.02, -0.01, 0.04],
 }).with_columns(pl.col("Date").str.to_date())
 
-data = build_data(returns=returns)
+data = Data.from_returns(returns=returns)
 
 sharpe = data.stats.sharpe()
 sortino = data.stats.sortino()
@@ -148,7 +148,7 @@ win = data.stats.win_rate()
 
 ```python
 import polars as pl
-from jquantstats import build_data
+from jquantstats import Data
 
 returns = pl.DataFrame({
     "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
@@ -160,7 +160,7 @@ benchmark = pl.DataFrame({
     "Benchmark": [0.005, -0.01, 0.015],
 }).with_columns(pl.col("Date").str.to_date())
 
-data = build_data(returns=returns, benchmark=benchmark)
+data = Data.from_returns(returns=returns, benchmark=benchmark)
 
 ir = data.stats.information_ratio()
 greeks = data.stats.greeks()
@@ -209,7 +209,7 @@ flowchart TD
     B --> E[".report.full()  —  HTML report"]
     B --> F[".data"]
 
-    G["returns_df [+ benchmark_df]"] --> H["build_data(returns=..., benchmark=...)
+    G["returns_df [+ benchmark_df]"] --> H["Data.from_returns(returns=..., benchmark=...)
     Data object"]
     H --> I[".stats  —  full stats suite"]
     H --> J[".plots.plot_snapshot()  —  snapshot chart"]
@@ -221,7 +221,7 @@ flowchart TD
 price series and position sizes. It compiles the NAV curve and exposes
 the full analytics suite.
 
-**Entry point 2** (`build_data`) is for arbitrary return streams — e.g.
+**Entry point 2** (`Data.from_returns`) is for arbitrary return streams — e.g.
 returns downloaded from a data vendor — with optional benchmark comparison.
 
 The two APIs are layered: `portfolio.data` returns a `Data` object, so you
