@@ -11,7 +11,7 @@ import polars as pl
 import pytest
 
 from jquantstats import Portfolio
-from jquantstats._portfolio_plots import Plots
+from jquantstats._plots import PortfolioPlots
 from jquantstats._reports import Report, _fmt, _stats_table_html
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -338,7 +338,7 @@ def test_to_html_dateless_portfolio_omits_date_range(dateless_portfolio):
 
 def test_to_html_chart_unavailable_on_plot_error(multi_year_portfolio):
     """_try_div catches plot exceptions and embeds a notice (lines 413-414)."""
-    with patch.object(Plots, "snapshot", side_effect=RuntimeError("boom")):
+    with patch.object(PortfolioPlots, "snapshot", side_effect=RuntimeError("boom")):
         html = multi_year_portfolio.report.to_html()
     assert 'class="chart-unavailable"' in html
     assert "Chart unavailable" in html
