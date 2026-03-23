@@ -3,18 +3,18 @@
 This module provides the :class:`Stats` dataclass, which is the public-facing
 class that combines four mixin classes:
 
-- :class:`~jquantstats._stats_basic._BasicStatsMixin` — basic statistics,
+- :class:`~jquantstats._stats._basic._BasicStatsMixin` — basic statistics,
   volatility, win/loss metrics, and risk metrics (VaR, Sharpe inputs, Kelly).
-- :class:`~jquantstats._stats_performance._PerformanceStatsMixin` — Sharpe,
+- :class:`~jquantstats._stats._performance._PerformanceStatsMixin` — Sharpe,
   Sortino, drawdown, benchmark/factor analytics (R², alpha, beta).
-- :class:`~jquantstats._stats_reporting._ReportingStatsMixin` — temporal
+- :class:`~jquantstats._stats._reporting._ReportingStatsMixin` — temporal
   reporting, Calmar, recovery factor, capture ratios, annual breakdown, and
   summary.
-- :class:`~jquantstats._stats_rolling._RollingStatsMixin` — rolling-window
+- :class:`~jquantstats._stats._rolling._RollingStatsMixin` — rolling-window
   time-series metrics (rolling Sharpe, Sortino, and volatility).
 
 Module-level helpers and the ``columnwise_stat`` / ``to_frame`` decorators are
-defined in :mod:`jquantstats._stats_core` and re-exported here for backwards
+defined in :mod:`jquantstats._stats._core` and re-exported here for backwards
 compatibility.
 """
 
@@ -25,19 +25,19 @@ from typing import TYPE_CHECKING
 
 import polars as pl
 
-from ._stats_basic import _BasicStatsMixin
-from ._stats_core import (
+from ._basic import _BasicStatsMixin
+from ._core import (
     _drawdown_series,
     _to_float,
     columnwise_stat,
     to_frame,
 )
-from ._stats_performance import _PerformanceStatsMixin
-from ._stats_reporting import _ReportingStatsMixin
-from ._stats_rolling import _RollingStatsMixin
+from ._performance import _PerformanceStatsMixin
+from ._reporting import _ReportingStatsMixin
+from ._rolling import _RollingStatsMixin
 
 if TYPE_CHECKING:
-    from ._data import Data
+    from .._data import Data
 
 __all__ = [
     "Stats",
@@ -64,10 +64,10 @@ class Stats(_BasicStatsMixin, _PerformanceStatsMixin, _ReportingStatsMixin, _Rol
 
     Metrics are organised into focused modules:
 
-    - :class:`~jquantstats._stats_basic._BasicStatsMixin`
-    - :class:`~jquantstats._stats_performance._PerformanceStatsMixin`
-    - :class:`~jquantstats._stats_reporting._ReportingStatsMixin`
-    - :class:`~jquantstats._stats_rolling._RollingStatsMixin`
+    - :class:`~jquantstats._stats._basic._BasicStatsMixin`
+    - :class:`~jquantstats._stats._performance._PerformanceStatsMixin`
+    - :class:`~jquantstats._stats._reporting._ReportingStatsMixin`
+    - :class:`~jquantstats._stats._rolling._RollingStatsMixin`
 
     Attributes:
         data: The :class:`~jquantstats._data.Data` object containing returns

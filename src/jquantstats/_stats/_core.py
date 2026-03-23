@@ -8,8 +8,8 @@ Provides:
 - :func:`to_frame` — decorator: build a per-column Polars DataFrame result.
 
 These building blocks are shared across the stats mixin modules
-(:mod:`~jquantstats._stats_basic`, :mod:`~jquantstats._stats_performance`,
-:mod:`~jquantstats._stats_reporting`, :mod:`~jquantstats._stats_rolling`).
+(:mod:`~jquantstats._stats._basic`, :mod:`~jquantstats._stats._performance`,
+:mod:`~jquantstats._stats._reporting`, :mod:`~jquantstats._stats._rolling`).
 """
 
 from __future__ import annotations

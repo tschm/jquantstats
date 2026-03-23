@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, cast
 import numpy as np
 import polars as pl
 
-from ._stats_core import to_frame
+from ._core import to_frame
 
 # ── Rolling statistics mixin ─────────────────────────────────────────────────
 
@@ -16,7 +16,7 @@ class _RollingStatsMixin:
     """Mixin class providing rolling-window financial statistics methods.
 
     Separates rolling-window computations from the core point-in-time metrics
-    in :class:`~jquantstats._stats_core._CoreStatsMixin`.  The concrete
+    in :mod:`~jquantstats._stats._core`.  The concrete
     :class:`~jquantstats._stats.Stats` dataclass inherits from both.
 
     Attributes (provided by the concrete subclass):
@@ -25,7 +25,7 @@ class _RollingStatsMixin:
     """
 
     if TYPE_CHECKING:
-        from ._data import Data
+        from .._data import Data
 
         data: Data
         all: pl.DataFrame | None
