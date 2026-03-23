@@ -19,12 +19,12 @@ class _ReportingStatsMixin:
     ratios, annual breakdown, and summary statistics table.
 
     Attributes (provided by the concrete subclass):
-        data: The :class:`~jquantstats._data.Data` object.
+        data: The :class:`~jquantstats.data.Data` object.
         all: Combined DataFrame for efficient column selection.
     """
 
     if TYPE_CHECKING:
-        from ._data import Data
+        from .data import Data
 
         data: Data
         all: pl.DataFrame | None
@@ -329,7 +329,7 @@ class _ReportingStatsMixin:
         date_col_name = self.data.date_col[0] if self.data.date_col else None
         has_temporal = date_col_name is not None and all_df[date_col_name].dtype.is_temporal()
 
-        from ._data import Data
+        from .data import Data
 
         if not has_temporal:
             # Integer-index fallback: group by chunks of ~_periods_per_year rows

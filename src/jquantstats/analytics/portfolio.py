@@ -21,8 +21,8 @@ import dataclasses
 from typing import TYPE_CHECKING, Self
 
 if TYPE_CHECKING:
-    from .._data import Data as Data
     from .._stats import Stats as Stats
+    from ..data import Data as Data
 
 import polars as pl
 import polars.selectors as cs
@@ -125,7 +125,7 @@ class Portfolio:
 
     @staticmethod
     def _build_data_bridge(ret: pl.DataFrame) -> "Data":
-        """Build a :class:`~jquantstats._data.Data` bridge from a returns frame.
+        """Build a :class:`~jquantstats.data.Data` bridge from a returns frame.
 
         Splits out the ``'date'`` column (if present) into an index and passes
         the remaining numeric columns as returns.  Used internally to populate
@@ -135,9 +135,9 @@ class Portfolio:
             ret: Returns DataFrame, optionally with a leading ``'date'`` column.
 
         Returns:
-            A :class:`~jquantstats._data.Data` instance backed by *ret*.
+            A :class:`~jquantstats.data.Data` instance backed by *ret*.
         """
-        from .._data import Data
+        from ..data import Data
 
         if "date" in ret.columns:
             return Data(returns=ret.drop("date"), index=ret.select("date"))
@@ -337,15 +337,15 @@ class Portfolio:
 
     @property
     def data(self) -> "Data":
-        """Build a legacy :class:`~jquantstats._data.Data` object from this portfolio's returns.
+        """Build a legacy :class:`~jquantstats.data.Data` object from this portfolio's returns.
 
         This bridges the two entry points: ``Portfolio`` compiles the NAV curve from
-        prices and positions; the returned :class:`~jquantstats._data.Data` object
+        prices and positions; the returned :class:`~jquantstats.data.Data` object
         gives access to the full legacy analytics pipeline (``data.stats``,
         ``data.plots``, ``data.reports``).
 
         Returns:
-            :class:`~jquantstats._data.Data`: A Data object whose ``returns`` column
+            :class:`~jquantstats.data.Data`: A Data object whose ``returns`` column
             is the portfolio's daily return series and whose ``index`` holds the date
             column (or a synthetic integer index for date-free portfolios).
 

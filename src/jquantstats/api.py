@@ -1,13 +1,13 @@
 # SPDX-License-Identifier: MIT
 """jQuantStats API module — backward-compatible convenience wrappers.
 
-The primary public API is :class:`~jquantstats._data.Data` with its
+The primary public API is :class:`~jquantstats.data.Data` with its
 ``from_returns`` classmethod.  ``build_data`` is kept as a thin alias
 for backward compatibility.
 """
 
-from ._data import Data
 from ._types import NativeFrame, NativeFrameOrScalar
+from .data import Data
 
 
 def build_data(

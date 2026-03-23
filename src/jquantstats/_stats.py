@@ -37,7 +37,7 @@ from ._stats_reporting import _ReportingStatsMixin
 from ._stats_rolling import _RollingStatsMixin
 
 if TYPE_CHECKING:
-    from ._data import Data
+    from .data import Data
 
 __all__ = [
     "Stats",
@@ -70,7 +70,7 @@ class Stats(_BasicStatsMixin, _PerformanceStatsMixin, _ReportingStatsMixin, _Rol
     - :class:`~jquantstats._stats_rolling._RollingStatsMixin`
 
     Attributes:
-        data: The :class:`~jquantstats._data.Data` object containing returns
+        data: The :class:`~jquantstats.data.Data` object containing returns
             and benchmark data.
         all: A DataFrame combining all data (index, returns, benchmark) for
             easy column selection.

@@ -11,7 +11,7 @@ import polars as pl
 from plotly.subplots import make_subplots
 
 if TYPE_CHECKING:
-    from ._data import Data
+    from .data import Data
 
 
 def _plot_performance_dashboard(returns: pl.DataFrame, log_scale: bool = False) -> go.Figure:

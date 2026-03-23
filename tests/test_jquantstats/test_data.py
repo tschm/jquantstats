@@ -174,7 +174,7 @@ def test_post_init():
     returns = pl.DataFrame({"returns": [0.01, 0.02]})
     index = pl.DataFrame({"Date": dates})
 
-    from jquantstats._data import Data
+    from jquantstats.data import Data
 
     with pytest.raises(ValueError, match=r"Returns and index must have the same number of rows\."):
         Data(returns=returns, index=index)
@@ -371,7 +371,7 @@ def test_truncate_integer_indexed_both_bounds():
     dates = list(range(10))
     returns_df = pl.DataFrame({"returns": [float(i) * 0.01 for i in range(10)]})
     index_df = pl.DataFrame({"row": dates})
-    from jquantstats._data import Data
+    from jquantstats.data import Data
 
     d = Data(returns=returns_df, index=index_df)
     result = d.truncate(start=2, end=5)
@@ -383,7 +383,7 @@ def test_truncate_integer_indexed_raises_on_non_int():
     """Tests truncate() raises TypeError when non-integer bound is given on integer-indexed data."""
     returns_df = pl.DataFrame({"returns": [0.01 * i for i in range(10)]})
     index_df = pl.DataFrame({"row": list(range(10))})
-    from jquantstats._data import Data
+    from jquantstats.data import Data
 
     d = Data(returns=returns_df, index=index_df)
     with pytest.raises(TypeError, match="start must be an integer"):

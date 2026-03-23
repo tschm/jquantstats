@@ -20,12 +20,12 @@ class _PerformanceStatsMixin:
     max drawdown, prices, R-squared, information ratio, and Greeks (alpha/beta).
 
     Attributes (provided by the concrete subclass):
-        data: The :class:`~jquantstats._data.Data` object.
+        data: The :class:`~jquantstats.data.Data` object.
         all: Combined DataFrame for efficient column selection.
     """
 
     if TYPE_CHECKING:
-        from ._data import Data
+        from .data import Data
 
         data: Data
         all: pl.DataFrame | None

@@ -5,8 +5,8 @@ import polars as pl
 import pytest
 from polars.testing import assert_frame_equal
 
-from jquantstats._data import Data
 from jquantstats.api import build_data
+from jquantstats.data import Data
 
 
 @pytest.fixture
