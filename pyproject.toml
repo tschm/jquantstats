@@ -26,6 +26,11 @@ repository = "https://github.com/tschm/jquantstats"
 plot = ["kaleido==1.2.0"]
 
 [dependency-groups]
+docs = [
+    "mkdocs>=1.6.0",
+    "mkdocs-material>=9.5.0",
+    "mkdocstrings[python]>=0.25.0",
+]
 dev = [
     "pandas>=2.2.3",       # required by quantstats (comparison tests only — not a runtime dependency)
     "pyarrow>=22.0.0",
