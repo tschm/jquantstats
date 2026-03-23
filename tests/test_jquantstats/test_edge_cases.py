@@ -90,13 +90,11 @@ def test_non_overlapping_dates():
 
 
 def test_periods_per_year_non_date_index():
-    """Tests the else-branch in _periods_per_year when index is not a date type."""
+    """Integer-indexed Data falls back to 252 trading days per year."""
     index = pl.DataFrame({"i": [1, 2, 3, 4, 5]})
     returns = pl.DataFrame({"asset": [0.01, -0.02, 0.03, 0.01, 0.02]})
     data = Data(returns=returns, index=index)
-    # diff of integers has mean=1.0 (float, not timedelta) → else branch
-    result = data._periods_per_year
-    assert result == pytest.approx(365 * 24 * 60 * 60)
+    assert data._periods_per_year == pytest.approx(252.0)
 
 
 def test_volatility_invalid_periods():

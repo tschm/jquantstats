@@ -205,25 +205,24 @@ class Data:
     def _periods_per_year(self) -> float:
         """Estimate the number of periods per year based on average frequency in the index.
 
-        Assumes `self.index` is a Polars DataFrame with a single datetime column.
+        For temporal (Date/Datetime) indices, computes the mean gap between observations
+        and converts to an annualised period count (e.g. ~252 for daily, ~52 for weekly).
+
+        For integer indices (date-free portfolios), falls back to 252 trading days per year
+        because integer diffs have no time meaning.
         """
-        # Extract the datetime column (assuming only one)
         datetime_col = self.index[self.index.columns[0]]
 
-        # Ensure it's sorted
+        if not datetime_col.dtype.is_temporal():
+            return 252.0
+
         sorted_dt = datetime_col.sort()
-
-        # Compute differences
         diffs = sorted_dt.diff().drop_nulls()
-
-        # Mean difference (Duration)
         mean_diff = diffs.mean()
 
-        # Convert Duration (timedelta) to seconds
         if isinstance(mean_diff, timedelta):
             seconds = mean_diff.total_seconds()
-        else:
-            # Should not happen for datetime diff, but handle gracefully
+        else:  # pragma: no cover  # Polars always returns timedelta for temporal diff
             seconds = cast(float, mean_diff) if mean_diff is not None else 1.0
 
         return (365 * 24 * 60 * 60) / seconds
