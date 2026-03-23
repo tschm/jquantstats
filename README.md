@@ -91,6 +91,44 @@ fig.show()
 ```
 
 
+## 🏗️ Architecture
+
+jQuantStats has two layered entry points:
+
+```
+Entry point 1 — prices + positions
+────────────────────────────────────────────────────────────
+prices_df + positions_df + aum
+        │
+        ▼
+  Portfolio.from_cash_position(...)   ← NAV compiler
+        │
+        ├── .stats.sharpe()           ← full stats suite
+        ├── .plots.snapshot()         ← portfolio-specific plots
+        ├── .report.full()            ← HTML report
+        └── .data                     ← drop into Entry point 2 ──┐
+                                                                    │
+Entry point 2 — returns series                                      │
+────────────────────────────────────────────────────────────        │
+returns_df [+ benchmark_df]  ◄──────────────────────────────────────┘
+        │
+        ▼
+  build_data(returns=..., benchmark=...)   ← Data object
+        │
+        ├── .stats.sharpe()           ← full stats suite
+        └── .plots.plot_snapshot()    ← snapshot chart
+```
+
+**Entry point 1** (`Portfolio`) is for active portfolios where you have
+price series and position sizes. It compiles the NAV curve and exposes
+the full analytics suite.
+
+**Entry point 2** (`build_data`) is for arbitrary return streams — e.g.
+returns downloaded from a data vendor — with optional benchmark comparison.
+
+The two APIs are layered: `portfolio.data` returns a `Data` object, so you
+can always drop from a `Portfolio` into the returns-series API.
+
 ## 📚 Documentation
 
 For detailed documentation, visit [jQuantStats Documentation](https://tschm.github.io/jquantstats/book).
