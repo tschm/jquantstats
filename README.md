@@ -134,14 +134,14 @@ returns = pl.DataFrame({
 
 data = build_data(returns=returns)
 
-print("Sharpe ratio  :", data.stats.sharpe())
-print("Sortino ratio :", data.stats.sortino())
-print("Max drawdown  :", data.stats.max_drawdown())
-print("Volatility    :", data.stats.volatility())
-print("VaR (95%)     :", data.stats.value_at_risk())
-print("CVaR (95%)    :", data.stats.conditional_value_at_risk())
-print("Calmar ratio  :", data.stats.calmar())
-print("Win rate      :", data.stats.win_rate())
+sharpe = data.stats.sharpe()
+sortino = data.stats.sortino()
+max_dd = data.stats.max_drawdown()
+vol = data.stats.volatility()
+var = data.stats.value_at_risk()
+cvar = data.stats.conditional_value_at_risk()
+calmar = data.stats.calmar()
+win = data.stats.win_rate()
 ```
 
 **Benchmark comparison**:
@@ -162,11 +162,11 @@ benchmark = pl.DataFrame({
 
 data = build_data(returns=returns, benchmark=benchmark)
 
-print("Information ratio :", data.stats.information_ratio())
-print("Alpha             :", data.stats.alpha())
-print("Beta              :", data.stats.beta())
+ir = data.stats.information_ratio()
+greeks = data.stats.greeks()
+alpha = greeks["Strategy"]["alpha"]
+beta = greeks["Strategy"]["beta"]
 fig = data.plots.plot_snapshot(title="Strategy vs Benchmark")
-fig.show()
 ```
 
 **Generate a full HTML report**:
@@ -190,7 +190,7 @@ positions = pl.DataFrame({
 pf = Portfolio.from_cash_position(prices=prices, cash_position=positions, aum=1_000_000)
 
 # Save a complete HTML performance report
-html = pf.report.full()
+html = pf.report.to_html()
 with open("report.html", "w") as f:
     f.write(html)
 ```
