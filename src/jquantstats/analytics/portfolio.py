@@ -166,6 +166,8 @@ class Portfolio:
         risk_position: pl.DataFrame,
         aum: float,
         vola: int | dict[str, int] = 32,
+        cost_per_unit: float = 0.0,
+        cost_bps: float = 0.0,
     ) -> Self:
         """Create a Portfolio from per-asset risk positions.
 
@@ -180,13 +182,17 @@ class Portfolio:
                 ``dict[str, int]`` to set a per-asset span (assets absent from
                 the dict default to ``32``).
             aum: Assets under management used as the base NAV offset.
+            cost_per_unit: One-way trading cost per unit of position change.
+                Defaults to 0.0 (no cost).
+            cost_bps: One-way trading cost in basis points of AUM turnover.
+                Defaults to 0.0 (no cost).
 
         Returns:
             A Portfolio instance whose cash positions are risk_position
             divided by EWMA volatility.
         """
         pd = PortfolioData.from_risk_position(prices=prices, risk_position=risk_position, vola=vola, aum=aum)
-        return cls._from_portfolio_data(pd)
+        return cls._from_portfolio_data(pd, cost_per_unit=cost_per_unit, cost_bps=cost_bps)
 
     @classmethod
     def from_cash_position(

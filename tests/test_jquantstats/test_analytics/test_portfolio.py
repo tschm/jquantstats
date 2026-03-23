@@ -1283,3 +1283,28 @@ def test_from_risk_position_dict_vola_missing_key_falls_back_to_32():
     a_dict = pf_dict.cashposition["A"].drop_nulls().to_list()
     a_int = pf_int.cashposition["A"].drop_nulls().to_list()
     assert a_dict == pytest.approx(a_int, nan_ok=True)
+
+
+# ── from_risk_position cost param forwarding ─────────────────────────────────
+
+
+def test_from_risk_position_forwards_cost_per_unit():
+    """from_risk_position must preserve the cost_per_unit parameter."""
+    import numpy as np
+
+    dates = pl.date_range(start=date(2020, 1, 1), end=date(2020, 3, 1), interval="1d", eager=True).cast(pl.Date)
+    prices = pl.DataFrame({"date": dates, "A": pl.Series(np.linspace(100, 120, len(dates)), dtype=pl.Float64)})
+    risk = pl.DataFrame({"date": dates, "A": pl.Series([1.0] * len(dates), dtype=pl.Float64)})
+    pf = Portfolio.from_risk_position(prices, risk, aum=1e8, cost_per_unit=0.05)
+    assert pf.cost_per_unit == pytest.approx(0.05)
+
+
+def test_from_risk_position_forwards_cost_bps():
+    """from_risk_position must preserve the cost_bps parameter."""
+    import numpy as np
+
+    dates = pl.date_range(start=date(2020, 1, 1), end=date(2020, 3, 1), interval="1d", eager=True).cast(pl.Date)
+    prices = pl.DataFrame({"date": dates, "A": pl.Series(np.linspace(100, 120, len(dates)), dtype=pl.Float64)})
+    risk = pl.DataFrame({"date": dates, "A": pl.Series([1.0] * len(dates), dtype=pl.Float64)})
+    pf = Portfolio.from_risk_position(prices, risk, aum=1e8, cost_bps=5.0)
+    assert pf.cost_bps == pytest.approx(5.0)
