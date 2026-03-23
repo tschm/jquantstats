@@ -249,6 +249,22 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
+## 📝 Citing
+
+If you use jQuantStats in academic work or research reports, please cite it using the
+[CITATIONS.bib](CITATIONS.bib) file provided in this repository:
+
+```bibtex
+@software{jquantstats,
+  author    = {Schmelzer, Thomas},
+  title     = {jQuantStats: Portfolio Analytics for Quants},
+  url       = {https://github.com/tschm/jquantstats},
+  version   = {0.1.1},
+  year      = {2026},
+  license   = {MIT}
+}
+```
+
 ## ⚖️ License
 
 This project is licensed under the MIT
