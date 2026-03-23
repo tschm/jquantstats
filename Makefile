@@ -20,6 +20,12 @@ post-validate::
 
 ##@ Quality
 
+.PHONY: changelog
+changelog: ## generate/update CHANGELOG.md from git history using git-cliff
+	@printf "${BLUE}[INFO] Generating CHANGELOG.md with git-cliff...${RESET}\n"
+	@${UVX_BIN} git-cliff --output CHANGELOG.md
+	@printf "${GREEN}[OK] CHANGELOG.md updated.${RESET}\n"
+
 .PHONY: semgrep
 semgrep: install ## run Semgrep static analysis (numpy rules)
 	@printf "${BLUE}[INFO] Running Semgrep (numpy rules)...${RESET}\n"
