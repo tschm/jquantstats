@@ -67,6 +67,13 @@ def test_with_series_rf(returns):
     assert_series_equal(result.returns["Meta"], returns["Meta"] - rf_scalar)
 
 
+def test_pandas_input(returns):
+    """Tests that build_data accepts a pandas DataFrame as input."""
+    pandas_returns = returns.to_pandas()
+    d = build_data(pandas_returns, date_col="Date")
+    assert_frame_equal(d.returns, returns.drop("Date"))
+
+
 def test_with_benchmark(returns, benchmark_frame):
     """Tests that build_data correctly handles a benchmark.
 
