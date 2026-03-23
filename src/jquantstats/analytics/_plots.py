@@ -219,6 +219,48 @@ class Plots:
 
         return fig
 
+    @staticmethod
+    def _apply_nav_layout(fig: go.Figure, title: str, log_scale: bool = False) -> None:
+        """Apply common NAV-accumulated layout to *fig* in-place.
+
+        Configures the plot background, legend, hover mode, x-axis date range
+        selector, y-axis label, grid lines, and optional logarithmic y-scale.
+        Shared by :meth:`lagged_performance_plot` and
+        :meth:`smoothed_holdings_performance_plot`.
+
+        Args:
+            fig: The Plotly Figure to configure.
+            title: Chart title text.
+            log_scale: If True, set the primary y-axis to logarithmic scale.
+        """
+        fig.update_layout(
+            title=title,
+            hovermode="x unified",
+            plot_bgcolor="white",
+            legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
+            xaxis={
+                "rangeselector": {
+                    "buttons": [
+                        {"count": 6, "label": "6m", "step": "month", "stepmode": "backward"},
+                        {"count": 1, "label": "1y", "step": "year", "stepmode": "backward"},
+                        {"count": 3, "label": "3y", "step": "year", "stepmode": "backward"},
+                        {"step": "year", "stepmode": "todate", "label": "YTD"},
+                        {"step": "all", "label": "All"},
+                    ]
+                },
+                "rangeslider": {"visible": False},
+                "type": "date",
+            },
+        )
+        fig.update_yaxes(title_text="NAV (accumulated)")
+        fig.update_xaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
+        fig.update_yaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
+
+        if log_scale:
+            fig.update_yaxes(type="log")
+            if hasattr(fig.layout, "yaxis"):
+                fig.layout.yaxis.type = "log"
+
     def lagged_performance_plot(self, lags: list[int] | None = None, log_scale: bool = False) -> go.Figure:
         """Plot NAV_accumulated for multiple lagged portfolios.
 
@@ -252,34 +294,7 @@ class Plots:
                 )
             )
 
-        fig.update_layout(
-            title="NAV accumulated by lag",
-            hovermode="x unified",
-            plot_bgcolor="white",
-            legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
-            xaxis={
-                "rangeselector": {
-                    "buttons": [
-                        {"count": 6, "label": "6m", "step": "month", "stepmode": "backward"},
-                        {"count": 1, "label": "1y", "step": "year", "stepmode": "backward"},
-                        {"count": 3, "label": "3y", "step": "year", "stepmode": "backward"},
-                        {"step": "year", "stepmode": "todate", "label": "YTD"},
-                        {"step": "all", "label": "All"},
-                    ]
-                },
-                "rangeslider": {"visible": False},
-                "type": "date",
-            },
-        )
-        fig.update_yaxes(title_text="NAV (accumulated)")
-        fig.update_xaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
-        fig.update_yaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
-
-        if log_scale:
-            fig.update_yaxes(type="log")
-            if hasattr(fig.layout, "yaxis"):
-                fig.layout.yaxis.type = "log"
-
+        self._apply_nav_layout(fig, title="NAV accumulated by lag", log_scale=log_scale)
         return fig
 
     def rolling_sharpe_plot(self, window: int = 63) -> go.Figure:
@@ -587,34 +602,7 @@ class Plots:
                 )
             )
 
-        fig.update_layout(
-            title="NAV accumulated by smoothed holdings",
-            hovermode="x unified",
-            plot_bgcolor="white",
-            legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
-            xaxis={
-                "rangeselector": {
-                    "buttons": [
-                        {"count": 6, "label": "6m", "step": "month", "stepmode": "backward"},
-                        {"count": 1, "label": "1y", "step": "year", "stepmode": "backward"},
-                        {"count": 3, "label": "3y", "step": "year", "stepmode": "backward"},
-                        {"step": "year", "stepmode": "todate", "label": "YTD"},
-                        {"step": "all", "label": "All"},
-                    ]
-                },
-                "rangeslider": {"visible": False},
-                "type": "date",
-            },
-        )
-        fig.update_yaxes(title_text="NAV (accumulated)")
-        fig.update_xaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
-        fig.update_yaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
-
-        if log_scale:
-            fig.update_yaxes(type="log")
-            if hasattr(fig.layout, "yaxis"):
-                fig.layout.yaxis.type = "log"
-
+        self._apply_nav_layout(fig, title="NAV accumulated by smoothed holdings", log_scale=log_scale)
         return fig
 
     def trading_cost_impact_plot(self, max_bps: int = 20) -> go.Figure:
