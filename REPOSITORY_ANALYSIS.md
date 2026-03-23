@@ -149,3 +149,39 @@ Six targeted improvements were applied to the `refactor` branch in this session,
 ### Score
 
 **10 / 10** — All correctness blockers and the primary design-quality gaps identified over the preceding three entries are now resolved. The codebase is Polars-native, 100%-covered, CI-hardened, and exposes a coherent two-entry-point API. Remaining items are refinements, not blockers.
+
+---
+
+## 2026-03-23 — Analysis Entry (main branch, post-merge)
+
+### Summary
+
+The `refactor` branch has been merged to `main` via commit `fe48a6a` ("Clean portfolio API"). Two further commits on `main` (`efc94e4`, `288453c`) resolve the final uncached-accessor concern for the `data` bridge and add `cost_bps` / `cost_per_unit` forwarding through `from_risk_position`. The codebase now has 304 passing tests at 99% statement coverage (2 991 statements, 6 uncovered). The dual-Stats implementation risk is eliminated.
+
+### Changes Since Last Entry (10/10 on refactor branch)
+
+| Commit | Change |
+|---|---|
+| `fe48a6a` | Merge "Clean portfolio API": deleted `analytics/_stats.py` (870 lines) and its 896-line test file; Stats logic consolidated into top-level `_stats.py` (now 1 342 lines). Single Stats class, no dual-implementation risk. |
+| `efc94e4` | Added `_data_bridge: Data \| None` field to `Portfolio`; `data` property now caches the bridge object on first access via `object.__setattr__`. Resolves the previously noted O(N) re-validation cost on repeated `.data` access. Identity tests added (`pf.data is pf.data`). |
+| `288453c` | `from_risk_position` now accepts and forwards `cost_per_unit` and `cost_bps`. Closes the construction-time cost gap noted in the 10/10 entry. |
+| `d2a4147` | README `make validate` code examples corrected. |
+| `1c05364` | `ty` type errors in `_stats.py` and `portfolio.py` resolved. |
+
+### Strengths Added
+
+- **Single Stats implementation.** `analytics/_stats.py` is gone. There is now exactly one `Stats` class (in `_stats.py`, 1 342 lines) used by both entry points. The behavioural-divergence risk between parallel Stats paths is eliminated.
+- **Cached `data` bridge.** `Portfolio.data` is O(1) after first access. The prior performance footgun (re-running `Data.__post_init__` validation on every `.data` call) is gone. `_from_portfolio_data` and `__post_init__` both initialise `_data_bridge = None` so the lazy-init path is uniform.
+- **`from_risk_position` cost parameters.** Both `cost_per_unit` and `cost_bps` are now accepted at `from_risk_position` construction and forwarded. All three construction paths (`__init__`, `from_cash_position`, `from_risk_position`) are now cost-aware at construction time.
+
+### Remaining Concerns
+
+- **`_stats.py` is 1 342 lines.** Consolidation resolved the dual-path risk, but the single file is now very large. Navigation and future maintenance may be hampered without internal section structure or a module split (e.g. `_stats_core.py` / `_stats_rolling.py`). The existing section-comment dividers from commit `105ca6d` partially mitigate this.
+- **`.stats`, `.plots`, `.report` are uncached.** `portfolio.stats` calls `self.data.stats`, where `self.data` is now O(1), but `self.data.stats` still allocates a new `Stats` object on every call. `portfolio.plots` and `portfolio.report` each construct a new `Plots` / `Report` instance per access. A `functools.cached_property` on each would eliminate repeated allocations for call-site loops.
+- **99% coverage, not 100%.** Coverage dropped from 100% to 99% (6 uncovered statements; the only test-file miss is `test_build_data.py:89`). Not a significant regression, but the 100% ceiling was previously a stated project standard.
+- **Two cost models remain unmerged.** Model A (`cost_per_unit`, per-unit delta) and Model B (`cost_bps`, bps-of-turnover) are parallel fields with separate methods. A unified `CostModel` abstraction remains a future refinement.
+- **Version still `0.0.x`.** No change since last entry.
+
+### Score
+
+**9.5 / 10** — The dual-Stats implementation risk is gone and the `data` bridge caching resolves the primary performance concern. The codebase is materially cleaner post-merge than before. The gap from 9.5 to 10 is: (1) the `_stats.py` file size and the uncached `.stats`/`.plots`/`.report` properties, and (2) the minor coverage regression. Neither is a correctness or design blocker.
