@@ -6,7 +6,7 @@ lead/lag information ratio bar charts. Designed for notebook use.
 
 Examples:
     >>> import dataclasses
-    >>> from jquantstats.analytics._plots import Plots
+    >>> from jquantstats._portfolio_plots import Plots
     >>> dataclasses.is_dataclass(Plots)
     True
 """
@@ -23,7 +23,7 @@ import polars as pl
 from plotly.subplots import make_subplots
 
 if TYPE_CHECKING:
-    # Import the local Portfolio type for type checking and documentation tools.
+    # Import Portfolio for type checking and documentation.
     from .portfolio import Portfolio
 
 # Ensure Plotly works with Marimo (set after imports to satisfy linters)
