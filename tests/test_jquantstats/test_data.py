@@ -310,3 +310,83 @@ def test_copy_no_benchmark(data_no_benchmark):
     x = data_no_benchmark.copy()
     assert x.returns is not None
     assert x.benchmark is None
+
+
+def test_truncate_by_start_and_end(data):
+    """Tests truncate(start, end) filters rows inclusively by date."""
+    first_date = data.index["Date"][0]
+    last_date = data.index["Date"][-1]
+    mid_start = data.index["Date"][10]
+    mid_end = data.index["Date"][20]
+
+    result = data.truncate(start=mid_start, end=mid_end)
+
+    assert result.index["Date"][0] == mid_start
+    assert result.index["Date"][-1] == mid_end
+    assert result.returns.shape[0] == 11
+    assert result.index.shape[0] == result.returns.shape[0]
+    if result.benchmark is not None:
+        assert result.benchmark.shape[0] == result.returns.shape[0]
+
+    # full range should equal original
+    full = data.truncate(start=first_date, end=last_date)
+    assert full.returns.shape[0] == data.returns.shape[0]
+
+
+def test_truncate_start_only(data):
+    """Tests truncate(start=...) returns rows from start to the end of the data."""
+    mid_start = data.index["Date"][10]
+    result = data.truncate(start=mid_start)
+    assert result.index["Date"][0] == mid_start
+    assert result.returns.shape[0] == data.returns.shape[0] - 10
+
+
+def test_truncate_end_only(data):
+    """Tests truncate(end=...) returns rows from the beginning up to end inclusive."""
+    mid_end = data.index["Date"][9]
+    result = data.truncate(end=mid_end)
+    assert result.index["Date"][-1] == mid_end
+    assert result.returns.shape[0] == 10
+
+
+def test_truncate_no_bounds_returns_all(data):
+    """Tests truncate() with no bounds returns all rows unchanged."""
+    result = data.truncate()
+    assert result.returns.shape[0] == data.returns.shape[0]
+    assert_frame_equal(result.returns, data.returns)
+    assert_frame_equal(result.index, data.index)
+
+
+def test_truncate_no_benchmark(data_no_benchmark):
+    """Tests truncate() works when there is no benchmark."""
+    mid_start = data_no_benchmark.index["Date"][5]
+    mid_end = data_no_benchmark.index["Date"][15]
+    result = data_no_benchmark.truncate(start=mid_start, end=mid_end)
+    assert result.benchmark is None
+    assert result.returns.shape[0] == 11
+
+
+def test_truncate_integer_indexed_both_bounds():
+    """Tests truncate() with integer indices when data has no temporal index."""
+    dates = list(range(10))
+    returns_df = pl.DataFrame({"returns": [float(i) * 0.01 for i in range(10)]})
+    index_df = pl.DataFrame({"row": dates})
+    from jquantstats._data import Data
+
+    d = Data(returns=returns_df, index=index_df)
+    result = d.truncate(start=2, end=5)
+    assert result.returns.shape[0] == 4
+    assert list(result.index["row"]) == [2, 3, 4, 5]
+
+
+def test_truncate_integer_indexed_raises_on_non_int():
+    """Tests truncate() raises TypeError when non-integer bound is given on integer-indexed data."""
+    returns_df = pl.DataFrame({"returns": [0.01 * i for i in range(10)]})
+    index_df = pl.DataFrame({"row": list(range(10))})
+    from jquantstats._data import Data
+
+    d = Data(returns=returns_df, index=index_df)
+    with pytest.raises(TypeError, match="start must be an integer"):
+        d.truncate(start="2020-01-01")
+    with pytest.raises(TypeError, match="end must be an integer"):
+        d.truncate(end=3.5)
