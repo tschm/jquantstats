@@ -185,3 +185,45 @@ The `refactor` branch has been merged to `main` via commit `fe48a6a` ("Clean por
 ### Score
 
 **9.5 / 10** — The dual-Stats implementation risk is gone and the `data` bridge caching resolves the primary performance concern. The codebase is materially cleaner post-merge than before. The gap from 9.5 to 10 is: (1) the `_stats.py` file size and the uncached `.stats`/`.plots`/`.report` properties, and (2) the minor coverage regression. Neither is a correctness or design blocker.
+
+---
+
+## 2026-03-23 — Analysis Entry (v0.1.1, post-community-infra)
+
+### Summary
+
+Several follow-up PRs have landed on `main` since the 9.5/10 entry: full MkDocs API reference, narwhals multi-framework input support, expanded README, issue templates, and a Discussions infrastructure. The two previously flagged performance gaps (uncached `.stats`/`.plots`/`.report`) are now resolved via explicit `_stats_cache`/`_plots_cache`/`_report_cache` fields on `Portfolio`. Version bumped to `0.1.1`.
+
+### Changes Since Last Entry (9.5/10)
+
+| Commit / PR | Change |
+|---|---|
+| PR #412 | MkDocs reference pages added for all six public surfaces (`Data`, `Stats`, `Portfolio`, `Plots`, `Reports`, `build_data`); `docs` dep group pinned in `pyproject.toml` — reproducible doc builds. |
+| `d2a4147` | `narwhals>=2.0.0` added as runtime dep; `build_data` now accepts any narwhals-compatible DataFrame (pandas, Modin, cuDF, etc.) via `_to_polars()` shim. |
+| PR #402 | README expanded with comparison table, Mermaid architecture diagram, extended examples, and badge row. |
+| PR #403 | `ISSUE_TEMPLATE/` added (`bug_report.yml`, `feature_request.yml`, `config.yml`). Lowers contributor barrier. |
+| PR #411 | GitHub Discussions `IDEAS` template added; `config.yml` redirects open-ended questions to Discussions. |
+| `analytics/portfolio.py` | `.stats`, `.plots`, `.report` now lazy-initialised via `_stats_cache`, `_plots_cache`, `_report_cache` fields; `object.__setattr__` used for frozen-dataclass compatibility. Resolves the O(N) repeated-allocation concern from prior entries. |
+| Version | Bumped to `0.1.1`; `CHANGELOG.md` present. |
+
+### Strengths
+
+- **All three accessor caches implemented.** `portfolio.stats`, `portfolio.plots`, and `portfolio.report` are O(1) after first access. Cache fields are reset correctly on copy/clone paths. The previously flagged call-site loop footgun is gone.
+- **Full API reference in docs.** Every public class and function has a dedicated MkDocs reference page rendered by `mkdocstrings`. Dep group ensures `uv sync --all-groups` is deterministic.
+- **Multi-framework input via narwhals.** `build_data` no longer forces callers onto Polars DataFrames directly. The `_to_polars()` shim is a thin conversion layer; Polars remains the internal runtime. Adds pandas/Modin/cuDF interoperability without changing the core.
+- **Community infrastructure complete.** Issue templates, Discussions routing, and README polish are all present. Organic discoverability improved.
+
+### Weaknesses
+
+- **`_stats.py` is 1 354 lines.** Unchanged since last entry. Section-comment dividers exist but a module split (`_stats_core.py` / `_stats_rolling.py`) would improve navigability and testability.
+- **`narwhals` is now a runtime dependency.** Previously the runtime install surface was extremely lean. Adding the narwhals shim is a reasonable trade-off but introduces a new transitive dep surface to monitor.
+- **Version still pre-1.0.** `0.1.1` signals progress but the public API has been stable for several releases. Issue #405 tracks this; no action yet.
+
+### Risks / Technical Debt
+
+- **Two cost models remain unmerged.** Model A (`cost_per_unit`) and Model B (`cost_bps`) are parallel fields with separate methods. A `CostModel` abstraction would simplify the interface but is a refinement, not a blocker.
+- **`analytics/` subpackage duplication risk.** `analytics/portfolio.py` coexists with the top-level entry points. Should be audited periodically to confirm no residual dual-path risk analogous to the now-resolved `Stats` duplication.
+
+### Score
+
+**9.5 / 10** — The caching gap is closed and docs/community infrastructure is now first-class. The remaining delta to 10 is the `_stats.py` file size and the pre-1.0 version signal. Neither affects correctness or reliability.

@@ -1,3 +1,5 @@
+"""Financial report generation from returns data."""
+
 from __future__ import annotations
 
 import dataclasses

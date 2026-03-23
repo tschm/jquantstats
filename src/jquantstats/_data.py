@@ -1,3 +1,5 @@
+"""Financial returns data container and manipulation utilities."""
+
 from __future__ import annotations
 
 import dataclasses
@@ -145,6 +147,7 @@ class Data:
         """
 
         def resample_frame(dframe: pl.DataFrame) -> pl.DataFrame:
+            """Resample a single DataFrame to the target frequency using compound returns."""
             dframe = self.index.hstack(dframe)  # Add the date column for resampling
 
             return dframe.group_by_dynamic(
