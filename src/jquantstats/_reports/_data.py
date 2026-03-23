@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import polars as pl
 
 if TYPE_CHECKING:
-    from .data import Data
+    from ._protocol import DataLike
 
 
 @dataclasses.dataclass(frozen=True)
@@ -19,11 +19,11 @@ class Reports:
     into report-ready formats such as DataFrames.
 
     Attributes:
-        data (Data): The financial data object to generate reports from.
+        data (DataLike): The financial data object to generate reports from.
 
     """
 
-    data: Data
+    data: DataLike
 
     def metrics(self, periods: int | float | None = None) -> pl.DataFrame:
         """Calculate various financial metrics and return them as a DataFrame.

@@ -28,9 +28,9 @@ import polars as pl
 import polars.selectors as cs
 
 from ._cost_model import CostModel
+from ._plots import PortfolioPlots
 from ._portfolio_data import PortfolioData
-from ._portfolio_plots import Plots
-from ._report import Report
+from ._reports import Report
 from .exceptions import (
     IntegerIndexBoundError,
 )
@@ -120,7 +120,7 @@ class Portfolio:
     _data: PortfolioData = dataclasses.field(init=False, repr=False, compare=False, hash=False)
     _data_bridge: "Data | None" = dataclasses.field(init=False, repr=False, compare=False, hash=False)
     _stats_cache: "Stats | None" = dataclasses.field(init=False, repr=False, compare=False, hash=False)
-    _plots_cache: "Plots | None" = dataclasses.field(init=False, repr=False, compare=False, hash=False)
+    _plots_cache: "PortfolioPlots | None" = dataclasses.field(init=False, repr=False, compare=False, hash=False)
     _report_cache: "Report | None" = dataclasses.field(init=False, repr=False, compare=False, hash=False)
 
     @staticmethod
@@ -380,20 +380,20 @@ class Portfolio:
         return self._stats_cache  # type: ignore[return-value]
 
     @property
-    def plots(self) -> Plots:
-        """Convenience accessor returning a Plots facade for this portfolio.
+    def plots(self) -> PortfolioPlots:
+        """Convenience accessor returning a PortfolioPlots facade for this portfolio.
 
         Use this to create Plotly visualizations such as snapshots, lagged
         performance curves, and lead/lag IR charts.
 
         Returns:
-            :class:`~jquantstats._portfolio_plots.Plots`: Helper object with
+            :class:`~jquantstats._plots.PortfolioPlots`: Helper object with
             plotting methods.
 
         The result is cached after first access so repeated calls are O(1).
         """
         if self._plots_cache is None:
-            object.__setattr__(self, "_plots_cache", Plots(self))
+            object.__setattr__(self, "_plots_cache", PortfolioPlots(self))
         return self._plots_cache  # type: ignore[return-value]
 
     @property
