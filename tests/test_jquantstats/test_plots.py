@@ -2,7 +2,7 @@
 
 import pytest
 
-from jquantstats import build_data
+from jquantstats import Data
 
 
 @pytest.fixture
@@ -56,7 +56,7 @@ def test_plot_snapshot_one_symbol(returns):
         2. The method doesn't raise any exceptions when working with a single symbol.
 
     """
-    fig = build_data(returns=returns).plots.plot_snapshot()
+    fig = Data.from_returns(returns=returns).plots.plot_snapshot()
 
     assert fig is not None
     assert hasattr(fig, "show")

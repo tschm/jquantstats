@@ -88,6 +88,7 @@ class Data:
     benchmark: pl.DataFrame | None = None
 
     def __post_init__(self) -> None:
+        """Validate the Data object after initialization."""
         # You need at least two points
         if self.index.shape[0] < 2:
             raise ValueError("Index must contain at least two timestamps.")  # noqa: TRY003

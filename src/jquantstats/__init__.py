@@ -23,7 +23,7 @@ pf.plots.snapshot()
 
 **Entry point 2 — returns series (for arbitrary return streams):**
 
-Use :class:`~jquantstats._data.Data` when you already have a returns series
+Use :class:`~jquantstats.data.Data` when you already have a returns series
 (e.g. downloaded from a data vendor) and want benchmark comparison or
 factor analytics.
 
@@ -36,10 +36,7 @@ data.stats.sharpe()
 data.plots.plot_snapshot(title="Performance")
 ```
 
-:func:`~jquantstats.api.build_data` is kept as a convenience alias for
-``Data.from_returns()`` for backward compatibility.
-
-The two APIs are layered: ``portfolio.data`` returns a :class:`~jquantstats._data.Data`
+The two APIs are layered: ``portfolio.data`` returns a :class:`~jquantstats.data.Data`
 object so you can always drop into the returns-series API from a Portfolio.
 
 For more information, visit the `jQuantStats Documentation <https://tschm.github.io/jquantstats/book>`_.
@@ -48,10 +45,9 @@ For more information, visit the `jQuantStats Documentation <https://tschm.github
 import importlib.metadata
 
 from ._cost_model import CostModel as CostModel
-from ._data import Data as Data
 from ._types import NativeFrame as NativeFrame
 from ._types import NativeFrameOrScalar as NativeFrameOrScalar
-from .api import build_data  # noqa: F401
+from .data import Data as Data
 from .portfolio import Portfolio as Portfolio
 
 __version__ = importlib.metadata.version("jquantstats")

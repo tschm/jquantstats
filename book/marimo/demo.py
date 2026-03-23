@@ -49,7 +49,7 @@ def _download(mo):
 
 @app.cell
 def _(benchmark, returns):
-    data = jqs.build_data(returns=returns, benchmark=benchmark, date_col="Date")
+    data = jqs.Data.from_returns(returns=returns, benchmark=benchmark, date_col="Date")
     return data
 
 

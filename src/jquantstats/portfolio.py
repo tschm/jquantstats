@@ -21,8 +21,8 @@ import dataclasses
 from typing import TYPE_CHECKING, Self
 
 if TYPE_CHECKING:
-    from ._data import Data as Data
     from ._stats import Stats as Stats
+    from .data import Data as Data
 
 import polars as pl
 import polars.selectors as cs
@@ -137,7 +137,7 @@ class Portfolio:
         Returns:
             A :class:`~jquantstats._data.Data` instance backed by *ret*.
         """
-        from ._data import Data
+        from .data import Data
 
         if "date" in ret.columns:
             return Data(returns=ret.drop("date"), index=ret.select("date"))

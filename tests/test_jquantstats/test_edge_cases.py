@@ -5,8 +5,7 @@ import polars as pl
 import pytest
 from polars.testing import assert_frame_equal
 
-from jquantstats._data import Data
-from jquantstats.api import build_data
+from jquantstats.data import Data
 
 
 @pytest.fixture
@@ -20,7 +19,7 @@ def data_no_benchmark(returns):
         _Data: A Data object with returns but no benchmark.
 
     """
-    return build_data(returns=returns)
+    return Data.from_returns(returns=returns)
 
 
 def test_copy_no_benchmark(data_no_benchmark):
@@ -67,10 +66,10 @@ def test_r_squared_no_benchmark(data_no_benchmark):
 
 
 def test_non_overlapping_dates():
-    """Tests that build_data raises a ValueError when returns and benchmark have non-overlapping dates.
+    """Tests that Data.from_returns raises a ValueError when returns and benchmark have non-overlapping dates.
 
     Verifies:
-        1. Calling build_data with non-overlapping dates raises a ValueError with the expected message.
+        1. Calling Data.from_returns with non-overlapping dates raises a ValueError with the expected message.
     """
     # Create returns data with dates in 2020
     returns_dates = [f"2020-01-{i:02d}" for i in range(1, 11)]
@@ -84,9 +83,9 @@ def test_non_overlapping_dates():
         pl.col("Date").str.to_date()
     )
 
-    # Verify that calling build_data raises a ValueError
+    # Verify that calling Data.from_returns raises a ValueError
     with pytest.raises(ValueError, match=r"No overlapping dates between returns and benchmark\."):
-        build_data(returns=returns, benchmark=benchmark)
+        Data.from_returns(returns=returns, benchmark=benchmark)
 
 
 def test_periods_per_year_non_date_index():
@@ -107,7 +106,7 @@ def test_volatility_invalid_periods():
             "asset": [0.01, -0.02, 0.03],
         }
     )
-    data = build_data(returns=returns)
+    data = Data.from_returns(returns=returns)
     with pytest.raises(TypeError):
         data.stats.volatility(periods="bad")
 
@@ -128,7 +127,7 @@ def test_sharpe_variance_nan_short_series():
             "asset": [1.0, -0.5, 0.25],
         }
     )
-    data = build_data(returns=returns)
+    data = Data.from_returns(returns=returns)
     result = data.stats.sharpe_variance()
     assert np.isnan(result["asset"])
 
@@ -149,7 +148,7 @@ def test_prob_sharpe_ratio_nan_short_series():
             "asset": [1.0, -0.5, 0.25],
         }
     )
-    data = build_data(returns=returns)
+    data = Data.from_returns(returns=returns)
     result = data.stats.prob_sharpe_ratio(benchmark_sr=0.0)
     assert np.isnan(result["asset"])
 
@@ -167,7 +166,7 @@ def test_prob_sharpe_ratio_nan_negative_variance():
             "asset": [1.0, -1.0, 1.0, -1.0],
         }
     )
-    data = build_data(returns=returns)
+    data = Data.from_returns(returns=returns)
     result = data.stats.prob_sharpe_ratio(benchmark_sr=1.0)
     assert np.isnan(result["asset"])
 
@@ -185,7 +184,7 @@ def test_hhi_negative_nan_few_negatives(edge):
 
 
 def test_subtract_rf_invalid_type():
-    """Tests that build_data raises TypeError when rf is not a float or DataFrame."""
+    """Tests that Data.from_returns raises TypeError when rf is not a float or DataFrame."""
     from datetime import date
 
     returns = pl.DataFrame(
@@ -195,28 +194,28 @@ def test_subtract_rf_invalid_type():
         }
     )
     with pytest.raises(TypeError, match="rf must be a float or DataFrame"):
-        build_data(returns=returns, rf=1)  # int is not float
+        Data.from_returns(returns=returns, rf=1)  # int is not float
 
 
 # ── Empty returns ─────────────────────────────────────────────────────────────
 
 
-def test_build_data_empty_returns_raises():
-    """build_data with a zero-row DataFrame raises ValueError.
+def test_from_returns_empty_returns_raises():
+    """Data.from_returns with a zero-row DataFrame raises ValueError.
 
     Verifies that an empty returns frame is rejected before any statistics
     are attempted.
     """
     empty = pl.DataFrame({"Date": pl.Series([], dtype=pl.Date), "asset": pl.Series([], dtype=pl.Float64)})
     with pytest.raises(ValueError, match="at least two timestamps"):
-        build_data(returns=empty)
+        Data.from_returns(returns=empty)
 
 
 # ── Single-row frame ──────────────────────────────────────────────────────────
 
 
-def test_build_data_single_row_raises():
-    """build_data with a single-row DataFrame raises ValueError.
+def test_from_returns_single_row_raises():
+    """Data.from_returns with a single-row DataFrame raises ValueError.
 
     A meaningful time series requires at least two observations to compute
     any meaningful statistics (e.g. variance, drawdown).
@@ -225,7 +224,7 @@ def test_build_data_single_row_raises():
 
     single = pl.DataFrame({"Date": [date(2023, 1, 1)], "asset": [0.01]})
     with pytest.raises(ValueError, match="at least two timestamps"):
-        build_data(returns=single)
+        Data.from_returns(returns=single)
 
 
 # ── All-zero returns — additional statistics ──────────────────────────────────
@@ -276,8 +275,8 @@ def test_all_zero_exposure(edge):
 # ── NaN-containing frames ─────────────────────────────────────────────────────
 
 
-def test_build_data_with_nan_succeeds():
-    """build_data accepts returns containing NaN values without raising.
+def test_from_returns_with_nan_succeeds():
+    """Data.from_returns accepts returns containing NaN values without raising.
 
     NaN is a valid IEEE-754 float and must not be mistaken for a missing row.
     """
@@ -289,7 +288,7 @@ def test_build_data_with_nan_succeeds():
             "asset": [0.01, float("nan"), 0.03],
         }
     )
-    data = build_data(returns=returns)
+    data = Data.from_returns(returns=returns)
     assert data.returns.shape[0] == 3
 
 
@@ -307,7 +306,7 @@ def test_nan_avg_return_propagates_nan():
             "asset": [0.01, float("nan"), 0.03],
         }
     )
-    data = build_data(returns=returns)
+    data = Data.from_returns(returns=returns)
     result = data.stats.avg_return()
     assert np.isnan(result["asset"])
 
@@ -326,7 +325,7 @@ def test_nan_volatility_propagates_nan():
             "asset": [0.01, float("nan"), 0.03],
         }
     )
-    data = build_data(returns=returns)
+    data = Data.from_returns(returns=returns)
     result = data.stats.volatility()
     assert np.isnan(result["asset"])
 
@@ -335,7 +334,7 @@ def test_nan_volatility_propagates_nan():
 
 
 def test_partial_date_overlap_aligns_correctly():
-    """build_data keeps only dates present in both returns and benchmark.
+    """Data.from_returns keeps only dates present in both returns and benchmark.
 
     Returns cover Jan 1–10; benchmark covers Jan 5–15.  The inner join must
     produce 6 rows (Jan 5–10) in both returns and benchmark.
@@ -348,7 +347,7 @@ def test_partial_date_overlap_aligns_correctly():
         pl.col("Date").str.to_date()
     )
 
-    data = build_data(returns=returns, benchmark=benchmark)
+    data = Data.from_returns(returns=returns, benchmark=benchmark)
 
     assert data.returns.shape[0] == 6
     assert data.benchmark is not None

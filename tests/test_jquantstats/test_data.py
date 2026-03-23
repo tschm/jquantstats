@@ -6,7 +6,7 @@ import polars as pl
 import pytest
 from polars.testing import assert_frame_equal
 
-from jquantstats.api import build_data
+from jquantstats import Data
 
 
 def test_head(data):
@@ -124,7 +124,7 @@ def test_periods_edge_cases(data):
         date(2023, 3, 5),
     ]
     weekly_returns = pl.DataFrame({"Date": weekly_dates, "returns": [0.01] * 10})
-    weekly_data = build_data(returns=weekly_returns)
+    weekly_data = Data.from_returns(returns=weekly_returns)
     print(weekly_data._periods_per_year)
     assert weekly_data._periods_per_year == pytest.approx(52.142857142857146)
     # Monthly data
@@ -142,7 +142,7 @@ def test_periods_edge_cases(data):
         date(2023, 10, 1),
     ]
     monthly_returns = pl.DataFrame({"Date": monthly_dates, "returns": [0.01] * 10})
-    monthly_data = build_data(returns=monthly_returns)
+    monthly_data = Data.from_returns(returns=monthly_returns)
     assert monthly_data._periods_per_year == pytest.approx(12.032967032967033)
 
 
@@ -160,21 +160,19 @@ def test_post_init():
     single_returns = pl.DataFrame({"Date": single_date, "returns": [0.01]})
 
     with pytest.raises(ValueError, match=r"Index must contain at least two timestamps\."):
-        build_data(returns=single_returns, date_col="Date")
+        Data.from_returns(returns=single_returns, date_col="Date")
 
     # Test case 2: Unsorted index
     unsorted_dates = [date(2023, 1, 15), date(2023, 1, 1), date(2023, 1, 30)]
     unsorted_returns = pl.DataFrame({"Date": unsorted_dates, "returns": [0.01, 0.02, 0.03]})
 
     with pytest.raises(ValueError, match=r"Index must be monotonically increasing\."):
-        build_data(returns=unsorted_returns)
+        Data.from_returns(returns=unsorted_returns)
 
     # Test case 3: Returns and index with different row counts
     dates = [date(2023, 1, 1), date(2023, 1, 15), date(2023, 1, 30)]
     returns = pl.DataFrame({"returns": [0.01, 0.02]})
     index = pl.DataFrame({"Date": dates})
-
-    from jquantstats._data import Data
 
     with pytest.raises(ValueError, match=r"Returns and index must have the same number of rows\."):
         Data(returns=returns, index=index)
@@ -371,7 +369,6 @@ def test_truncate_integer_indexed_both_bounds():
     dates = list(range(10))
     returns_df = pl.DataFrame({"returns": [float(i) * 0.01 for i in range(10)]})
     index_df = pl.DataFrame({"row": dates})
-    from jquantstats._data import Data
 
     d = Data(returns=returns_df, index=index_df)
     result = d.truncate(start=2, end=5)
@@ -383,7 +380,6 @@ def test_truncate_integer_indexed_raises_on_non_int():
     """Tests truncate() raises TypeError when non-integer bound is given on integer-indexed data."""
     returns_df = pl.DataFrame({"returns": [0.01 * i for i in range(10)]})
     index_df = pl.DataFrame({"row": list(range(10))})
-    from jquantstats._data import Data
 
     d = Data(returns=returns_df, index=index_df)
     with pytest.raises(TypeError, match="start must be an integer"):

@@ -1,15 +1,14 @@
-"""Tests for the build_data function."""
+"""Tests for the Data.from_returns classmethod."""
 
 import narwhals as nw
 import polars as pl
 from polars.testing import assert_frame_equal, assert_series_equal
 
 from jquantstats import Data
-from jquantstats.api import build_data
 
 
 def test_no_rf(returns):
-    """Tests that build_data works without a risk-free rate.
+    """Tests that Data.from_returns works without a risk-free rate.
 
     Args:
         returns (pd.DataFrame): The returns fixture containing asset returns.
@@ -20,12 +19,12 @@ def test_no_rf(returns):
         3. The date column is correctly excluded from the returns.
 
     """
-    d = build_data(returns, date_col="Date")
+    d = Data.from_returns(returns, date_col="Date")
     assert_frame_equal(d.returns, returns.drop("Date"))
 
 
 def test_with_constant_rf(returns):
-    """Tests that build_data works with a constant risk-free rate.
+    """Tests that Data.from_returns works with a constant risk-free rate.
 
     Args:
         returns (pd.DataFrame): The returns fixture containing asset returns.
@@ -38,7 +37,7 @@ def test_with_constant_rf(returns):
     """
     # Test with a small constant and daily risk-free rate
     rf = 0.001
-    result = build_data(returns=returns, rf=rf, date_col="Date")
+    result = Data.from_returns(returns=returns, rf=rf, date_col="Date")
 
     assert_series_equal(result.returns["Meta"], returns["Meta"] - rf)
     assert_series_equal(result.index.to_series(), returns["Date"])
@@ -47,7 +46,7 @@ def test_with_constant_rf(returns):
 
 
 def test_with_series_rf(returns):
-    """Tests that build_data works with a Series as the risk-free rate.
+    """Tests that Data.from_returns works with a Series as the risk-free rate.
 
     Args:
         returns (pd.DataFrame): The returns fixture containing asset returns.
@@ -63,21 +62,21 @@ def test_with_series_rf(returns):
     rf_scalar = 0.001
     rf = returns.select([pl.col(date_col), pl.lit(rf_scalar).alias("rf")])
 
-    result = build_data(returns=returns, rf=rf)
+    result = Data.from_returns(returns=returns, rf=rf)
 
     # Verify the returns are correctly adjusted by the risk-free rate
     assert_series_equal(result.returns["Meta"], returns["Meta"] - rf_scalar)
 
 
 def test_pandas_input(returns):
-    """Tests that build_data accepts a pandas DataFrame as input."""
+    """Tests that Data.from_returns accepts a pandas DataFrame as input."""
     pandas_returns = returns.to_pandas()
-    d = build_data(pandas_returns, date_col="Date")
+    d = Data.from_returns(pandas_returns, date_col="Date")
     assert_frame_equal(d.returns, returns.drop("Date"))
 
 
 def test_with_benchmark(returns, benchmark_frame):
-    """Tests that build_data correctly handles a benchmark.
+    """Tests that Data.from_returns correctly handles a benchmark.
 
     Args:
         returns (pd.DataFrame): The returns fixture containing asset returns.
@@ -90,14 +89,14 @@ def test_with_benchmark(returns, benchmark_frame):
         4. The indices of the returns and benchmark are aligned.
 
     """
-    result = build_data(returns=returns, benchmark=benchmark_frame)
+    result = Data.from_returns(returns=returns, benchmark=benchmark_frame)
     b = result.benchmark
     assert b is not None
     assert b.columns == ["SPY -- Benchmark"]
 
 
 def test_narwhals_polars_round_trip(returns):
-    """Validates that a native Polars DataFrame round-trips correctly through build_data.
+    """Validates that a native Polars DataFrame round-trips correctly through Data.from_returns.
 
     Narwhals identifies polars DataFrames natively; this test ensures the
     fast-path (``isinstance(df, pl.DataFrame) → return df``) in ``_to_polars``
@@ -111,15 +110,14 @@ def test_narwhals_polars_round_trip(returns):
         the date column.
     """
     nw_frame = nw.from_native(returns, eager_only=True)
-    # Round-trip through build_data — narwhals wraps polars transparently.
-    d = build_data(nw_frame, date_col="Date")
+    d = Data.from_returns(nw_frame, date_col="Date")
     assert_frame_equal(d.returns, returns.drop("Date"))
 
 
 def test_narwhals_pandas_round_trip(returns):
-    """Validates that a narwhals-wrapped pandas DataFrame round-trips through build_data.
+    """Validates that a narwhals-wrapped pandas DataFrame round-trips through Data.from_returns.
 
-    ``build_data`` accepts any ``narwhals``-compatible eager frame via
+    ``Data.from_returns`` accepts any ``narwhals``-compatible eager frame via
     ``NativeFrame``.  This test exercises the conversion path
     ``nw.from_native(pandas_df, eager_only=True).to_polars()`` end-to-end.
 
@@ -132,42 +130,8 @@ def test_narwhals_pandas_round_trip(returns):
     """
     pandas_returns = returns.to_pandas()
     nw_frame = nw.from_native(pandas_returns, eager_only=True)
-    d = build_data(nw_frame, date_col="Date")
+    d = Data.from_returns(nw_frame, date_col="Date")
     assert_frame_equal(d.returns, returns.drop("Date"))
-
-
-# ── Data.from_returns tests ────────────────────────────────────────────────────
-
-
-def test_from_returns_equals_build_data(returns):
-    """Data.from_returns produces the same result as build_data.
-
-    Verifies that both paths yield identical returns and index frames.
-    """
-    d_build = build_data(returns, date_col="Date")
-    d_class = Data.from_returns(returns, date_col="Date")
-    assert_frame_equal(d_build.returns, d_class.returns)
-    assert_frame_equal(d_build.index, d_class.index)
-    assert d_class.benchmark is None
-
-
-def test_from_returns_with_benchmark_equals_build_data(returns, benchmark_frame):
-    """Data.from_returns with benchmark matches build_data output."""
-    d_build = build_data(returns=returns, benchmark=benchmark_frame)
-    d_class = Data.from_returns(returns=returns, benchmark=benchmark_frame)
-    assert_frame_equal(d_build.returns, d_class.returns)
-    assert_frame_equal(d_build.index, d_class.index)
-    assert d_build.benchmark is not None
-    assert d_class.benchmark is not None
-    assert_frame_equal(d_build.benchmark, d_class.benchmark)
-
-
-def test_from_returns_with_rf_equals_build_data(returns):
-    """Data.from_returns with a scalar rf matches build_data output."""
-    rf = 0.001
-    d_build = build_data(returns=returns, rf=rf)
-    d_class = Data.from_returns(returns=returns, rf=rf)
-    assert_frame_equal(d_build.returns, d_class.returns)
 
 
 def test_from_returns_importable_from_top_level(returns):
@@ -183,3 +147,17 @@ def test_from_returns_pandas_input(returns):
     pandas_returns = returns.to_pandas()
     d = Data.from_returns(pandas_returns, date_col="Date")
     assert_frame_equal(d.returns, returns.drop("Date"))
+
+
+def test_from_returns_with_benchmark(returns, benchmark_frame):
+    """Data.from_returns with benchmark correctly stores benchmark."""
+    d = Data.from_returns(returns=returns, benchmark=benchmark_frame)
+    assert d.benchmark is not None
+    assert_frame_equal(d.benchmark, Data.from_returns(returns=returns, benchmark=benchmark_frame).benchmark)
+
+
+def test_from_returns_with_rf(returns):
+    """Data.from_returns with a scalar rf adjusts returns."""
+    rf = 0.001
+    d = Data.from_returns(returns=returns, rf=rf)
+    assert_series_equal(d.returns["Meta"], returns["Meta"] - rf)

@@ -11,8 +11,7 @@ are covered by the stability guarantee described below.
 | Name | Kind | Imported from |
 |------|------|---------------|
 | `Portfolio` | class | `jquantstats.portfolio` |
-| `build_data` | function | `jquantstats.api` |
-| `Data` | class | `jquantstats._data` |
+| `Data` | class | `jquantstats.data` |
 | `Stats` | class | `jquantstats._stats` |
 | `Plots` | class | `jquantstats._plots` |
 | `NativeFrame` | type alias | `jquantstats._types` |
@@ -21,11 +20,11 @@ are covered by the stability guarantee described below.
 All of the above are importable directly from `jquantstats`:
 
 ```python
-from jquantstats import Portfolio, build_data
+from jquantstats import Portfolio, Data
 ```
 
 `Data`, `Stats`, and `Plots` instances are returned by the public API
-(e.g. `build_data()` returns a `Data`; `data.stats` is a `Stats`;
+(e.g. `Data.from_returns()` returns a `Data`; `data.stats` is a `Stats`;
 `data.plots` is a `Plots`).  Their public methods and attributes are
 stable even though the classes live in private modules.
 
@@ -46,19 +45,18 @@ From **v1.0.0** onwards jquantstats follows [Semantic Versioning](https://semver
 Anything that is **not** in the table above is considered internal and
 may change or be removed in any release:
 
-- Private modules: `_data.py`, `_stats.py`, `_plots.py`, `_reports.py`,
+- Private modules: `_stats.py`, `_plots.py`, `_reports.py`,
   `_types.py`, `_portfolio_data.py`, `_portfolio_plots.py`.
 - Private classes, functions, or attributes whose names begin with an
   underscore (e.g. `Data._raw_returns`, `Stats._df`).
-- Sub-module paths such as `jquantstats.api` or `jquantstats.portfolio`
+- Sub-module paths such as `jquantstats.portfolio`
   — import from the top-level package instead.
 
 ```python
 # ✅ stable
-from jquantstats import Portfolio, build_data
+from jquantstats import Portfolio, Data
 
 # ❌ not stable — internal path, may change
-from jquantstats._data import Data
 from jquantstats.portfolio import Portfolio
 ```
 
