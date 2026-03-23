@@ -21,7 +21,7 @@ import polars as pl
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from jquantstats.analytics import Portfolio
+from jquantstats import Portfolio
 
 from ..plot_test_utils import figure_structure
 

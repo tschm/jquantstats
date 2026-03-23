@@ -6,7 +6,7 @@ data series (profits, NAV, returns, drawdown) without any analytics or
 visualisation dependencies.
 
 :class:`PortfolioData` is held by composition inside
-:class:`~jquantstats.analytics.Portfolio`, which adds analytics facades (Stats,
+:class:`~jquantstats.Portfolio`, which adds analytics facades (Stats,
 Plots, Report), portfolio transforms (lag, truncate, smoothed_holding), and
 attribution tools (tilt/timing decomposition, turnover, cost analysis).
 """
@@ -43,7 +43,7 @@ class PortfolioData:
     - :attr:`all` — merged view of all derived series
 
     This class deliberately carries no analytics, visualisation, or transform
-    logic; those live in :class:`~jquantstats.analytics.Portfolio`, which holds a
+    logic; those live in :class:`~jquantstats.Portfolio`, which holds a
     ``PortfolioData`` instance via composition.
 
     Attributes:

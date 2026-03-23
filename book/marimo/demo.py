@@ -2,7 +2,7 @@
 
 # /// script
 # dependencies = [
-#     "marimo==0.18.4",
+#     "marimo==0.20.4",
 #     "jquantstats",
 # ]
 #
@@ -13,7 +13,7 @@
 
 import marimo
 
-__generated_with = "0.18.4"
+__generated_with = "0.20.4"
 app = marimo.App(width="medium")
 
 with app.setup:

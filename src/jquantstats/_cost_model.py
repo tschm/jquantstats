@@ -1,7 +1,7 @@
 """Unified cost model for Portfolio analytics.
 
 This module provides :class:`CostModel`, a single abstraction that covers both
-cost models available in :class:`~jquantstats.analytics.portfolio.Portfolio`:
+cost models available in :class:`~jquantstats.portfolio.Portfolio`:
 
 **Model A — position-delta** (``cost_per_unit``)
     One-way cost per unit of traded notional (e.g. £0.01 per share).  Best for
@@ -30,7 +30,7 @@ class CostModel:
 
     Eliminates the implicit "pick one" contract between the two independent
     cost parameters (``cost_per_unit`` and ``cost_bps``) on
-    :class:`~jquantstats.analytics.portfolio.Portfolio`.  A ``CostModel``
+    :class:`~jquantstats.portfolio.Portfolio`.  A ``CostModel``
     instance encapsulates one model at a time and can be passed to any
     Portfolio factory method instead of specifying the raw float parameters.
 

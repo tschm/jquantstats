@@ -10,9 +10,9 @@ import numpy as np
 import polars as pl
 import pytest
 
-from jquantstats.analytics import Portfolio
-from jquantstats.analytics._plots import Plots
-from jquantstats.analytics._report import Report, _fmt, _stats_table_html
+from jquantstats import Portfolio
+from jquantstats._portfolio_plots import Plots
+from jquantstats._report import Report, _fmt, _stats_table_html
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
