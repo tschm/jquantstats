@@ -807,15 +807,54 @@ def test_annual_breakdown_structure(stats):
     assert result.height > 0
 
 
-def test_annual_breakdown_raises_without_date(data_no_benchmark):
-    """annual_breakdown raises ValueError when index is not temporal."""
+def test_annual_breakdown_integer_indexed(data_no_benchmark):
+    """annual_breakdown groups by ~252-row chunks for integer-indexed data."""
+    import numpy as np
+
     from jquantstats._data import Data
 
-    returns = data_no_benchmark.returns.head(10)
-    index = pl.DataFrame({"idx": list(range(10))})
+    # 500 rows → 2 full chunks of 252
+    n = 500
+    rng = np.random.default_rng(42)
+    returns = pl.DataFrame({"r": rng.normal(0.001, 0.01, n).tolist()})
+    index = pl.DataFrame({"idx": list(range(n))})
     int_data = Data(returns=returns, index=index)
-    with pytest.raises(ValueError, match="temporal"):
-        int_data.stats.annual_breakdown()
+    result = int_data.stats.annual_breakdown()
+    assert result.height > 0, "expected non-empty result for 500-row integer-indexed data"
+    assert "year" in result.columns
+    assert "metric" in result.columns
+    # 500 rows / 252 ≈ 2 full chunks → year labels 1 and 2
+    years = sorted(result["year"].unique().to_list())
+    assert years == [1, 2]
+
+
+def test_annual_breakdown_integer_indexed_sparse_chunk():
+    """annual_breakdown skips integer-index chunks that are too small."""
+    import numpy as np
+
+    from jquantstats._data import Data
+
+    # Only 260 rows: first chunk of 252 is full, remainder (8 rows) < max(5, 63) → skipped
+    n = 260
+    rng = np.random.default_rng(0)
+    returns = pl.DataFrame({"r": rng.normal(0.001, 0.01, n).tolist()})
+    index = pl.DataFrame({"idx": list(range(n))})
+    int_data = Data(returns=returns, index=index)
+    result = int_data.stats.annual_breakdown()
+    # Only year 1 survives; the 8-row tail is too sparse
+    assert list(result["year"].unique().sort().to_list()) == [1]
+
+
+def test_annual_breakdown_integer_indexed_all_sparse():
+    """annual_breakdown returns empty DataFrame when all integer-index chunks are sparse."""
+    from jquantstats._data import Data
+
+    # Only 3 rows, chunk=252 → 3 < max(5, 63) → skipped
+    returns = pl.DataFrame({"r": [0.01, -0.02, 0.03]})
+    index = pl.DataFrame({"idx": [0, 1, 2]})
+    int_data = Data(returns=returns, index=index)
+    result = int_data.stats.annual_breakdown()
+    assert result.height == 0
 
 
 def test_annual_breakdown_skips_sparse_year(data_no_benchmark):

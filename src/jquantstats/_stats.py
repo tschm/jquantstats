@@ -1238,10 +1238,33 @@ class Stats:
         """
         all_df = cast(pl.DataFrame, self.all)
         date_col_name = self.data.date_col[0] if self.data.date_col else None
-        if date_col_name is None or not all_df[date_col_name].dtype.is_temporal():
-            raise ValueError("annual_breakdown requires a temporal (Date/Datetime) index.")  # noqa: TRY003
+        has_temporal = date_col_name is not None and all_df[date_col_name].dtype.is_temporal()
 
         from ._data import Data
+
+        if not has_temporal:
+            # Integer-index fallback: group by chunks of ~_periods_per_year rows
+            chunk = round(self.data._periods_per_year)
+            total = all_df.height
+            frames_int: list[pl.DataFrame] = []
+            for i, start in enumerate(range(0, total, chunk), start=1):
+                chunk_all = all_df.slice(start, chunk)
+                if chunk_all.height < max(5, chunk // 4):
+                    continue
+                chunk_index = chunk_all.select(self.data.date_col)
+                chunk_returns = chunk_all.select(self.data.returns.columns)
+                chunk_benchmark = (
+                    chunk_all.select(self.data.benchmark.columns) if self.data.benchmark is not None else None
+                )
+                chunk_data = Data(returns=chunk_returns, index=chunk_index, benchmark=chunk_benchmark)
+                chunk_summary = Stats(chunk_data).summary()
+                chunk_summary = chunk_summary.with_columns(pl.lit(i).alias("year"))
+                frames_int.append(chunk_summary)
+            if not frames_int:
+                return pl.DataFrame()
+            result_int = pl.concat(frames_int)
+            ordered_int = ["year", "metric", *[c for c in result_int.columns if c not in ("year", "metric")]]
+            return result_int.select(ordered_int)
 
         years = all_df[date_col_name].dt.year().unique().sort().to_list()
 
