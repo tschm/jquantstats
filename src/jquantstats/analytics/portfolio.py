@@ -810,12 +810,13 @@ class Portfolio:
         for bps in cost_levels:
             adj = self.cost_adjusted_returns(float(bps))
             series = (adj.drop("date") if "date" in adj.columns else adj)["returns"]
-            mean_val = float(series.mean() or 0.0)
+            _mean_raw = series.mean()
+            mean_val = 0.0 if _mean_raw is None else float(_mean_raw)  # type: ignore[arg-type]
             std_val = series.std(ddof=1)
             if std_val is None or std_val <= _eps * max(abs(mean_val), _eps) * 10:
                 sharpe_values.append(float("nan"))
             else:
-                sharpe_values.append(mean_val / float(std_val) * float(np.sqrt(periods)))
+                sharpe_values.append(mean_val / float(std_val) * float(np.sqrt(periods)))  # type: ignore[arg-type]
         return pl.DataFrame({"cost_bps": pl.Series(cost_levels, dtype=pl.Int64), "sharpe": pl.Series(sharpe_values)})
 
     # ── Utility ────────────────────────────────────────────────────────────────

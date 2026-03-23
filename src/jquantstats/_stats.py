@@ -1079,7 +1079,7 @@ class Stats:
                 result[col] = 0
                 continue
 
-            if has_date:
+            if has_date and date_col_name is not None:
                 frame = pl.DataFrame({"date": all_df[date_col_name], "in_dd": in_dd})
             else:
                 frame = pl.DataFrame({"date": pl.Series(list(range(len(series))), dtype=pl.Int64), "in_dd": in_dd})
@@ -1266,6 +1266,8 @@ class Stats:
             ordered_int = ["year", "metric", *[c for c in result_int.columns if c not in ("year", "metric")]]
             return result_int.select(ordered_int)
 
+        if date_col_name is None:  # unreachable: has_temporal guarantees non-None  # pragma: no cover
+            return pl.DataFrame()  # pragma: no cover
         years = all_df[date_col_name].dt.year().unique().sort().to_list()
 
         frames: list[pl.DataFrame] = []
