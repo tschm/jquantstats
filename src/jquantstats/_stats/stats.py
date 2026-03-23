@@ -37,7 +37,7 @@ from ._reporting import _ReportingStatsMixin
 from ._rolling import _RollingStatsMixin
 
 if TYPE_CHECKING:
-    from .._data import Data
+    from ..data import Data
 
 __all__ = [
     "Stats",

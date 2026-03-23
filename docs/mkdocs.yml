@@ -34,7 +34,6 @@ nav:
   - Home: index.md
   - API Stability: stability.md
   - Reference:
-      - build_data: reference/api.md
       - Data: reference/data.md
       - Stats: reference/stats.md
       - Plots: reference/plots.md

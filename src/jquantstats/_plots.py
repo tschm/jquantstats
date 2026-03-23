@@ -11,7 +11,7 @@ import polars as pl
 from plotly.subplots import make_subplots
 
 if TYPE_CHECKING:
-    from ._data import Data
+    from .data import Data
 
 
 def _plot_performance_dashboard(returns: pl.DataFrame, log_scale: bool = False) -> go.Figure:
@@ -224,13 +224,13 @@ class Plots:
 
         Example:
             >>> import polars as pl
-            >>> from jquantstats.api import build_data
+            >>> from jquantstats import Data
             >>> # minimal demo dataset with a Date column and one asset
             >>> returns = pl.DataFrame({
             ...     "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
             ...     "Asset": [0.01, -0.02, 0.03],
             ... }).with_columns(pl.col("Date").str.to_date())
-            >>> data = build_data(returns=returns)
+            >>> data = Data.from_returns(returns=returns)
             >>> fig = data.plots.plot_snapshot(title="My Portfolio Performance")
             >>> # Optional: display the interactive figure
             >>> fig.show()  # doctest: +SKIP

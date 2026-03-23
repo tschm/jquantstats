@@ -17,7 +17,7 @@ from __future__ import annotations
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from jquantstats import build_data
+from jquantstats import Data
 
 from .plot_test_utils import figure_structure
 
@@ -55,5 +55,5 @@ def test_plot_snapshot_single_symbol_structure(returns, snapshot: SnapshotAssert
     green/red bar colouring instead of per-ticker colours.  This test
     verifies the trace count and types remain stable.
     """
-    fig = build_data(returns=returns).plots.plot_snapshot()
+    fig = Data.from_returns(returns=returns).plots.plot_snapshot()
     assert figure_structure(fig) == snapshot

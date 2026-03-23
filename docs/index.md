@@ -22,15 +22,15 @@ pf.plots.snapshot()
 **Entry point 2 — returns series (for arbitrary return streams):**
 
 ```python
-from jquantstats import build_data
+from jquantstats import Data
 import polars as pl
 
-data = build_data(returns=returns_df, benchmark=bench_df)
+data = Data.from_returns(returns=returns_df, benchmark=bench_df)
 data.stats.sharpe()
 data.plots.plot_snapshot(title="Performance")
 ```
 
-The two APIs are layered: `portfolio.data` returns a [`Data`][jquantstats._data.Data] object so you can always drop into the returns-series API from a Portfolio.
+The two APIs are layered: `portfolio.data` returns a [`Data`][jquantstats.data.Data] object so you can always drop into the returns-series API from a Portfolio.
 
 ## Reference
 

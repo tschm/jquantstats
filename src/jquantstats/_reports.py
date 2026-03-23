@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import polars as pl
 
 if TYPE_CHECKING:
-    from ._data import Data
+    from .data import Data
 
 
 @dataclasses.dataclass(frozen=True)

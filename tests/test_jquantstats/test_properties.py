@@ -17,7 +17,7 @@ from datetime import date, timedelta
 import polars as pl
 import pytest
 
-from jquantstats import build_data
+from jquantstats import Data
 
 hypothesis = pytest.importorskip("hypothesis")
 assume = hypothesis.assume
@@ -69,7 +69,7 @@ def test_sharpe_nonnegative_for_all_positive_returns(returns: list[float]) -> No
     returns NaN — that case is explicitly allowed here.
     """
     df = _make_returns_df(returns)
-    data = build_data(returns=df)
+    data = Data.from_returns(returns=df)
     sharpe_val = data.stats.sharpe()["Asset"]
     if not math.isnan(sharpe_val):
         assert sharpe_val >= 0, f"Expected sharpe >= 0 for all-positive returns, got {sharpe_val}"
@@ -86,7 +86,7 @@ def test_max_drawdown_always_nonnegative(returns: list[float]) -> None:
     peak.
     """
     df = _make_returns_df(returns)
-    data = build_data(returns=df)
+    data = Data.from_returns(returns=df)
     max_dd = data.stats.max_drawdown()["Asset"]
     assert max_dd >= 0, f"Expected max_drawdown >= 0, got {max_dd}"
 
@@ -102,7 +102,7 @@ def test_max_drawdown_zero_for_nonnegative_returns(returns: list[float]) -> None
     the drawdown series is identically zero.
     """
     df = _make_returns_df(returns)
-    data = build_data(returns=df)
+    data = Data.from_returns(returns=df)
     max_dd = data.stats.max_drawdown()["Asset"]
     assert max_dd == pytest.approx(0.0, abs=1e-10), (
         f"Expected max_drawdown == 0 for all-non-negative returns, got {max_dd}"
@@ -121,7 +121,7 @@ def test_win_rate_in_unit_interval(returns: list[float]) -> None:
     """
     assume(any(r != 0.0 for r in returns))  # reject all-zero series to avoid division by zero in win_rate
     df = _make_returns_df(returns)
-    data = build_data(returns=df)
+    data = Data.from_returns(returns=df)
     win_rate = data.stats.win_rate()["Asset"]
     assert 0.0 <= win_rate <= 1.0, f"Expected win_rate in [0, 1], got {win_rate}"
 
@@ -136,7 +136,7 @@ def test_volatility_nonnegative(returns: list[float]) -> None:
     of a real-valued series is always non-negative.
     """
     df = _make_returns_df(returns)
-    data = build_data(returns=df)
+    data = Data.from_returns(returns=df)
     vol = data.stats.volatility()["Asset"]
     assert vol >= 0, f"Expected volatility >= 0, got {vol}"
 
@@ -152,7 +152,7 @@ def test_sortino_nonnegative_for_all_positive_returns(returns: list[float]) -> N
     any finite non-negative value are considered valid here.
     """
     df = _make_returns_df(returns)
-    data = build_data(returns=df)
+    data = Data.from_returns(returns=df)
     sortino_val = data.stats.sortino()["Asset"]
     if not math.isnan(sortino_val):
         assert sortino_val >= 0, f"Expected sortino >= 0 for all-positive returns, got {sortino_val}"

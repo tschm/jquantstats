@@ -9,7 +9,7 @@ from pathlib import Path
 import polars as pl
 import pytest
 
-from jquantstats import build_data
+from jquantstats import Data
 
 
 @pytest.fixture(scope="session")
@@ -109,7 +109,7 @@ def data(portfolio, benchmark_frame):
         Data: A Data object containing portfolio returns and benchmark data.
 
     """
-    return build_data(returns=portfolio, benchmark=benchmark_frame)
+    return Data.from_returns(returns=portfolio, benchmark=benchmark_frame)
 
 
 @pytest.fixture
@@ -123,7 +123,7 @@ def data_no_benchmark(portfolio):
         Data: A Data object containing portfolio returns without benchmark data.
 
     """
-    return build_data(returns=portfolio)
+    return Data.from_returns(returns=portfolio)
 
 
 @pytest.fixture
@@ -144,7 +144,7 @@ def edge(data):
     returns = pl.DataFrame({"index": index, "returns": [0.0] * len(index)})
     benchmark = pl.DataFrame({"index": index, "benchmark": [0.0] * len(index)})
 
-    return build_data(returns=returns, benchmark=benchmark, date_col="index")
+    return Data.from_returns(returns=returns, benchmark=benchmark, date_col="index")
 
 
 @pytest.fixture
