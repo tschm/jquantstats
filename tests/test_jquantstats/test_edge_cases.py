@@ -196,3 +196,161 @@ def test_subtract_rf_invalid_type():
     )
     with pytest.raises(TypeError, match="rf must be a float or DataFrame"):
         build_data(returns=returns, rf=1)  # int is not float
+
+
+# ── Empty returns ─────────────────────────────────────────────────────────────
+
+
+def test_build_data_empty_returns_raises():
+    """build_data with a zero-row DataFrame raises ValueError.
+
+    Verifies that an empty returns frame is rejected before any statistics
+    are attempted.
+    """
+    empty = pl.DataFrame({"Date": pl.Series([], dtype=pl.Date), "asset": pl.Series([], dtype=pl.Float64)})
+    with pytest.raises(ValueError, match="at least two timestamps"):
+        build_data(returns=empty)
+
+
+# ── Single-row frame ──────────────────────────────────────────────────────────
+
+
+def test_build_data_single_row_raises():
+    """build_data with a single-row DataFrame raises ValueError.
+
+    A meaningful time series requires at least two observations to compute
+    any meaningful statistics (e.g. variance, drawdown).
+    """
+    from datetime import date
+
+    single = pl.DataFrame({"Date": [date(2023, 1, 1)], "asset": [0.01]})
+    with pytest.raises(ValueError, match="at least two timestamps"):
+        build_data(returns=single)
+
+
+# ── All-zero returns — additional statistics ──────────────────────────────────
+
+
+def test_all_zero_volatility(edge):
+    """Volatility of all-zero returns is 0.0 (no variation)."""
+    result = edge.stats.volatility()
+    assert result["returns"] == pytest.approx(0.0)
+
+
+def test_all_zero_max_drawdown(edge):
+    """max_drawdown of all-zero returns is 0 (price curve never declines)."""
+    result = edge.stats.max_drawdown()
+    assert result["returns"] == pytest.approx(0.0)
+
+
+def test_all_zero_avg_drawdown(edge):
+    """avg_drawdown of all-zero returns is 0.0 (no underwater periods)."""
+    result = edge.stats.avg_drawdown()
+    assert result["returns"] == pytest.approx(0.0)
+
+
+def test_all_zero_calmar_is_nan(edge):
+    """Calmar of all-zero returns is NaN because max_drawdown is zero."""
+    result = edge.stats.calmar()
+    assert np.isnan(result["returns"])
+
+
+def test_all_zero_recovery_factor_is_nan(edge):
+    """recovery_factor of all-zero returns is NaN because max_drawdown is zero."""
+    result = edge.stats.recovery_factor()
+    assert np.isnan(result["returns"])
+
+
+def test_all_zero_gain_to_pain_is_nan(edge):
+    """gain_to_pain_ratio of all-zero returns is NaN (no losses to divide by)."""
+    result = edge.stats.gain_to_pain_ratio()
+    assert np.isnan(result["returns"])
+
+
+def test_all_zero_exposure(edge):
+    """Exposure of all-zero returns is 0.0 (no non-zero periods)."""
+    result = edge.stats.exposure()
+    assert result["returns"] == pytest.approx(0.0)
+
+
+# ── NaN-containing frames ─────────────────────────────────────────────────────
+
+
+def test_build_data_with_nan_succeeds():
+    """build_data accepts returns containing NaN values without raising.
+
+    NaN is a valid IEEE-754 float and must not be mistaken for a missing row.
+    """
+    from datetime import date
+
+    returns = pl.DataFrame(
+        {
+            "Date": [date(2023, 1, 1), date(2023, 1, 2), date(2023, 1, 3)],
+            "asset": [0.01, float("nan"), 0.03],
+        }
+    )
+    data = build_data(returns=returns)
+    assert data.returns.shape[0] == 3
+
+
+def test_nan_avg_return_propagates_nan():
+    """avg_return propagates NaN when the returns series contains NaN.
+
+    In Polars, NaN is not null and is not filtered by is_not_null(), so it
+    propagates through mean().
+    """
+    from datetime import date
+
+    returns = pl.DataFrame(
+        {
+            "Date": [date(2023, 1, 1), date(2023, 1, 2), date(2023, 1, 3)],
+            "asset": [0.01, float("nan"), 0.03],
+        }
+    )
+    data = build_data(returns=returns)
+    result = data.stats.avg_return()
+    assert np.isnan(result["asset"])
+
+
+def test_nan_volatility_propagates_nan():
+    """Volatility propagates NaN when the returns series contains NaN.
+
+    Polars std() follows IEEE-754 semantics and returns NaN when any element
+    in the series is NaN.
+    """
+    from datetime import date
+
+    returns = pl.DataFrame(
+        {
+            "Date": [date(2023, 1, 1), date(2023, 1, 2), date(2023, 1, 3)],
+            "asset": [0.01, float("nan"), 0.03],
+        }
+    )
+    data = build_data(returns=returns)
+    result = data.stats.volatility()
+    assert np.isnan(result["asset"])
+
+
+# ── Partial date overlap (misaligned dates) ───────────────────────────────────
+
+
+def test_partial_date_overlap_aligns_correctly():
+    """build_data keeps only dates present in both returns and benchmark.
+
+    Returns cover Jan 1–10; benchmark covers Jan 5–15.  The inner join must
+    produce 6 rows (Jan 5–10) in both returns and benchmark.
+    """
+    returns_dates = [f"2020-01-{i:02d}" for i in range(1, 11)]
+    benchmark_dates = [f"2020-01-{i:02d}" for i in range(5, 16)]
+
+    returns = pl.DataFrame({"Date": returns_dates, "Asset": [0.01] * 10}).with_columns(pl.col("Date").str.to_date())
+    benchmark = pl.DataFrame({"Date": benchmark_dates, "Benchmark": [0.01] * 11}).with_columns(
+        pl.col("Date").str.to_date()
+    )
+
+    data = build_data(returns=returns, benchmark=benchmark)
+
+    assert data.returns.shape[0] == 6
+    assert data.benchmark is not None
+    assert data.benchmark.shape[0] == 6
+    assert data.index.shape[0] == 6
