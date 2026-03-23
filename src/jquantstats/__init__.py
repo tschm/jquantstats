@@ -44,6 +44,8 @@ For more information, visit the `jQuantStats Documentation <https://tschm.github
 
 import importlib.metadata
 
+from ._types import NativeFrame as NativeFrame
+from ._types import NativeFrameOrScalar as NativeFrameOrScalar
 from .analytics import Portfolio as Portfolio
 from .api import build_data  # noqa: F401
 
