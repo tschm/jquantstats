@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 import polars as pl
 import pytest
 
-from jquantstats.analytics import Portfolio
+from jquantstats import Portfolio
 
 # ─── Snapshot ────────────────────────────────────────────────────────────────
 
@@ -33,7 +33,7 @@ def test_snapshot_returns_figure_with_expected_traces_and_log_scale(portfolio: P
 
 def test_snapshot_with_cost_per_unit_includes_net_nav_trace(portfolio: Portfolio):
     """snapshot() adds a Net-of-Cost NAV trace when cost_per_unit > 0."""
-    from jquantstats.analytics import Portfolio as _Portfolio
+    from jquantstats import Portfolio as _Portfolio
 
     pf_with_cost = _Portfolio.from_cash_position(
         prices=portfolio.prices,

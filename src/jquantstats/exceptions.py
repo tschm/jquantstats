@@ -1,7 +1,7 @@
-"""Domain-specific exception types for the jquantstats.analytics subpackage.
+"""Domain-specific exception types for the jquantstats package.
 
 This module defines a hierarchy of exceptions that provide meaningful context
-when data-validation errors occur within the analytics subpackage.
+when data-validation errors occur within the package.
 
 All exceptions inherit from :class:`JQuantStatsError` so callers can catch the
 entire family with a single ``except JQuantStatsError`` clause if they prefer.
@@ -10,7 +10,7 @@ Examples:
     >>> raise MissingDateColumnError("prices")  # doctest: +ELLIPSIS
     Traceback (most recent call last):
         ...
-    jquantstats.analytics.exceptions.MissingDateColumnError: ...
+    jquantstats.exceptions.MissingDateColumnError: ...
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ class MissingDateColumnError(JQuantStatsError, ValueError):
         >>> raise MissingDateColumnError("prices")  # doctest: +ELLIPSIS
         Traceback (most recent call last):
             ...
-        jquantstats.analytics.exceptions.MissingDateColumnError: ...
+        jquantstats.exceptions.MissingDateColumnError: ...
     """
 
     def __init__(self, frame_name: str) -> None:
@@ -49,7 +49,7 @@ class InvalidCashPositionTypeError(JQuantStatsError, TypeError):
         >>> raise InvalidCashPositionTypeError("dict")
         Traceback (most recent call last):
             ...
-        jquantstats.analytics.exceptions.InvalidCashPositionTypeError: cashposition must be pl.DataFrame, got dict.
+        jquantstats.exceptions.InvalidCashPositionTypeError: cashposition must be pl.DataFrame, got dict.
     """
 
     def __init__(self, actual_type: str) -> None:
@@ -68,7 +68,7 @@ class InvalidPricesTypeError(JQuantStatsError, TypeError):
         >>> raise InvalidPricesTypeError("list")
         Traceback (most recent call last):
             ...
-        jquantstats.analytics.exceptions.InvalidPricesTypeError: prices must be pl.DataFrame, got list.
+        jquantstats.exceptions.InvalidPricesTypeError: prices must be pl.DataFrame, got list.
     """
 
     def __init__(self, actual_type: str) -> None:
@@ -87,7 +87,7 @@ class NonPositiveAumError(JQuantStatsError, ValueError):
         >>> raise NonPositiveAumError(0.0)
         Traceback (most recent call last):
             ...
-        jquantstats.analytics.exceptions.NonPositiveAumError: aum must be strictly positive, got 0.0.
+        jquantstats.exceptions.NonPositiveAumError: aum must be strictly positive, got 0.0.
     """
 
     def __init__(self, aum: float) -> None:
@@ -107,7 +107,7 @@ class RowCountMismatchError(JQuantStatsError, ValueError):
         >>> raise RowCountMismatchError(10, 9)  # doctest: +ELLIPSIS
         Traceback (most recent call last):
             ...
-        jquantstats.analytics.exceptions.RowCountMismatchError: ...
+        jquantstats.exceptions.RowCountMismatchError: ...
     """
 
     def __init__(self, prices_rows: int, cashposition_rows: int) -> None:
@@ -131,7 +131,7 @@ class IntegerIndexBoundError(JQuantStatsError, TypeError):
         >>> raise IntegerIndexBoundError("start", "str")
         Traceback (most recent call last):
             ...
-        jquantstats.analytics.exceptions.IntegerIndexBoundError: start must be an integer, got str.
+        jquantstats.exceptions.IntegerIndexBoundError: start must be an integer, got str.
     """
 
     def __init__(self, param: str, actual_type: str) -> None:

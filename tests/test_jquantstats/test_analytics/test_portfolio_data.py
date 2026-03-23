@@ -12,8 +12,8 @@ from datetime import date
 import polars as pl
 import pytest
 
-from jquantstats.analytics import Portfolio
-from jquantstats.analytics._portfolio_data import PortfolioData
+from jquantstats import Portfolio
+from jquantstats._portfolio_data import PortfolioData
 
 # ─── Fixtures ────────────────────────────────────────────────────────────────
 
