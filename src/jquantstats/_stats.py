@@ -14,6 +14,9 @@ if TYPE_CHECKING:
     from ._data import Data
 
 
+# ── Module helpers ────────────────────────────────────────────────────────────
+
+
 def _drawdown_series(series: pl.Series) -> pl.Series:
     """Compute the drawdown percentage series from a returns series.
 
@@ -94,6 +97,8 @@ class Stats:
     def _mean_negative_expr(series: pl.Series) -> float:
         return cast(float, series.filter(series < 0).mean())
 
+    # ── Decorators ────────────────────────────────────────────────────────────
+
     @staticmethod
     def columnwise_stat(func: Callable[..., Any]) -> Callable[..., dict[str, float]]:
         """Apply a column-wise statistical function to all numeric columns.
@@ -132,6 +137,8 @@ class Stats:
             )
 
         return wrapper
+
+    # ── Basic statistics ──────────────────────────────────────────────────────
 
     @columnwise_stat
     def skew(self, series: pl.Series) -> int | float | None:
@@ -200,6 +207,8 @@ class Stats:
         """
         return self._mean_negative_expr(series)
 
+    # ── Volatility & risk ─────────────────────────────────────────────────────
+
     @columnwise_stat
     def volatility(self, series: pl.Series, periods: int | float | None = None, annualize: bool = True) -> float:
         """Calculate the volatility of returns.
@@ -229,6 +238,8 @@ class Stats:
         # periods = periods or self.data._periods_per_year
         # factor = np.sqrt(periods) if annualize else 1
         # return series.std() * factor
+
+    # ── Win / loss metrics ────────────────────────────────────────────────────
 
     @columnwise_stat
     def payoff_ratio(self, series: pl.Series) -> float:
@@ -472,6 +483,8 @@ class Stats:
         all_data = cast(pl.DataFrame, self.all)
         return float(np.round((series.filter(series != 0).count() / all_data.height), decimals=2))
 
+    # ── Sharpe & Sortino ──────────────────────────────────────────────────────
+
     @columnwise_stat
     def sharpe(self, series: pl.Series, periods: int | float | None = None) -> float:
         """Calculate the Sharpe ratio of asset returns.
@@ -666,6 +679,8 @@ class Stats:
         ratio = (mean_val if mean_val is not None else 0.0) / downside_deviation
         return float(ratio * np.sqrt(periods))
 
+    # ── Rolling windows ───────────────────────────────────────────────────────
+
     @to_frame
     def rolling_sortino(
         self, series: pl.Expr, rolling_period: int = 126, periods_per_year: int | float | None = None
@@ -780,6 +795,8 @@ class Stats:
             + [(pl.col(col).rolling_std(window_size=actual_window) * factor).alias(col) for col, _ in self.data.items()]
         )
 
+    # ── Drawdown ──────────────────────────────────────────────────────────────
+
     @to_frame
     def drawdown(self, series: pl.Series) -> pl.Series:
         """Calculate the drawdown series for returns.
@@ -844,6 +861,8 @@ class Stats:
         """
         sortino_data = self.sortino(periods=periods)
         return {k: v / np.sqrt(2) for k, v in sortino_data.items()}
+
+    # ── Benchmark & factor ────────────────────────────────────────────────────
 
     @columnwise_stat
     def r_squared(self, series: pl.Series, benchmark: str | None = None) -> float:
@@ -968,7 +987,7 @@ class Stats:
 
         return {"alpha": float(alpha * ppy), "beta": beta}
 
-    # ── Analytics-style metrics (ported from analytics._stats) ─────────────────
+    # ── Temporal & reporting ──────────────────────────────────────────────────
 
     @property
     def periods_per_year(self) -> float:
@@ -1141,6 +1160,8 @@ class Stats:
                 worst.append(None)
             result[col] = worst
         return result
+
+    # ── Capture ratios ────────────────────────────────────────────────────────
 
     def up_capture(self, benchmark: pl.Series) -> dict[str, float]:
         """Up-market capture ratio relative to an explicit benchmark series.
