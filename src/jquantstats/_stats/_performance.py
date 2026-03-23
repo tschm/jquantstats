@@ -8,7 +8,7 @@ import numpy as np
 import polars as pl
 from scipy.stats import norm
 
-from ._stats_core import columnwise_stat, to_frame
+from ._core import columnwise_stat, to_frame
 
 # ── Performance statistics mixin ─────────────────────────────────────────────
 
@@ -25,7 +25,7 @@ class _PerformanceStatsMixin:
     """
 
     if TYPE_CHECKING:
-        from ._data import Data
+        from .._data import Data
 
         data: Data
         all: pl.DataFrame | None

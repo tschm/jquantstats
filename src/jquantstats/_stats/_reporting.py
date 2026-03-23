@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 import polars as pl
 
-from ._stats_core import _drawdown_series, _to_float, columnwise_stat
+from ._core import _drawdown_series, _to_float, columnwise_stat
 
 # ── Reporting statistics mixin ───────────────────────────────────────────────
 
@@ -24,7 +24,7 @@ class _ReportingStatsMixin:
     """
 
     if TYPE_CHECKING:
-        from ._data import Data
+        from .._data import Data
 
         data: Data
         all: pl.DataFrame | None
@@ -329,7 +329,7 @@ class _ReportingStatsMixin:
         date_col_name = self.data.date_col[0] if self.data.date_col else None
         has_temporal = date_col_name is not None and all_df[date_col_name].dtype.is_temporal()
 
-        from ._data import Data
+        from .._data import Data
 
         if not has_temporal:
             # Integer-index fallback: group by chunks of ~_periods_per_year rows

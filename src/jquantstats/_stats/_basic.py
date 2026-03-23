@@ -9,7 +9,7 @@ import numpy as np
 import polars as pl
 from scipy.stats import norm
 
-from ._stats_core import columnwise_stat
+from ._core import columnwise_stat
 
 # ── Basic statistics mixin ───────────────────────────────────────────────────
 
@@ -27,7 +27,7 @@ class _BasicStatsMixin:
     """
 
     if TYPE_CHECKING:
-        from ._data import Data
+        from .._data import Data
 
         data: Data
         all: pl.DataFrame | None
