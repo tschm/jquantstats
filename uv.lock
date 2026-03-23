@@ -632,6 +632,7 @@ version = "0.1.1"
 source = { editable = "." }
 dependencies = [
     { name = "jinja2" },
+    { name = "narwhals" },
     { name = "numpy" },
     { name = "plotly" },
     { name = "polars" },
@@ -659,6 +660,7 @@ dev = [
 requires-dist = [
     { name = "jinja2", specifier = ">=3.1.0" },
     { name = "kaleido", marker = "extra == 'plot'", specifier = "==1.2.0" },
+    { name = "narwhals", specifier = ">=2.0.0" },
     { name = "numpy", specifier = ">=2.0.0" },
     { name = "plotly", specifier = ">=6.0.0" },
     { name = "polars", specifier = ">=1.18.0" },

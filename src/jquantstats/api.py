@@ -47,15 +47,25 @@ data = build_data(
 
 """
 
+from typing import Any
+
+import narwhals as nw
 import polars as pl
 
 from ._data import Data
 
 
+def _to_polars(df: Any) -> pl.DataFrame:
+    """Convert any narwhals-compatible DataFrame to a polars DataFrame."""
+    if isinstance(df, pl.DataFrame):
+        return df
+    return nw.from_native(df, eager_only=True).to_polars()
+
+
 def build_data(
-    returns: pl.DataFrame,
-    rf: float | pl.DataFrame = 0.0,
-    benchmark: pl.DataFrame | None = None,
+    returns: Any,
+    rf: float | Any = 0.0,
+    benchmark: Any | None = None,
     date_col: str = "Date",
 ) -> Data:
     """Build a Data object from returns and optional benchmark using Polars.
@@ -133,6 +143,11 @@ def build_data(
         same analytics suite via ``.stats``, ``.plots``, and ``.report``.
 
     """
+    returns = _to_polars(returns)
+    if benchmark is not None:
+        benchmark = _to_polars(benchmark)
+    if isinstance(rf, pl.DataFrame) or (not isinstance(rf, float) and not isinstance(rf, int)):
+        rf = _to_polars(rf)
 
     def subtract_risk_free(dframe: pl.DataFrame, rf: float | pl.DataFrame, date_col: str) -> pl.DataFrame:
         """Subtract the risk-free rate from all numeric columns in the DataFrame.
