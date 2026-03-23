@@ -32,6 +32,7 @@ docs = [
     "mkdocstrings[python]>=0.25.0",
 ]
 dev = [
+    "interrogate>=1.7.0",
     "pandas>=2.2.3",       # required by quantstats (comparison tests only — not a runtime dependency)
     "pyarrow>=22.0.0",
     "yfinance==1.2.0",
@@ -83,3 +84,9 @@ ipython = "ipython"
 quantstats = "quantstats"
 marimo = "marimo"
 
+# Interrogate docstring coverage configuration
+[tool.interrogate]
+fail-under = 100
+ignore-init-method = true
+ignore-magic = true
+exclude = ["book"]

@@ -1,3 +1,5 @@
+"""Plotting utilities for financial returns data."""
+
 from __future__ import annotations
 
 import dataclasses
@@ -13,7 +15,28 @@ if TYPE_CHECKING:
 
 
 def _plot_performance_dashboard(returns: pl.DataFrame, log_scale: bool = False) -> go.Figure:
+    """Build a multi-panel performance dashboard figure for the given returns.
+
+    Args:
+        returns: A Polars DataFrame with a date column followed by one column per asset.
+        log_scale: Whether to use a logarithmic y-axis for cumulative returns.
+
+    Returns:
+        A Plotly Figure containing cumulative returns, drawdowns, and monthly returns panels.
+
+    """
+
     def hex_to_rgba(hex_color: str, alpha: float = 0.5) -> str:
+        """Convert a hex colour string to an RGBA CSS string.
+
+        Args:
+            hex_color: A hex colour string (with or without a leading ``#``).
+            alpha: Opacity in the range [0, 1]. Defaults to 0.5.
+
+        Returns:
+            An RGBA CSS string suitable for use in Plotly colour arguments.
+
+        """
         hex_color = hex_color.lstrip("#")
         r, g, b = tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
         return f"rgba({r}, {g}, {b}, {alpha})"

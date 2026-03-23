@@ -248,6 +248,7 @@ class Report:
         _first = True
 
         def _div(fig: go.Figure) -> str:
+            """Serialise *fig* to an HTML div, embedding Plotly.js only on the first call."""
             nonlocal _first
             include = "cdn" if _first else False
             _first = False
