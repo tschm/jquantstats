@@ -914,3 +914,11 @@ def test_rolling_volatility_invalid_periods_type_raises(stats):
     """rolling_volatility raises TypeError for non-numeric periods."""
     with pytest.raises(TypeError):
         stats.rolling_volatility(window=5, periods="252")  # type: ignore[arg-type]
+
+
+def test_repr(stats):
+    """Tests that Stats.__repr__ returns an informative string."""
+    r = repr(stats)
+    assert r.startswith("Stats(assets=")
+    for asset in stats.data.assets:
+        assert asset in r

@@ -52,6 +52,10 @@ class Data:
         if self.benchmark is not None and self.benchmark.shape[0] != self.index.shape[0]:
             raise ValueError("Benchmark and index must have the same number of rows.")  # noqa: TRY003
 
+    def __repr__(self) -> str:
+        """Return a string representation of the Data object."""
+        return f"Data(assets={self.assets}, rows={len(self.index)})"
+
     @property
     def plots(self) -> Plots:
         """Provides access to visualization methods for the financial data.

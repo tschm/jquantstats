@@ -156,6 +156,10 @@ class Portfolio:
         object.__setattr__(self, "_plots_cache", None)
         object.__setattr__(self, "_report_cache", None)
 
+    def __repr__(self) -> str:
+        """Return a string representation of the Portfolio object."""
+        return f"Portfolio(assets={self.assets})"
+
     # ── Factory classmethods ──────────────────────────────────────────────────
 
     @classmethod
