@@ -176,6 +176,10 @@ class Plots:
 
     data: Data
 
+    def __repr__(self) -> str:
+        """Return a string representation of the Plots object."""
+        return f"Plots(assets={self.data.assets})"
+
     def plot_snapshot(self, title: str = "Portfolio Summary", log_scale: bool = False) -> go.Figure:
         """Create a comprehensive dashboard with multiple plots for portfolio analysis.
 

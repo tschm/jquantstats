@@ -89,6 +89,10 @@ class Stats:
     def __post_init__(self) -> None:
         object.__setattr__(self, "all", self.data.all)
 
+    def __repr__(self) -> str:
+        """Return a string representation of the Stats object."""
+        return f"Stats(assets={self.data.assets})"
+
     @staticmethod
     def _mean_positive_expr(series: pl.Series) -> float:
         return cast(float, series.filter(series > 0).mean())

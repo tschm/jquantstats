@@ -1334,3 +1334,11 @@ def test_stats_plots_report_cached():
     assert pf.stats is pf.stats
     assert pf.plots is pf.plots
     assert pf.report is pf.report
+
+
+def test_repr(portfolio):
+    """Tests that Portfolio.__repr__ returns an informative string."""
+    r = repr(portfolio)
+    assert r.startswith("Portfolio(assets=")
+    for asset in portfolio.assets:
+        assert asset in r
