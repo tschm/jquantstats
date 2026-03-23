@@ -749,21 +749,21 @@ class Portfolio:
         """
         if not isinstance(max_bps, int) or max_bps < 1:
             raise ValueError
+        import numpy as np
+
+        periods = self.data._periods_per_year  # one Data object, outside the loop
+        _eps = np.finfo(np.float64).eps
         cost_levels = list(range(0, max_bps + 1))
         sharpe_values: list[float] = []
         for bps in cost_levels:
             adj = self.cost_adjusted_returns(float(bps))
-            from .._data import Data
-
-            if "date" in adj.columns:
-                adj_index = adj.select("date")
-                adj_returns = adj.drop("date")
+            series = (adj.drop("date") if "date" in adj.columns else adj)["returns"]
+            mean_val = float(series.mean() or 0.0)
+            std_val = series.std(ddof=1)
+            if std_val is None or std_val <= _eps * max(abs(mean_val), _eps) * 10:
+                sharpe_values.append(float("nan"))
             else:
-                adj_index = pl.DataFrame({"index": list(range(adj.height))})
-                adj_returns = adj
-            adj_stats = Data(returns=adj_returns, index=adj_index).stats
-            sharpe_val = adj_stats.sharpe().get("returns", float("nan"))
-            sharpe_values.append(float(sharpe_val) if sharpe_val is not None else float("nan"))
+                sharpe_values.append(mean_val / float(std_val) * float(np.sqrt(periods)))
         return pl.DataFrame({"cost_bps": pl.Series(cost_levels, dtype=pl.Int64), "sharpe": pl.Series(sharpe_values)})
 
     # ── Utility ────────────────────────────────────────────────────────────────
