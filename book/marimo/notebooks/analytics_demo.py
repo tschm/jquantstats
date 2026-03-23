@@ -1,7 +1,7 @@
 # /// script
 # requires-python = ">=3.11"
 # dependencies = [
-#     "marimo>=0.13.15",
+#     "marimo==0.20.4",
 #     "jquantstats",
 #     "numpy>=2.0.0",
 #     "polars>=1.0.0",
@@ -14,7 +14,7 @@
 
 import marimo
 
-__generated_with = "0.13.15"
+__generated_with = "0.20.4"
 app = marimo.App(width="medium")
 
 with app.setup:
@@ -23,6 +23,7 @@ with app.setup:
     import marimo as mo
     import numpy as np
     import polars as pl
+
     from jquantstats import Portfolio
 
 
