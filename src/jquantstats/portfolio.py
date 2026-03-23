@@ -404,7 +404,7 @@ class Portfolio:
         containing statistics tables and interactive charts.
 
         Returns:
-            :class:`~jquantstats._report.Report`: Helper object with
+            :class:`~jquantstats._reports.Report`: Helper object with
             report methods.
 
         The result is cached after first access so repeated calls are O(1).
