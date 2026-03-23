@@ -33,5 +33,9 @@ plugins:
 nav:
   - Home: index.md
   - Reference:
+      - build_data: reference/api.md
       - Data: reference/data.md
       - Stats: reference/stats.md
+      - Plots: reference/plots.md
+      - Reports: reference/reports.md
+      - Portfolio: reference/portfolio.md
