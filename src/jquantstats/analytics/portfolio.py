@@ -160,7 +160,13 @@ class Portfolio:
         return obj
 
     @classmethod
-    def from_risk_position(cls, prices: pl.DataFrame, risk_position: pl.DataFrame, aum: float, vola: int = 32) -> Self:
+    def from_risk_position(
+        cls,
+        prices: pl.DataFrame,
+        risk_position: pl.DataFrame,
+        aum: float,
+        vola: int | dict[str, int] = 32,
+    ) -> Self:
         """Create a Portfolio from per-asset risk positions.
 
         De-volatizes each risk position using an EWMA volatility estimate
@@ -170,6 +176,9 @@ class Portfolio:
             prices: Price levels per asset over time (may include a date column).
             risk_position: Risk units per asset aligned with prices.
             vola: EWMA lookback (span-equivalent) used to estimate volatility.
+                Pass an ``int`` to apply the same span to every asset, or a
+                ``dict[str, int]`` to set a per-asset span (assets absent from
+                the dict default to ``32``).
             aum: Assets under management used as the base NAV offset.
 
         Returns:

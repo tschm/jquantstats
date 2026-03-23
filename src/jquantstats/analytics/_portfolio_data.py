@@ -82,7 +82,13 @@ class PortfolioData:
     # ── Factory class methods ──────────────────────────────────────────────────
 
     @classmethod
-    def from_risk_position(cls, prices: pl.DataFrame, risk_position: pl.DataFrame, aum: float, vola: int = 32) -> Self:
+    def from_risk_position(
+        cls,
+        prices: pl.DataFrame,
+        risk_position: pl.DataFrame,
+        aum: float,
+        vola: int | dict[str, int] = 32,
+    ) -> Self:
         """Create a PortfolioData from per-asset risk positions.
 
         De-volatizes each risk position using an EWMA volatility estimate
@@ -93,7 +99,9 @@ class PortfolioData:
             risk_position: Risk units per asset (e.g., target risk exposure)
                 aligned with prices.
             vola: EWMA lookback (span-equivalent) used to estimate volatility
-                in trading days.
+                in trading days.  Pass an ``int`` to apply the same span to
+                every asset, or a ``dict[str, int]`` to set a per-asset span
+                (assets absent from the dict default to ``32``).
             aum: Assets under management used as the base NAV offset.
 
         Returns:
@@ -102,10 +110,16 @@ class PortfolioData:
         """
         assets = [col for col, dtype in prices.schema.items() if dtype.is_numeric()]
 
+        def _span(asset: str) -> int:
+            if isinstance(vola, dict):
+                return int(vola.get(asset, 32))
+            return int(vola)
+
         cash_position = risk_position.with_columns(
-            (pl.col(asset) / prices[asset].pct_change().ewm_std(com=vola - 1, adjust=True, min_samples=vola)).alias(
-                asset
-            )
+            (
+                pl.col(asset)
+                / prices[asset].pct_change().ewm_std(com=_span(asset) - 1, adjust=True, min_samples=_span(asset))
+            ).alias(asset)
             for asset in assets
         )
         return cls(prices=prices, cashposition=cash_position, aum=aum)

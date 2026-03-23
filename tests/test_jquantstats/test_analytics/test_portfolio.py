@@ -1224,3 +1224,62 @@ def test_cost_adjusted_returns_explicit_overrides_construction_cost_bps(cost_bps
     adj_base = cost_bps_pf.cost_adjusted_returns(5.0)
     # 0 bps should yield higher (or equal) returns than 5 bps
     assert float(adj_override["returns"].sum()) >= float(adj_base["returns"].sum())
+
+
+# ── from_risk_position per-asset vola dict ───────────────────────────────────
+
+
+def test_from_risk_position_per_asset_vola():
+    """Different vola values per asset produce different cash positions."""
+    import numpy as np
+
+    dates = pl.date_range(start=date(2020, 1, 1), end=date(2020, 3, 1), interval="1d", eager=True).cast(pl.Date)
+    prices = pl.DataFrame(
+        {
+            "date": dates,
+            "A": pl.Series(np.linspace(100, 120, len(dates)), dtype=pl.Float64),
+            "B": pl.Series(np.linspace(50, 60, len(dates)), dtype=pl.Float64),
+        }
+    )
+    riskposition = pl.DataFrame(
+        {
+            "date": dates,
+            "A": pl.Series([1.0] * len(dates), dtype=pl.Float64),
+            "B": pl.Series([1.0] * len(dates), dtype=pl.Float64),
+        }
+    )
+    pf_uniform = Portfolio.from_risk_position(prices, riskposition, vola=8, aum=1e8)
+    pf_per_asset = Portfolio.from_risk_position(prices, riskposition, vola={"A": 8, "B": 32}, aum=1e8)
+    # Same vola for A → identical A columns
+    assert pf_uniform.cashposition["A"].to_list() == pytest.approx(
+        pf_per_asset.cashposition["A"].to_list(), nan_ok=True
+    )
+    # Different vola for B → different B columns
+    b_uniform = pf_uniform.cashposition["B"].drop_nulls().to_list()
+    b_per_asset = pf_per_asset.cashposition["B"].drop_nulls().to_list()
+    assert b_uniform != pytest.approx(b_per_asset)
+
+
+def test_from_risk_position_dict_vola_missing_key_falls_back_to_32():
+    """Assets absent from the vola dict use span=32 as the default."""
+    import numpy as np
+
+    dates = pl.date_range(start=date(2020, 1, 1), end=date(2020, 3, 1), interval="1d", eager=True).cast(pl.Date)
+    prices = pl.DataFrame(
+        {
+            "date": dates,
+            "A": pl.Series(np.linspace(100, 120, len(dates)), dtype=pl.Float64),
+        }
+    )
+    riskposition = pl.DataFrame(
+        {
+            "date": dates,
+            "A": pl.Series([1.0] * len(dates), dtype=pl.Float64),
+        }
+    )
+    # dict with no "A" key → should fall back to 32
+    pf_dict = Portfolio.from_risk_position(prices, riskposition, vola={}, aum=1e8)
+    pf_int = Portfolio.from_risk_position(prices, riskposition, vola=32, aum=1e8)
+    a_dict = pf_dict.cashposition["A"].drop_nulls().to_list()
+    a_int = pf_int.cashposition["A"].drop_nulls().to_list()
+    assert a_dict == pytest.approx(a_int, nan_ok=True)
