@@ -678,7 +678,15 @@ class Stats:
         downside_sum = ((series.filter(series < 0)) ** 2).sum()
         downside_deviation = float(np.sqrt(downside_sum / series.count()))
         mean_val = cast(float, series.mean())
-        ratio = (mean_val if mean_val is not None else 0.0) / downside_deviation
+        mean_f = mean_val if mean_val is not None else 0.0
+        if downside_deviation == 0.0:
+            if mean_f > 0:
+                return float("inf")
+            elif mean_f < 0:
+                return float("-inf")
+            else:
+                return float("nan")
+        ratio = mean_f / downside_deviation
         return float(ratio * np.sqrt(periods))
 
     # ── Rolling windows ───────────────────────────────────────────────────────
