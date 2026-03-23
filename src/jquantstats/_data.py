@@ -134,7 +134,6 @@ class Data:
 
         Args:
             every (str, optional): Resampling frequency (e.g., '1mo', '1y'). Defaults to '1mo'.
-            compounded (bool, optional): Whether to compound returns. Defaults to False.
 
         Returns:
             Data: Resampled data.
