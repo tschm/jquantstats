@@ -18,7 +18,11 @@ unchanged.
 """
 
 import dataclasses
-from typing import ClassVar, Self
+from typing import TYPE_CHECKING, Self
+
+if TYPE_CHECKING:
+    from .._data import Data as Data
+    from .._stats import Stats as Stats
 
 import polars as pl
 import polars.selectors as cs
@@ -26,7 +30,6 @@ import polars.selectors as cs
 from ._plots import Plots
 from ._portfolio_data import PortfolioData
 from ._report import Report
-from ._stats import Stats
 from .exceptions import (
     IntegerIndexBoundError,
 )
@@ -56,24 +59,88 @@ class Portfolio:
             column if present).
         aum: Assets under management used as base NAV offset.
 
+    Analytics facades
+    -----------------
+    - ``.stats``   : delegates to the legacy ``Stats`` pipeline via ``.data``; all 50+ metrics available.
+    - ``.plots``   : portfolio-specific ``Plots``; NAV overlays, lead-lag IR, rolling Sharpe/vol, heatmaps.
+    - ``.report``  : HTML ``Report``; self-contained portfolio performance report.
+    - ``.data``    : bridge to the legacy ``Data`` / ``Stats`` / ``Plots`` pipeline.
+
+    ``.plots`` and ``.report`` are intentionally *not* delegated to the legacy path: the legacy
+    path operates on a bare returns series, while the analytics path has access to raw prices,
+    positions, and AUM for richer portfolio-specific visualisations.
+
+    Cost models
+    -----------
+    Two independent cost models are provided. They are not interchangeable:
+
+    **Model A — position-delta (stateful, set at construction):**
+        ``cost_per_unit: float``  — one-way cost per unit of position change (e.g. 0.01 per share).
+        Used by ``.position_delta_costs`` and ``.net_cost_nav``.
+        Best for: equity portfolios where cost scales with shares traded.
+
+    **Model B — turnover-bps (stateless, passed at call time):**
+        ``cost_bps: float``  — one-way cost in basis points of AUM turnover (e.g. 5 bps).
+        Used by ``.cost_adjusted_returns(cost_bps)`` and ``.trading_cost_impact(max_bps)``.
+        Best for: macro / fund-of-funds portfolios where cost scales with notional traded.
+
+    To sweep a range of cost assumptions use ``trading_cost_impact(max_bps=20)`` (Model B).
+    To compute a net-NAV curve set ``cost_per_unit`` at construction and read ``.net_cost_nav`` (Model A).
+
+    Date column requirement
+    -----------------------
+    Most analytics work with or without a ``date`` column. The following features require a
+    temporal ``date`` column (``pl.Date`` or ``pl.Datetime``):
+
+    - ``portfolio.plots.correlation_heatmap()``
+    - ``portfolio.plots.lead_lag_ir_plot()``
+    - ``stats.monthly_win_rate()``      — returns NaN per column when no date is present
+    - ``stats.annual_breakdown()``      — raises ``ValueError`` when no date is present
+    - ``stats.max_drawdown_duration()`` — returns period count (int) instead of days
+
+    Portfolios without a ``date`` column (integer-indexed) are fully supported for
+    NAV, returns, Sharpe, drawdown, cost analytics, and most rolling metrics.
+
     Examples:
         >>> import polars as pl
         >>> from datetime import date
         >>> prices = pl.DataFrame({"date": [date(2020, 1, 1), date(2020, 1, 2)], "A": [100.0, 110.0]})
         >>> pos = pl.DataFrame({"date": [date(2020, 1, 1), date(2020, 1, 2)], "A": [1000.0, 1000.0]})
-        >>> pf = Portfolio(prices=prices, cashposition=pos)
+        >>> pf = Portfolio(prices=prices, cashposition=pos, aum=1e6)
         >>> pf.assets
         ['A']
     """
 
     cashposition: pl.DataFrame
     prices: pl.DataFrame
-    aum: float = 1e8
+    aum: float
     cost_per_unit: float = 0.0
-    _data: ClassVar[PortfolioData]
+    cost_bps: float = 0.0
+    _data: PortfolioData = dataclasses.field(init=False, repr=False, compare=False, hash=False)
+    _data_bridge: "Data | None" = dataclasses.field(init=False, repr=False, compare=False, hash=False)
+
+    @staticmethod
+    def _build_data_bridge(ret: pl.DataFrame) -> "Data":
+        """Build a :class:`~jquantstats._data.Data` bridge from a returns frame.
+
+        Splits out the ``'date'`` column (if present) into an index and passes
+        the remaining numeric columns as returns.  Used internally to populate
+        ``_data_bridge`` at construction time so the ``data`` property is O(1).
+
+        Args:
+            ret: Returns DataFrame, optionally with a leading ``'date'`` column.
+
+        Returns:
+            A :class:`~jquantstats._data.Data` instance backed by *ret*.
+        """
+        from .._data import Data
+
+        if "date" in ret.columns:
+            return Data(returns=ret.drop("date"), index=ret.select("date"))
+        return Data(returns=ret, index=pl.DataFrame({"index": list(range(ret.height))}))
 
     def __post_init__(self) -> None:
-        """Create and cache the internal PortfolioData instance.
+        """Create and cache the internal PortfolioData instance and Data bridge.
 
         Input validation is delegated to :class:`PortfolioData`, which raises
         appropriate exceptions for invalid types, mismatched shapes, or
@@ -81,11 +148,12 @@ class Portfolio:
         """
         pd = PortfolioData(prices=self.prices, cashposition=self.cashposition, aum=self.aum)
         object.__setattr__(self, "_data", pd)
+        object.__setattr__(self, "_data_bridge", None)
 
     # ── Factory classmethods ──────────────────────────────────────────────────
 
     @classmethod
-    def _from_portfolio_data(cls, pd: PortfolioData, *, cost_per_unit: float = 0.0) -> Self:
+    def _from_portfolio_data(cls, pd: PortfolioData, *, cost_per_unit: float = 0.0, cost_bps: float = 0.0) -> Self:
         """Construct a Portfolio directly from an already-validated PortfolioData.
 
         Bypasses ``__post_init__`` to avoid constructing a second
@@ -98,6 +166,8 @@ class Portfolio:
             pd: A fully constructed and validated :class:`PortfolioData` instance.
             cost_per_unit: One-way trading cost per unit of position change.
                 Defaults to 0.0 (no cost).
+            cost_bps: One-way trading cost in basis points of AUM turnover.
+                Defaults to 0.0 (no cost).
 
         Returns:
             A new Portfolio instance backed by *pd*.
@@ -107,12 +177,20 @@ class Portfolio:
         object.__setattr__(obj, "prices", pd.prices)
         object.__setattr__(obj, "aum", pd.aum)
         object.__setattr__(obj, "cost_per_unit", cost_per_unit)
+        object.__setattr__(obj, "cost_bps", cost_bps)
         object.__setattr__(obj, "_data", pd)
+        object.__setattr__(obj, "_data_bridge", None)
         return obj
 
     @classmethod
     def from_risk_position(
-        cls, prices: pl.DataFrame, risk_position: pl.DataFrame, vola: int = 32, aum: float = 1e8
+        cls,
+        prices: pl.DataFrame,
+        risk_position: pl.DataFrame,
+        aum: float,
+        vola: int | dict[str, int] = 32,
+        cost_per_unit: float = 0.0,
+        cost_bps: float = 0.0,
     ) -> Self:
         """Create a Portfolio from per-asset risk positions.
 
@@ -123,18 +201,30 @@ class Portfolio:
             prices: Price levels per asset over time (may include a date column).
             risk_position: Risk units per asset aligned with prices.
             vola: EWMA lookback (span-equivalent) used to estimate volatility.
+                Pass an ``int`` to apply the same span to every asset, or a
+                ``dict[str, int]`` to set a per-asset span (assets absent from
+                the dict default to ``32``).
             aum: Assets under management used as the base NAV offset.
+            cost_per_unit: One-way trading cost per unit of position change.
+                Defaults to 0.0 (no cost).
+            cost_bps: One-way trading cost in basis points of AUM turnover.
+                Defaults to 0.0 (no cost).
 
         Returns:
             A Portfolio instance whose cash positions are risk_position
             divided by EWMA volatility.
         """
         pd = PortfolioData.from_risk_position(prices=prices, risk_position=risk_position, vola=vola, aum=aum)
-        return cls._from_portfolio_data(pd)
+        return cls._from_portfolio_data(pd, cost_per_unit=cost_per_unit, cost_bps=cost_bps)
 
     @classmethod
     def from_cash_position(
-        cls, prices: pl.DataFrame, cash_position: pl.DataFrame, aum: float = 1e8, cost_per_unit: float = 0.0
+        cls,
+        prices: pl.DataFrame,
+        cash_position: pl.DataFrame,
+        aum: float,
+        cost_per_unit: float = 0.0,
+        cost_bps: float = 0.0,
     ) -> Self:
         """Create a Portfolio directly from cash positions aligned with prices.
 
@@ -144,12 +234,14 @@ class Portfolio:
             aum: Assets under management used as the base NAV offset.
             cost_per_unit: One-way trading cost per unit of position change.
                 Defaults to 0.0 (no cost).
+            cost_bps: One-way trading cost in basis points of AUM turnover.
+                Defaults to 0.0 (no cost).
 
         Returns:
             A Portfolio instance with the provided cash positions.
         """
         pd = PortfolioData.from_cash_position(prices=prices, cash_position=cash_position, aum=aum)
-        return cls._from_portfolio_data(pd, cost_per_unit=cost_per_unit)
+        return cls._from_portfolio_data(pd, cost_per_unit=cost_per_unit, cost_bps=cost_bps)
 
     # ── PortfolioData proxy properties ────────────────────────────────────────
 
@@ -206,16 +298,44 @@ class Portfolio:
     # ── Lazy composition accessors ─────────────────────────────────────────────
 
     @property
-    def stats(self) -> Stats:
+    def data(self) -> "Data":
+        """Build a legacy :class:`~jquantstats._data.Data` object from this portfolio's returns.
+
+        This bridges the two entry points: ``Portfolio`` compiles the NAV curve from
+        prices and positions; the returned :class:`~jquantstats._data.Data` object
+        gives access to the full legacy analytics pipeline (``data.stats``,
+        ``data.plots``, ``data.reports``).
+
+        Returns:
+            :class:`~jquantstats._data.Data`: A Data object whose ``returns`` column
+            is the portfolio's daily return series and whose ``index`` holds the date
+            column (or a synthetic integer index for date-free portfolios).
+
+        Examples:
+            >>> import polars as pl
+            >>> from datetime import date
+            >>> prices = pl.DataFrame({"date": [date(2020, 1, 1), date(2020, 1, 2)], "A": [100.0, 110.0]})
+            >>> pos = pl.DataFrame({"date": [date(2020, 1, 1), date(2020, 1, 2)], "A": [1000.0, 1000.0]})
+            >>> pf = Portfolio(prices=prices, cashposition=pos, aum=1e6)
+            >>> d = pf.data
+            >>> "returns" in d.returns.columns
+            True
+        """
+        if self._data_bridge is not None:
+            return self._data_bridge
+        bridge = Portfolio._build_data_bridge(self.returns)
+        object.__setattr__(self, "_data_bridge", bridge)
+        return bridge
+
+    @property
+    def stats(self) -> "Stats":
         """Return a Stats object built from the portfolio's daily returns.
 
-        Constructs a :class:`~jquantstats.analytics._stats.Stats` instance from
-        the portfolio returns. When a ``'date'`` column is present both
-        ``'date'`` and ``'returns'`` are passed to Stats; otherwise only
-        ``'returns'`` is used.
+        Delegates to the legacy :class:`~jquantstats._stats.Stats` pipeline via
+        :attr:`data`, so all analytics (Sharpe, drawdown, summary, etc.) are
+        available through the shared implementation.
         """
-        cols = ["date", "returns"] if "date" in self.returns.columns else ["returns"]
-        return Stats(data=self.returns.select(cols))
+        return self.data.stats
 
     @property
     def plots(self) -> Plots:
@@ -295,7 +415,13 @@ class Portfolio:
             length = max(0, row_end - row_start)
             pr = self.prices.slice(row_start, length)
             cp = self.cashposition.slice(row_start, length)
-        return Portfolio(prices=pr, cashposition=cp, aum=self.aum)
+        return Portfolio(
+            prices=pr,
+            cashposition=cp,
+            aum=self.aum,
+            cost_per_unit=self.cost_per_unit,
+            cost_bps=self.cost_bps,
+        )
 
     def lag(self, n: int) -> "Portfolio":
         """Return a new Portfolio with cash positions lagged by ``n`` steps.
@@ -325,7 +451,13 @@ class Portfolio:
 
         assets = [c for c in self.cashposition.columns if c != "date" and self.cashposition[c].dtype.is_numeric()]
         cp_lagged = self.cashposition.with_columns(pl.col(c).shift(n) for c in assets)
-        return Portfolio(prices=self.prices, cashposition=cp_lagged, aum=self.aum)
+        return Portfolio(
+            prices=self.prices,
+            cashposition=cp_lagged,
+            aum=self.aum,
+            cost_per_unit=self.cost_per_unit,
+            cost_bps=self.cost_bps,
+        )
 
     def smoothed_holding(self, n: int) -> "Portfolio":
         """Return a new Portfolio with cash positions smoothed by a rolling mean.
@@ -358,7 +490,13 @@ class Portfolio:
         cp_smoothed = self.cashposition.with_columns(
             pl.col(c).rolling_mean(window_size=window, min_samples=1).alias(c) for c in assets
         )
-        return Portfolio(prices=self.prices, cashposition=cp_smoothed, aum=self.aum)
+        return Portfolio(
+            prices=self.prices,
+            cashposition=cp_smoothed,
+            aum=self.aum,
+            cost_per_unit=self.cost_per_unit,
+            cost_bps=self.cost_bps,
+        )
 
     # ── Attribution ────────────────────────────────────────────────────────────
 
@@ -373,7 +511,13 @@ class Portfolio:
         const_position = self.cashposition.with_columns(
             pl.col(col).drop_nulls().drop_nans().mean().alias(col) for col in self.assets
         )
-        return Portfolio.from_cash_position(self.prices, const_position, aum=self.aum)
+        return Portfolio.from_cash_position(
+            self.prices,
+            const_position,
+            aum=self.aum,
+            cost_per_unit=self.cost_per_unit,
+            cost_bps=self.cost_bps,
+        )
 
     @property
     def timing(self) -> "Portfolio":
@@ -385,7 +529,13 @@ class Portfolio:
         """
         const_position = self.tilt.cashposition
         position = self.cashposition.with_columns((pl.col(col) - const_position[col]).alias(col) for col in self.assets)
-        return Portfolio.from_cash_position(self.prices, position, aum=self.aum)
+        return Portfolio.from_cash_position(
+            self.prices,
+            position,
+            aum=self.aum,
+            cost_per_unit=self.cost_per_unit,
+            cost_bps=self.cost_bps,
+        )
 
     @property
     def tilt_timing_decomp(self) -> pl.DataFrame:
@@ -588,7 +738,7 @@ class Portfolio:
             df = profit_df.hstack(cost_df.select(["cost"]))
         return df.with_columns(((pl.col("profit") - pl.col("cost")).cum_sum() + self.aum).alias("NAV_accumulated_net"))
 
-    def cost_adjusted_returns(self, cost_bps: float) -> pl.DataFrame:
+    def cost_adjusted_returns(self, cost_bps: float | None = None) -> pl.DataFrame:
         """Return daily portfolio returns net of estimated one-way trading costs.
 
         Trading costs are modelled as a linear function of daily one-way
@@ -605,7 +755,8 @@ class Portfolio:
 
         Args:
             cost_bps: One-way trading cost in basis points per unit of AUM
-                traded.  Must be non-negative.
+                traded.  Must be non-negative.  Defaults to ``self.cost_bps``
+                set at construction time.
 
         Returns:
             pl.DataFrame: Same schema as :attr:`returns` but with the
@@ -625,10 +776,11 @@ class Portfolio:
             >>> float(adj["returns"][1]) == float(pf.returns["returns"][1])
             True
         """
-        if cost_bps < 0:
+        effective_bps = cost_bps if cost_bps is not None else self.cost_bps
+        if effective_bps < 0:
             raise ValueError
         base = self.returns
-        daily_cost = self.turnover["turnover"] * (cost_bps / 10_000.0)
+        daily_cost = self.turnover["turnover"] * (effective_bps / 10_000.0)
         return base.with_columns((pl.col("returns") - daily_cost).alias("returns"))
 
     def trading_cost_impact(self, max_bps: int = 20) -> pl.DataFrame:
@@ -673,13 +825,22 @@ class Portfolio:
         """
         if not isinstance(max_bps, int) or max_bps < 1:
             raise ValueError
+        import numpy as np
+
+        periods = self.data._periods_per_year  # one Data object, outside the loop
+        _eps = np.finfo(np.float64).eps
         cost_levels = list(range(0, max_bps + 1))
         sharpe_values: list[float] = []
         for bps in cost_levels:
             adj = self.cost_adjusted_returns(float(bps))
-            cols = ["date", "returns"] if "date" in adj.columns else ["returns"]
-            sharpe_val = Stats(data=adj.select(cols)).sharpe().get("returns", float("nan"))
-            sharpe_values.append(float(sharpe_val) if sharpe_val is not None else float("nan"))
+            series = (adj.drop("date") if "date" in adj.columns else adj)["returns"]
+            _mean_raw = series.mean()
+            mean_val = 0.0 if _mean_raw is None else float(_mean_raw)  # type: ignore[arg-type]
+            std_val = series.std(ddof=1)
+            if std_val is None or std_val <= _eps * max(abs(mean_val), _eps) * 10:
+                sharpe_values.append(float("nan"))
+            else:
+                sharpe_values.append(mean_val / float(std_val) * float(np.sqrt(periods)))  # type: ignore[arg-type]
         return pl.DataFrame({"cost_bps": pl.Series(cost_levels, dtype=pl.Int64), "sharpe": pl.Series(sharpe_values)})
 
     # ── Utility ────────────────────────────────────────────────────────────────

@@ -23,7 +23,6 @@ import pytest
 from jquantstats.analytics import Portfolio
 from jquantstats.analytics._portfolio_data import PortfolioData
 from jquantstats.analytics.exceptions import (
-    CleaningInvariantError,
     IntegerIndexBoundError,
     MissingDateColumnError,
 )
@@ -179,16 +178,16 @@ def test_portfolio_plot_returns_figure(portfolio):
 def test_portfolio_post_init_requires_polars_dataframes(prices, positions):
     """__post_init__ should assert inputs are Polars DataFrames."""
     with pytest.raises(TypeError, match=r"cashposition must be pl\.DataFrame, got dict"):
-        Portfolio(prices=prices, cashposition={"date": [1, 2, 3]})
+        Portfolio(prices=prices, cashposition={"date": [1, 2, 3]}, aum=1e5)
 
     with pytest.raises(TypeError, match=r"prices must be pl\.DataFrame, got list"):
-        Portfolio(prices=[[1.0, 2.0, 3.0]], cashposition=positions)
+        Portfolio(prices=[[1.0, 2.0, 3.0]], cashposition=positions, aum=1e5)
 
 
 def test_portfolio_post_init_requires_same_number_of_rows(prices, positions):
     """__post_init__ should raise ValueError when row counts differ."""
     with pytest.raises(ValueError, match=r"cashposition and prices must have the same number of rows"):
-        Portfolio(prices=prices.head(3), cashposition=positions.head(2))
+        Portfolio(prices=prices.head(3), cashposition=positions.head(2), aum=1e5)
 
 
 def test_portfolio_post_init_requires_positive_aum(prices, positions):
@@ -236,7 +235,7 @@ def test_sharpe_zero_std_returns_nan():
     prices = pl.DataFrame({"date": dates, "A": pl.Series([100.0] * len(dates), dtype=pl.Float64)})
     positions = pl.DataFrame({"date": dates, "A": pl.Series([0.0] * len(dates), dtype=pl.Float64)})
 
-    pf = Portfolio(prices=prices, cashposition=positions)
+    pf = Portfolio(prices=prices, cashposition=positions, aum=1e5)
     result = pf.stats.sharpe()["returns"]
     assert math.isnan(result)
 
@@ -253,7 +252,7 @@ def test_compute_daily_profits_replaces_nonfinite_with_zero():
     )
     positions = pl.DataFrame({"date": prices["date"], "A": pl.Series([1.0, 1.0], dtype=pl.Float64)})
 
-    portfolio = Portfolio(prices=prices, cashposition=positions)
+    portfolio = Portfolio(prices=prices, cashposition=positions, aum=1e5)
     profits = portfolio.profits
     assert np.allclose(profits["A"].to_numpy(), np.array([0.0, 0.0]))
 
@@ -263,7 +262,7 @@ def test_compute_daily_profits_no_numeric_columns():
     dates = pl.date_range(start=date(2020, 1, 1), end=date(2020, 1, 2), interval="1d", eager=True).cast(pl.Date)
     prices = pl.DataFrame({"date": dates})
     positions = pl.DataFrame({"date": dates})
-    portfolio = Portfolio(prices=prices, cashposition=positions)
+    portfolio = Portfolio(prices=prices, cashposition=positions, aum=1e5)
     profits = portfolio.profits
     assert profits.columns == ["date"]
     assert profits.height == 2
@@ -274,7 +273,7 @@ def test_profit_raises_when_no_numeric_asset_columns():
     dates = pl.date_range(start=date(2020, 1, 1), end=date(2020, 1, 2), interval="1d", eager=True).cast(pl.Date)
     prices = pl.DataFrame({"date": dates})
     positions = pl.DataFrame({"date": dates})
-    portfolio = Portfolio(prices=prices, cashposition=positions)
+    portfolio = Portfolio(prices=prices, cashposition=positions, aum=1e5)
 
     with pytest.raises(ValueError, match=r".*"):
         _ = portfolio.profit
@@ -339,11 +338,12 @@ def test_drawdown_is_highwater_minus_nav_and_preserves_date(portfolio):
 
 
 def test_stats(portfolio):
-    """stats() should return a dictionary with expected keys."""
+    """stats() returns legacy Stats with expected Sharpe; kurtosis is None for tiny samples."""
     stats = portfolio.stats
 
     assert pytest.approx(stats.sharpe()["returns"]) == 20.845234695819794
-    assert pytest.approx(stats.kurtosis()["returns"]) == -1.500
+    # Legacy kurtosis(bias=False) requires ≥4 observations; returns None for 3-row portfolios.
+    assert stats.kurtosis()["returns"] is None
 
 
 def test_portfolio_snapshot_log_scale(portfolio):
@@ -899,37 +899,6 @@ def test_trading_cost_impact_plot_title_contains_bps(turnover_portfolio):
     assert "bps" in fig.layout.title.text.lower()
 
 
-# ─── CleaningInvariantError ───────────────────────────────────────────────────
-
-
-def test_cleaning_invariant_error_null_message_and_attribute():
-    """CleaningInvariantError must carry the column name and a descriptive message for nulls."""
-    exc = CleaningInvariantError("foo", "still contains null values")
-    assert exc.column == "foo"
-    assert "foo" in str(exc)
-    assert "null" in str(exc).lower()
-
-
-def test_cleaning_invariant_error_nonfinite_message_and_attribute():
-    """CleaningInvariantError must carry the column name and a descriptive message for non-finite values."""
-    exc = CleaningInvariantError("bar", "has unexpected non-finite values after cleaning")
-    assert exc.column == "bar"
-    assert "bar" in str(exc)
-    assert "non-finite" in str(exc).lower()
-
-
-def test_cleaning_invariant_null_error_is_value_error():
-    """CleaningInvariantError (null variant) must be catchable as a ValueError."""
-    with pytest.raises(ValueError, match="null"):
-        raise CleaningInvariantError("col_x", "still contains null values")
-
-
-def test_cleaning_invariant_nonfinite_error_is_value_error():
-    """CleaningInvariantError (non-finite variant) must be catchable as a ValueError."""
-    with pytest.raises(ValueError, match="non-finite"):
-        raise CleaningInvariantError("col_y", "has unexpected non-finite values after cleaning")
-
-
 # ── position_delta_costs ─────────────────────────────────────────────────────
 
 
@@ -1150,3 +1119,208 @@ def test_net_cost_nav_integer_indexed(int_portfolio):
     assert "cost" in result.columns
     assert "date" not in result.columns
     assert result.height == int_portfolio.prices.height
+
+
+# ─── Portfolio.data bridge property ──────────────────────────────────────────
+
+
+def test_portfolio_data_property_returns_data_object(portfolio):
+    """portfolio.data returns a legacy Data object with a 'returns' column and date index."""
+    from jquantstats._data import Data
+
+    d = portfolio.data
+    assert isinstance(d, Data)
+    assert "returns" in d.returns.columns
+    assert d.returns.height == portfolio.prices.height
+    assert d.index.height == portfolio.prices.height
+
+
+def test_portfolio_data_property_integer_indexed(int_portfolio):
+    """portfolio.data on an integer-indexed portfolio creates a synthetic integer index."""
+    from jquantstats._data import Data
+
+    d = int_portfolio.data
+    assert isinstance(d, Data)
+    assert "returns" in d.returns.columns
+    assert "date" not in d.returns.columns
+    assert d.index.columns == ["index"]
+    assert d.index.height == int_portfolio.prices.height
+
+
+def test_integer_indexed_stats_uses_252_periods_per_year(int_portfolio):
+    """Integer-indexed portfolio.stats must use 252 periods/year, not ~31.5 million."""
+    assert int_portfolio.data._periods_per_year == pytest.approx(252.0)
+    sharpe = int_portfolio.stats.sharpe()
+    assert "returns" in sharpe
+    assert abs(sharpe["returns"]) < 1000  # sanity: not ~5600x inflated
+
+
+# ── cost_per_unit forwarding through transforms ───────────────────────────────
+
+
+@pytest.fixture
+def cost_pf():
+    """3-day portfolio with cost_per_unit=0.05 for transform-forwarding tests."""
+    prices = pl.DataFrame({"A": [100.0, 110.0, 105.0]})
+    pos = pl.DataFrame({"A": [1000.0, 1200.0, 1000.0]})
+    return Portfolio(prices=prices, cashposition=pos, aum=1e5, cost_per_unit=0.05)
+
+
+def test_truncate_forwards_cost_per_unit(cost_pf):
+    """Truncate must preserve cost_per_unit."""
+    assert cost_pf.truncate(start=0, end=1).cost_per_unit == pytest.approx(0.05)
+
+
+def test_lag_forwards_cost_per_unit(cost_pf):
+    """Lag must preserve cost_per_unit."""
+    assert cost_pf.lag(1).cost_per_unit == pytest.approx(0.05)
+
+
+def test_smoothed_holding_forwards_cost_per_unit(cost_pf):
+    """smoothed_holding must preserve cost_per_unit."""
+    assert cost_pf.smoothed_holding(1).cost_per_unit == pytest.approx(0.05)
+
+
+def test_tilt_forwards_cost_per_unit(cost_pf):
+    """Tilt must preserve cost_per_unit."""
+    assert cost_pf.tilt.cost_per_unit == pytest.approx(0.05)
+
+
+def test_timing_forwards_cost_per_unit(cost_pf):
+    """Timing must preserve cost_per_unit."""
+    assert cost_pf.timing.cost_per_unit == pytest.approx(0.05)
+
+
+# ── cost_bps construction-time parameter ─────────────────────────────────────
+
+
+@pytest.fixture
+def cost_bps_pf():
+    """3-day portfolio with cost_bps=5.0 for cost_bps-forwarding tests."""
+    prices = pl.DataFrame({"A": [100.0, 110.0, 105.0]})
+    pos = pl.DataFrame({"A": [1000.0, 1200.0, 1000.0]})
+    return Portfolio(prices=prices, cashposition=pos, aum=1e5, cost_bps=5.0)
+
+
+def test_cost_bps_forwarded_through_transforms(cost_bps_pf):
+    """All transforms must preserve the construction-time cost_bps value."""
+    assert cost_bps_pf.truncate(start=0, end=1).cost_bps == pytest.approx(5.0)
+    assert cost_bps_pf.lag(1).cost_bps == pytest.approx(5.0)
+    assert cost_bps_pf.smoothed_holding(1).cost_bps == pytest.approx(5.0)
+    assert cost_bps_pf.tilt.cost_bps == pytest.approx(5.0)
+    assert cost_bps_pf.timing.cost_bps == pytest.approx(5.0)
+
+
+def test_cost_adjusted_returns_defaults_to_construction_cost_bps(cost_bps_pf, turnover_portfolio):
+    """cost_adjusted_returns() with no argument uses self.cost_bps."""
+    adj_default = cost_bps_pf.cost_adjusted_returns()
+    adj_explicit = cost_bps_pf.cost_adjusted_returns(5.0)
+    assert adj_default["returns"].to_list() == pytest.approx(adj_explicit["returns"].to_list())
+
+
+def test_cost_adjusted_returns_explicit_overrides_construction_cost_bps(cost_bps_pf):
+    """An explicit cost_bps argument overrides self.cost_bps."""
+    adj_override = cost_bps_pf.cost_adjusted_returns(0.0)
+    adj_base = cost_bps_pf.cost_adjusted_returns(5.0)
+    # 0 bps should yield higher (or equal) returns than 5 bps
+    assert float(adj_override["returns"].sum()) >= float(adj_base["returns"].sum())
+
+
+# ── from_risk_position per-asset vola dict ───────────────────────────────────
+
+
+def test_from_risk_position_per_asset_vola():
+    """Different vola values per asset produce different cash positions."""
+    import numpy as np
+
+    dates = pl.date_range(start=date(2020, 1, 1), end=date(2020, 3, 1), interval="1d", eager=True).cast(pl.Date)
+    prices = pl.DataFrame(
+        {
+            "date": dates,
+            "A": pl.Series(np.linspace(100, 120, len(dates)), dtype=pl.Float64),
+            "B": pl.Series(np.linspace(50, 60, len(dates)), dtype=pl.Float64),
+        }
+    )
+    riskposition = pl.DataFrame(
+        {
+            "date": dates,
+            "A": pl.Series([1.0] * len(dates), dtype=pl.Float64),
+            "B": pl.Series([1.0] * len(dates), dtype=pl.Float64),
+        }
+    )
+    pf_uniform = Portfolio.from_risk_position(prices, riskposition, vola=8, aum=1e8)
+    pf_per_asset = Portfolio.from_risk_position(prices, riskposition, vola={"A": 8, "B": 32}, aum=1e8)
+    # Same vola for A → identical A columns
+    assert pf_uniform.cashposition["A"].to_list() == pytest.approx(
+        pf_per_asset.cashposition["A"].to_list(), nan_ok=True
+    )
+    # Different vola for B → different B columns
+    b_uniform = pf_uniform.cashposition["B"].drop_nulls().to_list()
+    b_per_asset = pf_per_asset.cashposition["B"].drop_nulls().to_list()
+    assert b_uniform != pytest.approx(b_per_asset)
+
+
+def test_from_risk_position_dict_vola_missing_key_falls_back_to_32():
+    """Assets absent from the vola dict use span=32 as the default."""
+    import numpy as np
+
+    dates = pl.date_range(start=date(2020, 1, 1), end=date(2020, 3, 1), interval="1d", eager=True).cast(pl.Date)
+    prices = pl.DataFrame(
+        {
+            "date": dates,
+            "A": pl.Series(np.linspace(100, 120, len(dates)), dtype=pl.Float64),
+        }
+    )
+    riskposition = pl.DataFrame(
+        {
+            "date": dates,
+            "A": pl.Series([1.0] * len(dates), dtype=pl.Float64),
+        }
+    )
+    # dict with no "A" key → should fall back to 32
+    pf_dict = Portfolio.from_risk_position(prices, riskposition, vola={}, aum=1e8)
+    pf_int = Portfolio.from_risk_position(prices, riskposition, vola=32, aum=1e8)
+    a_dict = pf_dict.cashposition["A"].drop_nulls().to_list()
+    a_int = pf_int.cashposition["A"].drop_nulls().to_list()
+    assert a_dict == pytest.approx(a_int, nan_ok=True)
+
+
+# ── from_risk_position cost param forwarding ─────────────────────────────────
+
+
+def test_from_risk_position_forwards_cost_per_unit():
+    """from_risk_position must preserve the cost_per_unit parameter."""
+    import numpy as np
+
+    dates = pl.date_range(start=date(2020, 1, 1), end=date(2020, 3, 1), interval="1d", eager=True).cast(pl.Date)
+    prices = pl.DataFrame({"date": dates, "A": pl.Series(np.linspace(100, 120, len(dates)), dtype=pl.Float64)})
+    risk = pl.DataFrame({"date": dates, "A": pl.Series([1.0] * len(dates), dtype=pl.Float64)})
+    pf = Portfolio.from_risk_position(prices, risk, aum=1e8, cost_per_unit=0.05)
+    assert pf.cost_per_unit == pytest.approx(0.05)
+
+
+def test_from_risk_position_forwards_cost_bps():
+    """from_risk_position must preserve the cost_bps parameter."""
+    import numpy as np
+
+    dates = pl.date_range(start=date(2020, 1, 1), end=date(2020, 3, 1), interval="1d", eager=True).cast(pl.Date)
+    prices = pl.DataFrame({"date": dates, "A": pl.Series(np.linspace(100, 120, len(dates)), dtype=pl.Float64)})
+    risk = pl.DataFrame({"date": dates, "A": pl.Series([1.0] * len(dates), dtype=pl.Float64)})
+    pf = Portfolio.from_risk_position(prices, risk, aum=1e8, cost_bps=5.0)
+    assert pf.cost_bps == pytest.approx(5.0)
+
+
+# ── _data_bridge caching ──────────────────────────────────────────────────────
+
+
+def test_data_property_returns_same_object(portfolio: Portfolio):
+    """pf.data must return the identical Data object on repeated calls."""
+    assert portfolio.data is portfolio.data
+
+
+def test_data_cached_after_factory():
+    """Portfolio built via from_cash_position must cache the Data bridge."""
+    prices = pl.DataFrame({"date": [date(2020, 1, 1), date(2020, 1, 2)], "A": [100.0, 110.0]})
+    pos = pl.DataFrame({"date": [date(2020, 1, 1), date(2020, 1, 2)], "A": [1000.0, 1000.0]})
+    pf = Portfolio.from_cash_position(prices=prices, cash_position=pos, aum=1e5)
+    assert pf.data is pf.data

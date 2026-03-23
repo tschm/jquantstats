@@ -17,7 +17,6 @@ from typing import Self
 import polars as pl
 
 from .exceptions import (
-    CleaningInvariantError,
     InvalidCashPositionTypeError,
     InvalidPricesTypeError,
     MissingDateColumnError,
@@ -59,14 +58,14 @@ class PortfolioData:
         >>> from datetime import date
         >>> prices = pl.DataFrame({"date": [date(2020, 1, 1), date(2020, 1, 2)], "A": [100.0, 110.0]})
         >>> pos = pl.DataFrame({"date": [date(2020, 1, 1), date(2020, 1, 2)], "A": [1000.0, 1000.0]})
-        >>> pd = PortfolioData(prices=prices, cashposition=pos)
+        >>> pd = PortfolioData(prices=prices, cashposition=pos, aum=1e6)
         >>> pd.assets
         ['A']
     """
 
     cashposition: pl.DataFrame
     prices: pl.DataFrame
-    aum: float = 1e8
+    aum: float
 
     def __post_init__(self) -> None:
         """Validate input types, shapes, and parameters post-initialization."""
@@ -84,7 +83,11 @@ class PortfolioData:
 
     @classmethod
     def from_risk_position(
-        cls, prices: pl.DataFrame, risk_position: pl.DataFrame, vola: int = 32, aum: float = 1e8
+        cls,
+        prices: pl.DataFrame,
+        risk_position: pl.DataFrame,
+        aum: float,
+        vola: int | dict[str, int] = 32,
     ) -> Self:
         """Create a PortfolioData from per-asset risk positions.
 
@@ -96,7 +99,9 @@ class PortfolioData:
             risk_position: Risk units per asset (e.g., target risk exposure)
                 aligned with prices.
             vola: EWMA lookback (span-equivalent) used to estimate volatility
-                in trading days.
+                in trading days.  Pass an ``int`` to apply the same span to
+                every asset, or a ``dict[str, int]`` to set a per-asset span
+                (assets absent from the dict default to ``32``).
             aum: Assets under management used as the base NAV offset.
 
         Returns:
@@ -105,16 +110,22 @@ class PortfolioData:
         """
         assets = [col for col, dtype in prices.schema.items() if dtype.is_numeric()]
 
+        def _span(asset: str) -> int:
+            if isinstance(vola, dict):
+                return int(vola.get(asset, 32))
+            return int(vola)
+
         cash_position = risk_position.with_columns(
-            (pl.col(asset) / prices[asset].pct_change().ewm_std(com=vola - 1, adjust=True, min_samples=vola)).alias(
-                asset
-            )
+            (
+                pl.col(asset)
+                / prices[asset].pct_change().ewm_std(com=_span(asset) - 1, adjust=True, min_samples=_span(asset))
+            ).alias(asset)
             for asset in assets
         )
         return cls(prices=prices, cashposition=cash_position, aum=aum)
 
     @classmethod
-    def from_cash_position(cls, prices: pl.DataFrame, cash_position: pl.DataFrame, aum: float = 1e8) -> Self:
+    def from_cash_position(cls, prices: pl.DataFrame, cash_position: pl.DataFrame, aum: float) -> Self:
         """Create a PortfolioData directly from cash positions aligned with prices.
 
         Args:
@@ -162,7 +173,7 @@ class PortfolioData:
             >>> import polars as pl
             >>> prices = pl.DataFrame({"A": [100.0, 110.0, 105.0]})
             >>> pos = pl.DataFrame({"A": [1000.0, 1000.0, 1000.0]})
-            >>> pd = PortfolioData(prices=prices, cashposition=pos)
+            >>> pd = PortfolioData(prices=prices, cashposition=pos, aum=1e6)
             >>> pd.profits.columns
             ['A']
         """
@@ -179,22 +190,6 @@ class PortfolioData:
             profits = profits.with_columns(
                 pl.when(pl.col(c).is_finite()).then(pl.col(c)).otherwise(0.0).fill_null(0.0).alias(c) for c in assets
             )
-            # Guards to guarantee cleanliness after the fill_null / otherwise(0.0) pass above.
-            # These branches should never be reached: fill_null(0.0) eliminates all null entries
-            # and otherwise(0.0) replaces every non-finite value with a finite float, so the
-            # conditions below are mathematically impossible at this point.
-            for c in assets:
-                s = profits[c]
-                if int(s.null_count()) != 0:
-                    raise CleaningInvariantError(  # pragma: no cover
-                        c, "still contains null values after fill_null(0.0)"
-                    )
-                if not bool(pl.Series(s).is_finite().all()):
-                    raise CleaningInvariantError(  # pragma: no cover
-                        c,
-                        "still contains non-finite values (NaN/Inf) after replacing all non-finite entries with 0.0",
-                    )
-
         return profits
 
     @property

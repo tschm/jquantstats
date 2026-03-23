@@ -22,6 +22,7 @@ The library is inspired by [QuantStats](https://github.com/ranaroussi/quantstats
 but focuses on providing a clean, modern API with
 enhanced visualization capabilities. Key improvements include:
 
+- Polars-native design with zero pandas runtime dependency
 - Modern interactive visualizations using Plotly
 - Comprehensive test coverage with pytest
 - Clean, well-documented API
@@ -37,7 +38,7 @@ Value at Risk (VaR), Conditional VaR, and drawdown analysis
 plots for portfolio performance, drawdowns, and
 return distributions
 - **Benchmark Comparison**: Compare your portfolio performance against benchmarks
-- **Pandas & Polars Support**: Work with either pandas or polars DataFrames as input
+- **Polars-native**: Pure polars at runtime; pandas is not required and not supported as input
 
 ## 📦 Installation
 
@@ -53,42 +54,84 @@ pip install jquantstats[dev]
 
 ## 🚀 Quick Start
 
+**If you have price series and position sizes** (recommended):
+
 ```python
-# Import jquantstats
+import polars as pl
+from jquantstats import Portfolio
+
+prices = pl.DataFrame({
+    "date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+    "Asset1": [100.0, 101.0, 99.5],
+}).with_columns(pl.col("date").str.to_date())
+
+positions = pl.DataFrame({
+    "date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+    "Asset1": [1000.0, 1000.0, 1200.0],
+}).with_columns(pl.col("date").str.to_date())
+
+pf = Portfolio.from_cash_position(prices=prices, cash_position=positions, aum=1_000_000)
+
+sharpe = pf.stats.sharpe()
+fig = pf.plots.snapshot()  # call fig.show() to display
+```
+
+**If you already have a returns series**:
+
+```python
 import polars as pl
 from jquantstats import build_data
 
-# Create sample returns data
 returns = pl.DataFrame({
-	"Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
-	"Asset1": [0.01, -0.02, 0.03],
-	"Asset2": [0.02, 0.01, -0.01]
+    "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+    "Asset1": [0.01, -0.02, 0.03],
+    "Asset2": [0.02, 0.01, -0.01]
 }).with_columns(pl.col("Date").str.to_date())
 
-# Basic usage
 data = build_data(returns=returns)
 
-# With benchmark and risk-free rate
-benchmark = pl.DataFrame({
-	"Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
-	"Market": [0.005, -0.01, 0.02]
-}).with_columns(pl.col("Date").str.to_date())
-
-data = build_data(
-	returns=returns,
-	benchmark=benchmark,
-	rf=0.0002,  # risk-free rate (e.g., 0.02% per day)
-)
-
-# Calculate statistics
 sharpe = data.stats.sharpe()
-
-volatility = data.stats.volatility()
-
-fig = data.plots.plot_snapshot(title="Portfolio Performance")
-fig.show()
+fig = data.plots.plot_snapshot(title="Portfolio Performance")  # call fig.show() to display
 ```
 
+
+## 🏗️ Architecture
+
+jQuantStats has two layered entry points:
+
+```
+Entry point 1 — prices + positions
+────────────────────────────────────────────────────────────
+prices_df + positions_df + aum
+        │
+        ▼
+  Portfolio.from_cash_position(...)   ← NAV compiler
+        │
+        ├── .stats.sharpe()           ← full stats suite
+        ├── .plots.snapshot()         ← portfolio-specific plots
+        ├── .report.full()            ← HTML report
+        └── .data                     ← drop into Entry point 2 ──┐
+                                                                    │
+Entry point 2 — returns series                                      │
+────────────────────────────────────────────────────────────        │
+returns_df [+ benchmark_df]  ◄──────────────────────────────────────┘
+        │
+        ▼
+  build_data(returns=..., benchmark=...)   ← Data object
+        │
+        ├── .stats.sharpe()           ← full stats suite
+        └── .plots.plot_snapshot()    ← snapshot chart
+```
+
+**Entry point 1** (`Portfolio`) is for active portfolios where you have
+price series and position sizes. It compiles the NAV curve and exposes
+the full analytics suite.
+
+**Entry point 2** (`build_data`) is for arbitrary return streams — e.g.
+returns downloaded from a data vendor — with optional benchmark comparison.
+
+The two APIs are layered: `portfolio.data` returns a `Data` object, so you
+can always drop from a `Portfolio` into the returns-series API.
 
 ## 📚 Documentation
 

@@ -1,7 +1,7 @@
 # Main project metadata
 [project]
 name = 'jquantstats'
-version = "0.0.36"
+version = "0.1.0"
 description = "Analytics for quants"
 authors = [{name='tschm', email= 'thomas.schmelzer@gmail.com'}]
 readme = "README.md"
@@ -26,11 +26,11 @@ plot = ["kaleido==1.2.0"]
 
 [dependency-groups]
 dev = [
-    "pandas>=2.2.3",
+    "pandas>=2.2.3",       # required by quantstats (comparison tests only — not a runtime dependency)
     "pyarrow>=22.0.0",
     "yfinance==1.2.0",
     "ipython==9.10.0",
-    "quantstats==0.0.81",
+    "quantstats==0.0.81",  # reference implementation used in test_quantstats.py for metric validation
     "marimo>=0.13.15",
 ]
 

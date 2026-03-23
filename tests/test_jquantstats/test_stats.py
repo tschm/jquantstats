@@ -614,3 +614,303 @@ def test_max_drawdown(stats):
     dd = stats.drawdown()
     for col in stats.data.assets:
         assert max_dd[col] == pytest.approx(dd[col].max(), abs=0.0001)
+
+
+# ── Ported analytics methods ──────────────────────────────────────────────────
+
+
+def test_to_float_none():
+    """_to_float(None) returns 0.0 (sentinel for absent aggregation results)."""
+    from jquantstats._stats import _to_float
+
+    assert _to_float(None) == 0.0
+
+
+def test_to_float_timedelta():
+    """_to_float(timedelta) returns total seconds."""
+    from datetime import timedelta
+
+    from jquantstats._stats import _to_float
+
+    assert _to_float(timedelta(seconds=42)) == 42.0
+
+
+def test_periods_per_year(stats):
+    """periods_per_year property delegates to data._periods_per_year."""
+    assert stats.periods_per_year == stats.data._periods_per_year
+    assert stats.periods_per_year > 0
+
+
+def test_avg_drawdown(stats):
+    """avg_drawdown returns a non-negative float per asset."""
+    result = stats.avg_drawdown()
+    assert isinstance(result, dict)
+    for col in result:
+        assert result[col] >= 0.0
+
+
+def test_calmar(stats):
+    """Calmar returns a finite float per asset for data with drawdowns."""
+    result = stats.calmar()
+    assert isinstance(result, dict)
+    for col in result:
+        assert result[col] is not None
+
+
+def test_recovery_factor(stats):
+    """recovery_factor returns a finite float per asset."""
+    result = stats.recovery_factor()
+    assert isinstance(result, dict)
+    for col in result:
+        assert result[col] is not None
+
+
+def test_max_drawdown_duration_with_date(stats):
+    """max_drawdown_duration returns positive integers for date-indexed data."""
+    result = stats.max_drawdown_duration()
+    assert isinstance(result, dict)
+    for col in result:
+        assert isinstance(result[col], int)
+        assert result[col] >= 0
+
+
+def test_max_drawdown_duration_integer_indexed(data_no_benchmark):
+    """max_drawdown_duration uses period-count when index is non-temporal."""
+    from jquantstats._data import Data
+
+    returns = data_no_benchmark.returns.head(20)
+    index = pl.DataFrame({"idx": list(range(20))})
+    int_data = Data(returns=returns, index=index)
+    result = int_data.stats.max_drawdown_duration()
+    assert isinstance(result, dict)
+    for col in result:
+        assert isinstance(result[col], int)
+        assert result[col] >= 0
+
+
+def test_monthly_win_rate_with_date(stats):
+    """monthly_win_rate returns a value in [0, 1] for each asset."""
+    result = stats.monthly_win_rate()
+    assert isinstance(result, dict)
+    for col in result:
+        assert 0.0 <= result[col] <= 1.0
+
+
+def test_monthly_win_rate_no_date(data_no_benchmark):
+    """monthly_win_rate returns nan for non-temporal index data."""
+    from jquantstats._data import Data
+
+    returns = data_no_benchmark.returns.head(10)
+    index = pl.DataFrame({"idx": list(range(10))})
+    int_data = Data(returns=returns, index=index)
+    result = int_data.stats.monthly_win_rate()
+    for col in result:
+        assert np.isnan(result[col])
+
+
+def test_worst_n_periods(stats):
+    """worst_n_periods returns a list of n sorted worst returns per asset."""
+    result = stats.worst_n_periods(n=3)
+    assert isinstance(result, dict)
+    for col in result:
+        assert len(result[col]) == 3
+        vals = [v for v in result[col] if v is not None]
+        assert vals == sorted(vals)
+
+
+def test_worst_n_periods_padding(data_no_benchmark):
+    """worst_n_periods pads with None when series has fewer than n non-null values."""
+    from jquantstats._data import Data
+
+    returns = pl.DataFrame({"r": [0.01, -0.02]})
+    index = pl.DataFrame({"idx": [0, 1]})
+    tiny_data = Data(returns=returns, index=index)
+    result = tiny_data.stats.worst_n_periods(n=5)
+    assert result["r"][-1] is None
+
+
+def test_up_capture_basic(stats):
+    """up_capture returns a dict with one entry per asset (including benchmark)."""
+    benchmark = stats.data.all["SPY -- Benchmark"]
+    result = stats.up_capture(benchmark)
+    assert isinstance(result, dict)
+    assert "META" in result
+    assert "AAPL" in result
+
+
+def test_up_capture_no_up_periods():
+    """up_capture returns nan when benchmark has no positive periods."""
+    from jquantstats._data import Data
+
+    returns = pl.DataFrame({"r": [-0.01, -0.02, -0.03, -0.01]})
+    index = pl.DataFrame({"idx": [0, 1, 2, 3]})
+    d = Data(returns=returns, index=index)
+    bench = pl.Series([-0.01, -0.02, -0.03, -0.01])
+    result = d.stats.up_capture(bench)
+    for col in result:
+        assert np.isnan(result[col])
+
+
+def test_up_capture_empty_strategy_up():
+    """up_capture returns nan for an asset with no returns during up-benchmark periods."""
+    from jquantstats._data import Data
+
+    # strategy has all values where benchmark is positive are null
+    returns = pl.DataFrame({"r": [None, 0.01, 0.02, 0.01]}, schema={"r": pl.Float64})
+    index = pl.DataFrame({"idx": [0, 1, 2, 3]})
+    d = Data(returns=returns, index=index)
+    bench = pl.Series([0.05, 0.0, 0.0, 0.0])  # only period 0 is up; strategy has null there
+    result = d.stats.up_capture(bench)
+    assert np.isnan(result["r"])
+
+
+def test_down_capture_basic(stats):
+    """down_capture returns a dict with one entry per asset (including benchmark)."""
+    benchmark = stats.data.all["SPY -- Benchmark"]
+    result = stats.down_capture(benchmark)
+    assert isinstance(result, dict)
+    assert "META" in result
+    assert "AAPL" in result
+
+
+def test_down_capture_no_down_periods():
+    """down_capture returns nan when benchmark has no negative periods."""
+    from jquantstats._data import Data
+
+    returns = pl.DataFrame({"r": [0.01, 0.02, 0.03, 0.01]})
+    index = pl.DataFrame({"idx": [0, 1, 2, 3]})
+    d = Data(returns=returns, index=index)
+    bench = pl.Series([0.01, 0.02, 0.03, 0.01])
+    result = d.stats.down_capture(bench)
+    for col in result:
+        assert np.isnan(result[col])
+
+
+def test_down_capture_empty_strategy_down():
+    """down_capture returns nan for an asset with no returns during down-benchmark periods."""
+    from jquantstats._data import Data
+
+    returns = pl.DataFrame({"r": [0.01, None, None, 0.01]}, schema={"r": pl.Float64})
+    index = pl.DataFrame({"idx": [0, 1, 2, 3]})
+    d = Data(returns=returns, index=index)
+    bench = pl.Series([0.0, -0.05, -0.03, 0.0])  # periods 1 and 2 are down; strategy has null there
+    result = d.stats.down_capture(bench)
+    assert np.isnan(result["r"])
+
+
+def test_annual_breakdown_structure(stats):
+    """annual_breakdown returns a DataFrame with year, metric, and asset columns."""
+    result = stats.annual_breakdown()
+    assert "year" in result.columns
+    assert "metric" in result.columns
+    assert "META" in result.columns
+    assert result.height > 0
+
+
+def test_annual_breakdown_integer_indexed(data_no_benchmark):
+    """annual_breakdown groups by ~252-row chunks for integer-indexed data."""
+    import numpy as np
+
+    from jquantstats._data import Data
+
+    # 500 rows → 2 full chunks of 252
+    n = 500
+    rng = np.random.default_rng(42)
+    returns = pl.DataFrame({"r": rng.normal(0.001, 0.01, n).tolist()})
+    index = pl.DataFrame({"idx": list(range(n))})
+    int_data = Data(returns=returns, index=index)
+    result = int_data.stats.annual_breakdown()
+    assert result.height > 0, "expected non-empty result for 500-row integer-indexed data"
+    assert "year" in result.columns
+    assert "metric" in result.columns
+    # 500 rows / 252 ≈ 2 full chunks → year labels 1 and 2
+    years = sorted(result["year"].unique().to_list())
+    assert years == [1, 2]
+
+
+def test_annual_breakdown_integer_indexed_sparse_chunk():
+    """annual_breakdown skips integer-index chunks that are too small."""
+    import numpy as np
+
+    from jquantstats._data import Data
+
+    # Only 260 rows: first chunk of 252 is full, remainder (8 rows) < max(5, 63) → skipped
+    n = 260
+    rng = np.random.default_rng(0)
+    returns = pl.DataFrame({"r": rng.normal(0.001, 0.01, n).tolist()})
+    index = pl.DataFrame({"idx": list(range(n))})
+    int_data = Data(returns=returns, index=index)
+    result = int_data.stats.annual_breakdown()
+    # Only year 1 survives; the 8-row tail is too sparse
+    assert list(result["year"].unique().sort().to_list()) == [1]
+
+
+def test_annual_breakdown_integer_indexed_all_sparse():
+    """annual_breakdown returns empty DataFrame when all integer-index chunks are sparse."""
+    from jquantstats._data import Data
+
+    # Only 3 rows, chunk=252 → 3 < max(5, 63) → skipped
+    returns = pl.DataFrame({"r": [0.01, -0.02, 0.03]})
+    index = pl.DataFrame({"idx": [0, 1, 2]})
+    int_data = Data(returns=returns, index=index)
+    result = int_data.stats.annual_breakdown()
+    assert result.height == 0
+
+
+def test_annual_breakdown_skips_sparse_year(data_no_benchmark):
+    """annual_breakdown skips years with fewer than 2 rows."""
+    from datetime import date
+
+    from jquantstats._data import Data
+
+    dates = [date(2020, 12, 31), date(2021, 1, 2), date(2021, 1, 3)]
+    returns = pl.DataFrame({"r": [0.01, -0.02, 0.03]})
+    index = pl.DataFrame({"Date": pl.Series(dates, dtype=pl.Date)})
+    d = Data(returns=returns, index=index)
+    result = d.stats.annual_breakdown()
+    # 2020 has only 1 row → skipped; only 2021 appears
+    assert list(result["year"].unique().sort()) == [2021]
+
+
+def test_annual_breakdown_empty_when_all_sparse():
+    """annual_breakdown returns empty DataFrame when every year has < 2 rows."""
+    from datetime import date
+
+    from jquantstats._data import Data
+
+    dates = [date(2020, 6, 15), date(2021, 6, 15)]
+    returns = pl.DataFrame({"r": [0.01, -0.02]})
+    index = pl.DataFrame({"Date": pl.Series(dates, dtype=pl.Date)})
+    d = Data(returns=returns, index=index)
+    result = d.stats.annual_breakdown()
+    assert result.height == 0
+    assert "year" in result.columns
+
+
+def test_summary_structure(stats):
+    """Summary returns a DataFrame with a metric column and asset columns."""
+    result = stats.summary()
+    assert "metric" in result.columns
+    assert "META" in result.columns
+    assert result.height > 0
+    assert "sharpe" in result["metric"].to_list()
+
+
+def test_rolling_sharpe_invalid_window_raises(stats):
+    """rolling_sharpe raises ValueError for non-positive window."""
+    with pytest.raises(ValueError, match="positive integer"):
+        stats.rolling_sharpe(window=0)
+    with pytest.raises(ValueError, match="positive integer"):
+        stats.rolling_sharpe(window=-1)
+
+
+def test_rolling_volatility_invalid_window_raises(stats):
+    """rolling_volatility raises ValueError for non-positive window."""
+    with pytest.raises(ValueError, match="positive integer"):
+        stats.rolling_volatility(window=0)
+
+
+def test_rolling_volatility_invalid_periods_type_raises(stats):
+    """rolling_volatility raises TypeError for non-numeric periods."""
+    with pytest.raises(TypeError):
+        stats.rolling_volatility(window=5, periods="252")  # type: ignore[arg-type]

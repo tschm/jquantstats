@@ -139,28 +139,3 @@ class IntegerIndexBoundError(JQuantStatsError, TypeError):
         super().__init__(f"{param} must be an integer, got {actual_type}.")
         self.param = param
         self.actual_type = actual_type
-
-
-class CleaningInvariantError(JQuantStatsError, ValueError):
-    """Raised when a profit column violates a post-cleaning invariant.
-
-    This is an internal invariant violation that indicates a logic defect in
-    the cleaning step.  It should never be raised under normal operation.
-
-    Args:
-        column: Name of the column that violates the invariant.
-        detail: Short description of the violation.
-
-    Examples:
-        >>> raise CleaningInvariantError("A", "has unexpected null values after cleaning")  # doctest: +ELLIPSIS
-        Traceback (most recent call last):
-            ...
-        jquantstats.analytics.exceptions.CleaningInvariantError: Column 'A' has unexpected null values after cleaning...
-    """
-
-    def __init__(self, column: str, detail: str) -> None:
-        """Initialize with the column name and a short description of the violation."""
-        super().__init__(
-            f"Column '{column}' {detail}. This should never happen and indicates a logic defect in the cleaning step."
-        )
-        self.column = column
