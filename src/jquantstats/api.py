@@ -126,6 +126,12 @@ def build_data(
     data = build_data(returns=returns, benchmark=benchmark, rf=0.0002)
     ```
 
+    See Also:
+    --------
+    :class:`~jquantstats.analytics.Portfolio` : preferred entry point when you have
+        price series and position sizes; compiles the NAV curve and provides the
+        same analytics suite via ``.stats``, ``.plots``, and ``.report``.
+
     """
 
     def subtract_risk_free(dframe: pl.DataFrame, rf: float | pl.DataFrame, date_col: str) -> pl.DataFrame:

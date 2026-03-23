@@ -54,38 +54,44 @@ pip install jquantstats[dev]
 
 ## 🚀 Quick Start
 
+**If you have price series and position sizes** (recommended):
+
 ```python
-# Import jquantstats
+import polars as pl
+from jquantstats import Portfolio
+
+prices = pl.DataFrame({
+    "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+    "Asset1": [100.0, 101.0, 99.5],
+}).with_columns(pl.col("Date").str.to_date())
+
+positions = pl.DataFrame({
+    "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+    "Asset1": [1000.0, 1000.0, 1200.0],
+}).with_columns(pl.col("Date").str.to_date())
+
+pf = Portfolio.from_cash_position(prices=prices, cash_position=positions, aum=1_000_000)
+
+sharpe = pf.stats.sharpe()
+fig = pf.plots.snapshot()
+fig.show()
+```
+
+**If you already have a returns series**:
+
+```python
 import polars as pl
 from jquantstats import build_data
 
-# Create sample returns data
 returns = pl.DataFrame({
-	"Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
-	"Asset1": [0.01, -0.02, 0.03],
-	"Asset2": [0.02, 0.01, -0.01]
+    "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+    "Asset1": [0.01, -0.02, 0.03],
+    "Asset2": [0.02, 0.01, -0.01]
 }).with_columns(pl.col("Date").str.to_date())
 
-# Basic usage
 data = build_data(returns=returns)
 
-# With benchmark and risk-free rate
-benchmark = pl.DataFrame({
-	"Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
-	"Market": [0.005, -0.01, 0.02]
-}).with_columns(pl.col("Date").str.to_date())
-
-data = build_data(
-	returns=returns,
-	benchmark=benchmark,
-	rf=0.0002,  # risk-free rate (e.g., 0.02% per day)
-)
-
-# Calculate statistics
 sharpe = data.stats.sharpe()
-
-volatility = data.stats.volatility()
-
 fig = data.plots.plot_snapshot(title="Portfolio Performance")
 fig.show()
 ```
