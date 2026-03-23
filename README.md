@@ -22,7 +22,7 @@ The library is inspired by [QuantStats](https://github.com/ranaroussi/quantstats
 but focuses on providing a clean, modern API with
 enhanced visualization capabilities. Key improvements include:
 
-- Support for both pandas and polars DataFrames
+- Polars-native design with zero pandas runtime dependency
 - Modern interactive visualizations using Plotly
 - Comprehensive test coverage with pytest
 - Clean, well-documented API
@@ -38,7 +38,7 @@ Value at Risk (VaR), Conditional VaR, and drawdown analysis
 plots for portfolio performance, drawdowns, and
 return distributions
 - **Benchmark Comparison**: Compare your portfolio performance against benchmarks
-- **Pandas & Polars Support**: Work with either pandas or polars DataFrames as input
+- **Polars-native**: Pure polars at runtime; pandas is not required and not supported as input
 
 ## 📦 Installation
 
