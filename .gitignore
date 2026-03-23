@@ -109,3 +109,4 @@ local.mk
 
 .bandit-baseline.json
 
+report.html
