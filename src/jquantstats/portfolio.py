@@ -28,8 +28,8 @@ import polars as pl
 import polars.selectors as cs
 
 from ._cost_model import CostModel
-from ._portfolio_data import PortfolioData
 from ._plots import PortfolioPlots
+from ._portfolio_data import PortfolioData
 from ._reports import Report
 from .exceptions import (
     IntegerIndexBoundError,
