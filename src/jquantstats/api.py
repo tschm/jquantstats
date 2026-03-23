@@ -47,15 +47,14 @@ data = build_data(
 
 """
 
-from typing import Any
-
 import narwhals as nw
 import polars as pl
 
 from ._data import Data
+from ._types import NativeFrame, NativeFrameOrScalar
 
 
-def _to_polars(df: Any) -> pl.DataFrame:
+def _to_polars(df: NativeFrame) -> pl.DataFrame:
     """Convert any narwhals-compatible DataFrame to a polars DataFrame."""
     if isinstance(df, pl.DataFrame):
         return df
@@ -63,9 +62,9 @@ def _to_polars(df: Any) -> pl.DataFrame:
 
 
 def build_data(
-    returns: Any,
-    rf: float | Any = 0.0,
-    benchmark: Any | None = None,
+    returns: NativeFrame,
+    rf: NativeFrameOrScalar = 0.0,
+    benchmark: NativeFrame | None = None,
     date_col: str = "Date",
 ) -> Data:
     """Build a Data object from returns and optional benchmark using Polars.
