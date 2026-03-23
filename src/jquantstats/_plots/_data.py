@@ -11,7 +11,7 @@ import polars as pl
 from plotly.subplots import make_subplots
 
 if TYPE_CHECKING:
-    from .data import Data
+    from ._protocol import DataLike
 
 
 def _plot_performance_dashboard(returns: pl.DataFrame, log_scale: bool = False) -> go.Figure:
@@ -197,7 +197,7 @@ class Plots:
 
     """
 
-    data: Data
+    data: DataLike
 
     def __repr__(self) -> str:
         """Return a string representation of the Plots object."""
