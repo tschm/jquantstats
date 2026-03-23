@@ -388,6 +388,47 @@ def test_truncate_integer_indexed_raises_on_non_int():
         d.truncate(end=3.5)
 
 
+def test_describe(data):
+    """Tests that describe() returns a tidy summary DataFrame with one row per asset.
+
+    Args:
+        data: The data fixture containing a Data object.
+
+    Verifies:
+        1. Returns a pl.DataFrame.
+        2. Has one row per returns asset (not including benchmark).
+        3. Contains columns: asset, start, end, rows, has_benchmark.
+        4. has_benchmark is True when a benchmark is present.
+
+    """
+    result = data.describe()
+    assert isinstance(result, pl.DataFrame)
+    assert list(result.columns) == ["asset", "start", "end", "rows", "has_benchmark"]
+    assert result.shape[0] == len(data.returns.columns)
+    assert list(result["asset"]) == data.returns.columns
+    expected_start = data.index[data.date_col[0]].min()
+    expected_end = data.index[data.date_col[0]].max()
+    assert (result["rows"] == len(data.index)).all()
+    assert (result["start"] == expected_start).all()
+    assert (result["end"] == expected_end).all()
+    assert all(result["has_benchmark"])
+
+
+def test_describe_no_benchmark(data_no_benchmark):
+    """Tests that describe() correctly reflects the absence of a benchmark.
+
+    Args:
+        data_no_benchmark: The data_no_benchmark fixture containing a Data object without benchmark.
+
+    Verifies:
+        has_benchmark column is False for all rows when no benchmark is present.
+
+    """
+    result = data_no_benchmark.describe()
+    assert isinstance(result, pl.DataFrame)
+    assert not any(result["has_benchmark"])
+
+
 def test_repr(data):
     """Tests that Data.__repr__ returns an informative string."""
     r = repr(data)
