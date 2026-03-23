@@ -1,0 +1,35 @@
+title: "[Idea] "
+labels: ["help wanted"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this space to propose ideas, experiments, or research directions for the project.
+        This is the right place for exploratory topics that don't yet fit a formal feature request or bug report.
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: Idea or Research Direction
+      description: Describe the idea, experiment, or topic you'd like to explore.
+      placeholder: e.g. Investigate using narwhals for dataframe-agnostic support...
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: Why is this interesting or valuable to the project?
+    validations:
+      required: false
+
+  - type: textarea
+    id: references
+    attributes:
+      label: References / Prior Art
+      description: Links to related libraries, papers, or discussions that inspired this idea.
+      placeholder: |
+        - https://github.com/...
+    validations:
+      required: false
