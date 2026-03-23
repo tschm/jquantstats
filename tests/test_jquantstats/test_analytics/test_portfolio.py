@@ -1150,3 +1150,29 @@ def test_net_cost_nav_integer_indexed(int_portfolio):
     assert "cost" in result.columns
     assert "date" not in result.columns
     assert result.height == int_portfolio.prices.height
+
+
+# ─── Portfolio.data bridge property ──────────────────────────────────────────
+
+
+def test_portfolio_data_property_returns_data_object(portfolio):
+    """portfolio.data returns a legacy Data object with a 'returns' column and date index."""
+    from jquantstats._data import Data
+
+    d = portfolio.data
+    assert isinstance(d, Data)
+    assert "returns" in d.returns.columns
+    assert d.returns.height == portfolio.prices.height
+    assert d.index.height == portfolio.prices.height
+
+
+def test_portfolio_data_property_integer_indexed(int_portfolio):
+    """portfolio.data on an integer-indexed portfolio creates a synthetic integer index."""
+    from jquantstats._data import Data
+
+    d = int_portfolio.data
+    assert isinstance(d, Data)
+    assert "returns" in d.returns.columns
+    assert "date" not in d.returns.columns
+    assert d.index.columns == ["index"]
+    assert d.index.height == int_portfolio.prices.height

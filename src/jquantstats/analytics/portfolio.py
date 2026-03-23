@@ -18,7 +18,10 @@ unchanged.
 """
 
 import dataclasses
-from typing import Self
+from typing import TYPE_CHECKING, Self
+
+if TYPE_CHECKING:
+    from .._data import Data as Data
 
 import polars as pl
 import polars.selectors as cs
@@ -202,6 +205,41 @@ class Portfolio:
         return self._data.all
 
     # ── Lazy composition accessors ─────────────────────────────────────────────
+
+    @property
+    def data(self) -> "Data":
+        """Build a legacy :class:`~jquantstats._data.Data` object from this portfolio's returns.
+
+        This bridges the two entry points: ``Portfolio`` compiles the NAV curve from
+        prices and positions; the returned :class:`~jquantstats._data.Data` object
+        gives access to the full legacy analytics pipeline (``data.stats``,
+        ``data.plots``, ``data.reports``).
+
+        Returns:
+            :class:`~jquantstats._data.Data`: A Data object whose ``returns`` column
+            is the portfolio's daily return series and whose ``index`` holds the date
+            column (or a synthetic integer index for date-free portfolios).
+
+        Examples:
+            >>> import polars as pl
+            >>> from datetime import date
+            >>> prices = pl.DataFrame({"date": [date(2020, 1, 1), date(2020, 1, 2)], "A": [100.0, 110.0]})
+            >>> pos = pl.DataFrame({"date": [date(2020, 1, 1), date(2020, 1, 2)], "A": [1000.0, 1000.0]})
+            >>> pf = Portfolio(prices=prices, cashposition=pos, aum=1e6)
+            >>> d = pf.data
+            >>> "returns" in d.returns.columns
+            True
+        """
+        from .._data import Data
+
+        ret = self.returns
+        if "date" in ret.columns:
+            index = ret.select("date")
+            returns = ret.drop("date")
+        else:
+            index = pl.DataFrame({"index": list(range(ret.height))})
+            returns = ret
+        return Data(returns=returns, index=index)
 
     @property
     def stats(self) -> Stats:
