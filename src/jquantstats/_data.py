@@ -201,6 +201,58 @@ class Data:
         benchmark_tail = self.benchmark.tail(n) if self.benchmark is not None else None
         return Data(returns=self.returns.tail(n), benchmark=benchmark_tail, index=self.index.tail(n))
 
+    def truncate(self, start: object = None, end: object = None) -> Data:
+        """Return a new Data object truncated to the inclusive [start, end] range.
+
+        When the index is temporal (Date/Datetime), truncation is performed by
+        comparing the date column against ``start`` and ``end`` values.
+
+        When the index is integer-based, row slicing is used instead, and
+        ``start`` and ``end`` must be non-negative integers.  Passing
+        non-integer bounds to an integer-indexed Data raises :exc:`TypeError`.
+
+        Args:
+            start: Optional lower bound (inclusive).  A date/datetime value
+                when the index is temporal; a non-negative :class:`int` row
+                index when the data has no temporal index.
+            end: Optional upper bound (inclusive).  Same type rules as
+                ``start``.
+
+        Returns:
+            Data: A new Data object filtered to the specified range.
+
+        Raises:
+            TypeError: When the index is not temporal and a non-integer bound
+                is supplied.
+
+        """
+        date_column = self.index.columns[0]
+        is_temporal = self.index[date_column].dtype.is_temporal()
+
+        if is_temporal:
+            cond = pl.lit(True)
+            if start is not None:
+                cond = cond & (pl.col(date_column) >= pl.lit(start))
+            if end is not None:
+                cond = cond & (pl.col(date_column) <= pl.lit(end))
+            mask = self.index.select(cond.alias("mask"))["mask"]
+            new_index = self.index.filter(mask)
+            new_returns = self.returns.filter(mask)
+            new_benchmark = self.benchmark.filter(mask) if self.benchmark is not None else None
+        else:
+            if start is not None and not isinstance(start, int):
+                raise TypeError(f"start must be an integer, got {type(start).__name__}.")  # noqa: TRY003
+            if end is not None and not isinstance(end, int):
+                raise TypeError(f"end must be an integer, got {type(end).__name__}.")  # noqa: TRY003
+            row_start = start if start is not None else 0
+            row_end = end + 1 if end is not None else self.index.height
+            length = max(0, row_end - row_start)
+            new_index = self.index.slice(row_start, length)
+            new_returns = self.returns.slice(row_start, length)
+            new_benchmark = self.benchmark.slice(row_start, length) if self.benchmark is not None else None
+
+        return Data(returns=new_returns, benchmark=new_benchmark, index=new_index)
+
     @property
     def _periods_per_year(self) -> float:
         """Estimate the number of periods per year based on average frequency in the index.

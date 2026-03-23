@@ -42,8 +42,16 @@ return distributions
 
 ## 📦 Installation
 
+**Using pip:**
+
 ```bash
 pip install jquantstats
+```
+
+**Using conda (via conda-forge):**
+
+```bash
+conda install -c conda-forge jquantstats
 ```
 
 For development:
