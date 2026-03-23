@@ -1,3 +1,31 @@
+## 2026-03-23 — Analysis Entry (refactor branch, post-bug-fix round)
+
+### Summary
+
+Three correctness bugs identified in the previous entry have been fixed on the `refactor` branch
+(commits `105ca6d` → `f920506`). The codebase now has 293 passing tests at 100% coverage.
+
+### Resolved since last entry (7.5/10)
+
+| Issue | Fix |
+|---|---|
+| `cost_per_unit` silently dropped by all portfolio transforms | `truncate`, `lag`, `smoothed_holding`, `tilt`, `timing` now forward `cost_per_unit=self.cost_per_unit`; covered by 5 new tests |
+| Integer-indexed `_periods_per_year` returned ~31.5 million | `Data._periods_per_year` now detects non-temporal indices and returns `252.0` instead of dividing seconds-per-year by 1 |
+| `CleaningInvariantError` dead class in `exceptions.py` | Class and its 4 dedicated tests removed; no production code raised it after commit `8430712` |
+
+### Remaining concerns
+
+- **No legacy-API deprecation path.** `build_data` / `Data` are still the primary surface for users who arrive via the README Quick Start. There is no migration guide or deprecation notice pointing toward `Portfolio`.
+- **Uncached composition accessors.** `portfolio.stats`, `.plots`, `.report`, and `.data` each allocate new objects on every access. `trading_cost_impact` compounds this by constructing `Data` + `Stats` per cost level in a loop.
+- **`pandas` as dev dependency.** `quantstats` (used for comparison tests) requires pandas, creating an implicit pandas presence during testing that could mask polars-specific bugs.
+- **`from_risk_position` applies a single EWMA span uniformly.** No per-asset vol targeting or vol-normalisation cap is exposed.
+
+### Score
+
+**8.5 / 10** — The three primary correctness blockers are gone. Remaining gap to 9/10: legacy-API deprecation path and the uncached accessor performance footgun. Gap to 10/10: full integer-index first-class support and a unified cost model.
+
+---
+
 ## 2026-03-23 — Analysis Entry
 
 ### Summary
