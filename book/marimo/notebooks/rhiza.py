@@ -21,7 +21,7 @@ with app.setup:
 
 
 @app.cell
-def cell_02():
+def cell_02() -> None:
     """Render the showcase introduction Markdown content."""
     mo.md(
         r"""
@@ -46,13 +46,13 @@ def cell_02():
 
 
 @app.cell
-def cell_03():
+def cell_03() -> None:
     """Render a horizontal rule to separate sections."""
     mo.md(r"""---""")
 
 
 @app.cell
-def cell_04():
+def cell_04() -> None:
     """Introduce the Interactive UI Elements section."""
     mo.md(
         r"""
@@ -73,7 +73,7 @@ def cell_05():
 
 
 @app.cell
-def cell_06(slider):
+def cell_06(slider) -> None:
     """Display the current slider value reactively."""
     mo.md(
         f"""
@@ -98,7 +98,7 @@ def cell_07():
 
 
 @app.cell
-def cell_08(dropdown):
+def cell_08(dropdown) -> None:
     """Display the currently selected language from the dropdown."""
     mo.md(
         f"""
@@ -119,19 +119,19 @@ def cell_09():
 
 
 @app.cell
-def cell_10(text_input):
+def cell_10(text_input) -> None:
     """Display a personalized greeting using the current text input value."""
     mo.md(f"""Hello, **{text_input.value}**! 👋""")
 
 
 @app.cell
-def cell_11():
+def cell_11() -> None:
     """Render a horizontal rule to visually separate sections."""
     mo.md(r"""---""")
 
 
 @app.cell
-def cell_12():
+def cell_12() -> None:
     """Introduce the Data Visualisation section."""
     mo.md(
         r"""
@@ -197,13 +197,13 @@ def cell_15(amplitude_slider, frequency_slider):
 
 
 @app.cell
-def cell_16():
+def cell_16() -> None:
     """Render a horizontal rule to visually separate sections."""
     mo.md(r"""---""")
 
 
 @app.cell
-def cell_17():
+def cell_17() -> None:
     """Introduce the DataFrames section."""
     mo.md(
         r"""
@@ -230,7 +230,7 @@ def cell_18():
 
 
 @app.cell
-def cell_19():
+def cell_19() -> None:
     """Render introductory text for the sample sales dataset."""
     mo.md(
         r"""
@@ -242,7 +242,7 @@ def cell_19():
 
 
 @app.cell
-def cell_20(data):
+def cell_20(data) -> None:
     """Display the sample dataset as an interactive table."""
     # Display as interactive table
     mo.ui.table(data)
@@ -279,13 +279,13 @@ def cell_21(data):
 
 
 @app.cell
-def cell_22():
+def cell_22() -> None:
     """Render a horizontal rule to visually separate sections."""
     mo.md(r"""---""")
 
 
 @app.cell
-def cell_23():
+def cell_23() -> None:
     """Introduce the layout components section."""
     mo.md(
         r"""
@@ -377,13 +377,13 @@ def cell_25():
 
 
 @app.cell
-def cell_26():
+def cell_26() -> None:
     """Render a horizontal rule to visually separate sections."""
     mo.md(r"""---""")
 
 
 @app.cell
-def cell_27():
+def cell_27() -> None:
     """Introduce the forms and user input section."""
     mo.md(
         r"""
@@ -414,7 +414,7 @@ def cell_28():
 
 
 @app.cell
-def cell_29(form):
+def cell_29(form) -> None:
     """Display current form values reactively as the user edits the form."""
     # Display form values - updates reactively as you type/change values
     if form.value and any(form.value.values()):
@@ -440,13 +440,13 @@ def cell_29(form):
 
 
 @app.cell
-def cell_30():
+def cell_30() -> None:
     """Render a horizontal rule to visually separate sections."""
     mo.md(r"""---""")
 
 
 @app.cell
-def cell_31():
+def cell_31() -> None:
     """Introduce the Markdown and LaTeX support section."""
     mo.md(
         r"""
@@ -458,7 +458,7 @@ def cell_31():
 
 
 @app.cell
-def cell_32():
+def cell_32() -> None:
     """Render rich Markdown with LaTeX equations, code blocks, and formatting examples."""
     mo.md(
         r"""
@@ -505,13 +505,13 @@ def cell_32():
 
 
 @app.cell
-def cell_33():
+def cell_33() -> None:
     """Render a horizontal rule to visually separate sections."""
     mo.md(r"""---""")
 
 
 @app.cell
-def cell_34():
+def cell_34() -> None:
     """Introduce the Advanced Features section."""
     mo.md(
         r"""
@@ -523,7 +523,7 @@ def cell_34():
 
 
 @app.cell
-def cell_35():
+def cell_35() -> None:
     """Render an informational callout about Marimo notebooks being plain Python files."""
     # Callout boxes for important information
     mo.callout(
@@ -543,7 +543,7 @@ def cell_35():
 
 
 @app.cell
-def cell_36():
+def cell_36() -> None:
     """Display an accordion with notes on reactivity, performance, and dependencies."""
     # Accordion for collapsible content
     mo.accordion(
@@ -576,13 +576,13 @@ def cell_36():
 
 
 @app.cell
-def cell_37():
+def cell_37() -> None:
     """Render a horizontal rule to visually separate sections."""
     mo.md(r"""---""")
 
 
 @app.cell
-def cell_38():
+def cell_38() -> None:
     """Introduce the artefacts section."""
     mo.md(
         r"""
@@ -619,13 +619,13 @@ def cell_39(data):
 
 
 @app.cell
-def cell_40():
+def cell_40() -> None:
     """Render a horizontal rule to visually separate sections."""
     mo.md(r"""---""")
 
 
 @app.cell
-def cell_41():
+def cell_41() -> None:
     """Render the conclusion section of the Marimo showcase notebook."""
     mo.md(
         r"""

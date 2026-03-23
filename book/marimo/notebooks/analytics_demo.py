@@ -28,7 +28,7 @@ with app.setup:
 
 
 @app.cell
-def cell_intro():
+def cell_intro() -> None:
     """Render the analytics demo introduction."""
     mo.md(
         r"""
@@ -106,7 +106,7 @@ def cell_stats(portfolio):
 
 
 @app.cell
-def cell_stats_table(summary):
+def cell_stats_table(summary) -> None:
     """Show the stats table."""
     mo.plain_text(str(summary))
     return
@@ -121,7 +121,7 @@ def cell_snapshot(portfolio):
 
 
 @app.cell
-def cell_snapshot_plot(fig):
+def cell_snapshot_plot(fig) -> None:
     """Display snapshot figure."""
     fig
     return
@@ -136,7 +136,7 @@ def cell_lead_lag(portfolio):
 
 
 @app.cell
-def cell_lead_lag_plot(fig_ll):
+def cell_lead_lag_plot(fig_ll) -> None:
     """Display lead/lag figure."""
     fig_ll
     return
@@ -152,7 +152,7 @@ def cell_report(portfolio):
 
 
 @app.cell
-def cell_report_preview(html):
+def cell_report_preview(html) -> None:
     """Show a snippet of the report HTML."""
     snippet = html[:500] + "..."
     mo.plain_text(snippet)
