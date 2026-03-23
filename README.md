@@ -135,10 +135,9 @@ For detailed documentation, visit [jQuantStats Documentation](https://tschm.gith
 
 ## 🔧 Requirements
 
-- Python 3.10+
+- Python 3.11+
 - numpy
 - polars
-- pandas
 - plotly
 - scipy
 
