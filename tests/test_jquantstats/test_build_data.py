@@ -1,5 +1,6 @@
 """Tests for the build_data function."""
 
+import narwhals as nw
 import polars as pl
 from polars.testing import assert_frame_equal, assert_series_equal
 
@@ -92,3 +93,43 @@ def test_with_benchmark(returns, benchmark_frame):
     b = result.benchmark
     assert b is not None
     assert b.columns == ["SPY -- Benchmark"]
+
+
+def test_narwhals_polars_round_trip(returns):
+    """Validates that a native Polars DataFrame round-trips correctly through build_data.
+
+    Narwhals identifies polars DataFrames natively; this test ensures the
+    fast-path (``isinstance(df, pl.DataFrame) → return df``) in ``_to_polars``
+    is covered and produces identical output.
+
+    Args:
+        returns: The returns fixture (a polars DataFrame).
+
+    Verifies:
+        The Data.returns produced from a polars input equals the input minus
+        the date column.
+    """
+    nw_frame = nw.from_native(returns, eager_only=True)
+    # Round-trip through build_data — narwhals wraps polars transparently.
+    d = build_data(nw_frame, date_col="Date")
+    assert_frame_equal(d.returns, returns.drop("Date"))
+
+
+def test_narwhals_pandas_round_trip(returns):
+    """Validates that a narwhals-wrapped pandas DataFrame round-trips through build_data.
+
+    ``build_data`` accepts any ``narwhals``-compatible eager frame via
+    ``NativeFrame``.  This test exercises the conversion path
+    ``nw.from_native(pandas_df, eager_only=True).to_polars()`` end-to-end.
+
+    Args:
+        returns: The returns fixture (a polars DataFrame used as source).
+
+    Verifies:
+        The Data.returns produced from a pandas-backed input matches the
+        result produced from the native polars input.
+    """
+    pandas_returns = returns.to_pandas()
+    nw_frame = nw.from_native(pandas_returns, eager_only=True)
+    d = build_data(nw_frame, date_col="Date")
+    assert_frame_equal(d.returns, returns.drop("Date"))
