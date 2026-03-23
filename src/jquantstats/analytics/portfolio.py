@@ -18,7 +18,7 @@ unchanged.
 """
 
 import dataclasses
-from typing import ClassVar, Self
+from typing import Self
 
 import polars as pl
 import polars.selectors as cs
@@ -61,16 +61,16 @@ class Portfolio:
         >>> from datetime import date
         >>> prices = pl.DataFrame({"date": [date(2020, 1, 1), date(2020, 1, 2)], "A": [100.0, 110.0]})
         >>> pos = pl.DataFrame({"date": [date(2020, 1, 1), date(2020, 1, 2)], "A": [1000.0, 1000.0]})
-        >>> pf = Portfolio(prices=prices, cashposition=pos)
+        >>> pf = Portfolio(prices=prices, cashposition=pos, aum=1e6)
         >>> pf.assets
         ['A']
     """
 
     cashposition: pl.DataFrame
     prices: pl.DataFrame
-    aum: float = 1e8
+    aum: float
     cost_per_unit: float = 0.0
-    _data: ClassVar[PortfolioData]
+    _data: PortfolioData = dataclasses.field(init=False, repr=False, compare=False, hash=False)
 
     def __post_init__(self) -> None:
         """Create and cache the internal PortfolioData instance.
@@ -111,9 +111,7 @@ class Portfolio:
         return obj
 
     @classmethod
-    def from_risk_position(
-        cls, prices: pl.DataFrame, risk_position: pl.DataFrame, vola: int = 32, aum: float = 1e8
-    ) -> Self:
+    def from_risk_position(cls, prices: pl.DataFrame, risk_position: pl.DataFrame, aum: float, vola: int = 32) -> Self:
         """Create a Portfolio from per-asset risk positions.
 
         De-volatizes each risk position using an EWMA volatility estimate
@@ -134,7 +132,7 @@ class Portfolio:
 
     @classmethod
     def from_cash_position(
-        cls, prices: pl.DataFrame, cash_position: pl.DataFrame, aum: float = 1e8, cost_per_unit: float = 0.0
+        cls, prices: pl.DataFrame, cash_position: pl.DataFrame, aum: float, cost_per_unit: float = 0.0
     ) -> Self:
         """Create a Portfolio directly from cash positions aligned with prices.
 

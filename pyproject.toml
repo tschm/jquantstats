@@ -1,7 +1,7 @@
 # Main project metadata
 [project]
 name = 'jquantstats'
-version = "0.0.36"
+version = "0.1.0"
 description = "Analytics for quants"
 authors = [{name='tschm', email= 'thomas.schmelzer@gmail.com'}]
 readme = "README.md"

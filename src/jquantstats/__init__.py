@@ -1,62 +1,50 @@
 """jQuantStats: Portfolio analytics for quants.
 
-Overview
---------
-jQuantStats is a Python library for portfolio analytics that helps quants and portfolio
-managers understand their performance through in-depth analytics and risk metrics.
-It provides tools for calculating various performance metrics and visualizing
-portfolio performance.
+Two entry points
+----------------
+**Entry point 1 — prices + positions (recommended for active portfolios):**
 
-Features
---------
-- Performance Metrics: Calculate key metrics like Sharpe ratio, Sortino ratio,
-  drawdowns, volatility, and more
-- Risk Analysis: Analyze risk through metrics like Value at Risk (VaR),
-  Conditional VaR, and drawdown analysis
-- Visualization: Create interactive plots for portfolio performance, drawdowns,
-  return distributions, and monthly heatmaps
-- Benchmark Comparison: Compare your portfolio performance against benchmarks
-- Support for both pandas and polars DataFrames
-
-Installation
------------
-```bash
-pip install jquantstats
-```
-
-Usage
------
-The main entry point is the `build_data` function in the api module, which creates
-a Data object from returns and optional benchmark data.
+Use :class:`~jquantstats.analytics.Portfolio` when you have price series and
+position sizes.  Portfolio compiles the NAV curve from raw inputs and exposes
+the full analytics suite via ``.stats``, ``.plots``, and ``.report``.
 
 ```python
+from jquantstats import Portfolio
 import polars as pl
-from jquantstats.api import build_data
 
-# Create sample returns data
-returns = pl.DataFrame({
-    "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
-    "Asset1": [0.01, -0.02, 0.03],
-    "Asset2": [0.02, 0.01, -0.01]
-}).with_columns(pl.col("Date").str.to_date())
-
-# Create a Data object
-data = build_data(returns=returns)
-
-# Calculate statistics
-sharpe = data.stats.sharpe()
-volatility = data.stats.volatility()
-
-# Create visualizations
-fig = data.plots.plot_snapshot(title="Portfolio Performance")
-fig.show()
+pf = Portfolio.from_cash_position(
+    prices=prices_df,
+    cash_position=positions_df,
+    aum=1_000_000,
+)
+pf.stats.sharpe()
+pf.plots.snapshot()
 ```
 
-For more information, visit the [jQuantStats Documentation](https://tschm.github.io/jquantstats/book).
+**Entry point 2 — returns series (for arbitrary return streams):**
+
+Use :func:`~jquantstats.api.build_data` when you already have a returns series
+(e.g. downloaded from a data vendor) and want benchmark comparison or
+factor analytics.
+
+```python
+from jquantstats import build_data
+import polars as pl
+
+data = build_data(returns=returns_df, benchmark=bench_df)
+data.stats.sharpe()
+data.plots.plot_snapshot(title="Performance")
+```
+
+The two APIs are layered: ``portfolio.data`` returns a :class:`~jquantstats._data.Data`
+object so you can always drop into the returns-series API from a Portfolio.
+
+For more information, visit the `jQuantStats Documentation <https://tschm.github.io/jquantstats/book>`_.
 """
 
 import importlib.metadata
 
+from .analytics import Portfolio as Portfolio
 from .api import build_data  # noqa: F401
 
 __version__ = importlib.metadata.version("jquantstats")

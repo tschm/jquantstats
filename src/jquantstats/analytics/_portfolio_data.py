@@ -59,14 +59,14 @@ class PortfolioData:
         >>> from datetime import date
         >>> prices = pl.DataFrame({"date": [date(2020, 1, 1), date(2020, 1, 2)], "A": [100.0, 110.0]})
         >>> pos = pl.DataFrame({"date": [date(2020, 1, 1), date(2020, 1, 2)], "A": [1000.0, 1000.0]})
-        >>> pd = PortfolioData(prices=prices, cashposition=pos)
+        >>> pd = PortfolioData(prices=prices, cashposition=pos, aum=1e6)
         >>> pd.assets
         ['A']
     """
 
     cashposition: pl.DataFrame
     prices: pl.DataFrame
-    aum: float = 1e8
+    aum: float
 
     def __post_init__(self) -> None:
         """Validate input types, shapes, and parameters post-initialization."""
@@ -83,9 +83,7 @@ class PortfolioData:
     # ── Factory class methods ──────────────────────────────────────────────────
 
     @classmethod
-    def from_risk_position(
-        cls, prices: pl.DataFrame, risk_position: pl.DataFrame, vola: int = 32, aum: float = 1e8
-    ) -> Self:
+    def from_risk_position(cls, prices: pl.DataFrame, risk_position: pl.DataFrame, aum: float, vola: int = 32) -> Self:
         """Create a PortfolioData from per-asset risk positions.
 
         De-volatizes each risk position using an EWMA volatility estimate
@@ -114,7 +112,7 @@ class PortfolioData:
         return cls(prices=prices, cashposition=cash_position, aum=aum)
 
     @classmethod
-    def from_cash_position(cls, prices: pl.DataFrame, cash_position: pl.DataFrame, aum: float = 1e8) -> Self:
+    def from_cash_position(cls, prices: pl.DataFrame, cash_position: pl.DataFrame, aum: float) -> Self:
         """Create a PortfolioData directly from cash positions aligned with prices.
 
         Args:
@@ -162,7 +160,7 @@ class PortfolioData:
             >>> import polars as pl
             >>> prices = pl.DataFrame({"A": [100.0, 110.0, 105.0]})
             >>> pos = pl.DataFrame({"A": [1000.0, 1000.0, 1000.0]})
-            >>> pd = PortfolioData(prices=prices, cashposition=pos)
+            >>> pd = PortfolioData(prices=prices, cashposition=pos, aum=1e6)
             >>> pd.profits.columns
             ['A']
         """

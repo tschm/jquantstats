@@ -58,7 +58,7 @@ def test_portfolio_is_not_subclass_of_portfolio_data():
 
 def test_portfolio_instance_is_not_portfolio_data(prices, positions):
     """A Portfolio instance must not pass isinstance checks for PortfolioData."""
-    pf = Portfolio(prices=prices, cashposition=positions)
+    pf = Portfolio(prices=prices, cashposition=positions, aum=1e5)
     assert not isinstance(pf, PortfolioData)
 
 
@@ -184,31 +184,31 @@ def test_portfolio_data_has_no_turnover():
 
 def test_portfolio_delegates_profits(prices, positions):
     """Portfolio exposes profits via delegation to the internal PortfolioData."""
-    pf = Portfolio(prices=prices, cashposition=positions)
+    pf = Portfolio(prices=prices, cashposition=positions, aum=1e5)
     assert "A" in pf.profits.columns
 
 
 def test_portfolio_delegates_profit(prices, positions):
     """Portfolio exposes profit via delegation to the internal PortfolioData."""
-    pf = Portfolio(prices=prices, cashposition=positions)
+    pf = Portfolio(prices=prices, cashposition=positions, aum=1e5)
     assert "profit" in pf.profit.columns
 
 
 def test_portfolio_delegates_nav_accumulated(prices, positions):
     """Portfolio exposes nav_accumulated via delegation to the internal PortfolioData."""
-    pf = Portfolio(prices=prices, cashposition=positions)
+    pf = Portfolio(prices=prices, cashposition=positions, aum=1e5)
     assert "NAV_accumulated" in pf.nav_accumulated.columns
 
 
 def test_portfolio_delegates_returns(prices, positions):
     """Portfolio exposes returns via delegation to the internal PortfolioData."""
-    pf = Portfolio(prices=prices, cashposition=positions)
+    pf = Portfolio(prices=prices, cashposition=positions, aum=1e5)
     assert "returns" in pf.returns.columns
 
 
 def test_portfolio_delegates_drawdown(prices, positions):
     """Portfolio exposes drawdown via delegation to the internal PortfolioData."""
-    pf = Portfolio(prices=prices, cashposition=positions)
+    pf = Portfolio(prices=prices, cashposition=positions, aum=1e5)
     assert "drawdown" in pf.drawdown.columns
 
 

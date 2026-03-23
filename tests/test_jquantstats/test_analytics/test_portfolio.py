@@ -179,16 +179,16 @@ def test_portfolio_plot_returns_figure(portfolio):
 def test_portfolio_post_init_requires_polars_dataframes(prices, positions):
     """__post_init__ should assert inputs are Polars DataFrames."""
     with pytest.raises(TypeError, match=r"cashposition must be pl\.DataFrame, got dict"):
-        Portfolio(prices=prices, cashposition={"date": [1, 2, 3]})
+        Portfolio(prices=prices, cashposition={"date": [1, 2, 3]}, aum=1e5)
 
     with pytest.raises(TypeError, match=r"prices must be pl\.DataFrame, got list"):
-        Portfolio(prices=[[1.0, 2.0, 3.0]], cashposition=positions)
+        Portfolio(prices=[[1.0, 2.0, 3.0]], cashposition=positions, aum=1e5)
 
 
 def test_portfolio_post_init_requires_same_number_of_rows(prices, positions):
     """__post_init__ should raise ValueError when row counts differ."""
     with pytest.raises(ValueError, match=r"cashposition and prices must have the same number of rows"):
-        Portfolio(prices=prices.head(3), cashposition=positions.head(2))
+        Portfolio(prices=prices.head(3), cashposition=positions.head(2), aum=1e5)
 
 
 def test_portfolio_post_init_requires_positive_aum(prices, positions):
@@ -236,7 +236,7 @@ def test_sharpe_zero_std_returns_nan():
     prices = pl.DataFrame({"date": dates, "A": pl.Series([100.0] * len(dates), dtype=pl.Float64)})
     positions = pl.DataFrame({"date": dates, "A": pl.Series([0.0] * len(dates), dtype=pl.Float64)})
 
-    pf = Portfolio(prices=prices, cashposition=positions)
+    pf = Portfolio(prices=prices, cashposition=positions, aum=1e5)
     result = pf.stats.sharpe()["returns"]
     assert math.isnan(result)
 
@@ -253,7 +253,7 @@ def test_compute_daily_profits_replaces_nonfinite_with_zero():
     )
     positions = pl.DataFrame({"date": prices["date"], "A": pl.Series([1.0, 1.0], dtype=pl.Float64)})
 
-    portfolio = Portfolio(prices=prices, cashposition=positions)
+    portfolio = Portfolio(prices=prices, cashposition=positions, aum=1e5)
     profits = portfolio.profits
     assert np.allclose(profits["A"].to_numpy(), np.array([0.0, 0.0]))
 
@@ -263,7 +263,7 @@ def test_compute_daily_profits_no_numeric_columns():
     dates = pl.date_range(start=date(2020, 1, 1), end=date(2020, 1, 2), interval="1d", eager=True).cast(pl.Date)
     prices = pl.DataFrame({"date": dates})
     positions = pl.DataFrame({"date": dates})
-    portfolio = Portfolio(prices=prices, cashposition=positions)
+    portfolio = Portfolio(prices=prices, cashposition=positions, aum=1e5)
     profits = portfolio.profits
     assert profits.columns == ["date"]
     assert profits.height == 2
@@ -274,7 +274,7 @@ def test_profit_raises_when_no_numeric_asset_columns():
     dates = pl.date_range(start=date(2020, 1, 1), end=date(2020, 1, 2), interval="1d", eager=True).cast(pl.Date)
     prices = pl.DataFrame({"date": dates})
     positions = pl.DataFrame({"date": dates})
-    portfolio = Portfolio(prices=prices, cashposition=positions)
+    portfolio = Portfolio(prices=prices, cashposition=positions, aum=1e5)
 
     with pytest.raises(ValueError, match=r".*"):
         _ = portfolio.profit
