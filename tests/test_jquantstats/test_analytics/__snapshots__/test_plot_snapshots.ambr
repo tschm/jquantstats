@@ -1,0 +1,265 @@
+# serializer version: 1
+# name: test_annual_sharpe_plot_structure
+  dict({
+    'layout': dict({
+      'hovermode': 'x unified',
+      'plot_bgcolor': 'white',
+      'subplot_titles': list([
+      ]),
+      'title': 'Annual Sharpe Ratio by Year',
+    }),
+    'num_traces': 3,
+    'traces': list([
+      dict({
+        'name': 'profit',
+        'type': 'Bar',
+      }),
+      dict({
+        'name': 'NAV_accumulated',
+        'type': 'Bar',
+      }),
+      dict({
+        'name': 'returns',
+        'type': 'Bar',
+      }),
+    ]),
+  })
+# ---
+# name: test_correlation_heatmap_structure
+  dict({
+    'layout': dict({
+      'hovermode': None,
+      'plot_bgcolor': None,
+      'subplot_titles': list([
+      ]),
+      'title': 'Correlation heatmap',
+    }),
+    'num_traces': 1,
+    'traces': list([
+      dict({
+        'name': '0',
+        'type': 'Heatmap',
+      }),
+    ]),
+  })
+# ---
+# name: test_lagged_performance_plot_structure
+  dict({
+    'layout': dict({
+      'hovermode': 'x unified',
+      'plot_bgcolor': 'white',
+      'subplot_titles': list([
+      ]),
+      'title': 'NAV accumulated by lag',
+    }),
+    'num_traces': 5,
+    'traces': list([
+      dict({
+        'name': 'lag 0',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'lag 1',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'lag 2',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'lag 3',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'lag 4',
+        'type': 'Scatter',
+      }),
+    ]),
+  })
+# ---
+# name: test_lead_lag_ir_plot_structure
+  dict({
+    'layout': dict({
+      'hovermode': 'x',
+      'plot_bgcolor': 'white',
+      'subplot_titles': list([
+      ]),
+      'title': 'Lead/Lag Information Ratio (Sharpe) by Lag',
+    }),
+    'num_traces': 1,
+    'traces': list([
+      dict({
+        'name': 'Sharpe by lag',
+        'type': 'Bar',
+      }),
+    ]),
+  })
+# ---
+# name: test_monthly_returns_heatmap_structure
+  dict({
+    'layout': dict({
+      'hovermode': None,
+      'plot_bgcolor': 'white',
+      'subplot_titles': list([
+      ]),
+      'title': 'Monthly Returns Heatmap',
+    }),
+    'num_traces': 1,
+    'traces': list([
+      dict({
+        'name': None,
+        'type': 'Heatmap',
+      }),
+    ]),
+  })
+# ---
+# name: test_rolling_sharpe_plot_structure
+  dict({
+    'layout': dict({
+      'hovermode': 'x unified',
+      'plot_bgcolor': 'white',
+      'subplot_titles': list([
+      ]),
+      'title': 'Rolling Sharpe Ratio (63-period window)',
+    }),
+    'num_traces': 3,
+    'traces': list([
+      dict({
+        'name': 'profit',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'NAV_accumulated',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'returns',
+        'type': 'Scatter',
+      }),
+    ]),
+  })
+# ---
+# name: test_rolling_volatility_plot_structure
+  dict({
+    'layout': dict({
+      'hovermode': 'x unified',
+      'plot_bgcolor': 'white',
+      'subplot_titles': list([
+      ]),
+      'title': 'Rolling Volatility (63-period window)',
+    }),
+    'num_traces': 3,
+    'traces': list([
+      dict({
+        'name': 'profit',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'NAV_accumulated',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'returns',
+        'type': 'Scatter',
+      }),
+    ]),
+  })
+# ---
+# name: test_smoothed_holdings_performance_plot_structure
+  dict({
+    'layout': dict({
+      'hovermode': 'x unified',
+      'plot_bgcolor': 'white',
+      'subplot_titles': list([
+      ]),
+      'title': 'NAV accumulated by smoothed holdings',
+    }),
+    'num_traces': 5,
+    'traces': list([
+      dict({
+        'name': 'smooth 0',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'smooth 1',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'smooth 2',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'smooth 3',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'smooth 4',
+        'type': 'Scatter',
+      }),
+    ]),
+  })
+# ---
+# name: test_snapshot_log_scale_structure
+  dict({
+    'layout': dict({
+      'hovermode': 'x unified',
+      'plot_bgcolor': 'white',
+      'subplot_titles': list([
+        'Accumulated Profit',
+        'Drawdown',
+      ]),
+      'title': 'Performance Dashboard',
+    }),
+    'num_traces': 4,
+    'traces': list([
+      dict({
+        'name': 'NAV',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'Tilt',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'Timing',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'Drawdown',
+        'type': 'Scatter',
+      }),
+    ]),
+  })
+# ---
+# name: test_snapshot_structure
+  dict({
+    'layout': dict({
+      'hovermode': 'x unified',
+      'plot_bgcolor': 'white',
+      'subplot_titles': list([
+        'Accumulated Profit',
+        'Drawdown',
+      ]),
+      'title': 'Performance Dashboard',
+    }),
+    'num_traces': 4,
+    'traces': list([
+      dict({
+        'name': 'NAV',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'Tilt',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'Timing',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'Drawdown',
+        'type': 'Scatter',
+      }),
+    ]),
+  })
+# ---
