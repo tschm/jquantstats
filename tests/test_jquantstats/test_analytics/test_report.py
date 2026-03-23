@@ -11,7 +11,7 @@ import polars as pl
 import pytest
 
 from jquantstats import Portfolio
-from jquantstats._portfolio_plots import Plots
+from jquantstats._plots import PortfolioPlots as Plots
 from jquantstats._report import Report, _fmt, _stats_table_html
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────

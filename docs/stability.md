@@ -46,7 +46,7 @@ Anything that is **not** in the table above is considered internal and
 may change or be removed in any release:
 
 - Private modules: `_stats.py`, `_plots.py`, `_reports.py`,
-  `_types.py`, `_portfolio_data.py`, `_portfolio_plots.py`.
+  `_types.py`, `_portfolio_data.py`.
 - Private classes, functions, or attributes whose names begin with an
   underscore (e.g. `Data._raw_returns`, `Stats._df`).
 - Sub-module paths such as `jquantstats.portfolio`
