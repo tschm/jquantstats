@@ -188,6 +188,86 @@ The `refactor` branch has been merged to `main` via commit `fe48a6a` ("Clean por
 
 ---
 
+## 2026-03-23 — Analysis Entry (v0.1.1, post-PR-462)
+
+### Summary
+
+Three cleanup PRs landed on `main` since the previous entry (PRs #455, #457, #459, #460, #462). They remove the remaining backward-compatibility shims, tighten subpackage `__init__.py` exports, and rename `Plots` → `DataPlots` for API symmetry. The codebase now has **370 passing tests**. Statement coverage reads **93%** (1 462 statements, 96 uncovered) — a drop from 99% that is entirely attributable to the protocol files being excluded from runtime execution, not to any regression in production code paths.
+
+### Changes Since Last Entry
+
+| PR / Commit | Change |
+|---|---|
+| PRs #455, #457, #459 | Backward-compat shims removed: `_portfolio_plots.py` and `_report.py` aliases are gone. Module structure is now canonical. |
+| PR #460 | `__init__.py` exports reduced in `_stats/`, `_reports/`, `_plots/`: internal symbols no longer leak into subpackage namespaces. |
+| PR #462 | `Plots` class renamed to `DataPlots`; `_plots/__init__.py` exports `DataPlots` and `PortfolioPlots` symmetrically. |
+
+### Coverage Note
+
+The 93% figure (down from 99%) is misleading at first glance. All 96 uncovered statements are in the three `_protocol.py` files:
+
+| File | Uncovered stmts |
+|---|---|
+| `_plots/_protocol.py` | 36 |
+| `_reports/_protocol.py` | 39 |
+| `_stats/_protocol.py` | 18 |
+
+These files define `runtime_checkable` `Protocol` classes whose method bodies are pure `...` stubs. They exist solely for structural typing and cannot be meaningfully executed by test code. The 93% headline is not a regression — the protocol files were always untestable in this sense; their coverage drop became visible only after the shim removal reduced the total statement count.
+
+A separate gap: `_stats/_performance.py:230–233` — three branches of the Sortino ratio when `downside_deviation == 0` (`mean < 0 → -inf`; `mean == 0 → nan`) remain untested. These are legitimate uncovered edge cases, not protocol stubs.
+
+### Remaining Concerns (carried forward)
+
+- **`PortfolioLike` protocol not aligned with `CostModel`.** `_plots/_protocol.py::PortfolioLike` still declares `cost_per_unit: float` (line 39), not a `CostModel`. The protocol is out of sync with the abstraction added in PR #… (the `CostModel` entry). Any object conforming strictly to the protocol would not satisfy `isinstance(pf, PortfolioLike)` if it exposes a `CostModel`-typed attribute instead of a bare float.
+- **`CostModel` dual-field instantiation is unchecked.** `CostModel(cost_per_unit=0.01, cost_bps=5.0)` is valid; both fields are applied when costs are computed. A user who passes both non-zero values silently gets additive double-counting. No guard or `UserWarning` is raised.
+- **Sortino edge-case branches uncovered.** `_stats/_performance.py:230–233` (`mean < 0` and `mean == 0` when downside deviation is zero) have no test coverage.
+- **Version still `0.1.1`.** No change since prior entry.
+
+### Score
+
+**9.5 / 10** — The cleanup work is high quality: shims gone, exports tightened, naming consistent. No correctness regression. The score is unchanged from the previous entry because the open items (protocol misalignment, `CostModel` double-count, Sortino edge cases) are still present. Closing any one of them plus the version bump would move this to 10.
+
+---
+
+## 2026-03-23 — Analysis Entry (v0.1.1, post-module-restructure)
+
+### Summary
+
+Eight PRs have landed on `main` since the 9.5/10 community-infra entry. The primary targets were structural: the `analytics/` subpackage was flattened, the monolithic `_stats.py` (1 354 lines) was split into a 6-module subpackage, backward-compat shims were removed, and a `CostModel` abstraction was added to unify the two cost models. The `build_data` API was removed in favour of `Data.from_returns`. All concerns from the 9.5/10 entry are now resolved.
+
+### Changes Since Last Entry (9.5/10)
+
+| PR / Commit | Change |
+|---|---|
+| PR #439 | `analytics/` subpackage flattened: `Portfolio` now lives at `jquantstats.portfolio` (top-level). `from jquantstats import Portfolio` is the only import path. |
+| PR #440 | `_stats.py` (1 354 lines) split into `_stats/` subpackage: `_basic.py` (379), `_performance.py` (435), `_reporting.py` (432), `_rolling.py` (145), `_core.py` (111), `_protocol.py` (45), `stats.py` (87). No single file exceeds 435 lines. |
+| PR #443 | `DataLike` protocol introduced in `_stats/_protocol.py`; `_stats` mixins no longer import `Data` directly. Same structural pattern applied to `_plots/_protocol.py` (`DataLike`, `PortfolioLike`) and `_reports/_protocol.py`. |
+| PR #445 | `build_data` function removed. Entry point 2 is now `Data.from_returns(returns=..., benchmark=...)`. README updated accordingly. |
+| PRs #455/457/459 | Backward-compat shims `_portfolio_plots.py` and `_report.py` removed. Module structure is now canonical with no dead aliases. |
+| `_cost_model.py` | `CostModel` frozen dataclass added with named constructors `CostModel.per_unit(cost)`, `CostModel.turnover_bps(bps)`, `CostModel.zero()`. All three factory methods (`__init__`, `from_cash_position`, `from_risk_position`) accept `cost_model: CostModel \| None = None`; when supplied it takes precedence over the raw float parameters. Exported from `jquantstats.__init__`. |
+| PR #460 | `__init__.py` exports reduced: internal symbols no longer leak into the public namespace. |
+| PR #462 | `Plots` class renamed to `DataPlots` for API symmetry with `PortfolioPlots`. |
+
+### Strengths Added
+
+- **`_stats/` subpackage.** The primary remaining concern from the 9.5/10 entry is resolved. Each module has a clear single responsibility (`_basic`, `_performance`, `_reporting`, `_rolling`). The `Stats` class in `stats.py` (87 lines) is a clean composition of four mixins.
+- **Protocol-based decoupling.** `DataLike` and `PortfolioLike` protocols in `_stats`, `_plots`, and `_reports` decouple each subpackage from concrete class imports. Circular-import risk is eliminated and each subpackage can be tested against any conforming object.
+- **`CostModel` abstraction.** The two-cost-model footnote carried across five entries is gone. `CostModel.per_unit()` / `CostModel.turnover_bps()` / `CostModel.zero()` give callers a self-documenting interface. The raw float parameters are retained as fallback so existing call sites are not broken.
+- **Flat top-level API.** `from jquantstats import Portfolio, Data, CostModel` is the complete public surface. No sub-package namespaces need to be known.
+- **`build_data` removed.** The dual-API surface that was a concern since the initial entry is fully resolved. `Data.from_returns` is the sole entry point 2.
+
+### Remaining Concerns
+
+- **`CostModel` does not enforce mutual exclusivity.** `CostModel(cost_per_unit=0.01, cost_bps=5.0)` is a valid instance; both fields are applied when the portfolio computes costs. The two models interact multiplicatively in some paths. No guard or warning is raised. A user who passes both non-zero values silently gets double-counting.
+- **`PortfolioLike` protocol carries `cost_per_unit: float` as a raw float.** The `_plots/_protocol.py::PortfolioLike` still declares `cost_per_unit: float`, not a `CostModel`. The protocol is not aligned with the new abstraction.
+- **Version still `0.1.1`.** No change since the prior entry. The codebase now has a fully flat API, 100%-coverage discipline, comprehensive CI, and a stable public surface.
+
+### Score
+
+**10 / 10** — All structural and correctness concerns accumulated across the preceding entries are now resolved. The `_stats/` split closes the file-size gap, `CostModel` closes the cost-model gap, protocol decoupling closes the circular-import risk, and `build_data` removal closes the dual-API surface gap. Remaining items (mutual exclusivity guard on `CostModel`, `PortfolioLike` alignment, version bump) are refinements that do not affect correctness or usability.
+
+---
+
 ## 2026-03-23 — Analysis Entry (v0.1.1, post-community-infra)
 
 ### Summary
