@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 import polars as pl
@@ -23,6 +23,12 @@ class _PerformanceStatsMixin:
         data: The :class:`~jquantstats._data.Data` object.
         all: Combined DataFrame for efficient column selection.
     """
+
+    if TYPE_CHECKING:
+        from ._data import Data
+
+        data: Data
+        all: pl.DataFrame | None
 
     # ── Sharpe & Sortino ──────────────────────────────────────────────────────
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import polars as pl
 
@@ -22,6 +22,57 @@ class _ReportingStatsMixin:
         data: The :class:`~jquantstats._data.Data` object.
         all: Combined DataFrame for efficient column selection.
     """
+
+    if TYPE_CHECKING:
+        from ._data import Data
+
+        data: Data
+        all: pl.DataFrame | None
+
+        def avg_return(self) -> dict[str, float]:
+            """Defined on _BasicStatsMixin."""
+
+        def avg_win(self) -> dict[str, float]:
+            """Defined on _BasicStatsMixin."""
+
+        def avg_loss(self) -> dict[str, float]:
+            """Defined on _BasicStatsMixin."""
+
+        def win_rate(self) -> dict[str, float]:
+            """Defined on _BasicStatsMixin."""
+
+        def profit_factor(self) -> dict[str, float]:
+            """Defined on _BasicStatsMixin."""
+
+        def payoff_ratio(self) -> dict[str, float]:
+            """Defined on _BasicStatsMixin."""
+
+        def best(self) -> dict[str, float]:
+            """Defined on _BasicStatsMixin."""
+
+        def worst(self) -> dict[str, float]:
+            """Defined on _BasicStatsMixin."""
+
+        def volatility(self) -> dict[str, float]:
+            """Defined on _BasicStatsMixin."""
+
+        def sharpe(self) -> dict[str, float]:
+            """Defined on _PerformanceStatsMixin."""
+
+        def skew(self) -> dict[str, float]:
+            """Defined on _BasicStatsMixin."""
+
+        def kurtosis(self) -> dict[str, float]:
+            """Defined on _BasicStatsMixin."""
+
+        def value_at_risk(self) -> dict[str, float]:
+            """Defined on _BasicStatsMixin."""
+
+        def conditional_value_at_risk(self) -> dict[str, float]:
+            """Defined on _BasicStatsMixin."""
+
+        def max_drawdown(self) -> dict[str, float]:
+            """Defined on _PerformanceStatsMixin."""
 
     # ── Temporal & reporting ──────────────────────────────────────────────────
 
@@ -295,7 +346,7 @@ class _ReportingStatsMixin:
                     chunk_all.select(self.data.benchmark.columns) if self.data.benchmark is not None else None
                 )
                 chunk_data = Data(returns=chunk_returns, index=chunk_index, benchmark=chunk_benchmark)
-                chunk_summary = type(self)(chunk_data).summary()
+                chunk_summary = cast(Any, type(self))(chunk_data).summary()
                 chunk_summary = chunk_summary.with_columns(pl.lit(i).alias("year"))
                 frames_int.append(chunk_summary)
             if not frames_int:
@@ -317,7 +368,7 @@ class _ReportingStatsMixin:
             year_returns = year_all.select(self.data.returns.columns)
             year_benchmark = year_all.select(self.data.benchmark.columns) if self.data.benchmark is not None else None
             year_data = Data(returns=year_returns, index=year_index, benchmark=year_benchmark)
-            year_summary = type(self)(year_data).summary()
+            year_summary = cast(Any, type(self))(year_data).summary()
             year_summary = year_summary.with_columns(pl.lit(year).alias("year"))
             frames.append(year_summary)
 
