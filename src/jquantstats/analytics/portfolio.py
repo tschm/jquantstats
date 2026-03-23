@@ -371,7 +371,7 @@ class Portfolio:
             length = max(0, row_end - row_start)
             pr = self.prices.slice(row_start, length)
             cp = self.cashposition.slice(row_start, length)
-        return Portfolio(prices=pr, cashposition=cp, aum=self.aum)
+        return Portfolio(prices=pr, cashposition=cp, aum=self.aum, cost_per_unit=self.cost_per_unit)
 
     def lag(self, n: int) -> "Portfolio":
         """Return a new Portfolio with cash positions lagged by ``n`` steps.
@@ -401,7 +401,7 @@ class Portfolio:
 
         assets = [c for c in self.cashposition.columns if c != "date" and self.cashposition[c].dtype.is_numeric()]
         cp_lagged = self.cashposition.with_columns(pl.col(c).shift(n) for c in assets)
-        return Portfolio(prices=self.prices, cashposition=cp_lagged, aum=self.aum)
+        return Portfolio(prices=self.prices, cashposition=cp_lagged, aum=self.aum, cost_per_unit=self.cost_per_unit)
 
     def smoothed_holding(self, n: int) -> "Portfolio":
         """Return a new Portfolio with cash positions smoothed by a rolling mean.
@@ -434,7 +434,7 @@ class Portfolio:
         cp_smoothed = self.cashposition.with_columns(
             pl.col(c).rolling_mean(window_size=window, min_samples=1).alias(c) for c in assets
         )
-        return Portfolio(prices=self.prices, cashposition=cp_smoothed, aum=self.aum)
+        return Portfolio(prices=self.prices, cashposition=cp_smoothed, aum=self.aum, cost_per_unit=self.cost_per_unit)
 
     # ── Attribution ────────────────────────────────────────────────────────────
 
@@ -449,7 +449,7 @@ class Portfolio:
         const_position = self.cashposition.with_columns(
             pl.col(col).drop_nulls().drop_nans().mean().alias(col) for col in self.assets
         )
-        return Portfolio.from_cash_position(self.prices, const_position, aum=self.aum)
+        return Portfolio.from_cash_position(self.prices, const_position, aum=self.aum, cost_per_unit=self.cost_per_unit)
 
     @property
     def timing(self) -> "Portfolio":
@@ -461,7 +461,7 @@ class Portfolio:
         """
         const_position = self.tilt.cashposition
         position = self.cashposition.with_columns((pl.col(col) - const_position[col]).alias(col) for col in self.assets)
-        return Portfolio.from_cash_position(self.prices, position, aum=self.aum)
+        return Portfolio.from_cash_position(self.prices, position, aum=self.aum, cost_per_unit=self.cost_per_unit)
 
     @property
     def tilt_timing_decomp(self) -> pl.DataFrame:

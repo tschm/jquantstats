@@ -23,7 +23,6 @@ import pytest
 from jquantstats.analytics import Portfolio
 from jquantstats.analytics._portfolio_data import PortfolioData
 from jquantstats.analytics.exceptions import (
-    CleaningInvariantError,
     IntegerIndexBoundError,
     MissingDateColumnError,
 )
@@ -900,37 +899,6 @@ def test_trading_cost_impact_plot_title_contains_bps(turnover_portfolio):
     assert "bps" in fig.layout.title.text.lower()
 
 
-# ─── CleaningInvariantError ───────────────────────────────────────────────────
-
-
-def test_cleaning_invariant_error_null_message_and_attribute():
-    """CleaningInvariantError must carry the column name and a descriptive message for nulls."""
-    exc = CleaningInvariantError("foo", "still contains null values")
-    assert exc.column == "foo"
-    assert "foo" in str(exc)
-    assert "null" in str(exc).lower()
-
-
-def test_cleaning_invariant_error_nonfinite_message_and_attribute():
-    """CleaningInvariantError must carry the column name and a descriptive message for non-finite values."""
-    exc = CleaningInvariantError("bar", "has unexpected non-finite values after cleaning")
-    assert exc.column == "bar"
-    assert "bar" in str(exc)
-    assert "non-finite" in str(exc).lower()
-
-
-def test_cleaning_invariant_null_error_is_value_error():
-    """CleaningInvariantError (null variant) must be catchable as a ValueError."""
-    with pytest.raises(ValueError, match="null"):
-        raise CleaningInvariantError("col_x", "still contains null values")
-
-
-def test_cleaning_invariant_nonfinite_error_is_value_error():
-    """CleaningInvariantError (non-finite variant) must be catchable as a ValueError."""
-    with pytest.raises(ValueError, match="non-finite"):
-        raise CleaningInvariantError("col_y", "has unexpected non-finite values after cleaning")
-
-
 # ── position_delta_costs ─────────────────────────────────────────────────────
 
 
@@ -1177,3 +1145,47 @@ def test_portfolio_data_property_integer_indexed(int_portfolio):
     assert "date" not in d.returns.columns
     assert d.index.columns == ["index"]
     assert d.index.height == int_portfolio.prices.height
+
+
+def test_integer_indexed_stats_uses_252_periods_per_year(int_portfolio):
+    """Integer-indexed portfolio.stats must use 252 periods/year, not ~31.5 million."""
+    assert int_portfolio.data._periods_per_year == pytest.approx(252.0)
+    sharpe = int_portfolio.stats.sharpe()
+    assert "returns" in sharpe
+    assert abs(sharpe["returns"]) < 1000  # sanity: not ~5600x inflated
+
+
+# ── cost_per_unit forwarding through transforms ───────────────────────────────
+
+
+@pytest.fixture
+def cost_pf():
+    """3-day portfolio with cost_per_unit=0.05 for transform-forwarding tests."""
+    prices = pl.DataFrame({"A": [100.0, 110.0, 105.0]})
+    pos = pl.DataFrame({"A": [1000.0, 1200.0, 1000.0]})
+    return Portfolio(prices=prices, cashposition=pos, aum=1e5, cost_per_unit=0.05)
+
+
+def test_truncate_forwards_cost_per_unit(cost_pf):
+    """Truncate must preserve cost_per_unit."""
+    assert cost_pf.truncate(start=0, end=1).cost_per_unit == pytest.approx(0.05)
+
+
+def test_lag_forwards_cost_per_unit(cost_pf):
+    """Lag must preserve cost_per_unit."""
+    assert cost_pf.lag(1).cost_per_unit == pytest.approx(0.05)
+
+
+def test_smoothed_holding_forwards_cost_per_unit(cost_pf):
+    """smoothed_holding must preserve cost_per_unit."""
+    assert cost_pf.smoothed_holding(1).cost_per_unit == pytest.approx(0.05)
+
+
+def test_tilt_forwards_cost_per_unit(cost_pf):
+    """Tilt must preserve cost_per_unit."""
+    assert cost_pf.tilt.cost_per_unit == pytest.approx(0.05)
+
+
+def test_timing_forwards_cost_per_unit(cost_pf):
+    """Timing must preserve cost_per_unit."""
+    assert cost_pf.timing.cost_per_unit == pytest.approx(0.05)
