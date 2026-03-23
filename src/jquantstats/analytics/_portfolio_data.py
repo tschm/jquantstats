@@ -17,7 +17,6 @@ from typing import Self
 import polars as pl
 
 from .exceptions import (
-    CleaningInvariantError,
     InvalidCashPositionTypeError,
     InvalidPricesTypeError,
     MissingDateColumnError,
@@ -177,22 +176,6 @@ class PortfolioData:
             profits = profits.with_columns(
                 pl.when(pl.col(c).is_finite()).then(pl.col(c)).otherwise(0.0).fill_null(0.0).alias(c) for c in assets
             )
-            # Guards to guarantee cleanliness after the fill_null / otherwise(0.0) pass above.
-            # These branches should never be reached: fill_null(0.0) eliminates all null entries
-            # and otherwise(0.0) replaces every non-finite value with a finite float, so the
-            # conditions below are mathematically impossible at this point.
-            for c in assets:
-                s = profits[c]
-                if int(s.null_count()) != 0:
-                    raise CleaningInvariantError(  # pragma: no cover
-                        c, "still contains null values after fill_null(0.0)"
-                    )
-                if not bool(pl.Series(s).is_finite().all()):
-                    raise CleaningInvariantError(  # pragma: no cover
-                        c,
-                        "still contains non-finite values (NaN/Inf) after replacing all non-finite entries with 0.0",
-                    )
-
         return profits
 
     @property
