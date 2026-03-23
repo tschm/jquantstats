@@ -77,6 +77,7 @@ def columnwise_stat(func: Callable[..., Any]) -> Callable[..., dict[str, float]]
 
     @wraps(func)
     def wrapper(self: _CoreStatsMixin, *args: Any, **kwargs: Any) -> dict[str, float]:
+        """Apply *func* to every column and return a ``{column: value}`` mapping."""
         return {col: func(self, series, *args, **kwargs) for col, series in self.data.items()}
 
     return wrapper
@@ -95,6 +96,7 @@ def to_frame(func: Callable[..., Any]) -> Callable[..., pl.DataFrame]:
 
     @wraps(func)
     def wrapper(self: _CoreStatsMixin, *args: Any, **kwargs: Any) -> pl.DataFrame:
+        """Apply *func* per column and return the result as a Polars DataFrame."""
         return cast(pl.DataFrame, self.all).select(
             [pl.col(name) for name in self.data.date_col]
             + [func(self, series, *args, **kwargs).alias(col) for col, series in self.data.items()]
@@ -121,10 +123,12 @@ class _CoreStatsMixin:
 
     @staticmethod
     def _mean_positive_expr(series: pl.Series) -> float:
+        """Return the mean of all positive values in *series*, or NaN if none exist."""
         return cast(float, series.filter(series > 0).mean())
 
     @staticmethod
     def _mean_negative_expr(series: pl.Series) -> float:
+        """Return the mean of all negative values in *series*, or NaN if none exist."""
         return cast(float, series.filter(series < 0).mean())
 
     # ── Basic statistics ──────────────────────────────────────────────────────
@@ -710,6 +714,14 @@ class _CoreStatsMixin:
 
     @staticmethod
     def max_drawdown_single_series(series: pl.Series) -> float:
+        """Compute the maximum drawdown for a single returns series.
+
+        Args:
+            series: A Polars Series of returns values.
+
+        Returns:
+            float: The maximum drawdown as a positive fraction (e.g. 0.2 for 20%).
+        """
         price = _CoreStatsMixin.prices(series)
         peak = price.cum_max()
         drawdown = price / peak - 1
@@ -1193,6 +1205,7 @@ class _CoreStatsMixin:
         assets = [col for col, _ in self.data.items()]
 
         def _safe(fn: Any) -> dict[str, Any]:
+            """Call *fn()* and return its result; return NaN for each asset on any exception."""
             try:
                 return fn()
             except Exception:
