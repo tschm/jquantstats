@@ -50,7 +50,8 @@ packages = ["src/jquantstats"]
 include = [
     "LICENSE",    # Ensure the LICENSE file is included in your package
     "README.md",
-    "src/jquantstats"
+    "src/jquantstats",
+    "src/jquantstats/py.typed",
 ]
 
 # Bandit security linter configuration
