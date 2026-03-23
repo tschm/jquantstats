@@ -115,6 +115,7 @@ class Portfolio:
     prices: pl.DataFrame
     aum: float
     cost_per_unit: float = 0.0
+    cost_bps: float = 0.0
     _data: PortfolioData = dataclasses.field(init=False, repr=False, compare=False, hash=False)
 
     def __post_init__(self) -> None:
@@ -130,7 +131,7 @@ class Portfolio:
     # ── Factory classmethods ──────────────────────────────────────────────────
 
     @classmethod
-    def _from_portfolio_data(cls, pd: PortfolioData, *, cost_per_unit: float = 0.0) -> Self:
+    def _from_portfolio_data(cls, pd: PortfolioData, *, cost_per_unit: float = 0.0, cost_bps: float = 0.0) -> Self:
         """Construct a Portfolio directly from an already-validated PortfolioData.
 
         Bypasses ``__post_init__`` to avoid constructing a second
@@ -143,6 +144,8 @@ class Portfolio:
             pd: A fully constructed and validated :class:`PortfolioData` instance.
             cost_per_unit: One-way trading cost per unit of position change.
                 Defaults to 0.0 (no cost).
+            cost_bps: One-way trading cost in basis points of AUM turnover.
+                Defaults to 0.0 (no cost).
 
         Returns:
             A new Portfolio instance backed by *pd*.
@@ -152,6 +155,7 @@ class Portfolio:
         object.__setattr__(obj, "prices", pd.prices)
         object.__setattr__(obj, "aum", pd.aum)
         object.__setattr__(obj, "cost_per_unit", cost_per_unit)
+        object.__setattr__(obj, "cost_bps", cost_bps)
         object.__setattr__(obj, "_data", pd)
         return obj
 
@@ -177,7 +181,12 @@ class Portfolio:
 
     @classmethod
     def from_cash_position(
-        cls, prices: pl.DataFrame, cash_position: pl.DataFrame, aum: float, cost_per_unit: float = 0.0
+        cls,
+        prices: pl.DataFrame,
+        cash_position: pl.DataFrame,
+        aum: float,
+        cost_per_unit: float = 0.0,
+        cost_bps: float = 0.0,
     ) -> Self:
         """Create a Portfolio directly from cash positions aligned with prices.
 
@@ -187,12 +196,14 @@ class Portfolio:
             aum: Assets under management used as the base NAV offset.
             cost_per_unit: One-way trading cost per unit of position change.
                 Defaults to 0.0 (no cost).
+            cost_bps: One-way trading cost in basis points of AUM turnover.
+                Defaults to 0.0 (no cost).
 
         Returns:
             A Portfolio instance with the provided cash positions.
         """
         pd = PortfolioData.from_cash_position(prices=prices, cash_position=cash_position, aum=aum)
-        return cls._from_portfolio_data(pd, cost_per_unit=cost_per_unit)
+        return cls._from_portfolio_data(pd, cost_per_unit=cost_per_unit, cost_bps=cost_bps)
 
     # ── PortfolioData proxy properties ────────────────────────────────────────
 
@@ -371,7 +382,13 @@ class Portfolio:
             length = max(0, row_end - row_start)
             pr = self.prices.slice(row_start, length)
             cp = self.cashposition.slice(row_start, length)
-        return Portfolio(prices=pr, cashposition=cp, aum=self.aum, cost_per_unit=self.cost_per_unit)
+        return Portfolio(
+            prices=pr,
+            cashposition=cp,
+            aum=self.aum,
+            cost_per_unit=self.cost_per_unit,
+            cost_bps=self.cost_bps,
+        )
 
     def lag(self, n: int) -> "Portfolio":
         """Return a new Portfolio with cash positions lagged by ``n`` steps.
@@ -401,7 +418,13 @@ class Portfolio:
 
         assets = [c for c in self.cashposition.columns if c != "date" and self.cashposition[c].dtype.is_numeric()]
         cp_lagged = self.cashposition.with_columns(pl.col(c).shift(n) for c in assets)
-        return Portfolio(prices=self.prices, cashposition=cp_lagged, aum=self.aum, cost_per_unit=self.cost_per_unit)
+        return Portfolio(
+            prices=self.prices,
+            cashposition=cp_lagged,
+            aum=self.aum,
+            cost_per_unit=self.cost_per_unit,
+            cost_bps=self.cost_bps,
+        )
 
     def smoothed_holding(self, n: int) -> "Portfolio":
         """Return a new Portfolio with cash positions smoothed by a rolling mean.
@@ -434,7 +457,13 @@ class Portfolio:
         cp_smoothed = self.cashposition.with_columns(
             pl.col(c).rolling_mean(window_size=window, min_samples=1).alias(c) for c in assets
         )
-        return Portfolio(prices=self.prices, cashposition=cp_smoothed, aum=self.aum, cost_per_unit=self.cost_per_unit)
+        return Portfolio(
+            prices=self.prices,
+            cashposition=cp_smoothed,
+            aum=self.aum,
+            cost_per_unit=self.cost_per_unit,
+            cost_bps=self.cost_bps,
+        )
 
     # ── Attribution ────────────────────────────────────────────────────────────
 
@@ -449,7 +478,13 @@ class Portfolio:
         const_position = self.cashposition.with_columns(
             pl.col(col).drop_nulls().drop_nans().mean().alias(col) for col in self.assets
         )
-        return Portfolio.from_cash_position(self.prices, const_position, aum=self.aum, cost_per_unit=self.cost_per_unit)
+        return Portfolio.from_cash_position(
+            self.prices,
+            const_position,
+            aum=self.aum,
+            cost_per_unit=self.cost_per_unit,
+            cost_bps=self.cost_bps,
+        )
 
     @property
     def timing(self) -> "Portfolio":
@@ -461,7 +496,13 @@ class Portfolio:
         """
         const_position = self.tilt.cashposition
         position = self.cashposition.with_columns((pl.col(col) - const_position[col]).alias(col) for col in self.assets)
-        return Portfolio.from_cash_position(self.prices, position, aum=self.aum, cost_per_unit=self.cost_per_unit)
+        return Portfolio.from_cash_position(
+            self.prices,
+            position,
+            aum=self.aum,
+            cost_per_unit=self.cost_per_unit,
+            cost_bps=self.cost_bps,
+        )
 
     @property
     def tilt_timing_decomp(self) -> pl.DataFrame:
@@ -664,7 +705,7 @@ class Portfolio:
             df = profit_df.hstack(cost_df.select(["cost"]))
         return df.with_columns(((pl.col("profit") - pl.col("cost")).cum_sum() + self.aum).alias("NAV_accumulated_net"))
 
-    def cost_adjusted_returns(self, cost_bps: float) -> pl.DataFrame:
+    def cost_adjusted_returns(self, cost_bps: float | None = None) -> pl.DataFrame:
         """Return daily portfolio returns net of estimated one-way trading costs.
 
         Trading costs are modelled as a linear function of daily one-way
@@ -681,7 +722,8 @@ class Portfolio:
 
         Args:
             cost_bps: One-way trading cost in basis points per unit of AUM
-                traded.  Must be non-negative.
+                traded.  Must be non-negative.  Defaults to ``self.cost_bps``
+                set at construction time.
 
         Returns:
             pl.DataFrame: Same schema as :attr:`returns` but with the
@@ -701,10 +743,11 @@ class Portfolio:
             >>> float(adj["returns"][1]) == float(pf.returns["returns"][1])
             True
         """
-        if cost_bps < 0:
+        effective_bps = cost_bps if cost_bps is not None else self.cost_bps
+        if effective_bps < 0:
             raise ValueError
         base = self.returns
-        daily_cost = self.turnover["turnover"] * (cost_bps / 10_000.0)
+        daily_cost = self.turnover["turnover"] * (effective_bps / 10_000.0)
         return base.with_columns((pl.col("returns") - daily_cost).alias("returns"))
 
     def trading_cost_impact(self, max_bps: int = 20) -> pl.DataFrame:

@@ -1189,3 +1189,38 @@ def test_tilt_forwards_cost_per_unit(cost_pf):
 def test_timing_forwards_cost_per_unit(cost_pf):
     """Timing must preserve cost_per_unit."""
     assert cost_pf.timing.cost_per_unit == pytest.approx(0.05)
+
+
+# ── cost_bps construction-time parameter ─────────────────────────────────────
+
+
+@pytest.fixture
+def cost_bps_pf():
+    """3-day portfolio with cost_bps=5.0 for cost_bps-forwarding tests."""
+    prices = pl.DataFrame({"A": [100.0, 110.0, 105.0]})
+    pos = pl.DataFrame({"A": [1000.0, 1200.0, 1000.0]})
+    return Portfolio(prices=prices, cashposition=pos, aum=1e5, cost_bps=5.0)
+
+
+def test_cost_bps_forwarded_through_transforms(cost_bps_pf):
+    """All transforms must preserve the construction-time cost_bps value."""
+    assert cost_bps_pf.truncate(start=0, end=1).cost_bps == pytest.approx(5.0)
+    assert cost_bps_pf.lag(1).cost_bps == pytest.approx(5.0)
+    assert cost_bps_pf.smoothed_holding(1).cost_bps == pytest.approx(5.0)
+    assert cost_bps_pf.tilt.cost_bps == pytest.approx(5.0)
+    assert cost_bps_pf.timing.cost_bps == pytest.approx(5.0)
+
+
+def test_cost_adjusted_returns_defaults_to_construction_cost_bps(cost_bps_pf, turnover_portfolio):
+    """cost_adjusted_returns() with no argument uses self.cost_bps."""
+    adj_default = cost_bps_pf.cost_adjusted_returns()
+    adj_explicit = cost_bps_pf.cost_adjusted_returns(5.0)
+    assert adj_default["returns"].to_list() == pytest.approx(adj_explicit["returns"].to_list())
+
+
+def test_cost_adjusted_returns_explicit_overrides_construction_cost_bps(cost_bps_pf):
+    """An explicit cost_bps argument overrides self.cost_bps."""
+    adj_override = cost_bps_pf.cost_adjusted_returns(0.0)
+    adj_base = cost_bps_pf.cost_adjusted_returns(5.0)
+    # 0 bps should yield higher (or equal) returns than 5 bps
+    assert float(adj_override["returns"].sum()) >= float(adj_base["returns"].sum())
