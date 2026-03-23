@@ -4,6 +4,7 @@ import narwhals as nw
 import polars as pl
 from polars.testing import assert_frame_equal, assert_series_equal
 
+from jquantstats import Data
 from jquantstats.api import build_data
 
 
@@ -132,4 +133,53 @@ def test_narwhals_pandas_round_trip(returns):
     pandas_returns = returns.to_pandas()
     nw_frame = nw.from_native(pandas_returns, eager_only=True)
     d = build_data(nw_frame, date_col="Date")
+    assert_frame_equal(d.returns, returns.drop("Date"))
+
+
+# ── Data.from_returns tests ────────────────────────────────────────────────────
+
+
+def test_from_returns_equals_build_data(returns):
+    """Data.from_returns produces the same result as build_data.
+
+    Verifies that both paths yield identical returns and index frames.
+    """
+    d_build = build_data(returns, date_col="Date")
+    d_class = Data.from_returns(returns, date_col="Date")
+    assert_frame_equal(d_build.returns, d_class.returns)
+    assert_frame_equal(d_build.index, d_class.index)
+    assert d_class.benchmark is None
+
+
+def test_from_returns_with_benchmark_equals_build_data(returns, benchmark_frame):
+    """Data.from_returns with benchmark matches build_data output."""
+    d_build = build_data(returns=returns, benchmark=benchmark_frame)
+    d_class = Data.from_returns(returns=returns, benchmark=benchmark_frame)
+    assert_frame_equal(d_build.returns, d_class.returns)
+    assert_frame_equal(d_build.index, d_class.index)
+    assert d_build.benchmark is not None
+    assert d_class.benchmark is not None
+    assert_frame_equal(d_build.benchmark, d_class.benchmark)
+
+
+def test_from_returns_with_rf_equals_build_data(returns):
+    """Data.from_returns with a scalar rf matches build_data output."""
+    rf = 0.001
+    d_build = build_data(returns=returns, rf=rf)
+    d_class = Data.from_returns(returns=returns, rf=rf)
+    assert_frame_equal(d_build.returns, d_class.returns)
+
+
+def test_from_returns_importable_from_top_level(returns):
+    """Data.from_returns is accessible via the top-level jquantstats import."""
+    from jquantstats import Data as TopLevelData
+
+    d = TopLevelData.from_returns(returns=returns)
+    assert_frame_equal(d.returns, returns.drop("Date"))
+
+
+def test_from_returns_pandas_input(returns):
+    """Data.from_returns accepts a pandas DataFrame as input."""
+    pandas_returns = returns.to_pandas()
+    d = Data.from_returns(pandas_returns, date_col="Date")
     assert_frame_equal(d.returns, returns.drop("Date"))
