@@ -315,6 +315,29 @@ class Data:
             index=resampled_index,
         )
 
+    def describe(self) -> pl.DataFrame:
+        """Return a tidy summary of shape, date range and asset names.
+
+        Returns:
+        -------
+        pl.DataFrame
+            One row per asset with columns: asset, start, end, rows, has_benchmark.
+
+        """
+        date_column = self.date_col[0]
+        start = self.index[date_column].min()
+        end = self.index[date_column].max()
+        rows = len(self.index)
+        return pl.DataFrame(
+            {
+                "asset": self.returns.columns,
+                "start": [start] * len(self.returns.columns),
+                "end": [end] * len(self.returns.columns),
+                "rows": [rows] * len(self.returns.columns),
+                "has_benchmark": [self.benchmark is not None] * len(self.returns.columns),
+            }
+        )
+
     def copy(self) -> Data:
         """Create a deep copy of the Data object.
 
