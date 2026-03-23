@@ -89,3 +89,4 @@ marimo = "marimo"
 fail-under = 100
 ignore-init-method = true
 ignore-magic = true
+exclude = ["book"]
