@@ -59,6 +59,48 @@ class Portfolio:
             column if present).
         aum: Assets under management used as base NAV offset.
 
+    Analytics facades
+    -----------------
+    - ``.stats``   : delegates to the legacy ``Stats`` pipeline via ``.data``; all 50+ metrics available.
+    - ``.plots``   : portfolio-specific ``Plots``; NAV overlays, lead-lag IR, rolling Sharpe/vol, heatmaps.
+    - ``.report``  : HTML ``Report``; self-contained portfolio performance report.
+    - ``.data``    : bridge to the legacy ``Data`` / ``Stats`` / ``Plots`` pipeline.
+
+    ``.plots`` and ``.report`` are intentionally *not* delegated to the legacy path: the legacy
+    path operates on a bare returns series, while the analytics path has access to raw prices,
+    positions, and AUM for richer portfolio-specific visualisations.
+
+    Cost models
+    -----------
+    Two independent cost models are provided. They are not interchangeable:
+
+    **Model A — position-delta (stateful, set at construction):**
+        ``cost_per_unit: float``  — one-way cost per unit of position change (e.g. 0.01 per share).
+        Used by ``.position_delta_costs`` and ``.net_cost_nav``.
+        Best for: equity portfolios where cost scales with shares traded.
+
+    **Model B — turnover-bps (stateless, passed at call time):**
+        ``cost_bps: float``  — one-way cost in basis points of AUM turnover (e.g. 5 bps).
+        Used by ``.cost_adjusted_returns(cost_bps)`` and ``.trading_cost_impact(max_bps)``.
+        Best for: macro / fund-of-funds portfolios where cost scales with notional traded.
+
+    To sweep a range of cost assumptions use ``trading_cost_impact(max_bps=20)`` (Model B).
+    To compute a net-NAV curve set ``cost_per_unit`` at construction and read ``.net_cost_nav`` (Model A).
+
+    Date column requirement
+    -----------------------
+    Most analytics work with or without a ``date`` column. The following features require a
+    temporal ``date`` column (``pl.Date`` or ``pl.Datetime``):
+
+    - ``portfolio.plots.correlation_heatmap()``
+    - ``portfolio.plots.lead_lag_ir_plot()``
+    - ``stats.monthly_win_rate()``      — returns NaN per column when no date is present
+    - ``stats.annual_breakdown()``      — raises ``ValueError`` when no date is present
+    - ``stats.max_drawdown_duration()`` — returns period count (int) instead of days
+
+    Portfolios without a ``date`` column (integer-indexed) are fully supported for
+    NAV, returns, Sharpe, drawdown, cost analytics, and most rolling metrics.
+
     Examples:
         >>> import polars as pl
         >>> from datetime import date
