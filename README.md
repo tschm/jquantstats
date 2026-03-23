@@ -61,20 +61,19 @@ import polars as pl
 from jquantstats import Portfolio
 
 prices = pl.DataFrame({
-    "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+    "date": ["2023-01-01", "2023-01-02", "2023-01-03"],
     "Asset1": [100.0, 101.0, 99.5],
-}).with_columns(pl.col("Date").str.to_date())
+}).with_columns(pl.col("date").str.to_date())
 
 positions = pl.DataFrame({
-    "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+    "date": ["2023-01-01", "2023-01-02", "2023-01-03"],
     "Asset1": [1000.0, 1000.0, 1200.0],
-}).with_columns(pl.col("Date").str.to_date())
+}).with_columns(pl.col("date").str.to_date())
 
 pf = Portfolio.from_cash_position(prices=prices, cash_position=positions, aum=1_000_000)
 
 sharpe = pf.stats.sharpe()
-fig = pf.plots.snapshot()
-fig.show()
+fig = pf.plots.snapshot()  # call fig.show() to display
 ```
 
 **If you already have a returns series**:
@@ -92,8 +91,7 @@ returns = pl.DataFrame({
 data = build_data(returns=returns)
 
 sharpe = data.stats.sharpe()
-fig = data.plots.plot_snapshot(title="Portfolio Performance")
-fig.show()
+fig = data.plots.plot_snapshot(title="Portfolio Performance")  # call fig.show() to display
 ```
 
 

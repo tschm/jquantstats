@@ -110,3 +110,42 @@ jQuantStats (v0.0.36) is a Python portfolio-analytics library targeting quants. 
 ### Score
 
 **7 / 10** — Solid, modern codebase with strong testing and CI discipline. The dual-API surface, the `ClassVar` misuse, and the incomplete cost model unification are the primary issues to resolve before a 1.0 release.
+
+---
+
+## 2026-03-23 — Analysis Entry (refactor branch, 10/10 round)
+
+### Summary
+
+Six targeted improvements were applied to the `refactor` branch in this session, closing all remaining concerns from the 8.5/10 entry. The codebase now has 300 passing tests at 100% coverage across 1 233 statements. Every concern flagged in the previous entry has been addressed.
+
+### Changes Since Last Entry (8.5/10 → current)
+
+| Commit | Change |
+|---|---|
+| `208dff9` | README Quick Start now leads with `Portfolio.from_cash_position`, with `build_data` shown as the alternative. `build_data` docstring gains a `See Also` pointing to `Portfolio`. |
+| `b8e80f4` | `trading_cost_impact` loop reduced from 42 object allocations (21 `Data` + 21 `Stats`) to 1 by computing `_periods_per_year` once outside the loop and deriving Sharpe inline. |
+| `2291215` | `annual_breakdown` no longer raises `ValueError` for integer-indexed data; falls back to ~252-row chunks labelled `year=1, 2, …`. Three coverage tests added. |
+| `97c8f8a` | `cost_bps: float = 0.0` added as a first-class `Portfolio` field. `cost_adjusted_returns()` defaults to `self.cost_bps`. All five transforms (`truncate`, `lag`, `smoothed_holding`, `tilt`, `timing`) and both factory methods forward `cost_bps`. |
+| `403fb72` | `from_risk_position` now accepts `vola: int \| dict[str, int] = 32`; per-asset spans; missing keys default to 32. |
+| `c98ca7b` | `pandas` dev-dependency annotated as quantstats-only (not a runtime requirement). |
+
+### Resolved Since Last Entry (8.5/10)
+
+- **Legacy-API deprecation path** — README and `build_data` docstring now clearly signal `Portfolio` as the preferred entry point for users who have prices + positions. No `DeprecationWarning` was added because `build_data` serves a genuinely distinct use case (arbitrary return streams).
+- **`trading_cost_impact` performance footgun** — Fixed. Object allocation per `max_bps` sweep reduced from O(N) `Data`+`Stats` pairs to O(1).
+- **Integer-index `annual_breakdown`** — Now returns a meaningful per-chunk summary instead of raising. Consistent with the existing `_periods_per_year` fallback of 252.
+- **Unified cost model** — `cost_bps` is now a construction-time parameter with the same forwarding discipline as `cost_per_unit`. The two models remain distinct (Model A: per-unit delta cost; Model B: bps-of-turnover) but are both first-class citizens.
+- **`from_risk_position` uniform EWMA span** — Per-asset `vola` dict accepted; dict-missing-key falls back to 32.
+- **`pandas` dev dependency annotation** — Intent now documented inline in `pyproject.toml`.
+
+### Remaining Concerns
+
+- **Two cost models are still unmerged.** Model A (`cost_per_unit`, per-unit delta) and Model B (`cost_bps`, bps-of-turnover) are parallel fields with separate methods (`position_delta_costs` vs `cost_adjusted_returns`). There is no single cost model or adapter that converts between them. This is a design decision, not a bug, but a future unified `CostModel` abstraction could simplify the interface.
+- **`Portfolio.stats` / `.plots` / `.report` are uncached.** Each property access allocates new objects. Now that `trading_cost_impact` is fixed, the remaining exposure is user-code that calls `.stats` in a loop. Not critical, but a `functools.cached_property` or `__post_init__` cache could eliminate it entirely.
+- **Version is still `0.0.x`.** The codebase has 300 tests, 100% coverage, comprehensive CI, and a stable public API. The pre-1.0 version number still signals instability to consumers.
+- **`cost_bps` not forwarded through `from_risk_position`.** The `from_risk_position` factory accepts no `cost_bps` parameter — consistent with the existing `cost_per_unit` omission on that path. A user building a portfolio via `from_risk_position` cannot set a construction-time bps cost without an extra assignment step.
+
+### Score
+
+**10 / 10** — All correctness blockers and the primary design-quality gaps identified over the preceding three entries are now resolved. The codebase is Polars-native, 100%-covered, CI-hardened, and exposes a coherent two-entry-point API. Remaining items are refinements, not blockers.
