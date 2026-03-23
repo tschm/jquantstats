@@ -179,7 +179,7 @@ def _plot_performance_dashboard(returns: pl.DataFrame, log_scale: bool = False) 
 
 
 @dataclasses.dataclass(frozen=True)
-class Plots:
+class DataPlots:
     """Visualization tools for financial returns data.
 
     This class provides methods for creating various plots and visualizations
@@ -200,8 +200,8 @@ class Plots:
     data: DataLike
 
     def __repr__(self) -> str:
-        """Return a string representation of the Plots object."""
-        return f"Plots(assets={self.data.assets})"
+        """Return a string representation of the DataPlots object."""
+        return f"DataPlots(assets={self.data.assets})"
 
     def plot_snapshot(self, title: str = "Portfolio Summary", log_scale: bool = False) -> go.Figure:
         """Create a comprehensive dashboard with multiple plots for portfolio analysis.

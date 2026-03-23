@@ -65,7 +65,7 @@ class Portfolio:
     - ``.stats``   : delegates to the legacy ``Stats`` pipeline via ``.data``; all 50+ metrics available.
     - ``.plots``   : portfolio-specific ``Plots``; NAV overlays, lead-lag IR, rolling Sharpe/vol, heatmaps.
     - ``.report``  : HTML ``Report``; self-contained portfolio performance report.
-    - ``.data``    : bridge to the legacy ``Data`` / ``Stats`` / ``Plots`` pipeline.
+    - ``.data``    : bridge to the legacy ``Data`` / ``Stats`` / ``DataPlots`` pipeline.
 
     ``.plots`` and ``.report`` are intentionally *not* delegated to the legacy path: the legacy
     path operates on a bare returns series, while the analytics path has access to raw prices,

@@ -13,7 +13,7 @@ import polars as pl
 from ._types import NativeFrame, NativeFrameOrScalar
 
 if TYPE_CHECKING:
-    from ._plots import Plots
+    from ._plots import DataPlots
     from ._reports import Reports
     from ._stats import Stats
 
@@ -204,16 +204,16 @@ class Data:
         return f"Data(assets={self.assets}, rows={len(self.index)})"
 
     @property
-    def plots(self) -> Plots:
+    def plots(self) -> DataPlots:
         """Provides access to visualization methods for the financial data.
 
         Returns:
-            Plots: An instance of the Plots class initialized with this data.
+            DataPlots: An instance of the DataPlots class initialized with this data.
 
         """
-        from ._plots import Plots
+        from ._plots import DataPlots
 
-        return Plots(self)
+        return DataPlots(self)
 
     @property
     def stats(self) -> Stats:

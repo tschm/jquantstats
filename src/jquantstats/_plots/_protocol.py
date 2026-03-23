@@ -9,7 +9,7 @@ import polars as pl
 
 @runtime_checkable
 class DataLike(Protocol):
-    """Structural interface required by the :class:`~jquantstats._plots._data.Plots` class.
+    """Structural interface required by the :class:`~jquantstats._plots._data.DataPlots` class.
 
     Any object satisfying this protocol can be passed as ``data`` without a
     concrete dependency on :class:`~jquantstats._data.Data`.
