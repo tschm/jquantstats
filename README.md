@@ -22,7 +22,7 @@ The library is inspired by [QuantStats](https://github.com/ranaroussi/quantstats
 but focuses on providing a clean, modern API with
 enhanced visualization capabilities. Key improvements include:
 
-- Support for both pandas and polars DataFrames
+- Support for polars DataFrames
 - Modern interactive visualizations using Plotly
 - Comprehensive test coverage with pytest
 - Clean, well-documented API
