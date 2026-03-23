@@ -24,9 +24,9 @@ class _ReportingStatsMixin:
     """
 
     if TYPE_CHECKING:
-        from .._data import Data
+        from ._protocol import DataLike
 
-        data: Data
+        data: DataLike
         all: pl.DataFrame | None
 
         def avg_return(self) -> dict[str, float]:

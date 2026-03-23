@@ -27,9 +27,9 @@ class _BasicStatsMixin:
     """
 
     if TYPE_CHECKING:
-        from .._data import Data
+        from ._protocol import DataLike
 
-        data: Data
+        data: DataLike
         all: pl.DataFrame | None
 
     @staticmethod
