@@ -314,6 +314,8 @@ class Stats:
 
         return float(np.abs(wins_sum / losses_sum))
 
+    # ── Risk metrics ──────────────────────────────────────────────────────────
+
     @columnwise_stat
     def value_at_risk(self, series: pl.Series, sigma: float = 1.0, alpha: float = 0.05) -> float:
         """Calculate the daily value-at-risk.
@@ -1221,6 +1223,8 @@ class Stats:
                 strat_geom = float((strat_down + 1.0).product()) ** (1.0 / len(strat_down)) - 1.0
                 result[col] = strat_geom / bench_geom
         return result
+
+    # ── Summary & breakdown ────────────────────────────────────────────────────
 
     def annual_breakdown(self) -> pl.DataFrame:
         """Summary statistics broken down by calendar year.

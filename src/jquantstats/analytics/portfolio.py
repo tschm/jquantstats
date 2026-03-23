@@ -118,6 +118,9 @@ class Portfolio:
     cost_bps: float = 0.0
     _data: PortfolioData = dataclasses.field(init=False, repr=False, compare=False, hash=False)
     _data_bridge: "Data | None" = dataclasses.field(init=False, repr=False, compare=False, hash=False)
+    _stats_cache: "Stats | None" = dataclasses.field(init=False, repr=False, compare=False, hash=False)
+    _plots_cache: "Plots | None" = dataclasses.field(init=False, repr=False, compare=False, hash=False)
+    _report_cache: "Report | None" = dataclasses.field(init=False, repr=False, compare=False, hash=False)
 
     @staticmethod
     def _build_data_bridge(ret: pl.DataFrame) -> "Data":
@@ -149,6 +152,9 @@ class Portfolio:
         pd = PortfolioData(prices=self.prices, cashposition=self.cashposition, aum=self.aum)
         object.__setattr__(self, "_data", pd)
         object.__setattr__(self, "_data_bridge", None)
+        object.__setattr__(self, "_stats_cache", None)
+        object.__setattr__(self, "_plots_cache", None)
+        object.__setattr__(self, "_report_cache", None)
 
     # ── Factory classmethods ──────────────────────────────────────────────────
 
@@ -180,6 +186,9 @@ class Portfolio:
         object.__setattr__(obj, "cost_bps", cost_bps)
         object.__setattr__(obj, "_data", pd)
         object.__setattr__(obj, "_data_bridge", None)
+        object.__setattr__(obj, "_stats_cache", None)
+        object.__setattr__(obj, "_plots_cache", None)
+        object.__setattr__(obj, "_report_cache", None)
         return obj
 
     @classmethod
@@ -334,8 +343,12 @@ class Portfolio:
         Delegates to the legacy :class:`~jquantstats._stats.Stats` pipeline via
         :attr:`data`, so all analytics (Sharpe, drawdown, summary, etc.) are
         available through the shared implementation.
+
+        The result is cached after first access so repeated calls are O(1).
         """
-        return self.data.stats
+        if self._stats_cache is None:
+            object.__setattr__(self, "_stats_cache", self.data.stats)
+        return self._stats_cache  # type: ignore[return-value]
 
     @property
     def plots(self) -> Plots:
@@ -347,8 +360,12 @@ class Portfolio:
         Returns:
             :class:`~jquantstats.analytics._plots.Plots`: Helper object with
             plotting methods.
+
+        The result is cached after first access so repeated calls are O(1).
         """
-        return Plots(self)
+        if self._plots_cache is None:
+            object.__setattr__(self, "_plots_cache", Plots(self))
+        return self._plots_cache  # type: ignore[return-value]
 
     @property
     def report(self) -> Report:
@@ -360,8 +377,12 @@ class Portfolio:
         Returns:
             :class:`~jquantstats.analytics._report.Report`: Helper object with
             report methods.
+
+        The result is cached after first access so repeated calls are O(1).
         """
-        return Report(self)
+        if self._report_cache is None:
+            object.__setattr__(self, "_report_cache", Report(self))
+        return self._report_cache  # type: ignore[return-value]
 
     # ── Portfolio transforms ───────────────────────────────────────────────────
 

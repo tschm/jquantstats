@@ -1324,3 +1324,13 @@ def test_data_cached_after_factory():
     pos = pl.DataFrame({"date": [date(2020, 1, 1), date(2020, 1, 2)], "A": [1000.0, 1000.0]})
     pf = Portfolio.from_cash_position(prices=prices, cash_position=pos, aum=1e5)
     assert pf.data is pf.data
+
+
+def test_stats_plots_report_cached():
+    """stats, plots, and report must return the same object on repeated access."""
+    prices = pl.DataFrame({"date": [date(2020, 1, 1), date(2020, 1, 2)], "A": [100.0, 110.0]})
+    pos = pl.DataFrame({"date": [date(2020, 1, 1), date(2020, 1, 2)], "A": [1000.0, 1000.0]})
+    pf = Portfolio.from_cash_position(prices=prices, cash_position=pos, aum=1e5)
+    assert pf.stats is pf.stats
+    assert pf.plots is pf.plots
+    assert pf.report is pf.report
