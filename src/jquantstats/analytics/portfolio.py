@@ -117,9 +117,30 @@ class Portfolio:
     cost_per_unit: float = 0.0
     cost_bps: float = 0.0
     _data: PortfolioData = dataclasses.field(init=False, repr=False, compare=False, hash=False)
+    _data_bridge: "Data | None" = dataclasses.field(init=False, repr=False, compare=False, hash=False)
+
+    @staticmethod
+    def _build_data_bridge(ret: pl.DataFrame) -> "Data":
+        """Build a :class:`~jquantstats._data.Data` bridge from a returns frame.
+
+        Splits out the ``'date'`` column (if present) into an index and passes
+        the remaining numeric columns as returns.  Used internally to populate
+        ``_data_bridge`` at construction time so the ``data`` property is O(1).
+
+        Args:
+            ret: Returns DataFrame, optionally with a leading ``'date'`` column.
+
+        Returns:
+            A :class:`~jquantstats._data.Data` instance backed by *ret*.
+        """
+        from .._data import Data
+
+        if "date" in ret.columns:
+            return Data(returns=ret.drop("date"), index=ret.select("date"))
+        return Data(returns=ret, index=pl.DataFrame({"index": list(range(ret.height))}))
 
     def __post_init__(self) -> None:
-        """Create and cache the internal PortfolioData instance.
+        """Create and cache the internal PortfolioData instance and Data bridge.
 
         Input validation is delegated to :class:`PortfolioData`, which raises
         appropriate exceptions for invalid types, mismatched shapes, or
@@ -127,6 +148,7 @@ class Portfolio:
         """
         pd = PortfolioData(prices=self.prices, cashposition=self.cashposition, aum=self.aum)
         object.__setattr__(self, "_data", pd)
+        object.__setattr__(self, "_data_bridge", None)
 
     # ── Factory classmethods ──────────────────────────────────────────────────
 
@@ -157,6 +179,7 @@ class Portfolio:
         object.__setattr__(obj, "cost_per_unit", cost_per_unit)
         object.__setattr__(obj, "cost_bps", cost_bps)
         object.__setattr__(obj, "_data", pd)
+        object.__setattr__(obj, "_data_bridge", None)
         return obj
 
     @classmethod
@@ -298,16 +321,11 @@ class Portfolio:
             >>> "returns" in d.returns.columns
             True
         """
-        from .._data import Data
-
-        ret = self.returns
-        if "date" in ret.columns:
-            index = ret.select("date")
-            returns = ret.drop("date")
-        else:
-            index = pl.DataFrame({"index": list(range(ret.height))})
-            returns = ret
-        return Data(returns=returns, index=index)
+        if self._data_bridge is not None:
+            return self._data_bridge
+        bridge = Portfolio._build_data_bridge(self.returns)
+        object.__setattr__(self, "_data_bridge", bridge)
+        return bridge
 
     @property
     def stats(self) -> "Stats":

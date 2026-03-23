@@ -1308,3 +1308,19 @@ def test_from_risk_position_forwards_cost_bps():
     risk = pl.DataFrame({"date": dates, "A": pl.Series([1.0] * len(dates), dtype=pl.Float64)})
     pf = Portfolio.from_risk_position(prices, risk, aum=1e8, cost_bps=5.0)
     assert pf.cost_bps == pytest.approx(5.0)
+
+
+# ── _data_bridge caching ──────────────────────────────────────────────────────
+
+
+def test_data_property_returns_same_object(portfolio: Portfolio):
+    """pf.data must return the identical Data object on repeated calls."""
+    assert portfolio.data is portfolio.data
+
+
+def test_data_cached_after_factory():
+    """Portfolio built via from_cash_position must cache the Data bridge."""
+    prices = pl.DataFrame({"date": [date(2020, 1, 1), date(2020, 1, 2)], "A": [100.0, 110.0]})
+    pos = pl.DataFrame({"date": [date(2020, 1, 1), date(2020, 1, 2)], "A": [1000.0, 1000.0]})
+    pf = Portfolio.from_cash_position(prices=prices, cash_position=pos, aum=1e5)
+    assert pf.data is pf.data
