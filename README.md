@@ -1,9 +1,10 @@
 # [jQuantStats](https://tschm.github.io/jquantstats/book): Portfolio Analytics for Quants
 
 [![PyPI version](https://badge.fury.io/py/jquantstats.svg)](https://badge.fury.io/py/jquantstats)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Downloads](https://static.pepy.tech/personalized-badge/jquantstats?period=month&units=international_system&left_color=black&right_color=orange&left_text=PyPI%20downloads%20per%20month)](https://pepy.tech/project/jquantstats)
+[![Python](https://img.shields.io/pypi/pyversions/jquantstats.svg)](https://pypi.org/project/jquantstats/)
 [![Coverage](https://raw.githubusercontent.com/tschm/jquantstats/refs/heads/gh-pages/coverage-badge.svg)](https://tschm.github.io/jquantstats/tests/html-coverage/index.html)
+[![Downloads](https://static.pepy.tech/personalized-badge/jquantstats?period=month&units=international_system&left_color=black&right_color=orange&left_text=PyPI%20downloads%20per%20month)](https://pepy.tech/project/jquantstats)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![CodeFactor](https://www.codefactor.io/repository/github/tschm/jquantstats/badge)](https://www.codefactor.io/repository/github/tschm/jquantstats)
 [![Renovate enabled](https://img.shields.io/badge/renovate-enabled-brightgreen.svg)](https://github.com/renovatebot/renovate)
 [![Rhiza](https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Fraw.githubusercontent.com%2Ftschm%2Fjquantstats%2Fmain%2F.rhiza%2Ftemplate.yml&query=%24.ref&label=rhiza)](https://github.com/jebel-quant/rhiza)
@@ -27,6 +28,24 @@ enhanced visualization capabilities. Key improvements include:
 - Comprehensive test coverage with pytest
 - Clean, well-documented API
 - Efficient data processing with polars
+
+## ⚡ jQuantStats vs QuantStats
+
+| Feature | jQuantStats | QuantStats |
+|---|---|---|
+| **DataFrame engine** | [Polars](https://pola.rs/) (zero pandas at runtime) | pandas |
+| **Visualisation** | Interactive [Plotly](https://plotly.com/python/) charts | Static matplotlib / seaborn |
+| **Input format** | `polars.DataFrame` | `pandas.Series` / `pandas.DataFrame` |
+| **Entry point — positions** | `Portfolio.from_cash_position(prices, cash_position, aum)` | — |
+| **Entry point — returns** | `build_data(returns, benchmark)` | `qs.reports.full(returns)` |
+| **HTML report** | `portfolio.report.full()` | `qs.reports.html(returns)` |
+| **Snapshot chart** | `data.plots.plot_snapshot()` | `qs.plots.snapshot(returns)` |
+| **Sharpe ratio** | `data.stats.sharpe()` | `qs.stats.sharpe(returns)` |
+| **Sortino ratio** | `data.stats.sortino()` | `qs.stats.sortino(returns)` |
+| **Max drawdown** | `data.stats.max_drawdown()` | `qs.stats.max_drawdown(returns)` |
+| **Python version** | 3.11+ | 3.7+ |
+| **Type annotations** | Full (`py.typed`) | Partial |
+| **Test coverage** | [![Coverage](https://raw.githubusercontent.com/tschm/jquantstats/refs/heads/gh-pages/coverage-badge.svg)](https://tschm.github.io/jquantstats/tests/html-coverage/index.html) | — |
 
 ## ✨ Features
 
@@ -102,33 +121,100 @@ sharpe = data.stats.sharpe()
 fig = data.plots.plot_snapshot(title="Portfolio Performance")  # call fig.show() to display
 ```
 
+**Risk metrics and drawdown analysis**:
+
+```python
+import polars as pl
+from jquantstats import build_data
+
+returns = pl.DataFrame({
+    "Date": ["2023-01-01", "2023-01-02", "2023-01-03", "2023-01-04", "2023-01-05"],
+    "Strategy": [0.01, -0.03, 0.02, -0.01, 0.04],
+}).with_columns(pl.col("Date").str.to_date())
+
+data = build_data(returns=returns)
+
+print("Sharpe ratio  :", data.stats.sharpe())
+print("Sortino ratio :", data.stats.sortino())
+print("Max drawdown  :", data.stats.max_drawdown())
+print("Volatility    :", data.stats.volatility())
+print("VaR (95%)     :", data.stats.value_at_risk())
+print("CVaR (95%)    :", data.stats.conditional_value_at_risk())
+print("Calmar ratio  :", data.stats.calmar())
+print("Win rate      :", data.stats.win_rate())
+```
+
+**Benchmark comparison**:
+
+```python
+import polars as pl
+from jquantstats import build_data
+
+returns = pl.DataFrame({
+    "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+    "Strategy": [0.01, -0.02, 0.03],
+}).with_columns(pl.col("Date").str.to_date())
+
+benchmark = pl.DataFrame({
+    "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+    "Benchmark": [0.005, -0.01, 0.015],
+}).with_columns(pl.col("Date").str.to_date())
+
+data = build_data(returns=returns, benchmark=benchmark)
+
+print("Information ratio :", data.stats.information_ratio())
+print("Alpha             :", data.stats.alpha())
+print("Beta              :", data.stats.beta())
+fig = data.plots.plot_snapshot(title="Strategy vs Benchmark")
+fig.show()
+```
+
+**Generate a full HTML report**:
+
+```python
+import polars as pl
+from jquantstats import Portfolio
+
+prices = pl.DataFrame({
+    "date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+    "AAPL": [150.0, 152.0, 149.5],
+    "MSFT": [250.0, 253.0, 251.0],
+}).with_columns(pl.col("date").str.to_date())
+
+positions = pl.DataFrame({
+    "date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+    "AAPL": [500.0, 500.0, 600.0],
+    "MSFT": [300.0, 300.0, 300.0],
+}).with_columns(pl.col("date").str.to_date())
+
+pf = Portfolio.from_cash_position(prices=prices, cash_position=positions, aum=1_000_000)
+
+# Save a complete HTML performance report
+html = pf.report.full()
+with open("report.html", "w") as f:
+    f.write(html)
+```
+
 
 ## 🏗️ Architecture
 
 jQuantStats has two layered entry points:
 
-```
-Entry point 1 — prices + positions
-────────────────────────────────────────────────────────────
-prices_df + positions_df + aum
-        │
-        ▼
-  Portfolio.from_cash_position(...)   ← NAV compiler
-        │
-        ├── .stats.sharpe()           ← full stats suite
-        ├── .plots.snapshot()         ← portfolio-specific plots
-        ├── .report.full()            ← HTML report
-        └── .data                     ← drop into Entry point 2 ──┐
-                                                                    │
-Entry point 2 — returns series                                      │
-────────────────────────────────────────────────────────────        │
-returns_df [+ benchmark_df]  ◄──────────────────────────────────────┘
-        │
-        ▼
-  build_data(returns=..., benchmark=...)   ← Data object
-        │
-        ├── .stats.sharpe()           ← full stats suite
-        └── .plots.plot_snapshot()    ← snapshot chart
+```mermaid
+flowchart TD
+    A["prices_df + cash_position_df + aum"] --> B["Portfolio.from_cash_position(...)
+    NAV compiler"]
+    B --> C[".stats  —  full stats suite"]
+    B --> D[".plots.snapshot()  —  portfolio plots"]
+    B --> E[".report.full()  —  HTML report"]
+    B --> F[".data"]
+
+    G["returns_df [+ benchmark_df]"] --> H["build_data(returns=..., benchmark=...)
+    Data object"]
+    H --> I[".stats  —  full stats suite"]
+    H --> J[".plots.plot_snapshot()  —  snapshot chart"]
+
+    F --> H
 ```
 
 **Entry point 1** (`Portfolio`) is for active portfolios where you have
