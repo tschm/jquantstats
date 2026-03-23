@@ -16,10 +16,14 @@ from datetime import date, timedelta
 
 import polars as pl
 import pytest
-from hypothesis import assume, given, settings
-from hypothesis import strategies as st
 
 from jquantstats import build_data
+
+hypothesis = pytest.importorskip("hypothesis")
+assume = hypothesis.assume
+given = hypothesis.given
+settings = hypothesis.settings
+st = hypothesis.strategies
 
 
 def _make_returns_df(values: list[float], start: date = date(2020, 1, 1)) -> pl.DataFrame:
