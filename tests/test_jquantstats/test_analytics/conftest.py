@@ -10,7 +10,7 @@ import numpy as np
 import polars as pl
 import pytest
 
-from jquantstats.analytics import Portfolio
+from jquantstats import Portfolio
 
 
 @pytest.fixture

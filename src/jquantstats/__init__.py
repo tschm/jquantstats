@@ -4,7 +4,7 @@ Two entry points
 ----------------
 **Entry point 1 — prices + positions (recommended for active portfolios):**
 
-Use :class:`~jquantstats.analytics.Portfolio` when you have price series and
+Use :class:`~jquantstats.portfolio.Portfolio` when you have price series and
 position sizes.  Portfolio compiles the NAV curve from raw inputs and exposes
 the full analytics suite via ``.stats``, ``.plots``, and ``.report``.
 
@@ -47,11 +47,11 @@ For more information, visit the `jQuantStats Documentation <https://tschm.github
 
 import importlib.metadata
 
+from ._cost_model import CostModel as CostModel
 from ._data import Data as Data
 from ._types import NativeFrame as NativeFrame
 from ._types import NativeFrameOrScalar as NativeFrameOrScalar
-from .analytics import CostModel as CostModel
-from .analytics import Portfolio as Portfolio
 from .api import build_data  # noqa: F401
+from .portfolio import Portfolio as Portfolio
 
 __version__ = importlib.metadata.version("jquantstats")

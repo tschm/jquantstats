@@ -15,7 +15,7 @@ from datetime import date
 import polars as pl
 import pytest
 
-from jquantstats.analytics import CostModel, Portfolio
+from jquantstats import CostModel, Portfolio
 
 # ── CostModel construction ────────────────────────────────────────────────────
 

@@ -43,7 +43,7 @@ def build_data(
     See Also:
     --------
     :meth:`Data.from_returns` : primary spelling of this factory.
-    :class:`~jquantstats.analytics.Portfolio` : entry point for price + position data.
+    :class:`~jquantstats.Portfolio` : entry point for price + position data.
 
     """
     return Data.from_returns(returns=returns, rf=rf, benchmark=benchmark, date_col=date_col)

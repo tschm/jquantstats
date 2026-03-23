@@ -1,7 +1,7 @@
 """Portfolio analytics facade composed with PortfolioData.
 
 This module provides :class:`Portfolio`, which holds a
-:class:`~jquantstats.analytics._portfolio_data.PortfolioData` instance and adds
+:class:`~jquantstats._portfolio_data.PortfolioData` instance and adds
 analytics, transforms, and attribution tools:
 
 - Lazy composition accessors — :attr:`stats`, :attr:`plots`, :attr:`report`
@@ -12,7 +12,7 @@ analytics, transforms, and attribution tools:
 - Utility — :meth:`correlation`
 
 The raw data layer (inputs, derived P&L series) is held internally in a
-:class:`~jquantstats.analytics._portfolio_data.PortfolioData` instance.  All of
+:class:`~jquantstats._portfolio_data.PortfolioData` instance.  All of
 its properties are delegated transparently so that the public API remains
 unchanged.
 """
@@ -21,15 +21,15 @@ import dataclasses
 from typing import TYPE_CHECKING, Self
 
 if TYPE_CHECKING:
-    from .._data import Data as Data
-    from .._stats import Stats as Stats
+    from ._data import Data as Data
+    from ._stats import Stats as Stats
 
 import polars as pl
 import polars.selectors as cs
 
 from ._cost_model import CostModel
-from ._plots import Plots
 from ._portfolio_data import PortfolioData
+from ._portfolio_plots import Plots
 from ._report import Report
 from .exceptions import (
     IntegerIndexBoundError,
@@ -40,7 +40,7 @@ from .exceptions import (
 class Portfolio:
     """Analytics facade composed with PortfolioData for transforms and analytics.
 
-    Holds a :class:`~jquantstats.analytics._portfolio_data.PortfolioData` instance
+    Holds a :class:`~jquantstats._portfolio_data.PortfolioData` instance
     internally and delegates all raw data properties to it.  Adds:
 
     - Lazy composition accessors: :attr:`stats`, :attr:`plots`, :attr:`report`
@@ -137,7 +137,7 @@ class Portfolio:
         Returns:
             A :class:`~jquantstats._data.Data` instance backed by *ret*.
         """
-        from .._data import Data
+        from ._data import Data
 
         if "date" in ret.columns:
             return Data(returns=ret.drop("date"), index=ret.select("date"))
@@ -186,7 +186,7 @@ class Portfolio:
                 Defaults to 0.0 (no cost).  Ignored when *cost_model* is given.
             cost_bps: One-way trading cost in basis points of AUM turnover.
                 Defaults to 0.0 (no cost).  Ignored when *cost_model* is given.
-            cost_model: Optional :class:`~jquantstats.analytics.CostModel`
+            cost_model: Optional :class:`~jquantstats.CostModel`
                 instance.  When supplied, its ``cost_per_unit`` and
                 ``cost_bps`` values take precedence over the individual
                 parameters above.
@@ -238,7 +238,7 @@ class Portfolio:
                 Defaults to 0.0 (no cost).  Ignored when *cost_model* is given.
             cost_bps: One-way trading cost in basis points of AUM turnover.
                 Defaults to 0.0 (no cost).  Ignored when *cost_model* is given.
-            cost_model: Optional :class:`~jquantstats.analytics.CostModel`
+            cost_model: Optional :class:`~jquantstats.CostModel`
                 instance.  When supplied, its ``cost_per_unit`` and
                 ``cost_bps`` values take precedence over the individual
                 parameters above.
@@ -270,7 +270,7 @@ class Portfolio:
                 Defaults to 0.0 (no cost).  Ignored when *cost_model* is given.
             cost_bps: One-way trading cost in basis points of AUM turnover.
                 Defaults to 0.0 (no cost).  Ignored when *cost_model* is given.
-            cost_model: Optional :class:`~jquantstats.analytics.CostModel`
+            cost_model: Optional :class:`~jquantstats.CostModel`
                 instance.  When supplied, its ``cost_per_unit`` and
                 ``cost_bps`` values take precedence over the individual
                 parameters above.
@@ -387,7 +387,7 @@ class Portfolio:
         performance curves, and lead/lag IR charts.
 
         Returns:
-            :class:`~jquantstats.analytics._plots.Plots`: Helper object with
+            :class:`~jquantstats._portfolio_plots.Plots`: Helper object with
             plotting methods.
 
         The result is cached after first access so repeated calls are O(1).
@@ -404,7 +404,7 @@ class Portfolio:
         containing statistics tables and interactive charts.
 
         Returns:
-            :class:`~jquantstats.analytics._report.Report`: Helper object with
+            :class:`~jquantstats._report.Report`: Helper object with
             report methods.
 
         The result is cached after first access so repeated calls are O(1).

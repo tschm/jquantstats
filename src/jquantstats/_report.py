@@ -6,7 +6,7 @@ visualisations for a Portfolio.
 
 Examples:
     >>> import dataclasses
-    >>> from jquantstats.analytics._report import Report
+    >>> from jquantstats._report import Report
     >>> dataclasses.is_dataclass(Report)
     True
 """

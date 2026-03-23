@@ -20,9 +20,9 @@ import polars as pl
 import polars.testing as pt
 import pytest
 
-from jquantstats.analytics import Portfolio
-from jquantstats.analytics._portfolio_data import PortfolioData
-from jquantstats.analytics.exceptions import (
+from jquantstats import Portfolio
+from jquantstats._portfolio_data import PortfolioData
+from jquantstats.exceptions import (
     IntegerIndexBoundError,
     MissingDateColumnError,
 )

@@ -23,7 +23,6 @@ with app.setup:
     import marimo as mo
     import numpy as np
     import polars as pl
-
     from jquantstats.analytics import Portfolio
 
 
