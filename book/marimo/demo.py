@@ -54,7 +54,7 @@ def _(benchmark, returns):
 
 
 @app.cell
-def _(data):
+def _(data) -> None:
     fig = data.plots.plot_snapshot(log_scale=True)
     fig
     return
