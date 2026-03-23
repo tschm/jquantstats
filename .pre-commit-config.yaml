@@ -55,6 +55,12 @@ repos:
     hooks:
       - id: uv-lock
 
+  - repo: https://github.com/econchick/interrogate
+    rev: 1.7.0
+    hooks:
+      - id: interrogate
+        args: [--config=pyproject.toml]
+
   - repo: https://github.com/Jebel-Quant/rhiza-hooks
     rev: v0.3.0  # Use the latest release
     hooks:

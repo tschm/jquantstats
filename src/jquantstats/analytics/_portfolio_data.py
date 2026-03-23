@@ -111,6 +111,7 @@ class PortfolioData:
         assets = [col for col, dtype in prices.schema.items() if dtype.is_numeric()]
 
         def _span(asset: str) -> int:
+            """Return the EWMA span for *asset*, falling back to 32 if not specified."""
             if isinstance(vola, dict):
                 return int(vola.get(asset, 32))
             return int(vola)
