@@ -62,3 +62,11 @@ def test_plot_snapshot_one_symbol(returns):
     assert hasattr(fig, "show")
     # causing sometimes problems
     # fig.show()
+
+
+def test_repr(plots):
+    """Tests that Plots.__repr__ returns an informative string."""
+    r = repr(plots)
+    assert r.startswith("Plots(assets=")
+    for asset in plots.data.assets:
+        assert asset in r

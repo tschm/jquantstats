@@ -390,3 +390,12 @@ def test_truncate_integer_indexed_raises_on_non_int():
         d.truncate(start="2020-01-01")
     with pytest.raises(TypeError, match="end must be an integer"):
         d.truncate(end=3.5)
+
+
+def test_repr(data):
+    """Tests that Data.__repr__ returns an informative string."""
+    r = repr(data)
+    assert r.startswith("Data(assets=")
+    assert "rows=" in r
+    for asset in data.assets:
+        assert asset in r
