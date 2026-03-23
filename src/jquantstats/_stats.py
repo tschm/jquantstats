@@ -1,11 +1,15 @@
 """Statistical analysis tools for financial returns data.
 
 This module provides the :class:`Stats` dataclass, which is the public-facing
-class that combines:
+class that combines four mixin classes:
 
-- :class:`~jquantstats._stats_core._CoreStatsMixin` — fundamental return/risk
-  metrics (basic statistics, volatility, Sharpe, drawdown, factor analysis,
-  temporal reporting, capture ratios, and summary).
+- :class:`~jquantstats._stats_basic._BasicStatsMixin` — basic statistics,
+  volatility, win/loss metrics, and risk metrics (VaR, Sharpe inputs, Kelly).
+- :class:`~jquantstats._stats_performance._PerformanceStatsMixin` — Sharpe,
+  Sortino, drawdown, benchmark/factor analytics (R², alpha, beta).
+- :class:`~jquantstats._stats_reporting._ReportingStatsMixin` — temporal
+  reporting, Calmar, recovery factor, capture ratios, annual breakdown, and
+  summary.
 - :class:`~jquantstats._stats_rolling._RollingStatsMixin` — rolling-window
   time-series metrics (rolling Sharpe, Sortino, and volatility).
 
@@ -21,13 +25,15 @@ from typing import TYPE_CHECKING
 
 import polars as pl
 
+from ._stats_basic import _BasicStatsMixin
 from ._stats_core import (
-    _CoreStatsMixin,
     _drawdown_series,
     _to_float,
     columnwise_stat,
     to_frame,
 )
+from ._stats_performance import _PerformanceStatsMixin
+from ._stats_reporting import _ReportingStatsMixin
 from ._stats_rolling import _RollingStatsMixin
 
 if TYPE_CHECKING:
@@ -43,7 +49,7 @@ __all__ = [
 
 
 @dataclasses.dataclass(frozen=True)
-class Stats(_CoreStatsMixin, _RollingStatsMixin):
+class Stats(_BasicStatsMixin, _PerformanceStatsMixin, _ReportingStatsMixin, _RollingStatsMixin):
     """Statistical analysis tools for financial returns data.
 
     Provides a comprehensive set of methods for calculating various financial
@@ -56,9 +62,12 @@ class Stats(_CoreStatsMixin, _RollingStatsMixin):
     - Rolling calculations (rolling volatility, rolling Sharpe)
     - Factor analysis (alpha, beta, R-squared)
 
-    Core metrics are implemented in
-    :class:`~jquantstats._stats_core._CoreStatsMixin`; rolling-window metrics
-    are in :class:`~jquantstats._stats_rolling._RollingStatsMixin`.
+    Metrics are organised into focused modules:
+
+    - :class:`~jquantstats._stats_basic._BasicStatsMixin`
+    - :class:`~jquantstats._stats_performance._PerformanceStatsMixin`
+    - :class:`~jquantstats._stats_reporting._ReportingStatsMixin`
+    - :class:`~jquantstats._stats_rolling._RollingStatsMixin`
 
     Attributes:
         data: The :class:`~jquantstats._data.Data` object containing returns
