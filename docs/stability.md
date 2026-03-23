@@ -10,7 +10,7 @@ are covered by the stability guarantee described below.
 
 | Name | Kind | Imported from |
 |------|------|---------------|
-| `Portfolio` | class | `jquantstats.analytics.portfolio` |
+| `Portfolio` | class | `jquantstats.portfolio` |
 | `build_data` | function | `jquantstats.api` |
 | `Data` | class | `jquantstats._data` |
 | `Stats` | class | `jquantstats._stats` |
@@ -47,10 +47,10 @@ Anything that is **not** in the table above is considered internal and
 may change or be removed in any release:
 
 - Private modules: `_data.py`, `_stats.py`, `_plots.py`, `_reports.py`,
-  `_types.py`, `analytics/_portfolio_data.py`, `analytics/_plots.py`.
+  `_types.py`, `_portfolio_data.py`, `_portfolio_plots.py`.
 - Private classes, functions, or attributes whose names begin with an
   underscore (e.g. `Data._raw_returns`, `Stats._df`).
-- Sub-module paths such as `jquantstats.api` or `jquantstats.analytics.portfolio`
+- Sub-module paths such as `jquantstats.api` or `jquantstats.portfolio`
   — import from the top-level package instead.
 
 ```python
@@ -59,7 +59,7 @@ from jquantstats import Portfolio, build_data
 
 # ❌ not stable — internal path, may change
 from jquantstats._data import Data
-from jquantstats.analytics.portfolio import Portfolio
+from jquantstats.portfolio import Portfolio
 ```
 
 ## Deprecation policy
