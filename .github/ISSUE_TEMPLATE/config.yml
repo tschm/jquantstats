@@ -3,6 +3,9 @@ contact_links:
   - name: Q&A Discussion
     url: https://github.com/tschm/jquantstats/discussions/categories/q-a
     about: Ask questions and discuss with the community
-  - name: Ideas & Experiments
+  - name: Ideas & RFC
     url: https://github.com/tschm/jquantstats/discussions/categories/ideas
-    about: Propose ideas, experiments, or research directions (replaces "help wanted" issues)
+    about: Propose new features or direction changes before opening a pull request
+  - name: Help Wanted
+    url: https://github.com/tschm/jquantstats/discussions/categories/help-wanted
+    about: Browse open contribution opportunities or flag areas where you need help
