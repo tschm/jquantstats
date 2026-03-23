@@ -1,0 +1,53 @@
+{% set name = "jquantstats" %}
+{% set version = "0.1.1" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
+  sha256: feaf4a9016300fa7a44df22015ffe1bfd24e4fd9b3478c89ed8f1efd0dd8b9d8
+
+build:
+  number: 0
+  script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+  noarch: python
+
+requirements:
+  host:
+    - python >=3.11
+    - pip
+    - hatchling
+  run:
+    - python >=3.11
+    - jinja2 >=3.1.0
+    - numpy >=2.0.0
+    - plotly >=6.0.0
+    - polars >=1.18.0
+    - scipy >=1.14.1
+
+test:
+  imports:
+    - jquantstats
+  commands:
+    - pip check
+  requires:
+    - pip
+
+about:
+  home: https://github.com/tschm/jquantstats
+  summary: Analytics for quants
+  description: |
+    jQuantStats is a Python library for portfolio analytics that helps quants
+    and portfolio managers understand their performance through in-depth
+    analytics and risk metrics. It provides tools for calculating various
+    performance metrics and visualizing portfolio performance using
+    interactive Plotly charts.
+  license: MIT
+  license_file: LICENSE
+  doc_url: https://tschm.github.io/jquantstats/book
+
+extra:
+  recipe-maintainers:
+    - tschm
