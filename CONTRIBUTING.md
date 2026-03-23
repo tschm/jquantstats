@@ -27,6 +27,8 @@ Before sending a pull request, make sure you do the following:
 - Run `make fmt` to make sure your code adheres to our [coding style](#code-style)
 and all tests pass.
 - [Write unit tests](#writing-unit-tests) for new functionality added.
+- If you changed any dependencies in `pyproject.toml`, run `uv lock` and commit
+the updated `uv.lock` file together with your changes.
 
 ## Building from source
 
