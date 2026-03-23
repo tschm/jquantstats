@@ -5,6 +5,19 @@ This document is a guide to contributing to the project.
 We welcome all contributions. You don't need to be an expert
 to help out.
 
+## Community & Discussions
+
+Have a question, an idea, or want to explore a contribution opportunity?
+Head over to [GitHub Discussions](https://github.com/tschm/jquantstats/discussions) —
+it's the right place for:
+
+- **Q&A** — ask how something works or get help with your use-case
+- **Ideas & RFC** — propose new features or direction changes before opening a pull request
+- **Help Wanted** — see open contribution opportunities or flag areas where you need help
+
+Please use **Issues** only for confirmed bugs or actionable feature requests that are ready
+to be tracked and implemented.
+
 ## Checklist
 
 Contributions are made through
@@ -42,18 +55,17 @@ Python versions and different platforms. If these tests start failing,
 please
 fix your code and send another commit, which will re-trigger the tests.
 
-If you'd like to add a new feature, please propose your
-change in a GitHub issue to make sure
-that your priorities align with ours.
+If you'd like to add a new feature, please start a discussion in
+[Ideas & RFC](https://github.com/tschm/jquantstats/discussions/categories/ideas)
+to make sure that your priorities align with ours before opening a pull request.
 
 If you'd like to contribute code but don't know where to start,
-try one of the
-following:
+try one of the following:
 
-- Read the source and enhance the documentation,
-  or address TODOs
-- Browse the open issues,
-  and look for the issues tagged "help wanted".
+- Read the source and enhance the documentation, or address TODOs
+- Browse [Help Wanted discussions](https://github.com/tschm/jquantstats/discussions/categories/help-wanted)
+  for open contribution opportunities
+- Browse the open issues and look for issues tagged "help wanted"
 
 ## Commit conventions
 
