@@ -27,6 +27,7 @@ if TYPE_CHECKING:
 import polars as pl
 import polars.selectors as cs
 
+from ._cost_model import CostModel
 from ._plots import Plots
 from ._portfolio_data import PortfolioData
 from ._report import Report
@@ -163,7 +164,14 @@ class Portfolio:
     # ── Factory classmethods ──────────────────────────────────────────────────
 
     @classmethod
-    def _from_portfolio_data(cls, pd: PortfolioData, *, cost_per_unit: float = 0.0, cost_bps: float = 0.0) -> Self:
+    def _from_portfolio_data(
+        cls,
+        pd: PortfolioData,
+        *,
+        cost_per_unit: float = 0.0,
+        cost_bps: float = 0.0,
+        cost_model: CostModel | None = None,
+    ) -> Self:
         """Construct a Portfolio directly from an already-validated PortfolioData.
 
         Bypasses ``__post_init__`` to avoid constructing a second
@@ -175,13 +183,20 @@ class Portfolio:
         Args:
             pd: A fully constructed and validated :class:`PortfolioData` instance.
             cost_per_unit: One-way trading cost per unit of position change.
-                Defaults to 0.0 (no cost).
+                Defaults to 0.0 (no cost).  Ignored when *cost_model* is given.
             cost_bps: One-way trading cost in basis points of AUM turnover.
-                Defaults to 0.0 (no cost).
+                Defaults to 0.0 (no cost).  Ignored when *cost_model* is given.
+            cost_model: Optional :class:`~jquantstats.analytics.CostModel`
+                instance.  When supplied, its ``cost_per_unit`` and
+                ``cost_bps`` values take precedence over the individual
+                parameters above.
 
         Returns:
             A new Portfolio instance backed by *pd*.
         """
+        if cost_model is not None:
+            cost_per_unit = cost_model.cost_per_unit
+            cost_bps = cost_model.cost_bps
         obj = cls.__new__(cls)
         object.__setattr__(obj, "cashposition", pd.cashposition)
         object.__setattr__(obj, "prices", pd.prices)
@@ -204,6 +219,7 @@ class Portfolio:
         vola: int | dict[str, int] = 32,
         cost_per_unit: float = 0.0,
         cost_bps: float = 0.0,
+        cost_model: CostModel | None = None,
     ) -> Self:
         """Create a Portfolio from per-asset risk positions.
 
@@ -219,16 +235,20 @@ class Portfolio:
                 the dict default to ``32``).
             aum: Assets under management used as the base NAV offset.
             cost_per_unit: One-way trading cost per unit of position change.
-                Defaults to 0.0 (no cost).
+                Defaults to 0.0 (no cost).  Ignored when *cost_model* is given.
             cost_bps: One-way trading cost in basis points of AUM turnover.
-                Defaults to 0.0 (no cost).
+                Defaults to 0.0 (no cost).  Ignored when *cost_model* is given.
+            cost_model: Optional :class:`~jquantstats.analytics.CostModel`
+                instance.  When supplied, its ``cost_per_unit`` and
+                ``cost_bps`` values take precedence over the individual
+                parameters above.
 
         Returns:
             A Portfolio instance whose cash positions are risk_position
             divided by EWMA volatility.
         """
         pd = PortfolioData.from_risk_position(prices=prices, risk_position=risk_position, vola=vola, aum=aum)
-        return cls._from_portfolio_data(pd, cost_per_unit=cost_per_unit, cost_bps=cost_bps)
+        return cls._from_portfolio_data(pd, cost_per_unit=cost_per_unit, cost_bps=cost_bps, cost_model=cost_model)
 
     @classmethod
     def from_cash_position(
@@ -238,6 +258,7 @@ class Portfolio:
         aum: float,
         cost_per_unit: float = 0.0,
         cost_bps: float = 0.0,
+        cost_model: CostModel | None = None,
     ) -> Self:
         """Create a Portfolio directly from cash positions aligned with prices.
 
@@ -246,15 +267,19 @@ class Portfolio:
             cash_position: Cash exposure per asset over time.
             aum: Assets under management used as the base NAV offset.
             cost_per_unit: One-way trading cost per unit of position change.
-                Defaults to 0.0 (no cost).
+                Defaults to 0.0 (no cost).  Ignored when *cost_model* is given.
             cost_bps: One-way trading cost in basis points of AUM turnover.
-                Defaults to 0.0 (no cost).
+                Defaults to 0.0 (no cost).  Ignored when *cost_model* is given.
+            cost_model: Optional :class:`~jquantstats.analytics.CostModel`
+                instance.  When supplied, its ``cost_per_unit`` and
+                ``cost_bps`` values take precedence over the individual
+                parameters above.
 
         Returns:
             A Portfolio instance with the provided cash positions.
         """
         pd = PortfolioData.from_cash_position(prices=prices, cash_position=cash_position, aum=aum)
-        return cls._from_portfolio_data(pd, cost_per_unit=cost_per_unit, cost_bps=cost_bps)
+        return cls._from_portfolio_data(pd, cost_per_unit=cost_per_unit, cost_bps=cost_bps, cost_model=cost_model)
 
     # ── PortfolioData proxy properties ────────────────────────────────────────
 
