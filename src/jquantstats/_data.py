@@ -7,12 +7,63 @@ from collections.abc import Iterator
 from datetime import timedelta
 from typing import TYPE_CHECKING, cast
 
+import narwhals as nw
 import polars as pl
+
+from ._types import NativeFrame, NativeFrameOrScalar
 
 if TYPE_CHECKING:
     from ._plots import Plots
     from ._reports import Reports
     from ._stats import Stats
+
+
+def _to_polars(df: NativeFrame) -> pl.DataFrame:
+    """Convert any narwhals-compatible DataFrame to a polars DataFrame."""
+    if isinstance(df, pl.DataFrame):
+        return df
+    return nw.from_native(df, eager_only=True).to_polars()
+
+
+def _subtract_risk_free(dframe: pl.DataFrame, rf: float | pl.DataFrame, date_col: str) -> pl.DataFrame:
+    """Subtract the risk-free rate from all numeric columns in the DataFrame.
+
+    Parameters
+    ----------
+    dframe : pl.DataFrame
+        DataFrame containing returns data with a date column
+        and one or more numeric columns representing asset returns.
+
+    rf : float | pl.DataFrame
+        Risk-free rate to subtract from returns.
+
+        - If float: A constant risk-free rate applied to all dates.
+        - If pl.DataFrame: A DataFrame with a date column and a second column
+          containing time-varying risk-free rates.
+
+    date_col : str
+        Name of the date column in both DataFrames for joining
+        when rf is a DataFrame.
+
+    Returns:
+    -------
+    pl.DataFrame
+        DataFrame with the risk-free rate subtracted from all numeric columns,
+        preserving the original column names.
+
+    """
+    if isinstance(rf, float):
+        rf_dframe = dframe.select([pl.col(date_col), pl.lit(rf).alias("rf")])
+    else:
+        if not isinstance(rf, pl.DataFrame):
+            raise TypeError("rf must be a float or DataFrame")  # noqa: TRY003
+        rf_dframe = rf.rename({rf.columns[1]: "rf"}) if rf.columns[1] != "rf" else rf
+
+    dframe = dframe.join(rf_dframe, on=date_col, how="inner")
+    return dframe.select(
+        [pl.col(date_col)]
+        + [(pl.col(col) - pl.col("rf")).alias(col) for col in dframe.columns if col not in {date_col, "rf"}]
+    )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -53,6 +104,99 @@ class Data:
         # Check row count matches benchmark (if provided)
         if self.benchmark is not None and self.benchmark.shape[0] != self.index.shape[0]:
             raise ValueError("Benchmark and index must have the same number of rows.")  # noqa: TRY003
+
+    @classmethod
+    def from_returns(
+        cls,
+        returns: NativeFrame,
+        rf: NativeFrameOrScalar = 0.0,
+        benchmark: NativeFrame | None = None,
+        date_col: str = "Date",
+    ) -> Data:
+        """Create a Data object from returns and optional benchmark.
+
+        Parameters
+        ----------
+        returns : NativeFrame
+            Financial returns data. First column should be the date column,
+            remaining columns are asset returns.
+
+        rf : float | NativeFrame, optional
+            Risk-free rate. Default is 0.0 (no risk-free rate adjustment).
+
+            - If float: Constant risk-free rate applied to all dates.
+            - If NativeFrame: Time-varying risk-free rate with dates matching returns.
+
+        benchmark : NativeFrame | None, optional
+            Benchmark returns. Default is None (no benchmark).
+            First column should be the date column, remaining columns are benchmark returns.
+
+        date_col : str, optional
+            Name of the date column in the DataFrames. Default is "Date".
+
+        Returns:
+        -------
+        Data
+            Object containing excess returns and benchmark (if any), with methods for
+            analysis and visualization through the ``stats`` and ``plots`` properties.
+
+        Raises:
+        ------
+        ValueError
+            If there are no overlapping dates between returns and benchmark.
+
+        Examples:
+        --------
+        Basic usage:
+
+        ```python
+        from jquantstats import Data
+        import polars as pl
+
+        returns = pl.DataFrame({
+            "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+            "Asset1": [0.01, -0.02, 0.03]
+        }).with_columns(pl.col("Date").str.to_date())
+
+        data = Data.from_returns(returns=returns)
+        ```
+
+        With benchmark and risk-free rate:
+
+        ```python
+        benchmark = pl.DataFrame({
+            "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+            "Market": [0.005, -0.01, 0.02]
+        }).with_columns(pl.col("Date").str.to_date())
+
+        data = Data.from_returns(returns=returns, benchmark=benchmark, rf=0.0002)
+        ```
+
+        """
+        returns_pl = _to_polars(returns)
+        benchmark_pl = _to_polars(benchmark) if benchmark is not None else None
+        rf_converted: float | pl.DataFrame
+        if isinstance(rf, pl.DataFrame) or (not isinstance(rf, float) and not isinstance(rf, int)):
+            rf_converted = _to_polars(rf)  # type: ignore[arg-type]
+        else:
+            rf_converted = rf  # type: ignore[assignment]  # int is not float/DataFrame: _subtract_risk_free raises TypeError (tested by test_subtract_rf_invalid_type)
+
+        if benchmark_pl is not None:
+            joined_dates = returns_pl.join(benchmark_pl, on=date_col, how="inner").select(date_col)
+            if joined_dates.is_empty():
+                raise ValueError("No overlapping dates between returns and benchmark.")  # noqa: TRY003
+            returns_pl = returns_pl.join(joined_dates, on=date_col, how="inner")
+            benchmark_pl = benchmark_pl.join(joined_dates, on=date_col, how="inner")
+
+        index = returns_pl.select(date_col)
+        excess_returns = _subtract_risk_free(returns_pl, rf_converted, date_col).drop(date_col)
+        excess_benchmark = (
+            _subtract_risk_free(benchmark_pl, rf_converted, date_col).drop(date_col)
+            if benchmark_pl is not None
+            else None
+        )
+
+        return cls(returns=excess_returns, benchmark=excess_benchmark, index=index)
 
     def __repr__(self) -> str:
         """Return a string representation of the Data object."""
