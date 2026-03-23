@@ -31,6 +31,23 @@ def test_snapshot_returns_figure_with_expected_traces_and_log_scale(portfolio: P
     _ = fig_log.to_dict()
 
 
+def test_snapshot_with_cost_per_unit_includes_net_nav_trace(portfolio: Portfolio):
+    """snapshot() adds a Net-of-Cost NAV trace when cost_per_unit > 0."""
+    from jquantstats.analytics import Portfolio as _Portfolio
+
+    pf_with_cost = _Portfolio.from_cash_position(
+        prices=portfolio.prices,
+        cash_position=portfolio.cashposition,
+        aum=portfolio.aum,
+        cost_per_unit=0.01,
+    )
+    fig = pf_with_cost.plots.snapshot()
+    assert isinstance(fig, go.Figure)
+    names = {trace.name for trace in fig.data}
+    assert "Net-of-Cost NAV" in names
+    _ = fig.to_dict()
+
+
 # ─── Lagged performance ───────────────────────────────────────────────────────
 
 

@@ -1140,3 +1140,13 @@ def test_portfolio_from_cash_position_passes_cost_per_unit():
     pos = pl.DataFrame({"date": [date(2020, 1, 1)], "A": [500.0]})
     pf = Portfolio.from_cash_position(prices=prices, cash_position=pos, aum=1e5, cost_per_unit=0.002)
     assert pf.cost_per_unit == pytest.approx(0.002)
+
+
+def test_net_cost_nav_integer_indexed(int_portfolio):
+    """net_cost_nav on an integer-indexed portfolio uses hstack (no 'date' join)."""
+    result = int_portfolio.net_cost_nav
+    assert "NAV_accumulated_net" in result.columns
+    assert "profit" in result.columns
+    assert "cost" in result.columns
+    assert "date" not in result.columns
+    assert result.height == int_portfolio.prices.height
