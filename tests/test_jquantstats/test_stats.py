@@ -621,7 +621,7 @@ def test_max_drawdown(stats):
 
 def test_to_float_none():
     """_to_float(None) returns 0.0 (sentinel for absent aggregation results)."""
-    from jquantstats._stats import _to_float
+    from jquantstats._stats._core import _to_float
 
     assert _to_float(None) == 0.0
 
@@ -630,7 +630,7 @@ def test_to_float_timedelta():
     """_to_float(timedelta) returns total seconds."""
     from datetime import timedelta
 
-    from jquantstats._stats import _to_float
+    from jquantstats._stats._core import _to_float
 
     assert _to_float(timedelta(seconds=42)) == 42.0
 

@@ -12,7 +12,8 @@ import pytest
 
 from jquantstats import Portfolio
 from jquantstats._plots import PortfolioPlots
-from jquantstats._reports import Report, _fmt, _stats_table_html
+from jquantstats._reports import Report
+from jquantstats._reports._portfolio import _fmt, _stats_table_html
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
