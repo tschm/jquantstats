@@ -33,7 +33,7 @@ dev = [
     "quantstats==0.0.81",  # reference implementation used in test_quantstats.py for metric validation
     "marimo>=0.13.15",
     "pytest-cov>=7.1.0",
-    "hypothesis>=6.151.9",
+    "syrupy>=4.9.1",
 ]
 
 
