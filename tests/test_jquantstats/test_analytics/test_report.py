@@ -9,10 +9,10 @@ from unittest.mock import patch
 import numpy as np
 import polars as pl
 import pytest
+from jquantstats._report import Report, _fmt, _stats_table_html
 
 from jquantstats import Portfolio
 from jquantstats._plots import PortfolioPlots
-from jquantstats._report import Report, _fmt, _stats_table_html
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
