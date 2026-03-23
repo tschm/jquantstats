@@ -201,20 +201,13 @@ with open("report.html", "w") as f:
 jQuantStats has two layered entry points:
 
 ```mermaid
-flowchart TD
-    A["prices_df + cash_position_df + aum"] --> B["Portfolio.from_cash_position(...)
-    NAV compiler"]
-    B --> C[".stats  —  full stats suite"]
-    B --> D[".plots.snapshot()  —  portfolio plots"]
-    B --> E[".report.full()  —  HTML report"]
-    B --> F[".data"]
-
-    G["returns_df [+ benchmark_df]"] --> H["build_data(returns=..., benchmark=...)
-    Data object"]
-    H --> I[".stats  —  full stats suite"]
-    H --> J[".plots.plot_snapshot()  —  snapshot chart"]
-
-    F --> H
+flowchart LR
+    A["prices + positions"] --> B[Portfolio]
+    C["returns series"] --> D[build_data]
+    B & D --> E[Data]
+    E --> F[Stats]
+    E --> G[Plots]
+    E --> H[Reports]
 ```
 
 **Entry point 1** (`Portfolio`) is for active portfolios where you have
