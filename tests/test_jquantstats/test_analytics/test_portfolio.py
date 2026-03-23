@@ -339,11 +339,12 @@ def test_drawdown_is_highwater_minus_nav_and_preserves_date(portfolio):
 
 
 def test_stats(portfolio):
-    """stats() should return a dictionary with expected keys."""
+    """stats() returns legacy Stats with expected Sharpe; kurtosis is None for tiny samples."""
     stats = portfolio.stats
 
     assert pytest.approx(stats.sharpe()["returns"]) == 20.845234695819794
-    assert pytest.approx(stats.kurtosis()["returns"]) == -1.500
+    # Legacy kurtosis(bias=False) requires ≥4 observations; returns None for 3-row portfolios.
+    assert stats.kurtosis()["returns"] is None
 
 
 def test_portfolio_snapshot_log_scale(portfolio):

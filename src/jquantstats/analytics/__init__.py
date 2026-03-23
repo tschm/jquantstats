@@ -7,7 +7,6 @@ Public API:
 
 Private modules (subject to change):
 - jquantstats.analytics._portfolio_data
-- jquantstats.analytics._stats
 - jquantstats.analytics._plots
 
 Usage:

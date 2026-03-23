@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING, Self
 
 if TYPE_CHECKING:
     from .._data import Data as Data
+    from .._stats import Stats as Stats
 
 import polars as pl
 import polars.selectors as cs
@@ -29,7 +30,6 @@ import polars.selectors as cs
 from ._plots import Plots
 from ._portfolio_data import PortfolioData
 from ._report import Report
-from ._stats import Stats
 from .exceptions import (
     IntegerIndexBoundError,
 )
@@ -242,16 +242,14 @@ class Portfolio:
         return Data(returns=returns, index=index)
 
     @property
-    def stats(self) -> Stats:
+    def stats(self) -> "Stats":
         """Return a Stats object built from the portfolio's daily returns.
 
-        Constructs a :class:`~jquantstats.analytics._stats.Stats` instance from
-        the portfolio returns. When a ``'date'`` column is present both
-        ``'date'`` and ``'returns'`` are passed to Stats; otherwise only
-        ``'returns'`` is used.
+        Delegates to the legacy :class:`~jquantstats._stats.Stats` pipeline via
+        :attr:`data`, so all analytics (Sharpe, drawdown, summary, etc.) are
+        available through the shared implementation.
         """
-        cols = ["date", "returns"] if "date" in self.returns.columns else ["returns"]
-        return Stats(data=self.returns.select(cols))
+        return self.data.stats
 
     @property
     def plots(self) -> Plots:
@@ -713,8 +711,16 @@ class Portfolio:
         sharpe_values: list[float] = []
         for bps in cost_levels:
             adj = self.cost_adjusted_returns(float(bps))
-            cols = ["date", "returns"] if "date" in adj.columns else ["returns"]
-            sharpe_val = Stats(data=adj.select(cols)).sharpe().get("returns", float("nan"))
+            from .._data import Data
+
+            if "date" in adj.columns:
+                adj_index = adj.select("date")
+                adj_returns = adj.drop("date")
+            else:
+                adj_index = pl.DataFrame({"index": list(range(adj.height))})
+                adj_returns = adj
+            adj_stats = Data(returns=adj_returns, index=adj_index).stats
+            sharpe_val = adj_stats.sharpe().get("returns", float("nan"))
             sharpe_values.append(float(sharpe_val) if sharpe_val is not None else float("nan"))
         return pl.DataFrame({"cost_bps": pl.Series(cost_levels, dtype=pl.Int64), "sharpe": pl.Series(sharpe_values)})
 
