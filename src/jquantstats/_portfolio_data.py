@@ -7,7 +7,7 @@ visualisation dependencies.
 
 :class:`PortfolioData` is held by composition inside
 :class:`~jquantstats.Portfolio`, which adds analytics facades (Stats,
-Plots, Report), portfolio transforms (lag, truncate, smoothed_holding), and
+DataPlots, Report), portfolio transforms (lag, truncate, smoothed_holding), and
 attribution tools (tilt/timing decomposition, turnover, cost analysis).
 """
 

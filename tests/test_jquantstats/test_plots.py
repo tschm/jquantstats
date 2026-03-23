@@ -13,7 +13,7 @@ def plots(data):
         data: The data fixture containing a Data object.
 
     Returns:
-        Plots: The plots property of the data fixture.
+        DataPlots: The plots property of the data fixture.
 
     """
     return data.plots
@@ -65,8 +65,8 @@ def test_plot_snapshot_one_symbol(returns):
 
 
 def test_repr(plots):
-    """Tests that Plots.__repr__ returns an informative string."""
+    """Tests that DataPlots.__repr__ returns an informative string."""
     r = repr(plots)
-    assert r.startswith("Plots(assets=")
+    assert r.startswith("DataPlots(assets=")
     for asset in plots.data.assets:
         assert asset in r
