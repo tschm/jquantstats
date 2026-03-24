@@ -172,9 +172,51 @@ class Portfolio:
         object.__setattr__(self, "_plots_cache", None)
         object.__setattr__(self, "_report_cache", None)
 
+    def _date_range(self) -> tuple[int, object, object]:
+        """Return (rows, start, end) for the portfolio's returns series.
+
+        ``start`` and ``end`` are ``None`` when there is no ``'date'`` column.
+        """
+        ret = self.returns
+        rows = ret.height
+        if "date" in ret.columns:
+            return rows, ret["date"].min(), ret["date"].max()
+        return rows, None, None
+
     def __repr__(self) -> str:
         """Return a string representation of the Portfolio object."""
-        return f"Portfolio(assets={self.assets})"
+        rows, start, end = self._date_range()
+        if start is not None:
+            return f"Portfolio(assets={self.assets}, rows={rows}, start={start}, end={end})"
+        return f"Portfolio(assets={self.assets}, rows={rows})"
+
+    def describe(self) -> pl.DataFrame:
+        """Return a tidy summary of shape, date range and asset names.
+
+        Returns:
+        -------
+        pl.DataFrame
+            One row per asset with columns: asset, start, end, rows.
+
+        Examples:
+            >>> import polars as pl
+            >>> from datetime import date
+            >>> prices = pl.DataFrame({"date": [date(2020, 1, 1), date(2020, 1, 2)], "A": [100.0, 110.0]})
+            >>> pos = pl.DataFrame({"date": [date(2020, 1, 1), date(2020, 1, 2)], "A": [1000.0, 1000.0]})
+            >>> pf = Portfolio(prices=prices, cashposition=pos, aum=1e6)
+            >>> df = pf.describe()
+            >>> list(df.columns)
+            ['asset', 'start', 'end', 'rows']
+        """
+        rows, start, end = self._date_range()
+        return pl.DataFrame(
+            {
+                "asset": self.assets,
+                "start": [start] * len(self.assets),
+                "end": [end] * len(self.assets),
+                "rows": [rows] * len(self.assets),
+            }
+        )
 
     # ── Factory classmethods ──────────────────────────────────────────────────
 
