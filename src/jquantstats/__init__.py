@@ -48,6 +48,7 @@ from ._cost_model import CostModel as CostModel
 from ._types import NativeFrame as NativeFrame
 from ._types import NativeFrameOrScalar as NativeFrameOrScalar
 from .data import Data as Data
+from .data import LazyData as LazyData
 from .portfolio import Portfolio as Portfolio
 
 __version__ = importlib.metadata.version("jquantstats")

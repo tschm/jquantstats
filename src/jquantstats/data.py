@@ -17,6 +17,8 @@ if TYPE_CHECKING:
     from ._reports import Reports
     from ._stats import Stats
 
+__all__ = ["Data", "LazyData"]
+
 
 def _to_polars(df: NativeFrame) -> pl.DataFrame:
     """Convert any narwhals-compatible DataFrame to a polars DataFrame."""
@@ -467,3 +469,346 @@ class Data:
 
         for col in self.assets:
             yield col, matrix.get_column(col)
+
+    def lazy(self) -> LazyData:
+        """Return a lazy-backed version of this Data object.
+
+        Wraps the underlying Polars DataFrames as LazyFrames so that subsequent
+        operations (``resample``, ``truncate``, ``head``, ``tail``) build a query
+        plan rather than executing immediately.  Call :meth:`LazyData.collect` on
+        the result to materialise the final :class:`Data` object.
+
+        This is the recommended entry point when chaining multiple transformations
+        on large datasets, as Polars can optimise and fuse operations before any
+        computation takes place.
+
+        Returns:
+        -------
+        LazyData
+            A lazy wrapper backed by the same data as this object.
+
+        Examples:
+        --------
+        ```python
+        lazy = data.lazy().truncate(start=date(2020, 1, 1)).resample("1mo")
+        result = lazy.collect()   # single optimised execution
+        ```
+
+        """
+        return LazyData(
+            returns=self.returns.lazy(),
+            index=self.index.lazy(),
+            benchmark=self.benchmark.lazy() if self.benchmark is not None else None,
+        )
+
+
+@dataclasses.dataclass(frozen=True)
+class LazyData:
+    """Lazy-evaluation container for financial returns data.
+
+    Wraps Polars :class:`~polars.LazyFrame` objects to enable query optimisation
+    and streaming for large datasets.  Operations such as :meth:`resample` and
+    :meth:`truncate` add steps to a lazy query plan; no computation happens until
+    :meth:`collect` is called.
+
+    Prefer :meth:`Data.lazy` to convert an existing eager :class:`Data` object,
+    or use the file-scanning constructors :meth:`scan_parquet` / :meth:`scan_csv`
+    to read large datasets without loading them fully into memory.
+
+    Attributes:
+        returns: LazyFrame of asset returns (no date column).
+        index: LazyFrame with a single date column.
+        benchmark: Optional LazyFrame of benchmark returns (no date column).
+
+    Examples:
+    --------
+    Convert an eager Data object to lazy and chain transformations:
+
+    ```python
+    from datetime import date
+    lazy = data.lazy().truncate(start=date(2020, 1, 1)).resample("1mo")
+    result = lazy.collect()
+    ```
+
+    Scan a large Parquet file without loading it into memory:
+
+    ```python
+    lazy = LazyData.scan_parquet("returns.parquet", benchmark="bench.parquet")
+    result = lazy.truncate(start=date(2020, 1, 1)).collect()
+    ```
+
+    """
+
+    returns: pl.LazyFrame
+    index: pl.LazyFrame
+    benchmark: pl.LazyFrame | None = None
+
+    def collect(self) -> Data:
+        """Materialise all lazy frames and return an eager :class:`Data` object.
+
+        Triggers Polars query optimisation and evaluation across all pending
+        operations.
+
+        Returns:
+        -------
+        Data
+            An eager Data object with all computations applied.
+
+        Examples:
+        --------
+        ```python
+        result: Data = data.lazy().resample("1mo").collect()
+        ```
+
+        """
+        return Data(
+            returns=self.returns.collect(),
+            index=self.index.collect(),
+            benchmark=self.benchmark.collect() if self.benchmark is not None else None,
+        )
+
+    def resample(self, every: str = "1mo") -> LazyData:
+        """Lazily resample returns to a lower frequency using compound returns.
+
+        Adds a ``group_by_dynamic`` aggregation step to the query plan.  The
+        actual resampling is deferred until :meth:`collect` is called, allowing
+        Polars to fuse this step with any preceding filters or projections.
+
+        Args:
+        ----
+        every : str
+            Polars duration string, e.g. ``"1mo"``, ``"1y"``, ``"1w"``.
+            Defaults to ``"1mo"``.
+
+        Returns:
+        -------
+        LazyData
+            A new LazyData with the resampling step added to the query plan.
+
+        """
+        date_col = self.index.collect_schema().names()[0]
+        returns_cols = self.returns.collect_schema().names()
+
+        def _resample(lf: pl.LazyFrame, asset_cols: list[str]) -> pl.LazyFrame:
+            """Combine index with *lf* and aggregate using compound returns."""
+            combined = pl.concat([self.index, lf], how="horizontal")
+            return combined.group_by_dynamic(
+                index_column=date_col,
+                every=every,
+                period=every,
+                closed="right",
+                label="right",
+            ).agg([((pl.col(col) + 1.0).product() - 1.0).alias(col) for col in asset_cols])
+
+        resampled_returns = _resample(self.returns, returns_cols)
+        resampled_benchmark: pl.LazyFrame | None = None
+        if self.benchmark is not None:
+            bench_cols = self.benchmark.collect_schema().names()
+            resampled_benchmark = _resample(self.benchmark, bench_cols)
+
+        return LazyData(
+            returns=resampled_returns.drop(date_col),
+            index=resampled_returns.select(date_col),
+            benchmark=resampled_benchmark.drop(date_col) if resampled_benchmark is not None else None,
+        )
+
+    def truncate(self, start: object = None, end: object = None) -> LazyData:
+        """Lazily filter to the inclusive ``[start, end]`` date range.
+
+        Adds a filter predicate to the query plan.  The actual filtering is
+        deferred until :meth:`collect` is called, enabling Polars' predicate
+        pushdown optimisation when reading from files via :meth:`scan_parquet`
+        or :meth:`scan_csv`.
+
+        Args:
+        ----
+        start : optional
+            Lower-bound date (inclusive).  Pass ``None`` to keep the earliest
+            available date.
+        end : optional
+            Upper-bound date (inclusive).  Pass ``None`` to keep the latest
+            available date.
+
+        Returns:
+        -------
+        LazyData
+            A new LazyData with the filter step added to the query plan.
+
+        """
+        date_col = self.index.collect_schema().names()[0]
+
+        cond = pl.lit(True)
+        if start is not None:
+            cond = cond & (pl.col(date_col) >= pl.lit(start))
+        if end is not None:
+            cond = cond & (pl.col(date_col) <= pl.lit(end))
+
+        new_index = self.index.filter(cond)
+
+        # Re-attach the date column so the filter can reference it, then drop it again.
+        returns_cols = self.returns.collect_schema().names()
+        new_returns = pl.concat([self.index, self.returns], how="horizontal").filter(cond).select(returns_cols)
+
+        new_benchmark = None
+        if self.benchmark is not None:
+            bench_cols = self.benchmark.collect_schema().names()
+            new_benchmark = pl.concat([self.index, self.benchmark], how="horizontal").filter(cond).select(bench_cols)
+
+        return LazyData(returns=new_returns, index=new_index, benchmark=new_benchmark)
+
+    def head(self, n: int = 5) -> LazyData:
+        """Return the first *n* rows lazily.
+
+        Args:
+        ----
+        n : int
+            Number of rows to keep. Defaults to 5.
+
+        Returns:
+        -------
+        LazyData
+            A new LazyData limited to the first n rows.
+
+        """
+        return LazyData(
+            returns=self.returns.head(n),
+            index=self.index.head(n),
+            benchmark=self.benchmark.head(n) if self.benchmark is not None else None,
+        )
+
+    def tail(self, n: int = 5) -> LazyData:
+        """Return the last *n* rows lazily.
+
+        Args:
+        ----
+        n : int
+            Number of rows to keep. Defaults to 5.
+
+        Returns:
+        -------
+        LazyData
+            A new LazyData limited to the last n rows.
+
+        """
+        return LazyData(
+            returns=self.returns.tail(n),
+            index=self.index.tail(n),
+            benchmark=self.benchmark.tail(n) if self.benchmark is not None else None,
+        )
+
+    @classmethod
+    def scan_parquet(
+        cls,
+        returns: str,
+        benchmark: str | None = None,
+        rf: float = 0.0,
+        date_col: str = "Date",
+    ) -> LazyData:
+        """Scan Parquet file(s) without loading them fully into memory.
+
+        Uses :func:`polars.scan_parquet` which enables predicate pushdown and
+        projection pushdown — only the rows and columns needed for the final
+        query are read from disk when :meth:`collect` is called.
+
+        Args:
+        ----
+        returns : str
+            Path (or glob pattern) to the returns Parquet file(s).
+        benchmark : str | None, optional
+            Path (or glob pattern) to the benchmark Parquet file(s).
+        rf : float, optional
+            Constant risk-free rate to subtract from all return columns.
+            Defaults to ``0.0`` (no adjustment).
+        date_col : str, optional
+            Name of the date column in the files. Defaults to ``"Date"``.
+
+        Returns:
+        -------
+        LazyData
+            Lazy container backed by Parquet file scans.
+
+        Examples:
+        --------
+        ```python
+        lazy = LazyData.scan_parquet("returns.parquet", benchmark="bench.parquet")
+        result = lazy.truncate(start=date(2020, 1, 1)).collect()
+        ```
+
+        """
+        returns_lf = pl.scan_parquet(returns)
+        asset_cols = [c for c in returns_lf.collect_schema().names() if c != date_col]
+
+        index = returns_lf.select(date_col)
+        if rf != 0.0:
+            returns_only: pl.LazyFrame = returns_lf.select([(pl.col(c) - rf).alias(c) for c in asset_cols])
+        else:
+            returns_only = returns_lf.select(asset_cols)
+
+        benchmark_only: pl.LazyFrame | None = None
+        if benchmark is not None:
+            bench_lf = pl.scan_parquet(benchmark)
+            bench_cols = [c for c in bench_lf.collect_schema().names() if c != date_col]
+            if rf != 0.0:
+                benchmark_only = bench_lf.select([(pl.col(c) - rf).alias(c) for c in bench_cols])
+            else:
+                benchmark_only = bench_lf.select(bench_cols)
+
+        return cls(returns=returns_only, index=index, benchmark=benchmark_only)
+
+    @classmethod
+    def scan_csv(
+        cls,
+        returns: str,
+        benchmark: str | None = None,
+        rf: float = 0.0,
+        date_col: str = "Date",
+    ) -> LazyData:
+        """Scan CSV file(s) without loading them fully into memory.
+
+        Uses :func:`polars.scan_csv` which enables predicate pushdown and
+        projection pushdown.
+
+        Args:
+        ----
+        returns : str
+            Path (or glob pattern) to the returns CSV file(s).
+        benchmark : str | None, optional
+            Path (or glob pattern) to the benchmark CSV file(s).
+        rf : float, optional
+            Constant risk-free rate to subtract from all return columns.
+            Defaults to ``0.0`` (no adjustment).
+        date_col : str, optional
+            Name of the date column in the files. Defaults to ``"Date"``.
+
+        Returns:
+        -------
+        LazyData
+            Lazy container backed by CSV file scans.
+
+        Examples:
+        --------
+        ```python
+        lazy = LazyData.scan_csv("returns.csv", benchmark="bench.csv", rf=0.0002)
+        result = lazy.resample("1mo").collect()
+        ```
+
+        """
+        returns_lf = pl.scan_csv(returns, try_parse_dates=True)
+        asset_cols = [c for c in returns_lf.collect_schema().names() if c != date_col]
+
+        index = returns_lf.select(date_col)
+        if rf != 0.0:
+            returns_only: pl.LazyFrame = returns_lf.select([(pl.col(c) - rf).alias(c) for c in asset_cols])
+        else:
+            returns_only = returns_lf.select(asset_cols)
+
+        benchmark_only: pl.LazyFrame | None = None
+        if benchmark is not None:
+            bench_lf = pl.scan_csv(benchmark, try_parse_dates=True)
+            bench_cols = [c for c in bench_lf.collect_schema().names() if c != date_col]
+            if rf != 0.0:
+                benchmark_only = bench_lf.select([(pl.col(c) - rf).alias(c) for c in bench_cols])
+            else:
+                benchmark_only = bench_lf.select(bench_cols)
+
+        return cls(returns=returns_only, index=index, benchmark=benchmark_only)
