@@ -16,6 +16,17 @@ dependencies = [
 ]
 license = "MIT"
 license-files = ["LICENSE"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Financial and Insurance Industry",
+  "Intended Audience :: Science/Research",
+  "Topic :: Office/Business :: Financial",
+  "Topic :: Scientific/Engineering :: Mathematics",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
 
 # Project URLs for documentation and reference
 [project.urls]
