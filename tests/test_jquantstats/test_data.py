@@ -434,5 +434,7 @@ def test_repr(data):
     r = repr(data)
     assert r.startswith("Data(assets=")
     assert "rows=" in r
+    assert "start=" in r
+    assert "end=" in r
     for asset in data.assets:
         assert asset in r

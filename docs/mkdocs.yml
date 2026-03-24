@@ -14,6 +14,10 @@ theme:
     - search.suggest
     - search.highlight
 
+extra:
+  version:
+    provider: mike
+
 plugins:
   - search
   - mkdocstrings:
