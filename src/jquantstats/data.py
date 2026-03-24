@@ -201,7 +201,14 @@ class Data:
 
     def __repr__(self) -> str:
         """Return a string representation of the Data object."""
-        return f"Data(assets={self.assets}, rows={len(self.index)})"
+        rows = len(self.index)
+        date_cols = self.date_col
+        if date_cols:
+            date_column = date_cols[0]
+            start = self.index[date_column].min()
+            end = self.index[date_column].max()
+            return f"Data(assets={self.assets}, rows={rows}, start={start}, end={end})"
+        return f"Data(assets={self.assets}, rows={rows})"
 
     @property
     def plots(self) -> DataPlots:
