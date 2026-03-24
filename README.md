@@ -10,6 +10,7 @@
 [![Rhiza](https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Fraw.githubusercontent.com%2Ftschm%2Fjquantstats%2Fmain%2F.rhiza%2Ftemplate.yml&query=%24.ref&label=rhiza)](https://github.com/jebel-quant/rhiza)
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/tschm/jquantstats)
+[![Open in Marimo](https://marimo.io/shield.svg)](https://marimo.app/github/tschm/jquantstats/blob/main/book/marimo/notebooks/analytics_demo.py)
 
 ## 📊 Overview
 
@@ -59,6 +60,12 @@ return distributions
 - **Benchmark Comparison**: Compare your portfolio performance against benchmarks
 - **Polars-native**: Pure polars at runtime; pandas is not required and not supported as input
 
+## 🖼️ Dashboard Preview
+
+![Portfolio Performance Dashboard](docs/assets/dashboard.png)
+
+> *Interactive Plotly dashboard — cumulative returns, drawdowns, and monthly return heatmaps in a single view. Charts are fully interactive (zoom, pan, hover tooltips) when rendered in a browser.*
+
 ## 📦 Installation
 
 **Using pip:**
@@ -80,6 +87,34 @@ pip install jquantstats[dev]
 ```
 
 ## 🚀 Quick Start
+
+**Five lines to your first analytics result:**
+
+```python
+import polars as pl
+from jquantstats import Data
+
+returns = pl.DataFrame({
+    "Date": ["2023-01-01", "2023-01-02", "2023-01-03", "2023-01-04", "2023-01-05"],
+    "Strategy": [0.01, -0.03, 0.02, -0.01, 0.04],
+}).with_columns(pl.col("Date").str.to_date())
+
+benchmark = pl.DataFrame({
+    "Date": ["2023-01-01", "2023-01-02", "2023-01-03", "2023-01-04", "2023-01-05"],
+    "Benchmark": [0.005, -0.01, 0.008, -0.005, 0.015],
+}).with_columns(pl.col("Date").str.to_date())
+
+data = Data.from_returns(returns=returns, benchmark=benchmark)
+
+print(data.stats.sharpe())
+# {'Strategy': 4.24, 'Benchmark': 4.94}
+
+print(data.stats.max_drawdown())
+# {'Strategy': 0.03, 'Benchmark': 0.01}
+
+fig = data.plots.plot_snapshot(title="Strategy vs Benchmark")
+fig.show()  # opens an interactive Plotly chart in your browser
+```
 
 **If you have price series and position sizes** (recommended):
 
