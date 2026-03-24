@@ -7,3 +7,9 @@
 
 ## Future
 - Autocorrelation / ACF (#19)
+
+## Completed explorations
+- **LazyData / Polars lazy path**: benchmarked; lazy adds 9–30 % overhead for
+  in-memory workloads. `LazyData` kept as a file-scanning convenience
+  (`scan_parquet`, `scan_csv`) but not recommended as a speed optimisation.
+  See `docs/lazy_evaluation.md` for the full verdict.

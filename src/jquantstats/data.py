@@ -485,9 +485,14 @@ class Data:
         plan rather than executing immediately.  Call :meth:`LazyData.collect` on
         the result to materialise the final :class:`Data` object.
 
-        This is the recommended entry point when chaining multiple transformations
-        on large datasets, as Polars can optimise and fuse operations before any
-        computation takes place.
+        .. note::
+            Benchmarks on a 20-year daily x 100-asset dataset show that lazy
+            evaluation is **9-30 % slower** than eager for in-memory workloads
+            because the query-planning overhead outweighs any optimisation
+            benefit.  Prefer eager operations (:meth:`resample`, :meth:`truncate`)
+            for data already loaded in memory.  Use ``LazyData`` primarily with
+            :meth:`LazyData.scan_parquet` or :meth:`LazyData.scan_csv` when the
+            dataset does not fit in RAM.
 
         Returns:
         -------
@@ -496,9 +501,24 @@ class Data:
 
         Examples:
         --------
+        Idiomatic usage — scan a large Parquet file, filter, collect:
+
         ```python
-        lazy = data.lazy().truncate(start=date(2020, 1, 1)).resample("1mo")
-        result = lazy.collect()   # single optimised execution
+        from jquantstats import LazyData
+        result = (
+            LazyData.scan_parquet("decades_of_ticks.parquet")
+            .truncate(start=date(2020, 1, 1))
+            .collect()
+        )
+        ```
+
+        Using ``Data.lazy()`` when data is already in memory adds overhead:
+
+        ```python
+        # Prefer this (eager):
+        result = data.truncate(start=date(2020, 1, 1)).resample("1mo")
+        # Over this (lazy — slower for in-memory data):
+        result = data.lazy().truncate(start=date(2020, 1, 1)).resample("1mo").collect()
         ```
 
         """
@@ -513,14 +533,16 @@ class Data:
 class LazyData:
     """Lazy-evaluation container for financial returns data.
 
-    Wraps Polars :class:`~polars.LazyFrame` objects to enable query optimisation
-    and streaming for large datasets.  Operations such as :meth:`resample` and
-    :meth:`truncate` add steps to a lazy query plan; no computation happens until
-    :meth:`collect` is called.
+    Wraps Polars :class:`~polars.LazyFrame` objects to defer computation until
+    :meth:`collect` is called.  This is primarily useful for **file-scanning
+    workflows** where the dataset is too large to load fully into memory —
+    :meth:`scan_parquet` and :meth:`scan_csv` let Polars push filters down to
+    the file reader, avoiding unnecessary I/O.
 
-    Prefer :meth:`Data.lazy` to convert an existing eager :class:`Data` object,
-    or use the file-scanning constructors :meth:`scan_parquet` / :meth:`scan_csv`
-    to read large datasets without loading them fully into memory.
+    .. note::
+        For data **already in memory**, eager :class:`Data` operations are
+        consistently faster (9-30 % in benchmarks).  See
+        ``docs/lazy_evaluation.md`` for the full benchmark report and verdict.
 
     Attributes:
         returns: LazyFrame of asset returns (no date column).
@@ -529,19 +551,25 @@ class LazyData:
 
     Examples:
     --------
-    Convert an eager Data object to lazy and chain transformations:
+    Recommended usage — scan a large Parquet file without loading it fully:
 
     ```python
+    from jquantstats import LazyData
     from datetime import date
-    lazy = data.lazy().truncate(start=date(2020, 1, 1)).resample("1mo")
-    result = lazy.collect()
+
+    result = (
+        LazyData.scan_parquet("decades_of_ticks.parquet", benchmark="spy.parquet")
+        .truncate(start=date(2020, 1, 1))
+        .resample("1mo")
+        .collect()
+    )
     ```
 
-    Scan a large Parquet file without loading it into memory:
+    Convert an existing eager Data object to lazy (adds overhead for in-memory
+    data; shown here for illustration only):
 
     ```python
-    lazy = LazyData.scan_parquet("returns.parquet", benchmark="bench.parquet")
-    result = lazy.truncate(start=date(2020, 1, 1)).collect()
+    result = data.lazy().truncate(start=date(2020, 1, 1)).collect()
     ```
 
     """

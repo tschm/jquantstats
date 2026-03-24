@@ -38,6 +38,7 @@ nav:
   - Home: index.md
   - Migration from QuantStats: migration.md
   - API Stability: stability.md
+  - Lazy Evaluation: lazy_evaluation.md
   - Reference:
       - Data: reference/data.md
       - Stats: reference/stats.md
