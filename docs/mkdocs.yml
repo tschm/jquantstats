@@ -33,6 +33,7 @@ plugins:
 nav:
   - Home: index.md
   - Migration from QuantStats: migration.md
+  - Why Polars? Benchmarks: BENCHMARKS.md
   - API Stability: stability.md
   - Reference:
       - Data: reference/data.md

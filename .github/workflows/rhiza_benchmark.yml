@@ -1,0 +1,45 @@
+# Workflow: Performance Benchmarks
+#
+# Purpose: Run the jquantstats vs quantstats benchmark suite on every push to
+#          main/master and store the results as a workflow artifact.  The
+#          artifact lets maintainers track performance trends over time.
+#
+# Trigger: On push to main/master.
+
+name: "(RHIZA) BENCHMARKS"
+
+permissions:
+  contents: read
+  actions: read
+
+on:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7.6.0
+        with:
+          version: "0.10.12"
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Install dependencies
+        run: make install
+
+      - name: Run standalone benchmark script
+        run: uv run python benchmarks/run.py | tee /tmp/benchmark_summary.txt
+
+      - name: Upload benchmark summary
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: benchmark-summary
+          path: /tmp/benchmark_summary.txt
+          retention-days: 90

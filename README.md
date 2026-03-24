@@ -47,6 +47,18 @@ enhanced visualization capabilities. Key improvements include:
 | **Type annotations** | Full (`py.typed`) | Partial |
 | **Test coverage** | [![Coverage](https://raw.githubusercontent.com/tschm/jquantstats/refs/heads/gh-pages/coverage-badge.svg)](https://tschm.github.io/jquantstats/tests/html-coverage/index.html) | — |
 
+### 🚀 Performance (2520 daily returns, ~10 years)
+
+| Operation | jQuantStats | QuantStats | Speed | Memory |
+|---|---:|---:|---:|---:|
+| Sharpe ratio | **0.5 ms** | 1.0 ms | **2.2× faster** | **8× less** |
+| Max drawdown | **0.3 ms** | 3.3 ms | **9.7× faster** | **36× less** |
+| Metrics report | **2.6 ms** | 7204 ms | **~2800× faster** | **~1000× less** |
+
+See [benchmarks/run.py](benchmarks/run.py) and the
+[full benchmark documentation](docs/BENCHMARKS.md)
+for methodology and reproduction instructions.
+
 ## ✨ Features
 
 - **Performance Metrics**: Calculate key metrics like Sharpe ratio,
