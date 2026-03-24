@@ -212,7 +212,7 @@ class _BasicStatsMixin:
         wins_sum = wins.sum()
         losses_sum = losses.sum()
 
-        return float(np.abs(wins_sum / losses_sum))
+        return float(np.abs(float(wins_sum) / float(losses_sum)))
 
     # ── Risk metrics ──────────────────────────────────────────────────────────
 
@@ -297,7 +297,7 @@ class _BasicStatsMixin:
         total_gain = series.sum()
         total_pain = series.filter(series < 0).abs().sum()
         try:
-            return float(total_gain / total_pain)
+            return float(float(total_gain) / float(total_pain))
         except ZeroDivisionError:
             return float(np.nan)
 
