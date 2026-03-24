@@ -262,7 +262,7 @@ can always drop from a `Portfolio` into the returns-series API.
 
 ## 📚 Documentation
 
-For detailed documentation, visit [jQuantStats Documentation](https://tschm.github.io/jquantstats/book).
+For detailed documentation, visit [jQuantStats Documentation](https://tschm.github.io/jquantstats).
 
 ## 🔧 Requirements
 
