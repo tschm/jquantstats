@@ -180,9 +180,9 @@ class Data:
         benchmark_pl = _to_polars(benchmark) if benchmark is not None else None
         rf_converted: float | pl.DataFrame
         if isinstance(rf, pl.DataFrame) or (not isinstance(rf, float) and not isinstance(rf, int)):
-            rf_converted = _to_polars(rf)  # type: ignore[arg-type]
+            rf_converted = _to_polars(rf)
         else:
-            rf_converted = rf  # type: ignore[assignment]  # int is not float/DataFrame: _subtract_risk_free raises TypeError (tested by test_subtract_rf_invalid_type)
+            rf_converted = rf  # int: _subtract_risk_free raises TypeError (see test_subtract_rf_invalid_type)
 
         if benchmark_pl is not None:
             joined_dates = returns_pl.join(benchmark_pl, on=date_col, how="inner").select(date_col)
@@ -569,9 +569,9 @@ class LazyData:
 
         """
         return Data(
-            returns=self.returns.collect(),
-            index=self.index.collect(),
-            benchmark=self.benchmark.collect() if self.benchmark is not None else None,
+            returns=cast(pl.DataFrame, self.returns.collect()),
+            index=cast(pl.DataFrame, self.index.collect()),
+            benchmark=cast(pl.DataFrame, self.benchmark.collect()) if self.benchmark is not None else None,
         )
 
     def resample(self, every: str = "1mo") -> LazyData:

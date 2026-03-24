@@ -3,7 +3,7 @@
 
 from typing import TypeAlias
 
-import narwhals as nw
+import narwhals.typing
 
-NativeFrame: TypeAlias = nw.typing.IntoDataFrame
-NativeFrameOrScalar: TypeAlias = nw.typing.IntoDataFrame | float
+NativeFrame: TypeAlias = narwhals.typing.IntoDataFrame
+NativeFrameOrScalar: TypeAlias = narwhals.typing.IntoDataFrame | float
