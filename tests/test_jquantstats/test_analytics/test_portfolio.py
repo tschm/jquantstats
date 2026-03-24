@@ -1126,7 +1126,7 @@ def test_net_cost_nav_integer_indexed(int_portfolio):
 
 def test_portfolio_data_property_returns_data_object(portfolio):
     """portfolio.data returns a legacy Data object with a 'returns' column and date index."""
-    from jquantstats.data import Data
+    from jquantstats import Data
 
     d = portfolio.data
     assert isinstance(d, Data)
@@ -1137,7 +1137,7 @@ def test_portfolio_data_property_returns_data_object(portfolio):
 
 def test_portfolio_data_property_integer_indexed(int_portfolio):
     """portfolio.data on an integer-indexed portfolio creates a synthetic integer index."""
-    from jquantstats.data import Data
+    from jquantstats import Data
 
     d = int_portfolio.data
     assert isinstance(d, Data)

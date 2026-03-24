@@ -676,7 +676,7 @@ def test_max_drawdown_duration_with_date(stats):
 
 def test_max_drawdown_duration_integer_indexed(data_no_benchmark):
     """max_drawdown_duration uses period-count when index is non-temporal."""
-    from jquantstats.data import Data
+    from jquantstats import Data
 
     returns = data_no_benchmark.returns.head(20)
     index = pl.DataFrame({"idx": list(range(20))})
@@ -698,7 +698,7 @@ def test_monthly_win_rate_with_date(stats):
 
 def test_monthly_win_rate_no_date(data_no_benchmark):
     """monthly_win_rate returns nan for non-temporal index data."""
-    from jquantstats.data import Data
+    from jquantstats import Data
 
     returns = data_no_benchmark.returns.head(10)
     index = pl.DataFrame({"idx": list(range(10))})
@@ -720,7 +720,7 @@ def test_worst_n_periods(stats):
 
 def test_worst_n_periods_padding(data_no_benchmark):
     """worst_n_periods pads with None when series has fewer than n non-null values."""
-    from jquantstats.data import Data
+    from jquantstats import Data
 
     returns = pl.DataFrame({"r": [0.01, -0.02]})
     index = pl.DataFrame({"idx": [0, 1]})
@@ -740,7 +740,7 @@ def test_up_capture_basic(stats):
 
 def test_up_capture_no_up_periods():
     """up_capture returns nan when benchmark has no positive periods."""
-    from jquantstats.data import Data
+    from jquantstats import Data
 
     returns = pl.DataFrame({"r": [-0.01, -0.02, -0.03, -0.01]})
     index = pl.DataFrame({"idx": [0, 1, 2, 3]})
@@ -753,7 +753,7 @@ def test_up_capture_no_up_periods():
 
 def test_up_capture_empty_strategy_up():
     """up_capture returns nan for an asset with no returns during up-benchmark periods."""
-    from jquantstats.data import Data
+    from jquantstats import Data
 
     # strategy has all values where benchmark is positive are null
     returns = pl.DataFrame({"r": [None, 0.01, 0.02, 0.01]}, schema={"r": pl.Float64})
@@ -775,7 +775,7 @@ def test_down_capture_basic(stats):
 
 def test_down_capture_no_down_periods():
     """down_capture returns nan when benchmark has no negative periods."""
-    from jquantstats.data import Data
+    from jquantstats import Data
 
     returns = pl.DataFrame({"r": [0.01, 0.02, 0.03, 0.01]})
     index = pl.DataFrame({"idx": [0, 1, 2, 3]})
@@ -788,7 +788,7 @@ def test_down_capture_no_down_periods():
 
 def test_down_capture_empty_strategy_down():
     """down_capture returns nan for an asset with no returns during down-benchmark periods."""
-    from jquantstats.data import Data
+    from jquantstats import Data
 
     returns = pl.DataFrame({"r": [0.01, None, None, 0.01]}, schema={"r": pl.Float64})
     index = pl.DataFrame({"idx": [0, 1, 2, 3]})
@@ -811,7 +811,7 @@ def test_annual_breakdown_integer_indexed(data_no_benchmark):
     """annual_breakdown groups by ~252-row chunks for integer-indexed data."""
     import numpy as np
 
-    from jquantstats.data import Data
+    from jquantstats import Data
 
     # 500 rows → 2 full chunks of 252
     n = 500
@@ -832,7 +832,7 @@ def test_annual_breakdown_integer_indexed_sparse_chunk():
     """annual_breakdown skips integer-index chunks that are too small."""
     import numpy as np
 
-    from jquantstats.data import Data
+    from jquantstats import Data
 
     # Only 260 rows: first chunk of 252 is full, remainder (8 rows) < max(5, 63) → skipped
     n = 260
@@ -847,7 +847,7 @@ def test_annual_breakdown_integer_indexed_sparse_chunk():
 
 def test_annual_breakdown_integer_indexed_all_sparse():
     """annual_breakdown returns empty DataFrame when all integer-index chunks are sparse."""
-    from jquantstats.data import Data
+    from jquantstats import Data
 
     # Only 3 rows, chunk=252 → 3 < max(5, 63) → skipped
     returns = pl.DataFrame({"r": [0.01, -0.02, 0.03]})
@@ -861,7 +861,7 @@ def test_annual_breakdown_skips_sparse_year(data_no_benchmark):
     """annual_breakdown skips years with fewer than 2 rows."""
     from datetime import date
 
-    from jquantstats.data import Data
+    from jquantstats import Data
 
     dates = [date(2020, 12, 31), date(2021, 1, 2), date(2021, 1, 3)]
     returns = pl.DataFrame({"r": [0.01, -0.02, 0.03]})
@@ -876,7 +876,7 @@ def test_annual_breakdown_empty_when_all_sparse():
     """annual_breakdown returns empty DataFrame when every year has < 2 rows."""
     from datetime import date
 
-    from jquantstats.data import Data
+    from jquantstats import Data
 
     dates = [date(2020, 6, 15), date(2021, 6, 15)]
     returns = pl.DataFrame({"r": [0.01, -0.02]})

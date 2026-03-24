@@ -45,9 +45,9 @@ For more information, visit the `jQuantStats Documentation <https://tschm.github
 import importlib.metadata
 
 from ._cost_model import CostModel as CostModel
+from ._data import Data as Data
 from ._types import NativeFrame as NativeFrame
 from ._types import NativeFrameOrScalar as NativeFrameOrScalar
-from .data import Data as Data
 from .portfolio import Portfolio as Portfolio
 
 __version__ = importlib.metadata.version("jquantstats")

@@ -329,7 +329,7 @@ class _ReportingStatsMixin:
         date_col_name = self.data.date_col[0] if self.data.date_col else None
         has_temporal = date_col_name is not None and all_df[date_col_name].dtype.is_temporal()
 
-        from ..data import Data
+        from .._data import Data
 
         if not has_temporal:
             # Integer-index fallback: group by chunks of ~_periods_per_year rows

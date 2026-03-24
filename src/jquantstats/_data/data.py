@@ -10,12 +10,12 @@ from typing import TYPE_CHECKING, cast
 import narwhals as nw
 import polars as pl
 
-from ._types import NativeFrame, NativeFrameOrScalar
+from .._types import NativeFrame, NativeFrameOrScalar
 
 if TYPE_CHECKING:
-    from ._plots import DataPlots
-    from ._reports import Reports
-    from ._stats import Stats
+    from .._plots import DataPlots
+    from .._reports import Reports
+    from .._stats import Stats
 
 
 def _to_polars(df: NativeFrame) -> pl.DataFrame:
@@ -211,7 +211,7 @@ class Data:
             DataPlots: An instance of the DataPlots class initialized with this data.
 
         """
-        from ._plots import DataPlots
+        from .._plots import DataPlots
 
         return DataPlots(self)
 
@@ -223,7 +223,7 @@ class Data:
             Stats: An instance of the Stats class initialized with this data.
 
         """
-        from ._stats import Stats
+        from .._stats import Stats
 
         return Stats(self)
 
@@ -235,7 +235,7 @@ class Data:
             Reports: An instance of the Reports class initialized with this data.
 
         """
-        from ._reports import Reports
+        from .._reports import Reports
 
         return Reports(self)
 
