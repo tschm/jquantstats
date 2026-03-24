@@ -1389,3 +1389,99 @@ def test_from_risk_position_with_cost_model():
     assert isinstance(pf, Portfolio)
     assert pf.cost_per_unit == pytest.approx(0.05)
     assert pf.cost_bps == pytest.approx(0.0)
+
+
+# ─── Portfolio data computation properties (from test_portfolio_data) ─────────
+
+
+@pytest.fixture
+def prices_single():
+    """Three-day single-asset price frame (A: 100 → 110 → 121)."""
+    return pl.DataFrame(
+        {
+            "date": pl.date_range(start=date(2020, 1, 1), end=date(2020, 1, 3), interval="1d", eager=True).cast(
+                pl.Date
+            ),
+            "A": pl.Series([100.0, 110.0, 121.0], dtype=pl.Float64),
+        }
+    )
+
+
+@pytest.fixture
+def positions_single(prices_single):
+    """Three-day cash-position frame aligned with the prices_single fixture."""
+    return pl.DataFrame(
+        {
+            "date": prices_single["date"],
+            "A": pl.Series([1000.0, 1000.0, 1000.0], dtype=pl.Float64),
+        }
+    )
+
+
+@pytest.fixture
+def portfolio_single(prices_single, positions_single):
+    """Portfolio instance built from the prices_single and positions_single fixtures."""
+    return Portfolio(prices=prices_single, cashposition=positions_single, aum=1e5)
+
+
+def test_from_cash_position_returns_portfolio(prices_single, positions_single):
+    """Portfolio.from_cash_position returns a Portfolio instance."""
+    pf = Portfolio.from_cash_position(prices=prices_single, cash_position=positions_single, aum=2e5)
+    assert isinstance(pf, Portfolio)
+    assert pf.aum == 2e5
+
+
+def test_from_risk_position_returns_portfolio(prices_single, positions_single):
+    """Portfolio.from_risk_position returns a Portfolio instance."""
+    pf = Portfolio.from_risk_position(prices=prices_single, risk_position=positions_single, vola=2, aum=1e5)
+    assert isinstance(pf, Portfolio)
+    assert pf.assets == ["A"]
+
+
+def test_portfolio_assets(portfolio_single):
+    """Portfolio.assets lists numeric column names from prices."""
+    assert portfolio_single.assets == ["A"]
+
+
+def test_portfolio_profits_columns(portfolio_single):
+    """Portfolio.profits contains the asset column."""
+    assert "A" in portfolio_single.profits.columns
+
+
+def test_portfolio_profit_columns(portfolio_single):
+    """Portfolio.profit contains a 'profit' column."""
+    assert "profit" in portfolio_single.profit.columns
+
+
+def test_portfolio_nav_accumulated(portfolio_single):
+    """Portfolio.nav_accumulated contains a 'NAV_accumulated' column."""
+    assert "NAV_accumulated" in portfolio_single.nav_accumulated.columns
+
+
+def test_portfolio_returns(portfolio_single):
+    """Portfolio.returns contains a 'returns' column."""
+    assert "returns" in portfolio_single.returns.columns
+
+
+def test_portfolio_nav_compounded(portfolio_single):
+    """Portfolio.nav_compounded contains a 'NAV_compounded' column."""
+    assert "NAV_compounded" in portfolio_single.nav_compounded.columns
+
+
+def test_portfolio_highwater(portfolio_single):
+    """Portfolio.highwater contains a 'highwater' column."""
+    assert "highwater" in portfolio_single.highwater.columns
+
+
+def test_portfolio_drawdown(portfolio_single):
+    """Portfolio.drawdown contains both 'drawdown' and 'drawdown_pct' columns."""
+    assert "drawdown" in portfolio_single.drawdown.columns
+    assert "drawdown_pct" in portfolio_single.drawdown.columns
+
+
+def test_portfolio_all_columns(portfolio_single):
+    """Portfolio.all merges NAV, drawdown, and compounded NAV columns."""
+    df = portfolio_single.all
+    assert "NAV_accumulated" in df.columns
+    assert "NAV_compounded" in df.columns
+    assert "drawdown" in df.columns
