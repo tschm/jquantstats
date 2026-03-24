@@ -1339,5 +1339,20 @@ def test_repr(portfolio):
     """Tests that Portfolio.__repr__ returns an informative string."""
     r = repr(portfolio)
     assert r.startswith("Portfolio(assets=")
+    assert "rows=" in r
+    assert "start=" in r
+    assert "end=" in r
     for asset in portfolio.assets:
         assert asset in r
+
+
+def test_describe(portfolio):
+    """Tests that Portfolio.describe() returns a tidy summary DataFrame."""
+    df = portfolio.describe()
+    assert "asset" in df.columns
+    assert "start" in df.columns
+    assert "end" in df.columns
+    assert "rows" in df.columns
+    assert len(df) == len(portfolio.assets)
+    for asset in portfolio.assets:
+        assert asset in df["asset"].to_list()
