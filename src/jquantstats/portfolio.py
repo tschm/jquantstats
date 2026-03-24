@@ -1,20 +1,18 @@
-"""Portfolio analytics facade composed with PortfolioData.
+"""Portfolio analytics class for quant finance.
 
-This module provides :class:`Portfolio`, which holds a
-:class:`~jquantstats._portfolio_data.PortfolioData` instance and adds
-analytics, transforms, and attribution tools:
+This module provides :class:`Portfolio`, a single frozen dataclass that
+stores the raw portfolio inputs (prices, cash positions, AUM) and exposes
+both the derived data series and the full analytics / visualisation suite:
 
+- Derived data series — :attr:`profits`, :attr:`profit`, :attr:`nav_accumulated`,
+  :attr:`returns`, :attr:`monthly`, :attr:`nav_compounded`, :attr:`highwater`,
+  :attr:`drawdown`, :attr:`all`
 - Lazy composition accessors — :attr:`stats`, :attr:`plots`, :attr:`report`
 - Portfolio transforms — :meth:`truncate`, :meth:`lag`, :meth:`smoothed_holding`
 - Attribution — :attr:`tilt`, :attr:`timing`, :attr:`tilt_timing_decomp`
 - Turnover analysis — :attr:`turnover`, :attr:`turnover_weekly`, :meth:`turnover_summary`
 - Cost analysis — :meth:`cost_adjusted_returns`, :meth:`trading_cost_impact`
 - Utility — :meth:`correlation`
-
-The raw data layer (inputs, derived P&L series) is held internally in a
-:class:`~jquantstats._portfolio_data.PortfolioData` instance.  All of
-its properties are delegated transparently so that the public API remains
-unchanged.
 """
 
 import dataclasses
@@ -29,19 +27,36 @@ import polars.selectors as cs
 
 from ._cost_model import CostModel
 from ._plots import PortfolioPlots
-from ._portfolio_data import PortfolioData
 from ._reports import Report
 from .exceptions import (
     IntegerIndexBoundError,
+    InvalidCashPositionTypeError,
+    InvalidPricesTypeError,
+    MissingDateColumnError,
+    NonPositiveAumError,
+    RowCountMismatchError,
 )
 
 
 @dataclasses.dataclass(frozen=True)
 class Portfolio:
-    """Analytics facade composed with PortfolioData for transforms and analytics.
+    """Portfolio analytics class for quant finance.
 
-    Holds a :class:`~jquantstats._portfolio_data.PortfolioData` instance
-    internally and delegates all raw data properties to it.  Adds:
+    Stores the three raw inputs — cash positions, prices, and AUM — and
+    exposes the standard derived data series, analytics facades, transforms,
+    and attribution tools.
+
+    Derived data series:
+
+    - :attr:`profits` — per-asset daily cash P&L
+    - :attr:`profit` — aggregate daily portfolio profit
+    - :attr:`nav_accumulated` — cumulative additive NAV
+    - :attr:`nav_compounded` — compounded NAV
+    - :attr:`returns` — daily returns (profit / AUM)
+    - :attr:`monthly` — monthly compounded returns
+    - :attr:`highwater` — running high-water mark
+    - :attr:`drawdown` — drawdown from high-water mark
+    - :attr:`all` — merged view of all derived series
 
     - Lazy composition accessors: :attr:`stats`, :attr:`plots`, :attr:`report`
     - Portfolio transforms: :meth:`truncate`, :meth:`lag`,
@@ -117,7 +132,6 @@ class Portfolio:
     aum: float
     cost_per_unit: float = 0.0
     cost_bps: float = 0.0
-    _data: PortfolioData = dataclasses.field(init=False, repr=False, compare=False, hash=False)
     _data_bridge: "Data | None" = dataclasses.field(init=False, repr=False, compare=False, hash=False)
     _stats_cache: "Stats | None" = dataclasses.field(init=False, repr=False, compare=False, hash=False)
     _plots_cache: "PortfolioPlots | None" = dataclasses.field(init=False, repr=False, compare=False, hash=False)
@@ -144,14 +158,15 @@ class Portfolio:
         return Data(returns=ret, index=pl.DataFrame({"index": list(range(ret.height))}))
 
     def __post_init__(self) -> None:
-        """Create and cache the internal PortfolioData instance and Data bridge.
-
-        Input validation is delegated to :class:`PortfolioData`, which raises
-        appropriate exceptions for invalid types, mismatched shapes, or
-        non-positive AUM.
-        """
-        pd = PortfolioData(prices=self.prices, cashposition=self.cashposition, aum=self.aum)
-        object.__setattr__(self, "_data", pd)
+        """Validate input types, shapes, and parameters post-initialization."""
+        if not isinstance(self.prices, pl.DataFrame):
+            raise InvalidPricesTypeError(type(self.prices).__name__)
+        if not isinstance(self.cashposition, pl.DataFrame):
+            raise InvalidCashPositionTypeError(type(self.cashposition).__name__)
+        if self.cashposition.shape[0] != self.prices.shape[0]:
+            raise RowCountMismatchError(self.prices.shape[0], self.cashposition.shape[0])
+        if self.aum <= 0.0:
+            raise NonPositiveAumError(self.aum)
         object.__setattr__(self, "_data_bridge", None)
         object.__setattr__(self, "_stats_cache", None)
         object.__setattr__(self, "_plots_cache", None)
@@ -162,53 +177,6 @@ class Portfolio:
         return f"Portfolio(assets={self.assets})"
 
     # ── Factory classmethods ──────────────────────────────────────────────────
-
-    @classmethod
-    def _from_portfolio_data(
-        cls,
-        pd: PortfolioData,
-        *,
-        cost_per_unit: float = 0.0,
-        cost_bps: float = 0.0,
-        cost_model: CostModel | None = None,
-    ) -> Self:
-        """Construct a Portfolio directly from an already-validated PortfolioData.
-
-        Bypasses ``__post_init__`` to avoid constructing a second
-        :class:`PortfolioData` instance when one has already been built by a
-        factory method.  All public fields and the internal ``_data`` cache are
-        set via :func:`object.__setattr__` to satisfy the frozen dataclass
-        constraint.
-
-        Args:
-            pd: A fully constructed and validated :class:`PortfolioData` instance.
-            cost_per_unit: One-way trading cost per unit of position change.
-                Defaults to 0.0 (no cost).  Ignored when *cost_model* is given.
-            cost_bps: One-way trading cost in basis points of AUM turnover.
-                Defaults to 0.0 (no cost).  Ignored when *cost_model* is given.
-            cost_model: Optional :class:`~jquantstats.CostModel`
-                instance.  When supplied, its ``cost_per_unit`` and
-                ``cost_bps`` values take precedence over the individual
-                parameters above.
-
-        Returns:
-            A new Portfolio instance backed by *pd*.
-        """
-        if cost_model is not None:
-            cost_per_unit = cost_model.cost_per_unit
-            cost_bps = cost_model.cost_bps
-        obj = cls.__new__(cls)
-        object.__setattr__(obj, "cashposition", pd.cashposition)
-        object.__setattr__(obj, "prices", pd.prices)
-        object.__setattr__(obj, "aum", pd.aum)
-        object.__setattr__(obj, "cost_per_unit", cost_per_unit)
-        object.__setattr__(obj, "cost_bps", cost_bps)
-        object.__setattr__(obj, "_data", pd)
-        object.__setattr__(obj, "_data_bridge", None)
-        object.__setattr__(obj, "_stats_cache", None)
-        object.__setattr__(obj, "_plots_cache", None)
-        object.__setattr__(obj, "_report_cache", None)
-        return obj
 
     @classmethod
     def from_risk_position(
@@ -247,8 +215,25 @@ class Portfolio:
             A Portfolio instance whose cash positions are risk_position
             divided by EWMA volatility.
         """
-        pd = PortfolioData.from_risk_position(prices=prices, risk_position=risk_position, vola=vola, aum=aum)
-        return cls._from_portfolio_data(pd, cost_per_unit=cost_per_unit, cost_bps=cost_bps, cost_model=cost_model)
+        if cost_model is not None:
+            cost_per_unit = cost_model.cost_per_unit
+            cost_bps = cost_model.cost_bps
+        assets = [col for col, dtype in prices.schema.items() if dtype.is_numeric()]
+
+        def _span(asset: str) -> int:
+            """Return the EWMA span for *asset*, falling back to 32 if not specified."""
+            if isinstance(vola, dict):
+                return int(vola.get(asset, 32))
+            return int(vola)
+
+        cash_position = risk_position.with_columns(
+            (
+                pl.col(asset)
+                / prices[asset].pct_change().ewm_std(com=_span(asset) - 1, adjust=True, min_samples=_span(asset))
+            ).alias(asset)
+            for asset in assets
+        )
+        return cls(prices=prices, cashposition=cash_position, aum=aum, cost_per_unit=cost_per_unit, cost_bps=cost_bps)
 
     @classmethod
     def from_cash_position(
@@ -278,60 +263,198 @@ class Portfolio:
         Returns:
             A Portfolio instance with the provided cash positions.
         """
-        pd = PortfolioData.from_cash_position(prices=prices, cash_position=cash_position, aum=aum)
-        return cls._from_portfolio_data(pd, cost_per_unit=cost_per_unit, cost_bps=cost_bps, cost_model=cost_model)
+        if cost_model is not None:
+            cost_per_unit = cost_model.cost_per_unit
+            cost_bps = cost_model.cost_bps
+        return cls(prices=prices, cashposition=cash_position, aum=aum, cost_per_unit=cost_per_unit, cost_bps=cost_bps)
 
-    # ── PortfolioData proxy properties ────────────────────────────────────────
+    # ── Internal helpers ───────────────────────────────────────────────────────
+
+    @staticmethod
+    def _assert_clean_series(series: pl.Series, name: str = "") -> None:
+        """Raise ValueError if *series* contains nulls or non-finite values."""
+        if series.null_count() != 0:
+            raise ValueError
+        if not series.is_finite().all():
+            raise ValueError
+
+    # ── Core data properties ───────────────────────────────────────────────────
 
     @property
     def assets(self) -> list[str]:
-        """List the asset column names from prices (numeric columns)."""
-        return self._data.assets
+        """List the asset column names from prices (numeric columns).
+
+        Returns:
+            list[str]: Names of numeric columns in prices; typically excludes
+            ``'date'``.
+        """
+        return [c for c in self.prices.columns if self.prices[c].dtype.is_numeric()]
 
     @property
     def profits(self) -> pl.DataFrame:
-        """Per-asset daily cash profits, preserving non-numeric columns."""
-        return self._data.profits
+        """Compute per-asset daily cash profits, preserving non-numeric columns.
+
+        Returns:
+            pl.DataFrame: Per-asset daily profit series along with any
+            non-numeric columns (e.g., ``'date'``).
+
+        Examples:
+            >>> import polars as pl
+            >>> prices = pl.DataFrame({"A": [100.0, 110.0, 105.0]})
+            >>> pos = pl.DataFrame({"A": [1000.0, 1000.0, 1000.0]})
+            >>> pf = Portfolio(prices=prices, cashposition=pos, aum=1e6)
+            >>> pf.profits.columns
+            ['A']
+        """
+        assets = [c for c in self.prices.columns if self.prices[c].dtype.is_numeric()]
+
+        result = self.prices.with_columns(
+            (self.prices[asset].pct_change().fill_null(0.0) * self.cashposition[asset].shift(n=1).fill_null(0.0)).alias(
+                asset
+            )
+            for asset in assets
+        )
+
+        if assets:
+            result = result.with_columns(
+                pl.when(pl.col(c).is_finite()).then(pl.col(c)).otherwise(0.0).fill_null(0.0).alias(c) for c in assets
+            )
+        return result
 
     @property
     def profit(self) -> pl.DataFrame:
-        """Total daily portfolio profit including the ``'date'`` column."""
-        return self._data.profit
+        """Return total daily portfolio profit including the ``'date'`` column.
+
+        Aggregates per-asset profits into a single ``'profit'`` column and
+        validates that no day's total profit is NaN/null.
+        """
+        df_profits = self.profits
+        assets = [c for c in df_profits.columns if df_profits[c].dtype.is_numeric()]
+
+        if not assets:
+            raise ValueError
+
+        non_assets = [c for c in df_profits.columns if c not in set(assets)]
+
+        portfolio_daily_profit = pl.sum_horizontal([pl.col(c).fill_null(0.0) for c in assets]).alias("profit")
+        result = df_profits.select([*non_assets, portfolio_daily_profit])
+
+        self._assert_clean_series(series=result["profit"])
+        return result
 
     @property
     def nav_accumulated(self) -> pl.DataFrame:
-        """Cumulative additive NAV of the portfolio, preserving ``'date'``."""
-        return self._data.nav_accumulated
+        """Compute cumulative additive NAV of the portfolio, preserving ``'date'``."""
+        return self.profit.with_columns((pl.col("profit").cum_sum() + self.aum).alias("NAV_accumulated"))
 
     @property
     def returns(self) -> pl.DataFrame:
-        """Daily returns as profit scaled by AUM, preserving ``'date'``."""
-        return self._data.returns
+        """Return daily returns as profit scaled by AUM, preserving ``'date'``.
+
+        The returned DataFrame contains the original ``'date'`` column with the
+        ``'profit'`` column scaled by AUM (i.e., per-period returns), and also
+        an additional convenience column named ``'returns'`` with the same
+        values for downstream consumers.
+        """
+        return self.nav_accumulated.with_columns(
+            (pl.col("profit") / self.aum).alias("returns"),
+        )
 
     @property
     def monthly(self) -> pl.DataFrame:
-        """Monthly compounded returns and calendar columns."""
-        return self._data.monthly
+        """Return monthly compounded returns and calendar columns.
+
+        Aggregates daily returns (profit/AUM) by calendar month and computes
+        the compounded monthly return: prod(1 + r_d) - 1. The resulting frame
+        includes:
+
+        - ``date``: month-end label as a Polars Date (end of the grouping window)
+        - ``returns``: compounded monthly return
+        - ``NAV_accumulated``: last NAV within the month
+        - ``profit``: summed profit within the month
+        - ``year``: integer year (e.g., 2020)
+        - ``month``: integer month number (1-12)
+        - ``month_name``: abbreviated month name (e.g., ``"Jan"``, ``"Feb"``)
+
+        Raises:
+            MissingDateColumnError: If the portfolio data has no ``'date'``
+                column.
+        """
+        if "date" not in self.prices.columns:
+            raise MissingDateColumnError("monthly")
+        daily = self.returns.select(["date", "returns", "profit", "NAV_accumulated"])
+        monthly = (
+            daily.group_by_dynamic(
+                "date",
+                every="1mo",
+                period="1mo",
+                label="left",
+                closed="right",
+            )
+            .agg(
+                [
+                    pl.col("profit").sum().alias("profit"),
+                    pl.col("NAV_accumulated").last().alias("NAV_accumulated"),
+                    (pl.col("returns") + 1.0).product().alias("gross"),
+                ]
+            )
+            .with_columns((pl.col("gross") - 1.0).alias("returns"))
+            .select(["date", "returns", "NAV_accumulated", "profit"])
+            .with_columns(
+                [
+                    pl.col("date").dt.year().alias("year"),
+                    pl.col("date").dt.month().alias("month"),
+                    pl.col("date").dt.strftime("%b").alias("month_name"),
+                ]
+            )
+            .sort("date")
+        )
+        return monthly
 
     @property
     def nav_compounded(self) -> pl.DataFrame:
-        """Compounded NAV from returns (profit/AUM), preserving ``'date'``."""
-        return self._data.nav_compounded
+        """Compute compounded NAV from returns (profit/AUM), preserving ``'date'``."""
+        return self.returns.with_columns(((pl.col("returns") + 1.0).cum_prod() * self.aum).alias("NAV_compounded"))
 
     @property
     def highwater(self) -> pl.DataFrame:
-        """Cumulative maximum of NAV as the high-water mark series."""
-        return self._data.highwater
+        """Return the cumulative maximum of NAV as the high-water mark series.
+
+        The resulting DataFrame preserves the ``'date'`` column and adds a
+        ``'highwater'`` column computed as the cumulative maximum of
+        ``'NAV_accumulated'``.
+        """
+        return self.returns.with_columns(pl.col("NAV_accumulated").cum_max().alias("highwater"))
 
     @property
     def drawdown(self) -> pl.DataFrame:
-        """Drawdown as the distance from high-water mark to current NAV."""
-        return self._data.drawdown
+        """Return drawdown as the distance from high-water mark to current NAV.
+
+        Computes ``'drawdown'`` = ``'highwater'`` - ``'NAV_accumulated'`` and
+        preserves the ``'date'`` column alongside the intermediate columns.
+        """
+        return self.highwater.with_columns(
+            (pl.col("highwater") - pl.col("NAV_accumulated")).alias("drawdown"),
+            ((pl.col("highwater") - pl.col("NAV_accumulated")) / pl.col("highwater")).alias("drawdown_pct"),
+        )
 
     @property
     def all(self) -> pl.DataFrame:
-        """Merged view of drawdown and compounded NAV."""
-        return self._data.all
+        """Return a merged view of drawdown and compounded NAV.
+
+        When a ``'date'`` column is present the two frames are joined on that
+        column to ensure temporal alignment.  When the data is integer-indexed
+        (no ``'date'`` column) the frames are stacked horizontally — they are
+        guaranteed to have identical row counts because both are derived from
+        the same source portfolio.
+        """
+        left = self.drawdown
+        if "date" in left.columns:
+            right = self.nav_compounded.select(["date", "NAV_compounded"])
+            return left.join(right, on="date", how="inner")
+        else:
+            right = self.nav_compounded.select(["NAV_compounded"])
+            return left.hstack(right)
 
     # ── Lazy composition accessors ─────────────────────────────────────────────
 
