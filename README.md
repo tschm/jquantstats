@@ -90,7 +90,7 @@ pip install jquantstats[dev]
 
 **Five lines to your first analytics result:**
 
-```python
+```python +RHIZA_SKIP
 import polars as pl
 from jquantstats import Data
 
