@@ -221,7 +221,7 @@ class _PerformanceStatsMixin:
         """
         periods = periods or self.data._periods_per_year
         downside_sum = ((series.filter(series < 0)) ** 2).sum()
-        downside_deviation = float(np.sqrt(downside_sum / series.count()))
+        downside_deviation = float(np.sqrt(float(downside_sum) / series.count()))
         mean_val = cast(float, series.mean())
         mean_f = mean_val if mean_val is not None else 0.0
         if downside_deviation == 0.0:
