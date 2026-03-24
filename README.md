@@ -1,10 +1,10 @@
 # [jQuantStats](https://tschm.github.io/jquantstats): Portfolio Analytics for Quants
 
 [![PyPI version](https://badge.fury.io/py/jquantstats.svg)](https://badge.fury.io/py/jquantstats)
-[![Python](https://img.shields.io/pypi/pyversions/jquantstats.svg)](https://pypi.org/project/jquantstats/)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://pypi.org/project/jquantstats/)
 [![Coverage](https://raw.githubusercontent.com/tschm/jquantstats/refs/heads/gh-pages/coverage-badge.svg)](https://tschm.github.io/jquantstats/tests/html-coverage/index.html)
 [![Downloads](https://static.pepy.tech/personalized-badge/jquantstats?period=month&units=international_system&left_color=black&right_color=orange&left_text=PyPI%20downloads%20per%20month)](https://pepy.tech/project/jquantstats)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/tschm/jquantstats/blob/main/LICENSE)
 [![CodeFactor](https://www.codefactor.io/repository/github/tschm/jquantstats/badge)](https://www.codefactor.io/repository/github/tschm/jquantstats)
 [![Rhiza](https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Fraw.githubusercontent.com%2Ftschm%2Fjquantstats%2Fmain%2F.rhiza%2Ftemplate.yml&query=%24.ref&label=rhiza)](https://github.com/jebel-quant/rhiza)
 
@@ -60,7 +60,7 @@ return distributions
 
 ## 🖼️ Dashboard Preview
 
-![Portfolio Performance Dashboard](docs/assets/dashboard.png)
+![Portfolio Performance Dashboard](https://raw.githubusercontent.com/tschm/jquantstats/main/docs/assets/dashboard.png)
 
 > *Interactive Plotly dashboard — cumulative returns, drawdowns, and monthly return heatmaps in a single view. Charts are fully interactive (zoom, pan, hover tooltips) when rendered in a browser.*
 
@@ -285,7 +285,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## 📝 Citing
 
 If you use jQuantStats in academic work or research reports, please cite it using the
-[CITATIONS.bib](CITATIONS.bib) file provided in this repository:
+[CITATIONS.bib](https://github.com/tschm/jquantstats/blob/main/CITATIONS.bib) file provided in this repository:
 
 ```bibtex
 @software{jquantstats,
@@ -301,4 +301,4 @@ If you use jQuantStats in academic work or research reports, please cite it usin
 ## ⚖️ License
 
 This project is licensed under the MIT
-License - see the [LICENSE](LICENSE) file for details.
+License - see the [LICENSE](https://github.com/tschm/jquantstats/blob/main/LICENSE) file for details.
