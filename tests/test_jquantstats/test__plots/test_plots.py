@@ -1,4 +1,4 @@
-"""Tests for jquantstats.analytics._plots (Plots facade on Portfolio)."""
+"""Tests for the _plots subpackage (Data.plots and Portfolio.plots facades)."""
 
 from __future__ import annotations
 
@@ -9,14 +9,84 @@ import plotly.graph_objects as go
 import polars as pl
 import pytest
 
-from jquantstats import Portfolio
+from jquantstats import Data, Portfolio
 
-# ─── Snapshot ────────────────────────────────────────────────────────────────
+# ─── Data.plots tests ────────────────────────────────────────────────────────
 
 
-def test_snapshot_returns_figure_with_expected_traces_and_log_scale(portfolio: Portfolio):
+@pytest.fixture
+def plots(data):
+    """Fixture that returns the plots property of the data fixture.
+
+    Args:
+        data: The data fixture containing a Data object.
+
+    Returns:
+        DataPlots: The plots property of the data fixture.
+
+    """
+    return data.plots
+
+
+def test_plot_snapshot(plots):
+    """Tests that the plot_snapshot method works correctly.
+
+    Args:
+        plots: The plots fixture.
+
+    Verifies:
+        1. The method returns a plotly Figure object.
+        2. The method doesn't raise any exceptions.
+        3. The method works with different parameters.
+
+    """
+    # Test with default parameters
+    fig = plots.plot_snapshot()
+    assert fig is not None
+    assert hasattr(fig, "show")
+
+    # Test with custom parameters
+    fig = plots.plot_snapshot(title="Custom Title", log_scale=True)
+    assert fig is not None
+    assert hasattr(fig, "show")
+
+    # causing sometimes problems
+    # fig.show()
+
+
+def test_plot_snapshot_one_symbol(returns):
+    """Tests that the plot_snapshot method works correctly with a single symbol.
+
+    Args:
+        returns: The returns fixture containing a DataFrame with a single symbol.
+
+    Verifies:
+        1. The method returns a plotly Figure object.
+        2. The method doesn't raise any exceptions when working with a single symbol.
+
+    """
+    fig = Data.from_returns(returns=returns).plots.plot_snapshot()
+
+    assert fig is not None
+    assert hasattr(fig, "show")
+    # causing sometimes problems
+    # fig.show()
+
+
+def test_repr(plots):
+    """Tests that DataPlots.__repr__ returns an informative string."""
+    r = repr(plots)
+    assert r.startswith("DataPlots(assets=")
+    for asset in plots.data.assets:
+        assert asset in r
+
+
+# ─── Portfolio.plots tests ────────────────────────────────────────────────────
+
+
+def test_snapshot_returns_figure_with_expected_traces_and_log_scale(pf: Portfolio):
     """Snapshot should return a 2-trace figure and honor log_scale on y-axis."""
-    fig = portfolio.plots.snapshot()
+    fig = pf.plots.snapshot()
     assert isinstance(fig, go.Figure)
     assert len(fig.data) == 4
     names = {trace.name for trace in fig.data}
@@ -25,20 +95,20 @@ def test_snapshot_returns_figure_with_expected_traces_and_log_scale(portfolio: P
     assert "Performance" in fig.layout.title.text
     assert fig.layout.hovermode in ("x unified", "x", "x unified")
 
-    fig_log = portfolio.plots.snapshot(log_scale=True)
+    fig_log = pf.plots.snapshot(log_scale=True)
     assert isinstance(fig_log, go.Figure)
     assert getattr(fig_log.layout.yaxis, "type", None) == "log"
     _ = fig_log.to_dict()
 
 
-def test_snapshot_with_cost_per_unit_includes_net_nav_trace(portfolio: Portfolio):
+def test_snapshot_with_cost_per_unit_includes_net_nav_trace(pf: Portfolio):
     """snapshot() adds a Net-of-Cost NAV trace when cost_per_unit > 0."""
     from jquantstats import Portfolio as _Portfolio
 
     pf_with_cost = _Portfolio.from_cash_position(
-        prices=portfolio.prices,
-        cash_position=portfolio.cashposition,
-        aum=portfolio.aum,
+        prices=pf.prices,
+        cash_position=pf.cashposition,
+        aum=pf.aum,
         cost_per_unit=0.01,
     )
     fig = pf_with_cost.plots.snapshot()
@@ -51,94 +121,94 @@ def test_snapshot_with_cost_per_unit_includes_net_nav_trace(portfolio: Portfolio
 # ─── Lagged performance ───────────────────────────────────────────────────────
 
 
-def test_lagged_performance_plot_traces_and_log_scale(portfolio):
+def test_lagged_performance_plot_traces_and_log_scale(pf):
     """lagged_performance_plot returns 5 traces by default and supports log scale."""
-    fig = portfolio.plots.lagged_performance_plot()
+    fig = pf.plots.lagged_performance_plot()
     assert isinstance(fig, go.Figure)
     assert len(fig.data) == 5
     assert [t.name for t in fig.data] == [f"lag {i}" for i in range(5)]
     for tr in fig.data:
         assert len(tr.x) == len(tr.y) > 0
 
-    fig_log = portfolio.plots.lagged_performance_plot(log_scale=True)
+    fig_log = pf.plots.lagged_performance_plot(log_scale=True)
     assert getattr(fig_log.layout.yaxis, "type", None) == "log"
     _ = fig_log.to_dict()
 
 
-def test_lagged_performance_plot_type_validation_raises(portfolio):
+def test_lagged_performance_plot_type_validation_raises(pf):
     """Lags must be a list of ints; other types or contents should raise TypeError."""
     with pytest.raises(TypeError):
-        _ = portfolio.plots.lagged_performance_plot(lags=(0, 1, 2))
+        _ = pf.plots.lagged_performance_plot(lags=(0, 1, 2))
     with pytest.raises(TypeError):
-        _ = portfolio.plots.lagged_performance_plot(lags=[0, "1", 2])
+        _ = pf.plots.lagged_performance_plot(lags=[0, "1", 2])
 
 
 # ─── Smoothed holdings ────────────────────────────────────────────────────────
 
 
-def test_smoothed_holdings_performance_plot_traces_and_log_scale(portfolio):
+def test_smoothed_holdings_performance_plot_traces_and_log_scale(pf):
     """smoothed_holdings_performance_plot returns 5 traces and supports log scale."""
-    fig = portfolio.plots.smoothed_holdings_performance_plot()
+    fig = pf.plots.smoothed_holdings_performance_plot()
     assert isinstance(fig, go.Figure)
     assert len(fig.data) == 5
     assert [t.name for t in fig.data] == [f"smooth {i}" for i in range(5)]
     for tr in fig.data:
         assert len(tr.x) == len(tr.y) > 0
 
-    fig_log = portfolio.plots.smoothed_holdings_performance_plot(log_scale=True)
+    fig_log = pf.plots.smoothed_holdings_performance_plot(log_scale=True)
     assert getattr(fig_log.layout.yaxis, "type", None) == "log"
     _ = fig_log.to_dict()
 
 
-def test_smoothed_holdings_performance_plot_type_validation_raises(portfolio):
+def test_smoothed_holdings_performance_plot_type_validation_raises(pf):
     """Windows must be a list of non-negative ints; invalid inputs raise TypeError."""
     with pytest.raises(TypeError):
-        _ = portfolio.plots.smoothed_holdings_performance_plot(windows=(0, 1, 2))
+        _ = pf.plots.smoothed_holdings_performance_plot(windows=(0, 1, 2))
     with pytest.raises(TypeError):
-        _ = portfolio.plots.smoothed_holdings_performance_plot(windows=[0, -1, 2])
+        _ = pf.plots.smoothed_holdings_performance_plot(windows=[0, -1, 2])
     with pytest.raises(TypeError):
-        _ = portfolio.plots.smoothed_holdings_performance_plot(windows=[0, "2"])
+        _ = pf.plots.smoothed_holdings_performance_plot(windows=[0, "2"])
 
 
 # ─── Lead/lag IR ─────────────────────────────────────────────────────────────
 
 
-def test_lead_lag_ir_plot_basic_structure_and_values(portfolio):
+def test_lead_lag_ir_plot_basic_structure_and_values(pf):
     """lead_lag_ir_plot returns a Figure with bars for lags -10..+19 and valid values."""
-    fig = portfolio.plots.lead_lag_ir_plot()
+    fig = pf.plots.lead_lag_ir_plot()
     bar = fig.data[0]
     expected_lags = list(range(-10, 20))
     assert list(bar.x) == expected_lags
     assert len(list(bar.y)) == len(expected_lags)
 
     for lag in (-10, 0, 5, 19):
-        pf_lagged = portfolio if lag == 0 else portfolio.lag(lag)
+        pf_lagged = pf if lag == 0 else pf.lag(lag)
         sharpe_n = pf_lagged.stats.sharpe()["returns"]
         assert np.isclose(list(bar.y)[expected_lags.index(lag)], sharpe_n, rtol=1e-12, atol=1e-12)
 
     _ = fig.to_dict()
 
 
-def test_lead_lag_ir_plot_swaps_when_start_greater_than_end(portfolio):
+def test_lead_lag_ir_plot_swaps_when_start_greater_than_end(pf):
     """When start > end, the function swaps them and still plots inclusive range."""
-    fig = portfolio.plots.lead_lag_ir_plot(start=5, end=-5)
+    fig = pf.plots.lead_lag_ir_plot(start=5, end=-5)
     assert list(fig.data[0].x) == list(range(-5, 6))
 
 
-def test_lead_lag_ir_plot_type_validation_raises(portfolio):
+def test_lead_lag_ir_plot_type_validation_raises(pf):
     """Non-integer start/end should raise TypeError in lead_lag_ir_plot."""
     with pytest.raises(TypeError):
-        _ = portfolio.plots.lead_lag_ir_plot(start=-10.0, end=10)
+        _ = pf.plots.lead_lag_ir_plot(start=-10.0, end=10)
     with pytest.raises(TypeError):
-        _ = portfolio.plots.lead_lag_ir_plot(start=-10, end="19")
+        _ = pf.plots.lead_lag_ir_plot(start=-10, end="19")
 
 
 # ─── Correlation heatmap ──────────────────────────────────────────────────────
 
 
-def test_correlation_heatmap_default_trace_and_serialize(portfolio):
+def test_correlation_heatmap_default_trace_and_serialize(pf):
     """Default call returns Heatmap trace and is serializable; axes align."""
-    fig = portfolio.plots.correlation_heatmap()
+    fig = pf.plots.correlation_heatmap()
 
     assert isinstance(fig, go.Figure)
     assert len(fig.data) >= 1
@@ -155,10 +225,10 @@ def test_correlation_heatmap_default_trace_and_serialize(portfolio):
     _ = fig.to_dict()
 
 
-def test_correlation_heatmap_custom_args_title_and_name(portfolio):
+def test_correlation_heatmap_custom_args_title_and_name(pf):
     """Custom frame/name/title are respected and output remains a Heatmap."""
     custom_title = "My Correlations"
-    fig = portfolio.plots.correlation_heatmap(frame=portfolio.prices, name="my_port", title=custom_title)
+    fig = pf.plots.correlation_heatmap(frame=pf.prices, name="my_port", title=custom_title)
 
     assert isinstance(fig, go.Figure)
     assert fig.layout.title.text == custom_title
@@ -171,7 +241,7 @@ def test_correlation_heatmap_custom_args_title_and_name(portfolio):
 
 @pytest.fixture
 def long_portfolio() -> Portfolio:
-    """Three-year portfolio used to test rolling and annual-breakdown plots."""
+    """Three-year pf used to test rolling and annual-breakdown plots."""
     n = 756  # ~3 years of trading days
     start = date(2020, 1, 1)
     end = start + timedelta(days=n - 1)

@@ -1,4 +1,4 @@
-"""Fixtures for analytics tests.
+"""Fixtures for plot tests.
 
 Security note: Test files use assert statements (S101) which are safe here as
 they are only executed by pytest, never in production code.
@@ -14,7 +14,7 @@ from jquantstats import Portfolio
 
 
 @pytest.fixture
-def portfolio() -> Portfolio:
+def pf() -> Portfolio:
     """Shared Portfolio fixture: 60-day, 2-asset deterministic portfolio."""
     n = 60
     start = date(2020, 1, 1)

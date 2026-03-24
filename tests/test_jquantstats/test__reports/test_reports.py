@@ -7,13 +7,13 @@ from polars.testing import assert_frame_equal
 
 @pytest.fixture
 def reports(data):
-    """Fixture that returns the stats property of the data fixture.
+    """Fixture that returns the reports property of the data fixture.
 
     Args:
         data: The data fixture containing a Data object.
 
     Returns:
-        Stats: The stats property of the data fixture.
+        Reports: The reports property of the data fixture.
 
     """
     return data.reports
