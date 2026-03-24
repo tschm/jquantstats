@@ -5,6 +5,7 @@ repo_url: https://github.com/tschm/jquantstats
 repo_name: tschm/jquantstats
 
 docs_dir: .
+site_dir: ../site
 
 theme:
   name: material
