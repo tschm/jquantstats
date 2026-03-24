@@ -227,7 +227,7 @@ class _PerformanceStatsMixin:
         if downside_deviation == 0.0:
             if mean_f > 0:
                 return float("inf")
-            elif mean_f < 0:
+            elif mean_f < 0:  # pragma: no cover  # unreachable: no negatives ⟹ mean ≥ 0
                 return float("-inf")
             else:
                 return float("nan")

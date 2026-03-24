@@ -96,6 +96,13 @@ ipython = "ipython"
 quantstats = "quantstats"
 marimo = "marimo"
 
+# Coverage configuration
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",  # type-only imports are never executed at runtime
+]
+
 # Interrogate docstring coverage configuration
 [tool.interrogate]
 fail-under = 100

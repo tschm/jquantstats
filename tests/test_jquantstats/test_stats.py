@@ -922,3 +922,12 @@ def test_repr(stats):
     assert r.startswith("Stats(assets=")
     for asset in stats.data.assets:
         assert asset in r
+
+
+def test_sortino_all_zero_returns_is_nan(edge):
+    """Sortino returns NaN when all returns are zero (downside_deviation=0, mean=0)."""
+    import math
+
+    result = edge.stats.sortino()
+    for val in result.values():
+        assert math.isnan(val)

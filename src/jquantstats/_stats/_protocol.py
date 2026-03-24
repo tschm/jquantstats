@@ -9,7 +9,7 @@ import polars as pl
 
 
 @runtime_checkable
-class DataLike(Protocol):
+class DataLike(Protocol):  # pragma: no cover
     """Structural interface required by the Stats mixin classes.
 
     Any object satisfying this protocol can be passed as ``data`` to the

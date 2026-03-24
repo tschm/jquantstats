@@ -208,7 +208,7 @@ class Data:
             start = self.index[date_column].min()
             end = self.index[date_column].max()
             return f"Data(assets={self.assets}, rows={rows}, start={start}, end={end})"
-        return f"Data(assets={self.assets}, rows={rows})"
+        return f"Data(assets={self.assets}, rows={rows})"  # pragma: no cover  # __post_init__ requires ≥1 index column
 
     @property
     def plots(self) -> DataPlots:

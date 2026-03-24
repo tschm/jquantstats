@@ -8,7 +8,7 @@ import polars as pl
 
 
 @runtime_checkable
-class StatsLike(Protocol):
+class StatsLike(Protocol):  # pragma: no cover
     """Structural interface for the statistics methods used by :class:`~jquantstats._reports._data.Reports`."""
 
     def sharpe(self, periods: int | float | None = None) -> dict[str, float]:
@@ -49,7 +49,7 @@ class StatsLike(Protocol):
 
 
 @runtime_checkable
-class DataLike(Protocol):
+class DataLike(Protocol):  # pragma: no cover
     """Structural interface required by the :class:`~jquantstats._reports._data.Reports` class.
 
     Any object satisfying this protocol can be passed as ``data`` without a
@@ -63,7 +63,7 @@ class DataLike(Protocol):
 
 
 @runtime_checkable
-class PlotsLike(Protocol):
+class PlotsLike(Protocol):  # pragma: no cover
     """Structural interface for the portfolio plots facade used by :class:`~jquantstats._reports._portfolio.Report`."""
 
     def snapshot(self) -> object:
@@ -100,7 +100,7 @@ class PlotsLike(Protocol):
 
 
 @runtime_checkable
-class PortfolioLike(Protocol):
+class PortfolioLike(Protocol):  # pragma: no cover
     """Structural interface required by the :class:`~jquantstats._reports._portfolio.Report` class.
 
     Any object satisfying this protocol can be passed as ``portfolio`` without a

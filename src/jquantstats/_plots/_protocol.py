@@ -8,7 +8,7 @@ import polars as pl
 
 
 @runtime_checkable
-class DataLike(Protocol):
+class DataLike(Protocol):  # pragma: no cover
     """Structural interface required by the :class:`~jquantstats._plots._data.DataPlots` class.
 
     Any object satisfying this protocol can be passed as ``data`` without a
@@ -27,7 +27,7 @@ class DataLike(Protocol):
 
 
 @runtime_checkable
-class PortfolioLike(Protocol):
+class PortfolioLike(Protocol):  # pragma: no cover
     """Structural interface required by the :class:`~jquantstats._plots._portfolio.PortfolioPlots` class.
 
     Any object satisfying this protocol can be passed as ``portfolio`` without a

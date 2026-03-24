@@ -1356,3 +1356,36 @@ def test_describe(portfolio):
     assert len(df) == len(portfolio.assets)
     for asset in portfolio.assets:
         assert asset in df["asset"].to_list()
+
+
+def test_repr_integer_indexed(int_portfolio):
+    """Portfolio.__repr__ omits start/end for integer-indexed (no date) portfolios."""
+    r = repr(int_portfolio)
+    assert r.startswith("Portfolio(assets=")
+    assert "rows=" in r
+    assert "start=" not in r
+    assert "end=" not in r
+
+
+def test_from_risk_position_with_cost_model():
+    """from_risk_position passes cost_model values to the Portfolio."""
+    from jquantstats import CostModel
+
+    dates = pl.date_range(start=date(2020, 1, 1), end=date(2020, 2, 10), interval="1d", eager=True).cast(pl.Date)
+    prices = pl.DataFrame(
+        {
+            "date": dates,
+            "A": pl.Series(np.linspace(100, 120, len(dates)), dtype=pl.Float64),
+        }
+    )
+    risk_position = pl.DataFrame(
+        {
+            "date": dates,
+            "A": pl.Series(np.sin(np.linspace(0, 3.14, len(dates))), dtype=pl.Float64),
+        }
+    )
+    cm = CostModel.per_unit(0.05)
+    pf = Portfolio.from_risk_position(prices, risk_position, vola=8, aum=1e8, cost_model=cm)
+    assert isinstance(pf, Portfolio)
+    assert pf.cost_per_unit == pytest.approx(0.05)
+    assert pf.cost_bps == pytest.approx(0.0)
