@@ -211,6 +211,18 @@ class Data:
         return f"Data(assets={self.assets}, rows={rows})"  # pragma: no cover  # __post_init__ requires ≥1 index column
 
     @property
+    def lazy(self) -> pl.LazyFrame:
+        """Return a LazyFrame view of all data for use in expr-based stats.
+
+        Returns:
+            pl.LazyFrame: Lazy representation of :attr:`all` (index + returns +
+            optional benchmark), suitable for passing to
+            :func:`~jquantstats._stats._core._lazy_columnwise`.
+
+        """
+        return self.all.lazy()
+
+    @property
     def plots(self) -> DataPlots:
         """Provides access to visualization methods for the financial data.
 

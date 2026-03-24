@@ -50,6 +50,7 @@ class _RollingStatsMixin:
         mean_ret = series.rolling_mean(window_size=rolling_period)
 
         # Rolling downside deviation (squared negative returns averaged over window)
+        # TODO: replace map_elements with a pure pl.Expr to avoid the Python callback overhead
         downside = series.map_elements(lambda x: x**2 if x < 0 else 0.0, return_dtype=pl.Float64).rolling_mean(
             window_size=rolling_period
         )

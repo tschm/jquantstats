@@ -4,7 +4,10 @@ Provides:
 
 - :func:`_drawdown_series` — drawdown series from a returns series.
 - :func:`_to_float` — safe Polars aggregation result → Python float.
-- :func:`columnwise_stat` — decorator: apply a metric to every asset column.
+- :func:`_lazy_columnwise` — run an ``_expr`` factory for all asset columns in
+  one :py:meth:`polars.LazyFrame.select` call (no per-column Python loop).
+- :func:`columnwise_stat` — decorator: apply a metric to every asset column
+  (kept for stats not yet ported to the ``pl.Expr`` path).
 - :func:`to_frame` — decorator: build a per-column Polars DataFrame result.
 
 These building blocks are shared across the stats mixin modules
@@ -67,17 +70,58 @@ def _to_float(value: object) -> float:
     return float(cast(float, value))
 
 
+# ── Lazy helpers ─────────────────────────────────────────────────────────────
+
+
+def _lazy_columnwise(
+    lf: pl.LazyFrame,
+    expr_fn: Callable[..., pl.Expr],
+    asset_cols: list[str],
+    **kwargs: Any,
+) -> dict[str, float]:
+    """Run *expr_fn* for every column in *asset_cols* in one LazyFrame.select().
+
+    Builds a list of named ``pl.Expr`` objects — one per asset — and collects
+    them in a single pass so the Polars query optimiser can fuse and parallelise
+    the work rather than materialising each column individually in Python.
+
+    Args:
+        lf: LazyFrame containing all asset columns (e.g. ``data.lazy``).
+        expr_fn: Callable with signature ``(col: str, **kwargs) -> pl.Expr``.
+            The returned expression must be a scalar aggregation aliased to *col*.
+        asset_cols: Ordered list of column names to compute the stat for.
+        **kwargs: Extra keyword arguments forwarded verbatim to *expr_fn*.
+
+    Returns:
+        dict[str, float]: Mapping of asset name → computed scalar value, with
+        the same key order as *asset_cols*.
+
+    """
+    exprs = [expr_fn(col, **kwargs) for col in asset_cols]
+    row = lf.select(exprs).collect().row(0, named=True)
+    return cast(dict[str, float], row)
+
+
 # ── Module-level decorators ──────────────────────────────────────────────────
 
 
 def columnwise_stat(func: Callable[..., Any]) -> Callable[..., dict[str, float]]:
     """Apply a column-wise statistical function to all numeric columns.
 
+    This decorator is kept for stats that have **not** yet been ported to the
+    :mod:`~jquantstats._stats._expr` lazy-path.  Ported stats call
+    :func:`_lazy_columnwise` directly and no longer use this decorator.
+
     Args:
         func (Callable): The function to decorate.
 
     Returns:
         Callable: The decorated function.
+
+    Note:
+        A ``pl.Expr``-based lazy path is not yet available for stats decorated
+        with this function.  See :func:`_lazy_columnwise` and
+        :mod:`~jquantstats._stats._expr` for the new pattern.
 
     """
 

@@ -6,7 +6,8 @@ from typing import TYPE_CHECKING, Any, cast
 
 import polars as pl
 
-from ._core import _drawdown_series, _to_float, columnwise_stat
+from ._core import _lazy_columnwise, _to_float
+from ._expr import avg_drawdown_expr, calmar_expr, recovery_factor_expr
 
 # ── Reporting statistics mixin ───────────────────────────────────────────────
 
@@ -17,6 +18,10 @@ class _ReportingStatsMixin:
     Covers: periods per year, average drawdown, Calmar ratio, recovery factor,
     max drawdown duration, monthly win rate, worst-N periods, up/down capture
     ratios, annual breakdown, and summary statistics table.
+
+    Scalar stats (avg_drawdown, calmar, recovery_factor) are computed via a
+    single :py:meth:`polars.LazyFrame.select` call using
+    :func:`~jquantstats._stats._core._lazy_columnwise`.
 
     Attributes (provided by the concrete subclass):
         data: The :class:`~jquantstats._data.Data` object.
@@ -85,61 +90,39 @@ class _ReportingStatsMixin:
         """
         return self.data._periods_per_year
 
-    @columnwise_stat
-    def avg_drawdown(self, series: pl.Series) -> float:
+    def avg_drawdown(self) -> dict[str, float]:
         """Average drawdown across all underwater periods.
 
         Returns 0.0 when there are no underwater periods.
 
-        Args:
-            series (pl.Series): Series of additive daily returns.
-
         Returns:
-            float: Mean drawdown in [0, 1].
+            dict[str, float]: Mapping of asset name → mean drawdown in [0, 1].
         """
-        dd = _drawdown_series(series)
-        in_dd = dd.filter(dd > 0)
-        if in_dd.is_empty():
-            return 0.0
-        return _to_float(in_dd.mean())
+        return _lazy_columnwise(self.data.lazy, avg_drawdown_expr, self.data.assets)
 
-    @columnwise_stat
-    def calmar(self, series: pl.Series, periods: int | float | None = None) -> float:
+    def calmar(self, periods: int | float | None = None) -> dict[str, float]:
         """Calmar ratio (annualised return divided by maximum drawdown).
 
         Returns ``nan`` when the maximum drawdown is zero.
 
         Args:
-            series (pl.Series): Series of additive daily returns.
             periods: Annualisation factor. Defaults to ``periods_per_year``.
 
         Returns:
-            float: Calmar ratio, or ``nan`` if max drawdown is zero.
+            dict[str, float]: Mapping of asset name → Calmar ratio.
         """
-        raw_periods = periods or self.data._periods_per_year
-        max_dd = _to_float(_drawdown_series(series).max())
-        if max_dd <= 0:
-            return float("nan")
-        ann_return = _to_float(series.mean()) * raw_periods
-        return ann_return / max_dd
+        resolved = float(periods or self.data._periods_per_year)
+        return _lazy_columnwise(self.data.lazy, calmar_expr, self.data.assets, periods=resolved)
 
-    @columnwise_stat
-    def recovery_factor(self, series: pl.Series) -> float:
+    def recovery_factor(self) -> dict[str, float]:
         """Recovery factor (total return divided by maximum drawdown).
 
         Returns ``nan`` when the maximum drawdown is zero.
 
-        Args:
-            series (pl.Series): Series of additive daily returns.
-
         Returns:
-            float: Recovery factor, or ``nan`` if max drawdown is zero.
+            dict[str, float]: Mapping of asset name → recovery factor.
         """
-        max_dd = _to_float(_drawdown_series(series).max())
-        if max_dd <= 0:
-            return float("nan")
-        total_return = _to_float(series.sum())
-        return total_return / max_dd
+        return _lazy_columnwise(self.data.lazy, recovery_factor_expr, self.data.assets)
 
     def max_drawdown_duration(self) -> dict[str, float | int | None]:
         """Maximum drawdown duration in calendar days (or periods) per asset.
@@ -400,7 +383,7 @@ class _ReportingStatsMixin:
             """Call *fn()* and return its result; return NaN for each asset on any exception."""
             try:
                 return fn()
-            except Exception:
+            except Exception:  # pragma: no cover
                 return dict.fromkeys(assets, float("nan"))
 
         metrics: dict[str, dict[str, Any]] = {

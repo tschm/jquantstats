@@ -21,6 +21,11 @@ class DataLike(Protocol):  # pragma: no cover
     benchmark: pl.DataFrame | None
 
     @property
+    def lazy(self) -> pl.LazyFrame:
+        """LazyFrame view of all data, for use with expr-based stat factories."""
+        ...
+
+    @property
     def date_col(self) -> list[str]:
         """Column names used as the date/time index."""
         ...

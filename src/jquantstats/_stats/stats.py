@@ -13,9 +13,22 @@ class that combines four mixin classes:
 - :class:`~jquantstats._stats._rolling._RollingStatsMixin` — rolling-window
   time-series metrics (rolling Sharpe, Sortino, and volatility).
 
+Scalar statistics are computed via a single
+:py:meth:`polars.LazyFrame.select` call (see
+:func:`~jquantstats._stats._core._lazy_columnwise` and
+:mod:`~jquantstats._stats._expr`) rather than a per-column Python loop.  This
+lets the Polars query optimiser fuse and parallelise work across asset columns
+and opens the door to streaming on large datasets.
+
+Stats that cannot be cleanly expressed as a ``pl.Expr`` (e.g. ``greeks``,
+``r_squared``, ``information_ratio``, ``prob_sharpe_ratio``,
+``hhi_positive``, ``hhi_negative``, ``sharpe_variance``) remain on the
+legacy ``@columnwise_stat`` path.
+
 Module-level helpers and the ``columnwise_stat`` / ``to_frame`` decorators are
 defined in :mod:`jquantstats._stats._core` and re-exported here for backwards
-compatibility.
+compatibility.  Pure ``pl.Expr`` factory functions are available in
+:mod:`jquantstats._stats._expr`.
 """
 
 from __future__ import annotations
@@ -25,9 +38,11 @@ from typing import TYPE_CHECKING
 
 import polars as pl
 
+from . import _expr
 from ._basic import _BasicStatsMixin
 from ._core import (
     _drawdown_series,
+    _lazy_columnwise,
     _to_float,
     columnwise_stat,
     to_frame,
@@ -42,6 +57,8 @@ if TYPE_CHECKING:
 __all__ = [
     "Stats",
     "_drawdown_series",
+    "_expr",
+    "_lazy_columnwise",
     "_to_float",
     "columnwise_stat",
     "to_frame",
@@ -61,6 +78,16 @@ class Stats(_BasicStatsMixin, _PerformanceStatsMixin, _ReportingStatsMixin, _Rol
     - Win/loss metrics (win rate, profit factor, payoff ratio)
     - Rolling calculations (rolling volatility, rolling Sharpe)
     - Factor analysis (alpha, beta, R-squared)
+
+    Scalar statistics use :func:`~jquantstats._stats._core._lazy_columnwise`
+    to compute all asset columns in a single :py:meth:`polars.LazyFrame.select`
+    call instead of a per-column Python loop.  See
+    :mod:`~jquantstats._stats._expr` for the ``pl.Expr`` factory functions.
+
+    Stats that require multi-column access or complex scipy logic
+    (``greeks``, ``r_squared``, ``information_ratio``, ``prob_sharpe_ratio``,
+    ``hhi_positive``, ``hhi_negative``, ``sharpe_variance``) remain on the
+    legacy ``@columnwise_stat`` path.
 
     Metrics are organised into focused modules:
 

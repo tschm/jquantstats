@@ -8,7 +8,8 @@ import numpy as np
 import polars as pl
 from scipy.stats import norm
 
-from ._core import columnwise_stat, to_frame
+from ._core import _lazy_columnwise, columnwise_stat, to_frame
+from ._expr import max_drawdown_expr, sharpe_expr, sortino_expr
 
 # ── Performance statistics mixin ─────────────────────────────────────────────
 
@@ -18,6 +19,13 @@ class _PerformanceStatsMixin:
 
     Covers: Sharpe ratio, Sortino ratio, adjusted Sortino, drawdown series,
     max drawdown, prices, R-squared, information ratio, and Greeks (alpha/beta).
+
+    Scalar stats (sharpe, sortino, max_drawdown) are computed via a single
+    :py:meth:`polars.LazyFrame.select` call using
+    :func:`~jquantstats._stats._core._lazy_columnwise`.  Stats that require
+    multi-column access or complex scipy logic (sharpe_variance,
+    prob_sharpe_ratio, hhi_positive, hhi_negative, r_squared, information_ratio,
+    greeks) remain on the legacy ``@columnwise_stat`` path.
 
     Attributes (provided by the concrete subclass):
         data: The :class:`~jquantstats._data.Data` object.
@@ -32,32 +40,18 @@ class _PerformanceStatsMixin:
 
     # ── Sharpe & Sortino ──────────────────────────────────────────────────────
 
-    @columnwise_stat
-    def sharpe(self, series: pl.Series, periods: int | float | None = None) -> float:
+    def sharpe(self, periods: int | float | None = None) -> dict[str, float]:
         """Calculate the Sharpe ratio of asset returns.
 
         Args:
-            series (pl.Series): The series to calculate Sharpe ratio for.
-            periods (int, optional): Number of periods per year. Defaults to 252.
+            periods (int, optional): Number of periods per year. Defaults to ``_periods_per_year``.
 
         Returns:
-            float: The Sharpe ratio value.
+            dict[str, float]: Mapping of asset name → Sharpe ratio.
 
         """
-        periods = periods or self.data._periods_per_year
-
-        std_val = cast(float, series.std(ddof=1))
-        mean_val = cast(float, series.mean())
-        divisor = std_val if std_val is not None else 0.0
-        mean_f = mean_val if mean_val is not None else 0.0
-
-        _eps = np.finfo(np.float64).eps
-        if divisor <= _eps * max(abs(mean_f), _eps) * 10:
-            return float("nan")
-
-        res = mean_f / divisor
-        factor = periods or 1
-        return float(res * np.sqrt(factor))
+        resolved = float(periods or self.data._periods_per_year)
+        return _lazy_columnwise(self.data.lazy, sharpe_expr, self.data.assets, periods=resolved)
 
     @columnwise_stat
     def sharpe_variance(self, series: pl.Series, periods: int | float | None = None) -> float:
@@ -204,35 +198,21 @@ class _PerformanceStatsMixin:
         weight = negative_returns / negative_returns.sum()
         return float((weight.len() * (weight**2).sum() - 1) / (weight.len() - 1))
 
-    @columnwise_stat
-    def sortino(self, series: pl.Series, periods: int | float | None = None) -> float:
+    def sortino(self, periods: int | float | None = None) -> dict[str, float]:
         """Calculate the Sortino ratio.
 
         The Sortino ratio is the mean return divided by downside deviation.
         Based on Red Rock Capital's Sortino ratio paper.
 
         Args:
-            series (pl.Series): The series to calculate Sortino ratio for.
-            periods (int, optional): Number of periods per year. Defaults to 252.
+            periods (int, optional): Number of periods per year. Defaults to ``_periods_per_year``.
 
         Returns:
-            float: The Sortino ratio value.
+            dict[str, float]: Mapping of asset name → Sortino ratio.
 
         """
-        periods = periods or self.data._periods_per_year
-        downside_sum = ((series.filter(series < 0)) ** 2).sum()
-        downside_deviation = float(np.sqrt(downside_sum / series.count()))
-        mean_val = cast(float, series.mean())
-        mean_f = mean_val if mean_val is not None else 0.0
-        if downside_deviation == 0.0:
-            if mean_f > 0:
-                return float("inf")
-            elif mean_f < 0:  # pragma: no cover  # unreachable: no negatives ⟹ mean ≥ 0
-                return float("-inf")
-            else:
-                return float("nan")
-        ratio = mean_f / downside_deviation
-        return float(ratio * np.sqrt(periods))
+        resolved = float(periods or self.data._periods_per_year)
+        return _lazy_columnwise(self.data.lazy, sortino_expr, self.data.assets, periods=resolved)
 
     # ── Drawdown ──────────────────────────────────────────────────────────────
 
@@ -280,18 +260,14 @@ class _PerformanceStatsMixin:
         dd_min = cast(float, drawdown.min())
         return -dd_min if dd_min is not None else 0.0
 
-    @columnwise_stat
-    def max_drawdown(self, series: pl.Series) -> float:
+    def max_drawdown(self) -> dict[str, float]:
         """Calculate the maximum drawdown for each column.
 
-        Args:
-            series (pl.Series): The series to calculate maximum drawdown for.
-
         Returns:
-            float: The maximum drawdown value.
+            dict[str, float]: Mapping of asset name → maximum drawdown (positive fraction).
 
         """
-        return _PerformanceStatsMixin.max_drawdown_single_series(series)
+        return _lazy_columnwise(self.data.lazy, max_drawdown_expr, self.data.assets)
 
     def adjusted_sortino(self, periods: int | float | None = None) -> dict[str, float]:
         """Calculate Jack Schwager's adjusted Sortino ratio.
