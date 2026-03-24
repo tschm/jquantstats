@@ -199,6 +199,74 @@ class Data:
 
         return cls(returns=excess_returns, benchmark=excess_benchmark, index=index)
 
+    @classmethod
+    def from_prices(
+        cls,
+        prices: NativeFrame,
+        rf: NativeFrameOrScalar = 0.0,
+        benchmark: NativeFrame | None = None,
+        date_col: str = "Date",
+    ) -> Data:
+        """Create a Data object from prices and optional benchmark.
+
+        Converts price levels to returns via percentage change and delegates
+        to :meth:`from_returns`.  The first row of each asset is dropped
+        because no prior price is available to compute a return.
+
+        Parameters
+        ----------
+        prices : NativeFrame
+            Price-level data.  First column should be the date column;
+            remaining columns are asset prices.
+
+        rf : float | NativeFrame, optional
+            Risk-free rate.  Forwarded unchanged to :meth:`from_returns`.
+            Default is 0.0 (no risk-free rate adjustment).
+
+        benchmark : NativeFrame | None, optional
+            Benchmark prices.  Converted to returns in the same way as
+            ``prices`` before being forwarded to :meth:`from_returns`.
+            Default is None (no benchmark).
+
+        date_col : str, optional
+            Name of the date column in the DataFrames.  Default is ``"Date"``.
+
+        Returns:
+        -------
+        Data
+            Object containing excess returns derived from the supplied prices,
+            with methods for analysis and visualization through the ``stats``
+            and ``plots`` properties.
+
+        Examples:
+        --------
+        ```python
+        from jquantstats import Data
+        import polars as pl
+
+        prices = pl.DataFrame({
+            "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+            "Asset1": [100.0, 101.0, 99.0]
+        }).with_columns(pl.col("Date").str.to_date())
+
+        data = Data.from_prices(prices=prices)
+        ```
+
+        """
+        prices_pl = _to_polars(prices)
+        asset_cols = [c for c in prices_pl.columns if c != date_col]
+        returns_pl = prices_pl.with_columns([pl.col(c).pct_change().alias(c) for c in asset_cols]).slice(1)
+
+        benchmark_returns: NativeFrame | None = None
+        if benchmark is not None:
+            benchmark_pl = _to_polars(benchmark)
+            bench_cols = [c for c in benchmark_pl.columns if c != date_col]
+            benchmark_returns = benchmark_pl.with_columns([pl.col(c).pct_change().alias(c) for c in bench_cols]).slice(
+                1
+            )
+
+        return cls.from_returns(returns=returns_pl, rf=rf, benchmark=benchmark_returns, date_col=date_col)
+
     def __repr__(self) -> str:
         """Return a string representation of the Data object."""
         rows = len(self.index)
