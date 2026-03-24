@@ -1,4 +1,4 @@
-# [jQuantStats](https://tschm.github.io/jquantstats/book): Portfolio Analytics for Quants
+# [jQuantStats](https://tschm.github.io/jquantstats): Portfolio Analytics for Quants
 
 [![PyPI version](https://badge.fury.io/py/jquantstats.svg)](https://badge.fury.io/py/jquantstats)
 [![Python](https://img.shields.io/pypi/pyversions/jquantstats.svg)](https://pypi.org/project/jquantstats/)
