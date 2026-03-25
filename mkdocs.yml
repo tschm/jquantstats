@@ -4,8 +4,8 @@ site_url: https://tschm.github.io/jquantstats/
 repo_url: https://github.com/tschm/jquantstats
 repo_name: tschm/jquantstats
 
-docs_dir: ../docs
-site_dir: ../_mkdocs
+docs_dir: docs
+site_dir: _mkdocs
 
 theme:
   name: material
@@ -26,7 +26,7 @@ plugins:
       handlers:
         python:
           paths:
-            - ../src
+            - src
           options:
             docstring_style: google
             show_source: false
