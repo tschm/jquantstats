@@ -49,11 +49,4 @@ nav:
   - Home: index.md
   - Marimo Notebooks: notebooks.md
   - Reports: reports.md
-  - Migration from QuantStats: migration.md
-  - API Stability: stability.md
-  - Reference:
-      - Data: reference/data.md
-      - Stats: reference/stats.md
-      - Plots: reference/plots.md
-      - Reports: reference/reports.md
-      - Portfolio: reference/portfolio.md
+  - API Reference: api.md

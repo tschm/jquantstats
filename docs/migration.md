@@ -234,5 +234,5 @@ data.stats.sharpe()
 ## Further reading
 
 - [Quick Start](index.md) — minimal working example
-- [Stats reference](reference/stats.md) — complete method list with signatures
+- [API Reference](api.md) — complete method list with signatures
 - [API Stability](stability.md) — versioning and deprecation policy

@@ -218,7 +218,7 @@ flowchart TB
             direction LR
             tests_txt[tests.txt<br/>pytest, coverage]
             marimo_txt[marimo.txt<br/>notebooks]
-            docs_txt[docs.txt<br/>pdoc]
+            docs_txt[docs.txt<br/>interrogate]
             tools_txt[tools.txt<br/>pre-commit]
         end
         
@@ -414,7 +414,7 @@ post-release::   # Runs after make release
 
 3. **Requirements organization** (`.rhiza/requirements/`):
    - Named by **purpose**: `tests.txt`, `docs.txt`, `marimo.txt`, `tools.txt`
-   - Not by library: ❌ `pytest.txt`, `pdoc.txt`
+   - Not by library: ❌ `pytest.txt`, `mkdocstrings.txt`
 
 ### Template Bundle Naming
 

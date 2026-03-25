@@ -47,7 +47,8 @@ _book-notebooks:
 	  for nb in book/marimo/notebooks/*.py; do \
 	    name=$$(basename "$$nb" .py); \
 	    printf "${BLUE}[INFO] Exporting $$nb${RESET}\n"; \
-	    uv run marimo export html --sandbox "$$nb" -o "docs/notebooks/$$name.html"; \
+	    abs_output="$$(pwd)/docs/notebooks/$$name.html"; \
+	    (cd "$$(dirname "$$nb")" && uv run marimo export html --sandbox "$$(basename "$$nb")" -o "$$abs_output"); \
 	  done; \
 	  printf "# Marimo Notebooks\n\n" > docs/notebooks.md; \
 	  for html in docs/notebooks/*.html; do \
