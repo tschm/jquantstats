@@ -38,7 +38,7 @@ from .exceptions import (
 )
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, slots=True)
 class Portfolio:
     """Portfolio analytics class for quant finance.
 
