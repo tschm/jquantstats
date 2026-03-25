@@ -26,6 +26,16 @@ changelog: ## generate/update CHANGELOG.md from git history using git-cliff
 	@${UVX_BIN} git-cliff --output CHANGELOG.md
 	@printf "${GREEN}[OK] CHANGELOG.md updated.${RESET}\n"
 
+# Override the rhiza template's security target to ignore CVE-2026-4539
+# (ReDoS in pygments AdlLexer). Fix requires pygments>=3.3, which is not
+# yet published on PyPI. Remove this override once pygments 3.3 is available.
+.PHONY: security
+security: install ## run security scans (pip-audit and bandit)
+	@printf "${BLUE}[INFO] Running pip-audit for dependency vulnerabilities...${RESET}\n"
+	@${UVX_BIN} pip-audit --ignore-vuln CVE-2026-4539
+	@printf "${BLUE}[INFO] Running bandit security scan...${RESET}\n"
+	@${UVX_BIN} bandit -r ${SOURCE_FOLDER} -ll -q -c pyproject.toml
+
 .PHONY: semgrep
 semgrep: install ## run Semgrep static analysis (numpy rules)
 	@printf "${BLUE}[INFO] Running Semgrep (numpy rules)...${RESET}\n"
