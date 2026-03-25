@@ -66,7 +66,7 @@ def _subtract_risk_free(dframe: pl.DataFrame, rf: float | pl.DataFrame, date_col
     )
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, slots=True)
 class Data:
     """A container for financial returns data and an optional benchmark.
 
