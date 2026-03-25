@@ -9,7 +9,7 @@
 MKDOCS_OUTPUT ?= _mkdocs
 
 # MkDocs config file location
-MKDOCS_CONFIG ?= .rhiza/mkdocs.yml
+MKDOCS_CONFIG ?= mkdocs.yml
 
 ##@ Documentation
 
