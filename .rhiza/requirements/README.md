@@ -6,7 +6,7 @@ This folder contains the development dependencies for the Rhiza project, organiz
 
 - **tests.txt** - Testing dependencies (pytest, pytest-cov, pytest-html)
 - **marimo.txt** - Marimo notebook dependencies
-- **docs.txt** - Documentation generation dependencies (pdoc)
+- **docs.txt** - Documentation generation dependencies
 - **tools.txt** - Development tools (pre-commit, python-dotenv)
 
 ## Usage

@@ -4,12 +4,13 @@ site_url: https://tschm.github.io/jquantstats/
 repo_url: https://github.com/tschm/jquantstats
 repo_name: tschm/jquantstats
 
-docs_dir: docs
-site_dir: site
+docs_dir: ../docs
+site_dir: ../_mkdocs
 
 theme:
   name: material
   features:
+    - navigation.tabs
     - navigation.sections
     - navigation.top
     - search.suggest
@@ -25,7 +26,7 @@ plugins:
       handlers:
         python:
           paths:
-            - src
+            - ../src
           options:
             docstring_style: google
             show_source: false
@@ -35,13 +36,17 @@ plugins:
             members_order: source
             show_signature_annotations: true
 
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.snippets:
+      base_path: ["."]
+  - admonition
+  - toc:
+      permalink: true
+
 nav:
   - Home: index.md
-  - Migration from QuantStats: migration.md
-  - API Stability: stability.md
-  - Reference:
-      - Data: reference/data.md
-      - Stats: reference/stats.md
-      - Plots: reference/plots.md
-      - Reports: reference/reports.md
-      - Portfolio: reference/portfolio.md
+  - Marimo Notebooks: notebooks.md
+  - Reports: reports.md
+  - API Reference: api.md
