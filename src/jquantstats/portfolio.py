@@ -1044,18 +1044,26 @@ class Portfolio:
 
         periods = self.data._periods_per_year  # one Data object, outside the loop
         _eps = np.finfo(np.float64).eps
+        sqrt_periods = float(np.sqrt(periods))
         cost_levels = list(range(0, max_bps + 1))
+
+        # Extract base returns and turnover once — O(1) allocations regardless of max_bps
+        base_rets = self.returns["returns"]
+        turnover_s = self.turnover["turnover"]
+
+        # Build all cost-adjusted return columns in one vectorised DataFrame construction,
+        # then compute means and stds in a single aggregate pass (no per-iteration allocation).
+        sweep = pl.DataFrame({str(bps): base_rets - turnover_s * (bps / 10_000.0) for bps in cost_levels})
+        means_row = sweep.mean().row(0)
+        stds_row = sweep.std(ddof=1).row(0)
+
         sharpe_values: list[float] = []
-        for bps in cost_levels:
-            adj = self.cost_adjusted_returns(float(bps))
-            series = (adj.drop("date") if "date" in adj.columns else adj)["returns"]
-            _mean_raw = series.mean()
-            mean_val = 0.0 if _mean_raw is None else float(_mean_raw)  # type: ignore[arg-type]
-            std_val = series.std(ddof=1)
-            if std_val is None or std_val <= _eps * max(abs(mean_val), _eps) * 10:
+        for mean_raw, std_raw in zip(means_row, stds_row, strict=False):
+            mean_val = 0.0 if mean_raw is None else float(mean_raw)
+            if std_raw is None or float(std_raw) <= _eps * max(abs(mean_val), _eps) * 10:
                 sharpe_values.append(float("nan"))
             else:
-                sharpe_values.append(mean_val / float(std_val) * float(np.sqrt(periods)))  # type: ignore[arg-type]
+                sharpe_values.append(mean_val / float(std_raw) * sqrt_periods)
         return pl.DataFrame({"cost_bps": pl.Series(cost_levels, dtype=pl.Int64), "sharpe": pl.Series(sharpe_values)})
 
     # ── Utility ────────────────────────────────────────────────────────────────
