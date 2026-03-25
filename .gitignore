@@ -20,6 +20,10 @@ _mkdocs
 _benchmarks
 _jupyter
 _site
+docs/notebooks/
+docs/notebooks.md
+docs/reports/
+docs/reports.md
 
 # temp file used by Junie
 .output.txt

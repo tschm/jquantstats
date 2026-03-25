@@ -1,67 +1,34 @@
-# Project Book and Documentation
+# Book
 
-This directory contains the source and templates for generating the Rhiza companion book and API documentation.
+The companion book is built with [MkDocs](https://www.mkdocs.org/) and the
+[Material theme](https://squidfunk.github.io/mkdocs-material/). It combines
+test reports, executed Marimo notebooks, API reference, and project
+documentation into a single static site.
 
-## Structure
-
-- `marimo/`: Interactive [Marimo](https://marimo.io/) notebooks that are included in the book.
-- `minibook-templates/`: Jinja2 templates for the minibook generation.
-- `pdoc-templates/`: Custom templates for [pdoc](https://pdoc.dev/) API documentation.
-- `book.mk`: Specialised Makefile for building the book and documentation.
-
-## Building the Book
-
-You can build the complete documentation book using the main project Makefile:
+## Building
 
 ```bash
 make book
 ```
 
-This process involves:
-1. Exporting Marimo notebooks to HTML.
-2. Generating API documentation from the source code.
-3. Combining them into a cohesive "book" structure.
+The output is written to `_book/`.
 
-## Documentation Customisation
+## What gets included
 
-You can customise the look and feel of your documentation by providing your own templates.
+| Section | Source | How it's generated |
+|---|---|---|
+| Home | `README.md` | Included via snippet |
+| Marimo Notebooks | `book/marimo/notebooks/*.py` | Exported to HTML with `marimo export html --sandbox` |
+| Reports | `_tests/` | Copied after running `make test`, `make benchmark`, `make stress`, `make hypothesis-test` |
+| API Reference | `src/` | Rendered by mkdocstrings from source docstrings |
 
-### API Documentation (pdoc)
+## Adding a notebook
 
-The `make docs` command checks for a directory at `book/pdoc-templates`. If found, it uses the templates within that directory to generate the API documentation.
+Place a Marimo notebook (`.py`) in `book/marimo/notebooks/`. It will be
+picked up automatically on the next `make book`. Notebooks are executed in
+a sandbox using their inline [PEP 723](https://peps.python.org/pep-0723/)
+dependencies, so each notebook is self-contained.
 
-To customise the API docs:
-1. Create the directory: `mkdir -p book/pdoc-templates`
-2. Add your Jinja2 templates (e.g., `module.html.jinja2`) to this directory.
+## Configuration
 
-See the [pdoc documentation](https://pdoc.dev/docs/pdoc.html#templates) for more details on templating.
-
-### Project Logo
-
-The documentation generation supports embedding a project logo in the sidebar.
-
-**Default Behavior:**
-By default, the build looks for `assets/rhiza-logo.svg`.
-
-**Customization:**
-You can change the logo by setting the `LOGO_FILE` variable in your project's `Makefile` or `local.mk`.
-
-```makefile
-# Example: Use a custom PNG logo
-LOGO_FILE := assets/my-company-logo.png
-```
-
-To disable the logo entirely, set the variable to an empty string:
-
-```makefile
-# Example: Disable logo
-LOGO_FILE :=
-```
-
-### Companion Book (minibook)
-
-The `make book` command checks for a template at `book/minibook-templates/custom.html.jinja2`. If found, it uses this template for the minibook generation.
-
-To customise the book:
-1. Create the directory: `mkdir -p book/minibook-templates`
-2. Create your custom template at `book/minibook-templates/custom.html.jinja2`.
+The MkDocs configuration lives in `.rhiza/mkdocs.yml`.
