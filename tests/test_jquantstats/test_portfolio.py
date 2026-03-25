@@ -1329,6 +1329,95 @@ def test_from_risk_position_dict_vola_missing_key_falls_back_to_32():
     assert a_dict == pytest.approx(a_int, nan_ok=True)
 
 
+# ── from_risk_position vola validation ───────────────────────────────────────
+
+
+def test_from_risk_position_zero_span_raises():
+    """A span of zero must raise ValueError."""
+    import numpy as np
+
+    dates = pl.date_range(start=date(2020, 1, 1), end=date(2020, 3, 1), interval="1d", eager=True).cast(pl.Date)
+    prices = pl.DataFrame({"date": dates, "A": pl.Series(np.linspace(100, 120, len(dates)), dtype=pl.Float64)})
+    risk = pl.DataFrame({"date": dates, "A": pl.Series([1.0] * len(dates), dtype=pl.Float64)})
+    with pytest.raises(ValueError, match="positive integer"):
+        Portfolio.from_risk_position(prices, risk, vola=0, aum=1e8)
+
+
+def test_from_risk_position_negative_span_raises():
+    """A negative span must raise ValueError."""
+    import numpy as np
+
+    dates = pl.date_range(start=date(2020, 1, 1), end=date(2020, 3, 1), interval="1d", eager=True).cast(pl.Date)
+    prices = pl.DataFrame({"date": dates, "A": pl.Series(np.linspace(100, 120, len(dates)), dtype=pl.Float64)})
+    risk = pl.DataFrame({"date": dates, "A": pl.Series([1.0] * len(dates), dtype=pl.Float64)})
+    with pytest.raises(ValueError, match="positive integer"):
+        Portfolio.from_risk_position(prices, risk, vola=-5, aum=1e8)
+
+
+def test_from_risk_position_dict_zero_span_raises():
+    """A zero span value inside a vola dict must raise ValueError."""
+    import numpy as np
+
+    dates = pl.date_range(start=date(2020, 1, 1), end=date(2020, 3, 1), interval="1d", eager=True).cast(pl.Date)
+    prices = pl.DataFrame({"date": dates, "A": pl.Series(np.linspace(100, 120, len(dates)), dtype=pl.Float64)})
+    risk = pl.DataFrame({"date": dates, "A": pl.Series([1.0] * len(dates), dtype=pl.Float64)})
+    with pytest.raises(ValueError, match="positive integer"):
+        Portfolio.from_risk_position(prices, risk, vola={"A": 0}, aum=1e8)
+
+
+def test_from_risk_position_dict_unknown_key_raises():
+    """A vola dict key that does not match any column must raise ValueError."""
+    import numpy as np
+
+    dates = pl.date_range(start=date(2020, 1, 1), end=date(2020, 3, 1), interval="1d", eager=True).cast(pl.Date)
+    prices = pl.DataFrame({"date": dates, "A": pl.Series(np.linspace(100, 120, len(dates)), dtype=pl.Float64)})
+    risk = pl.DataFrame({"date": dates, "A": pl.Series([1.0] * len(dates), dtype=pl.Float64)})
+    with pytest.raises(ValueError, match="UNKNOWN"):
+        Portfolio.from_risk_position(prices, risk, vola={"UNKNOWN": 8}, aum=1e8)
+
+
+# ── from_risk_position vol_cap ────────────────────────────────────────────────
+
+
+def test_from_risk_position_vol_cap_clips_vol():
+    """vol_cap clips the EWMA vol from below, reducing position sizes in calm regimes."""
+    import numpy as np
+
+    dates = pl.date_range(start=date(2020, 1, 1), end=date(2020, 3, 1), interval="1d", eager=True).cast(pl.Date)
+    # Flat prices → near-zero returns → very small vol → large uncapped positions
+    prices = pl.DataFrame({"date": dates, "A": pl.Series(np.ones(len(dates)) * 100.0, dtype=pl.Float64)})
+    risk = pl.DataFrame({"date": dates, "A": pl.Series([1.0] * len(dates), dtype=pl.Float64)})
+    pf_uncapped = Portfolio.from_risk_position(prices, risk, vola=2, aum=1e8)
+    pf_capped = Portfolio.from_risk_position(prices, risk, vola=2, aum=1e8, vol_cap=1.0)
+    # With a large vol_cap the denominator is larger → cash positions should be smaller or equal
+    uncapped_vals = pf_uncapped.cashposition["A"].drop_nulls().abs()
+    capped_vals = pf_capped.cashposition["A"].drop_nulls().abs()
+    # Every non-null capped value must be ≤ uncapped (or equal when vol already ≥ cap)
+    assert (capped_vals <= uncapped_vals + 1e-9).all()
+
+
+def test_from_risk_position_vol_cap_zero_raises():
+    """A vol_cap of zero must raise ValueError."""
+    import numpy as np
+
+    dates = pl.date_range(start=date(2020, 1, 1), end=date(2020, 3, 1), interval="1d", eager=True).cast(pl.Date)
+    prices = pl.DataFrame({"date": dates, "A": pl.Series(np.linspace(100, 120, len(dates)), dtype=pl.Float64)})
+    risk = pl.DataFrame({"date": dates, "A": pl.Series([1.0] * len(dates), dtype=pl.Float64)})
+    with pytest.raises(ValueError, match="positive"):
+        Portfolio.from_risk_position(prices, risk, vola=8, aum=1e8, vol_cap=0.0)
+
+
+def test_from_risk_position_vol_cap_negative_raises():
+    """A negative vol_cap must raise ValueError."""
+    import numpy as np
+
+    dates = pl.date_range(start=date(2020, 1, 1), end=date(2020, 3, 1), interval="1d", eager=True).cast(pl.Date)
+    prices = pl.DataFrame({"date": dates, "A": pl.Series(np.linspace(100, 120, len(dates)), dtype=pl.Float64)})
+    risk = pl.DataFrame({"date": dates, "A": pl.Series([1.0] * len(dates), dtype=pl.Float64)})
+    with pytest.raises(ValueError, match="positive"):
+        Portfolio.from_risk_position(prices, risk, vola=8, aum=1e8, vol_cap=-0.05)
+
+
 # ── from_risk_position cost param forwarding ─────────────────────────────────
 
 
