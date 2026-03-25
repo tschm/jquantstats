@@ -870,6 +870,51 @@ def test_trading_cost_impact_invalid_max_bps_raises(turnover_portfolio):
         turnover_portfolio.trading_cost_impact(max_bps=-1)  # type: ignore[arg-type]
 
 
+def test_trading_cost_impact_vectorised_equivalence():
+    """Regression: vectorised implementation must match per-iteration formula exactly.
+
+    Constructs a portfolio with known turnover and computes Sharpe values
+    manually using the same arithmetic (mean / std * sqrt(periods)) for each
+    cost level, then asserts that trading_cost_impact returns bit-identical
+    results.
+    """
+    import math
+
+    import numpy as np
+
+    n = 252
+    start = date(2020, 1, 1)
+    dates = pl.date_range(start=start, end=start + timedelta(days=n - 1), interval="1d", eager=True).cast(pl.Date)
+    prices = pl.DataFrame({"date": dates, "A": pl.Series([100.0 * (1.001**i) for i in range(n)])})
+    positions = pl.DataFrame({"date": dates, "A": pl.Series([1000.0 + 50.0 * (i % 3) for i in range(n)])})
+    pf = Portfolio.from_cash_position(prices=prices, cash_position=positions, aum=1e5)
+
+    max_bps = 10
+    impact = pf.trading_cost_impact(max_bps=max_bps)
+
+    base_rets = pf.returns["returns"].to_numpy()
+    turnover_arr = pf.turnover["turnover"].to_numpy()
+    periods = pf.data._periods_per_year
+    _eps = np.finfo(np.float64).eps
+
+    for i, bps in enumerate(range(0, max_bps + 1)):
+        adj = base_rets - turnover_arr * (bps / 10_000.0)
+        mean_val = float(np.mean(adj))
+        std_val = float(np.std(adj, ddof=1))
+        if std_val <= _eps * max(abs(mean_val), _eps) * 10:
+            expected = float("nan")
+        else:
+            expected = mean_val / std_val * math.sqrt(periods)
+
+        actual = impact["sharpe"][i]
+        if math.isnan(expected):
+            assert actual is None or math.isnan(float(actual)), f"Expected NaN at bps={bps}, got {actual}"
+        else:
+            assert math.isclose(float(actual), expected, rel_tol=1e-9, abs_tol=1e-10), (
+                f"Mismatch at bps={bps}: got {float(actual)}, expected {expected}"
+            )
+
+
 # ── Plots.trading_cost_impact_plot ───────────────────────────────────────────
 
 
