@@ -6,6 +6,8 @@ from typing import Protocol, runtime_checkable
 
 import polars as pl
 
+from jquantstats._cost_model import CostModel
+
 
 @runtime_checkable
 class DataLike(Protocol):  # pragma: no cover
@@ -36,7 +38,7 @@ class PortfolioLike(Protocol):  # pragma: no cover
 
     prices: pl.DataFrame
     aum: float
-    cost_per_unit: float
+    cost_model: CostModel
 
     @property
     def nav_accumulated(self) -> pl.DataFrame:

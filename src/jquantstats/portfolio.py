@@ -183,6 +183,16 @@ class Portfolio:
             return rows, ret["date"].min(), ret["date"].max()
         return rows, None, None
 
+    @property
+    def cost_model(self) -> CostModel:
+        """Return the active cost model as a :class:`~jquantstats.CostModel` instance.
+
+        Returns:
+            A :class:`CostModel` whose ``cost_per_unit`` and ``cost_bps`` fields
+            reflect the values stored on this portfolio.
+        """
+        return CostModel(cost_per_unit=self.cost_per_unit, cost_bps=self.cost_bps)
+
     def __repr__(self) -> str:
         """Return a string representation of the Portfolio object."""
         rows, start, end = self._date_range()
