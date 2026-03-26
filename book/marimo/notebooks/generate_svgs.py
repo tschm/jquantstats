@@ -1,3 +1,15 @@
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "jquantstats",
+#     "kaleido==1.2.0",
+#     "polars>=1.0.0",
+#     "plotly>=6.0.0",
+# ]
+# [tool.uv.sources]
+# jquantstats = { path = "../../..", editable = true }
+# ///
+
 """Generate SVG charts for the 1/n (equal-weight) portfolio.
 
 Loads AAPL + META daily returns from the bundled data directory, constructs
@@ -7,11 +19,6 @@ publication-quality SVG files to ``assets/`` at the repository root.
 Usage::
 
     uv run book/marimo/notebooks/generate_svgs.py
-
-Requires the ``plot`` optional dependency group (kaleido) declared in
-``pyproject.toml``::
-
-    uv sync --extra plot
 """
 
 from pathlib import Path
