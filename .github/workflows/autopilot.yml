@@ -26,8 +26,8 @@ jobs:
         with:
           version: "0.10.12"
 
-      - name: Install Claude CLI
-        run: npm install -g @anthropic-ai/claude-code
+      - name: Install Copilot CLI
+        run: curl -fsSL https://gh.io/copilot-install | bash
 
       - name: Configure git auth for private packages
         uses: ./.github/actions/configure-git-auth
@@ -36,7 +36,7 @@ jobs:
 
       - name: Run analyse-repo
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT || github.token }}
           UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
         run: make analyse-repo
 
