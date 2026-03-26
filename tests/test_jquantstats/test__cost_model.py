@@ -42,10 +42,20 @@ def test_cost_model_zero():
 
 
 def test_cost_model_direct_construction():
-    """CostModel can be constructed directly with both fields."""
-    cm = CostModel(cost_per_unit=0.02, cost_bps=3.0)
-    assert cm.cost_per_unit == pytest.approx(0.02)
-    assert cm.cost_bps == pytest.approx(3.0)
+    """CostModel rejects simultaneous non-zero cost_per_unit and cost_bps."""
+    with pytest.raises(ValueError, match="Only one cost model"):
+        CostModel(cost_per_unit=0.02, cost_bps=3.0)
+
+
+def test_cost_model_direct_construction_single_field():
+    """CostModel can be constructed directly with a single non-zero field."""
+    cm_unit = CostModel(cost_per_unit=0.02)
+    assert cm_unit.cost_per_unit == pytest.approx(0.02)
+    assert cm_unit.cost_bps == pytest.approx(0.0)
+
+    cm_bps = CostModel(cost_bps=3.0)
+    assert cm_bps.cost_per_unit == pytest.approx(0.0)
+    assert cm_bps.cost_bps == pytest.approx(3.0)
 
 
 def test_cost_model_negative_cost_per_unit_raises():

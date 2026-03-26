@@ -41,7 +41,8 @@ class CostModel:
             Defaults to 0.0.
 
     Raises:
-        ValueError: If ``cost_per_unit`` or ``cost_bps`` is negative.
+        ValueError: If ``cost_per_unit`` or ``cost_bps`` is negative, or if
+            both are non-zero (which would silently double-count costs).
 
     Examples:
         >>> CostModel.per_unit(0.01)
@@ -60,6 +61,12 @@ class CostModel:
             raise ValueError(f"cost_per_unit must be non-negative, got {self.cost_per_unit}")  # noqa: TRY003
         if self.cost_bps < 0:
             raise ValueError(f"cost_bps must be non-negative, got {self.cost_bps}")  # noqa: TRY003
+        if self.cost_per_unit > 0 and self.cost_bps > 0:
+            raise ValueError(  # noqa: TRY003
+                "Only one cost model may be active at a time: "
+                f"got cost_per_unit={self.cost_per_unit} and cost_bps={self.cost_bps}. "
+                "Use CostModel.per_unit() or CostModel.turnover_bps() to make intent explicit."
+            )
 
     # ── Named constructors ────────────────────────────────────────────────────
 
