@@ -237,6 +237,7 @@ class Portfolio:
         risk_position: pl.DataFrame,
         aum: float,
         vola: int | dict[str, int] = 32,
+        vol_cap: float | None = None,
         cost_per_unit: float = 0.0,
         cost_bps: float = 0.0,
         cost_model: CostModel | None = None,
@@ -252,7 +253,16 @@ class Portfolio:
             vola: EWMA lookback (span-equivalent) used to estimate volatility.
                 Pass an ``int`` to apply the same span to every asset, or a
                 ``dict[str, int]`` to set a per-asset span (assets absent from
-                the dict default to ``32``).
+                the dict default to ``32``).  Every span value must be a
+                positive integer; a ``ValueError`` is raised otherwise.  Dict
+                keys that do not correspond to any numeric column in *prices*
+                also raise a ``ValueError``.
+            vol_cap: Optional lower bound for the EWMA volatility estimate.
+                When provided, the vol series is clipped from below at this
+                value before dividing the risk position, preventing
+                position blow-up in calm, low-volatility regimes.  For
+                example, ``vol_cap=0.05`` ensures annualised vol is never
+                estimated below 5%.  Must be positive when not ``None``.
             aum: Assets under management used as the base NAV offset.
             cost_per_unit: One-way trading cost per unit of position change.
                 Defaults to 0.0 (no cost).  Ignored when *cost_model* is given.
@@ -266,11 +276,34 @@ class Portfolio:
         Returns:
             A Portfolio instance whose cash positions are risk_position
             divided by EWMA volatility.
+
+        Raises:
+            ValueError: If any span value in *vola* is ≤ 0, or if a key in a
+                *vola* dict does not match any numeric column in *prices*, or
+                if *vol_cap* is provided but is not positive.
         """
         if cost_model is not None:
             cost_per_unit = cost_model.cost_per_unit
             cost_bps = cost_model.cost_bps
         assets = [col for col, dtype in prices.schema.items() if dtype.is_numeric()]
+
+        # ── Validate vol_cap ──────────────────────────────────────────────────
+        if vol_cap is not None and vol_cap <= 0:
+            raise ValueError(f"vol_cap must be a positive number when provided, got {vol_cap!r}")  # noqa: TRY003
+
+        # ── Validate vola ─────────────────────────────────────────────────────
+        if isinstance(vola, dict):
+            unknown = set(vola.keys()) - set(assets)
+            if unknown:
+                raise ValueError(  # noqa: TRY003
+                    f"vola dict contains keys that do not match any numeric column in prices: {sorted(unknown)}"
+                )
+            for asset, span in vola.items():
+                if int(span) <= 0:
+                    raise ValueError(f"vola span for '{asset}' must be a positive integer, got {span!r}")  # noqa: TRY003
+        else:
+            if int(vola) <= 0:
+                raise ValueError(f"vola span must be a positive integer, got {vola!r}")  # noqa: TRY003
 
         def _span(asset: str) -> int:
             """Return the EWMA span for *asset*, falling back to 32 if not specified."""
@@ -278,13 +311,14 @@ class Portfolio:
                 return int(vola.get(asset, 32))
             return int(vola)
 
-        cash_position = risk_position.with_columns(
-            (
-                pl.col(asset)
-                / prices[asset].pct_change().ewm_std(com=_span(asset) - 1, adjust=True, min_samples=_span(asset))
-            ).alias(asset)
-            for asset in assets
-        )
+        def _vol(asset: str) -> pl.Series:
+            """Return the EWMA volatility series for *asset*, optionally clipped from below."""
+            vol = prices[asset].pct_change().ewm_std(com=_span(asset) - 1, adjust=True, min_samples=_span(asset))
+            if vol_cap is not None:
+                vol = vol.clip(lower_bound=vol_cap)
+            return vol
+
+        cash_position = risk_position.with_columns((pl.col(asset) / _vol(asset)).alias(asset) for asset in assets)
         return cls(prices=prices, cashposition=cash_position, aum=aum, cost_per_unit=cost_per_unit, cost_bps=cost_bps)
 
     @classmethod

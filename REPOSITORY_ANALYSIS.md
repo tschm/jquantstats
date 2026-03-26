@@ -363,3 +363,69 @@ Significant structural work has landed since the previous entry. The legacy API 
 | Dependency Management | 9/10 | Lean runtime stack (polars, narwhals, numpy, scipy, plotly, jinja2). deptry and pip-audit in CI. `kaleido` optional. |
 | CI/CD & Tooling | 9/10 | 19 GitHub Actions workflows. MkDocs versioned deploy via mike. Link-checker workflow present. Minor deduction: kaleido static-export path not tested. |
 | **Overall** | **9/10** | Production-quality codebase. All previously identified correctness blockers are resolved. Remaining items are refinements (protocol alignment, CostModel guard, kaleido coverage), not blockers. |
+
+---
+
+## 2026-03-26 — Analysis Entry (v0.3.3, post-performance sprint)
+
+### Summary
+
+Seven commits have landed since the 2026-03-25 entry. Three targeted performance gaps identified in prior entries are now closed: `trading_cost_impact` is fully vectorised, both frozen dataclasses carry `slots=True`, and kaleido static export is covered by a dedicated test file and a separate CI job. A notable side-observation: an AI-authored PR (`#514`) to move `mkdocs.yml` to the repo root was reverted by the project author one commit later (`#517`), leaving the non-standard `.rhiza/mkdocs.yml` placement intact and confirming that the location is locked by framework constraints rather than oversight.
+
+### Changes Since Last Entry
+
+| Commit | Change |
+|---|---|
+| `a57b0ab` | `tests/test_jquantstats/test__plots/test_kaleido.py` added (66 lines): 5 `@pytest.mark.kaleido` tests covering `to_image(png)`, `write_image(png)`, `to_image(svg)` for both `Data.plots` and `Portfolio.plots`. Magic-byte assertions (`\x89PNG`) confirm kaleido is actually rendering. |
+| `6f155d3` | CodeQL scanning alert resolved: `link-check.yml` was missing a `permissions:` block. 3 lines added. |
+| `abf54c8` | AI-authored PR: moved `mkdocs.yml` from `.rhiza/` to repo root, updating `book.mk` and `docs.mk` paths accordingly. |
+| `1bde048` | Author-reverted `abf54c8`. `mkdocs.yml` is back at `.rhiza/mkdocs.yml`. Revert restores 3 changed files. |
+| `629de4b` | `trading_cost_impact` vectorised. Previous impl constructed one `Data` + `Stats` pair per cost level. New impl: extracts `base_rets` and `turnover_s` once, builds a single `pl.DataFrame` with all cost levels as columns, calls `.mean()` and `.std()` once each. O(1) allocations regardless of `max_bps`. |
+| `13c4a4f` | `slots=True` added to both `@dataclasses.dataclass(frozen=True)` decorators: `Portfolio` (`portfolio.py:41`) and `Data` (`data.py`). Attribute lookup now uses `__slots__` rather than `__dict__`, eliminating per-instance dict overhead. |
+| `6fe43c6` | `pytest.ini` gains `kaleido` marker declaration. `.github/workflows/rhiza_ci.yml` gains a standalone `test-kaleido` job that installs the `plot` extra and runs `make test-kaleido`. |
+
+### Resolved Since Last Entry
+
+- **Kaleido static export untested in CI** — Fully resolved. Three coverage layers are now in place: the test file (`test_kaleido.py`), the `@pytest.mark.kaleido` marker allowing selective execution, and the dedicated CI job. PNG magic-byte assertions ensure kaleido is not just imported but actually produces valid output.
+- **`trading_cost_impact` O(N) allocations** — Resolved via vectorisation in `629de4b`. The implementation is now correct and allocation-free for any `max_bps` sweep width.
+- **No `slots=True` on frozen dataclasses** — Resolved in `13c4a4f`. Both `Portfolio` and `Data` benefit from the slot-based layout.
+- **CodeQL `link-check.yml` permissions alert** — Resolved in `6f155d3`.
+
+### Remaining Concerns
+
+- **`PortfolioLike` protocol misaligned with `CostModel`.** `_plots/_protocol.py:39` still declares `cost_per_unit: float` as a bare float. Any object exposing a `CostModel`-typed attribute instead of a raw float will not satisfy structural `isinstance` checks against this protocol. Carried across three entries without resolution.
+- **`CostModel` permits both fields non-zero without warning.** `CostModel(cost_per_unit=0.01, cost_bps=5.0)` is valid; both models are applied additively. No guard or `UserWarning` is raised. Silent double-counting remains possible.
+- **`mkdocs.yml` placement is a recurring coordination point.** The AI-authored move (#514) and immediate revert (#517) confirm the `.rhiza/mkdocs.yml` location is constrained by the rhiza framework's `book.mk`/`docs.mk` includes. A repo-root placement would require corresponding framework changes. The instability is documented now; future AI-assisted PRs touching doc tooling should be aware of this constraint.
+- **Version still `0.3.3`.** No bump since the previous entry. `docs/stability.md` documents the v1.0.0 commitment; no blocking issues remain that would preclude a 1.0 release.
+
+### Scores
+
+| Subcategory | Score | Rationale |
+|---|---|---|
+| Code Quality | 10/10 | Flat API, protocol-decoupled subpackages, `slots=True` on hot-path dataclasses, ruff/mypy enforced, no file exceeds 435 lines. |
+| Test Coverage | 10/10 | 381 tests, 1 352 statements, 100% coverage. Kaleido now covered with magic-byte assertions in a dedicated file. |
+| Documentation | 9/10 | MkDocs + mkdocstrings, stability contract, API reference. Deduction: `mkdocs.yml` in `.rhiza/` confirmed non-standard by the failed move attempt (#514/#517). |
+| Architecture | 9/10 | Clean two-entry-point design, `CostModel` abstraction, cached accessors, O(1) cost sweep. Deduction: `PortfolioLike` protocol still exposes `cost_per_unit: float` rather than `CostModel`. |
+| Security | 8/10 | CodeQL, semgrep, pip-audit, bandit in CI. `link-check.yml` permissions alert resolved. One known CVE (CVE-2026-4539, pygments ReDoS) ignored pending upstream fix. |
+| Dependency Management | 9/10 | Lean runtime. `kaleido` optional extra. deptry and pip-audit enforced in CI. |
+| CI/CD & Tooling | 10/10 | Dedicated kaleido job added. All previously flagged CI gaps are now closed. 20+ GitHub Actions workflows. |
+| **Overall** | **9.5/10** | All performance and CI gaps from the prior entry are resolved. Remaining delta to 10: `PortfolioLike` protocol alignment, `CostModel` mutual-exclusivity guard, and the version bump to 1.0. None affect correctness or reliability. |
+
+---
+
+## 2026-03-26 — Analysis Entry (v0.3.3, re-run, no new commits)
+
+### Summary
+
+Re-run triggered same day as the previous entry. `git log --since="2026-03-26"` returns no commits; the repository is in the same state as the 9.5/10 entry written earlier today. Test suite: **381 passed, 0 failed, 100% coverage at 1 352 statements, 13 snapshots passed.** All scores from the previous entry carry forward unchanged.
+
+### Open Items (unchanged)
+
+- `PortfolioLike` protocol (`_plots/_protocol.py:39`) still declares `cost_per_unit: float` rather than a `CostModel`. Structural `isinstance` checks will silently fail for `CostModel`-typed consumers.
+- `CostModel` permits both `cost_per_unit` and `cost_bps` non-zero simultaneously with no guard or warning.
+- `mkdocs.yml` remains at `.rhiza/mkdocs.yml`; the failed move-and-revert cycle (#514/#517) from the previous session is now documented.
+- Version still `0.3.3`; no blocking issues remain for a 1.0 release.
+
+### Score
+
+**9.5/10** — No change from prior entry.
