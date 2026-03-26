@@ -72,9 +72,10 @@ class PortfolioPlots:
             y_vals.append(float(sharpe_val) if sharpe_val is not None else float("nan"))
             x_vals.append(n)
 
+        colors = ["red" if x == 0 else "#1f77b4" for x in x_vals]
         fig = go.Figure(
             data=[
-                go.Bar(x=x_vals, y=y_vals, name="Sharpe by lag", marker_color="#1f77b4"),
+                go.Bar(x=x_vals, y=y_vals, name="Sharpe by lag", marker_color=colors),
             ]
         )
         fig.update_layout(

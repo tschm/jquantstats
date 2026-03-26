@@ -153,9 +153,10 @@ class Portfolio:
         """
         from .data import Data
 
+        returns_only = ret.select("returns")
         if "date" in ret.columns:
-            return Data(returns=ret.drop("date"), index=ret.select("date"))
-        return Data(returns=ret, index=pl.DataFrame({"index": list(range(ret.height))}))
+            return Data(returns=returns_only, index=ret.select("date"))
+        return Data(returns=returns_only, index=pl.DataFrame({"index": list(range(ret.height))}))
 
     def __post_init__(self) -> None:
         """Validate input types, shapes, and parameters post-initialization."""
@@ -320,6 +321,58 @@ class Portfolio:
 
         cash_position = risk_position.with_columns((pl.col(asset) / _vol(asset)).alias(asset) for asset in assets)
         return cls(prices=prices, cashposition=cash_position, aum=aum, cost_per_unit=cost_per_unit, cost_bps=cost_bps)
+
+    @classmethod
+    def from_position(
+        cls,
+        prices: pl.DataFrame,
+        position: pl.DataFrame,
+        aum: float,
+        cost_per_unit: float = 0.0,
+        cost_bps: float = 0.0,
+        cost_model: CostModel | None = None,
+    ) -> Self:
+        """Create a Portfolio from share/unit positions.
+
+        Converts *position* (number of units held per asset) to cash exposure
+        by multiplying element-wise with *prices*, then delegates to
+        :py:meth:`from_cash_position`.
+
+        Args:
+            prices: Price levels per asset over time (may include a date column).
+            position: Number of units held per asset over time, aligned with
+                *prices*.  Non-numeric columns (e.g. ``'date'``) are passed
+                through unchanged.
+            aum: Assets under management used as the base NAV offset.
+            cost_per_unit: One-way trading cost per unit of position change.
+                Defaults to 0.0 (no cost).  Ignored when *cost_model* is given.
+            cost_bps: One-way trading cost in basis points of AUM turnover.
+                Defaults to 0.0 (no cost).  Ignored when *cost_model* is given.
+            cost_model: Optional :class:`~jquantstats.CostModel` instance.
+                When supplied, its ``cost_per_unit`` and ``cost_bps`` values
+                take precedence over the individual parameters above.
+
+        Returns:
+            A Portfolio instance whose cash positions equal *position* x *prices*.
+
+        Examples:
+            >>> import polars as pl
+            >>> prices = pl.DataFrame({"A": [100.0, 110.0, 105.0]})
+            >>> pos = pl.DataFrame({"A": [10.0, 10.0, 10.0]})
+            >>> pf = Portfolio.from_position(prices=prices, position=pos, aum=1e6)
+            >>> pf.cashposition["A"].to_list()
+            [1000.0, 1100.0, 1050.0]
+        """
+        assets = [col for col, dtype in prices.schema.items() if dtype.is_numeric()]
+        cash_position = position.with_columns((pl.col(asset) * prices[asset]).alias(asset) for asset in assets)
+        return cls.from_cash_position(
+            prices=prices,
+            cash_position=cash_position,
+            aum=aum,
+            cost_per_unit=cost_per_unit,
+            cost_bps=cost_bps,
+            cost_model=cost_model,
+        )
 
     @classmethod
     def from_cash_position(

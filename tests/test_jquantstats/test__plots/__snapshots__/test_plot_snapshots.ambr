@@ -8,16 +8,8 @@
       ]),
       'title': 'Annual Sharpe Ratio by Year',
     }),
-    'num_traces': 3,
+    'num_traces': 1,
     'traces': list([
-      dict({
-        'name': 'profit',
-        'type': 'Bar',
-      }),
-      dict({
-        'name': 'NAV_accumulated',
-        'type': 'Bar',
-      }),
       dict({
         'name': 'returns',
         'type': 'Bar',
@@ -257,16 +249,8 @@
       ]),
       'title': 'Rolling Sharpe Ratio (63-period window)',
     }),
-    'num_traces': 3,
+    'num_traces': 1,
     'traces': list([
-      dict({
-        'name': 'profit',
-        'type': 'Scatter',
-      }),
-      dict({
-        'name': 'NAV_accumulated',
-        'type': 'Scatter',
-      }),
       dict({
         'name': 'returns',
         'type': 'Scatter',
@@ -283,16 +267,8 @@
       ]),
       'title': 'Rolling Volatility (63-period window)',
     }),
-    'num_traces': 3,
+    'num_traces': 1,
     'traces': list([
-      dict({
-        'name': 'profit',
-        'type': 'Scatter',
-      }),
-      dict({
-        'name': 'NAV_accumulated',
-        'type': 'Scatter',
-      }),
       dict({
         'name': 'returns',
         'type': 'Scatter',

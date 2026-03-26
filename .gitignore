@@ -113,3 +113,6 @@ local.mk
 .bandit-baseline.json
 
 report.html
+/demo_report.py
+/positions.csv
+/prices.csv
