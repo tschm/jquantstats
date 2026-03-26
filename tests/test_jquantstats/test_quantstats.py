@@ -4,6 +4,8 @@ import numpy as np
 import pytest
 import quantstats as qs
 
+pytestmark = pytest.mark.quantstats
+
 
 @pytest.fixture
 def stats(data):

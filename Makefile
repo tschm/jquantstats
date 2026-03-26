@@ -25,6 +25,11 @@ test-kaleido: install ## run kaleido static image export tests (requires jquants
 	@printf "${BLUE}[INFO] Running kaleido static image export tests...${RESET}\n"
 	@${UV_BIN} run pytest -m kaleido -v tests/
 
+.PHONY: test-quantstats
+test-quantstats: install ## run quantstats comparison tests (requires pandas via quantstats)
+	@printf "${BLUE}[INFO] Running quantstats comparison tests...${RESET}\n"
+	@${UV_BIN} run pytest -m quantstats -v tests/
+
 .PHONY: changelog
 changelog: ## generate/update CHANGELOG.md from git history using git-cliff
 	@printf "${BLUE}[INFO] Generating CHANGELOG.md with git-cliff...${RESET}\n"
