@@ -1,0 +1,149 @@
+name: Autopilot v2
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 1' # Weekly on Monday
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+
+  # ── Job 1: Deterministic repository analysis using GitHub Models ──
+
+  analyse:
+    runs-on: ubuntu-latest
+    outputs:
+      has_analysis: ${{ steps.analysis.outputs.has_analysis }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6.0.2
+        with:
+          lfs: true
+          token: ${{ secrets.GH_PAT || github.token }}
+
+      - name: Run repository analysis (GitHub Models)
+        id: analysis
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT || github.token }}
+        run: |
+          python3 << 'PYEOF'
+          import json, subprocess, datetime, os, urllib.request, sys
+
+          # --- Collect repo snapshot (controlled scope) ---
+          files = subprocess.check_output(
+              "git ls-files", shell=True, text=True
+          ).splitlines()
+
+          files = [f for f in files if f.endswith((".py", ".md", ".toml"))][:200]
+
+          content = ""
+          for f in files:
+              try:
+                  with open(f) as fh:
+                      content += f"\n\n# FILE: {f}\n" + fh.read()[:2000]
+              except:
+                  pass
+
+          prompt = """
+          Analyze this repository.
+
+          Return STRICT JSON:
+
+          {
+            "summary": "...",
+            "weaknesses": ["..."],
+            "risks": ["..."],
+            "opportunities": ["..."]
+          }
+
+          No text outside JSON.
+          """
+
+          payload = json.dumps({
+              "model": "gpt-4.1",
+              "messages": [
+                  {"role": "user", "content": prompt + content}
+              ],
+              "temperature": 0
+          }).encode()
+
+          req = urllib.request.Request(
+              "https://models.inference.ai.azure.com/chat/completions",
+              data=payload,
+              headers={
+                  "Content-Type": "application/json",
+                  "Authorization": f"Bearer {os.environ['GITHUB_TOKEN']}"
+              }
+          )
+
+          try:
+              with urllib.request.urlopen(req) as resp:
+                  result = json.loads(resp.read())
+          except Exception as e:
+              print("Model call failed:", e)
+              print("has_analysis=false")
+              with open(os.environ['GITHUB_OUTPUT'], 'a') as gho:
+                  gho.write('has_analysis=false\n')
+              sys.exit(0)
+
+          raw = result["choices"][0]["message"]["content"]
+
+          try:
+              data = json.loads(raw)
+          except:
+              print("Invalid JSON from model")
+              with open(os.environ['GITHUB_OUTPUT'], 'a') as gho:
+                  gho.write('has_analysis=false\n')
+              sys.exit(0)
+
+          # --- Validate schema ---
+          for key in ["summary", "weaknesses", "risks", "opportunities"]:
+              if key not in data:
+                  raise ValueError(f"Missing key: {key}")
+
+          date = datetime.date.today().isoformat()
+          data["date"] = date
+
+          # --- Save JSON ---
+          with open("analysis.json", "w") as f:
+              json.dump(data, f, indent=2)
+
+          # --- Append markdown (derived artifact) ---
+          md = f"""## {date}
+
+          ### Summary
+          {data['summary']}
+
+          ### Weaknesses
+          {chr(10).join('- ' + w for w in data['weaknesses'])}
+
+          ### Risks / Technical Debt
+          {chr(10).join('- ' + r for r in data['risks'])}
+
+          ### Opportunities
+          {chr(10).join('- ' + o for o in data['opportunities'])}
+          """
+
+          with open("REPOSITORY_ANALYSIS.md", "a") as f:
+              f.write("\n\n" + md)
+
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as gho:
+              gho.write('has_analysis=true\n')
+          PYEOF
+
+      - name: Commit analysis
+        if: steps.analysis.outputs.has_analysis == 'true'
+        env:
+          GH_PAT: ${{ secrets.GH_PAT || github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add analysis.json REPOSITORY_ANALYSIS.md
+          if ! git diff --staged --quiet; then
+            git commit -m "chore: update analysis [autopilot v2] [skip ci]"
+            git push origin ${{ github.ref_name }}
+          fi
