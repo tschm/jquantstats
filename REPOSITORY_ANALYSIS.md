@@ -1,3 +1,40 @@
+## 2026-03-26 — Analysis Entry (v0.3.4)
+
+### Summary
+
+v0.3.4 marks a generational step: the legacy dual-API surface (`api.py`, `_stats.py`, `_data.py`, `_plots.py`) has been fully replaced by a clean 22-module flat structure. All correctness bugs from prior entries are resolved. The codebase now has 391 tests at 100% coverage and 5,253 LOC.
+
+### Resolved since last entry
+
+| Issue | Fix |
+|---|---|
+| `PortfolioLike` protocol misaligned | Now uses `cost_model: CostModel` — aligned (`b247538`) |
+| `CostModel` silent double-counting | Now raises `ValueError` when both cost fields are non-zero (`b95e5a7`) |
+| `mkdocs.yml` placement recurring issue | Moved to repo root (`9652e4d`) |
+| Version stuck at `0.0.x` | Bumped to `0.3.4` (`f599522`) |
+
+### New additions
+
+- `Portfolio.from_position()` — fourth factory method for unit-position portfolios
+- Academic companion paper + LaTeX CI workflow
+- `from_risk_position` vol-normalisation cap and validation
+- `CostModel` dataclass unifies the two prior cost model approaches
+
+### Remaining concerns
+
+1. **Uncached lazy accessors.** `.stats`, `.plots`, `.report` allocate new objects on every access — performance footgun for tight loops.
+2. **`pandas` at test time.** `quantstats` (comparison tests) requires pandas, creating an implicit pandas presence that could mask polars-specific bugs.
+3. **Uniform EWMA span in `from_risk_position`.** No per-asset vol targeting exposed.
+4. **Kaleido tests not in default CI matrix.** Static export breakage would be invisible.
+5. **`deploy-versioned-docs` removed from CI.** Versioned MkDocs deploys are no longer automated.
+6. **`demo_report.html` committed to repo root.** Development artefact should be gitignored.
+
+### Score
+
+**9.0 / 10** — The legacy API is gone, all prior correctness bugs are closed, and the version number now reflects maturity. Remaining gap: uncached accessors and the versioned-docs regression.
+
+---
+
 ## 2026-03-23 — Analysis Entry (refactor branch, post-bug-fix round)
 
 ### Summary
