@@ -1,4 +1,4 @@
-name: Autopilot v2
+name: Autopilot_v2
 
 on:
   workflow_dispatch:
