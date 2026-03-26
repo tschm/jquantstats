@@ -31,4 +31,4 @@ dependencies, so each notebook is self-contained.
 
 ## Configuration
 
-The MkDocs configuration lives in `.rhiza/mkdocs.yml`.
+The MkDocs configuration lives in `mkdocs.yml`.
