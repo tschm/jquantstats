@@ -26,6 +26,5 @@ jobs:
             --verbose
             --no-progress
             --accept 200,206,429
-            --exclude-mail
             README.md
           fail: true
