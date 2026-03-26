@@ -11,22 +11,22 @@
 # jquantstats = { path = "../../..", editable = true }
 # ///
 
+from pathlib import Path
+
 import marimo
 
 __generated_with = "0.20.4"
 app = marimo.App(width="medium")
 
-with app.setup:
-    from pathlib import Path
+_HERE = Path(__file__).parent
+_DATA = _HERE / "data"
+_ASSETS = _HERE.parent.parent.parent / "assets"
 
+with app.setup:
     import marimo as mo
     import polars as pl
 
     from jquantstats import Data
-
-    _HERE = Path(__file__).parent
-    _DATA = _HERE / "data"
-    _ASSETS = _HERE.parent.parent.parent / "assets"
 
 
 @app.cell

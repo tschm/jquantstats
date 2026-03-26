@@ -1155,6 +1155,29 @@ def test_portfolio_from_cash_position_passes_cost_per_unit():
     assert pf.cost_per_unit == pytest.approx(0.002)
 
 
+# ─── Portfolio.from_position ──────────────────────────────────────────────────
+
+
+def test_from_position_cash_equals_units_times_price():
+    """from_position must set cashposition = position * prices for each asset."""
+    prices = pl.DataFrame({"A": [100.0, 110.0, 105.0], "B": [50.0, 55.0, 52.0]})
+    pos = pl.DataFrame({"A": [10.0, 10.0, 10.0], "B": [20.0, 20.0, 20.0]})
+    pf = Portfolio.from_position(prices=prices, position=pos, aum=1e6)
+    assert pf.cashposition["A"].to_list() == pytest.approx([1000.0, 1100.0, 1050.0])
+    assert pf.cashposition["B"].to_list() == pytest.approx([1000.0, 1100.0, 1040.0])
+
+
+def test_from_position_forwards_cost_model():
+    """from_position must forward cost_model parameters to from_cash_position."""
+    from jquantstats import CostModel
+
+    prices = pl.DataFrame({"A": [100.0, 110.0]})
+    pos = pl.DataFrame({"A": [5.0, 5.0]})
+    cm = CostModel(cost_per_unit=0.01, cost_bps=0.0)
+    pf = Portfolio.from_position(prices=prices, position=pos, aum=1e5, cost_model=cm)
+    assert pf.cost_per_unit == pytest.approx(0.01)
+
+
 def test_net_cost_nav_integer_indexed(int_portfolio):
     """net_cost_nav on an integer-indexed portfolio uses hstack (no 'date' join)."""
     result = int_portfolio.net_cost_nav

@@ -2,7 +2,7 @@
 
 [![PyPI version](https://badge.fury.io/py/jquantstats.svg)](https://badge.fury.io/py/jquantstats)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://pypi.org/project/jquantstats/)
-[![Coverage](https://raw.githubusercontent.com/tschm/jquantstats/refs/heads/gh-pages/coverage-badge.svg)](https://tschm.github.io/jquantstats/tests/html-coverage/index.html)
+[![Coverage](https://raw.githubusercontent.com/tschm/jquantstats/refs/heads/gh-pages/coverage-badge.svg)](https://tschm.github.io/jquantstats/reports/coverage/)
 [![Downloads](https://static.pepy.tech/personalized-badge/jquantstats?period=month&units=international_system&left_color=black&right_color=orange&left_text=PyPI%20downloads%20per%20month)](https://pepy.tech/project/jquantstats)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/tschm/jquantstats/blob/main/LICENSE)
 [![CodeFactor](https://www.codefactor.io/repository/github/tschm/jquantstats/badge)](https://www.codefactor.io/repository/github/tschm/jquantstats)
@@ -43,7 +43,7 @@ enhanced visualization capabilities. Key improvements include:
 | **Max drawdown** | `data.stats.max_drawdown()` | `qs.stats.max_drawdown(returns)` |
 | **Python version** | 3.11+ | 3.7+ |
 | **Type annotations** | Full (`py.typed`) | Partial |
-| **Test coverage** | [![Coverage](https://raw.githubusercontent.com/tschm/jquantstats/refs/heads/gh-pages/coverage-badge.svg)](https://tschm.github.io/jquantstats/tests/html-coverage/index.html) | — |
+| **Test coverage** | [![Coverage](https://raw.githubusercontent.com/tschm/jquantstats/refs/heads/gh-pages/coverage-badge.svg)](https://tschm.github.io/jquantstats/reports/coverage/) | — |
 
 ## ✨ Features
 
