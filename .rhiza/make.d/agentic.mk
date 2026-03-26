@@ -18,6 +18,7 @@ claude: install-claude ## open interactive prompt for claude code
 
 analyse-repo: install-copilot ## run the analyser agent to update REPOSITORY_ANALYSIS.md
 	@"$(COPILOT_BIN)" \
+		--allow-all-tools \
 		--model "$(DEFAULT_AI_MODEL)" \
 		--agent analyser \
 		-p "Analyze the repository and append a new dated entry to REPOSITORY_ANALYSIS.md"
