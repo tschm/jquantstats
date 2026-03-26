@@ -18,6 +18,7 @@ claude: install-claude ## open interactive prompt for claude code
 
 analyse-repo: install-claude ## run the analyser agent to update REPOSITORY_ANALYSIS.md
 	@"$(CLAUDE_BIN)" --print \
+		--dangerously-skip-permissions \
 		--allowedTools "Write" \
 		--agent .github/agents/analyser.md \
 		"Analyze the repository and update REPOSITORY_ANALYSIS.md"
