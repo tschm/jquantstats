@@ -1,7 +1,6 @@
 name: Autopilot
 
 on:
-  push:
   workflow_dispatch:
   schedule:
     - cron: '0 0 * * 1'  # Weekly on Monday
@@ -40,7 +39,12 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
           CLAUDE_BIN: claude
-        run: make analyse-repo
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::notice::ANTHROPIC_API_KEY is not configured — skipping analyse-repo."
+            exit 0
+          fi
+          make analyse-repo
 
       - name: Commit and push updated analysis
         env:
