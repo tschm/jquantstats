@@ -1,0 +1,64 @@
+name: Paper
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'paper/**'
+      - '.github/workflows/paper.yml'
+  pull_request:
+    branches: [ main, master ]
+    paths:
+      - 'paper/**'
+      - '.github/workflows/paper.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-pdf:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install TeX Live
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            texlive-latex-extra \
+            texlive-fonts-recommended \
+            texlive-bibtex-extra \
+            latexmk
+
+      - name: Compile LaTeX document
+        working-directory: paper
+        run: |
+          latexmk -pdf -interaction=nonstopmode jquantstats.tex
+
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: jquantstats.pdf
+          path: paper/jquantstats.pdf
+          retention-days: 30
+
+      - name: Push PDF to paper branch
+        if: github.event_name != 'pull_request'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          cp paper/jquantstats.pdf /tmp/jquantstats.pdf
+          git fetch origin paper 2>/dev/null || true
+          if git show-ref --verify --quiet refs/remotes/origin/paper; then
+            git checkout -b paper origin/paper
+          else
+            git checkout --orphan paper
+            git rm -rf --quiet .
+          fi
+          cp /tmp/jquantstats.pdf jquantstats.pdf
+          git add jquantstats.pdf
+          git diff --staged --quiet || git commit -m "Update jquantstats.pdf [skip ci]"
+          git push origin paper
