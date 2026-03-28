@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import dataclasses
+import datetime
 import math
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import polars as pl
 
@@ -188,7 +189,7 @@ def _add_recent_returns_rows(
         s: Stats object used for the all-time CAGR.
 
     """
-    today = all_df[date_col].max()
+    today = cast(datetime.date, all_df[date_col].max())
     mtd_start = today.replace(day=1)
     ytd_start = today.replace(month=1, day=1)
 
