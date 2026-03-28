@@ -329,6 +329,48 @@ def test_autocorrelation_lag5(stats):
     assert result["META"] == pytest.approx(0.012378555376440949)
 
 
+def test_autocorrelation_invalid_lag_zero(stats):
+    """Tests that autocorrelation raises ValueError for lag=0.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        A ValueError is raised when lag is zero.
+
+    """
+    with pytest.raises(ValueError, match="lag must be a positive integer"):
+        stats.autocorrelation(lag=0)
+
+
+def test_autocorrelation_invalid_lag_negative(stats):
+    """Tests that autocorrelation raises ValueError for negative lag.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        A ValueError is raised when lag is negative.
+
+    """
+    with pytest.raises(ValueError, match="lag must be a positive integer"):
+        stats.autocorrelation(lag=-1)
+
+
+def test_autocorrelation_invalid_lag_type(stats):
+    """Tests that autocorrelation raises TypeError for non-integer lag.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        A TypeError is raised when lag is not an int.
+
+    """
+    with pytest.raises(TypeError, match="lag must be an int"):
+        stats.autocorrelation(lag=1.0)  # type: ignore[arg-type]
+
+
 def test_acf_shape(stats):
     """Tests that the acf method returns a DataFrame with the correct shape.
 
@@ -363,6 +405,34 @@ def test_acf_values(stats):
     assert result["META"][1] == pytest.approx(-0.025099872722702105)
     assert result["META"][5] == pytest.approx(0.012378555376440949)
     assert result["META"][20] == pytest.approx(0.049337716067170856)
+
+
+def test_acf_invalid_nlags_negative(stats):
+    """Tests that acf raises ValueError for negative nlags.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        A ValueError is raised when nlags is negative.
+
+    """
+    with pytest.raises(ValueError, match="nlags must be non-negative"):
+        stats.acf(nlags=-1)
+
+
+def test_acf_invalid_nlags_type(stats):
+    """Tests that acf raises TypeError for non-integer nlags.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        A TypeError is raised when nlags is not an int.
+
+    """
+    with pytest.raises(TypeError, match="nlags must be an int"):
+        stats.acf(nlags=1.5)  # type: ignore[arg-type]
 
 
 def test_sharpe(stats):
