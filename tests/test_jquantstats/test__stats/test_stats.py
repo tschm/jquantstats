@@ -931,3 +931,74 @@ def test_sortino_all_zero_returns_is_nan(edge):
     result = edge.stats.sortino()
     for val in result.values():
         assert math.isnan(val)
+
+
+# ── Ulcer metrics ─────────────────────────────────────────────────────────────
+
+
+def test_ulcer_index(stats):
+    """ulcer_index returns a positive float per asset."""
+    result = stats.ulcer_index()
+    assert isinstance(result, dict)
+    assert set(result.keys()) == set(stats.data.assets)
+    for col in result:
+        assert result[col] >= 0.0
+    assert result["META"] == pytest.approx(0.11054071288725323)
+
+
+def test_ulcer_index_all_zeros(edge):
+    """ulcer_index returns 0.0 when all returns are zero (no drawdowns)."""
+    result = edge.stats.ulcer_index()
+    for val in result.values():
+        assert val == 0.0
+
+
+def test_ulcer_performance_index(stats):
+    """ulcer_performance_index returns a finite float per asset."""
+    result = stats.ulcer_performance_index()
+    assert isinstance(result, dict)
+    assert set(result.keys()) == set(stats.data.assets)
+    for col in result:
+        assert np.isfinite(result[col])
+    assert result["META"] == pytest.approx(121.06547792498111)
+
+
+def test_upi_is_alias(stats):
+    """upi() is an alias for ulcer_performance_index()."""
+    assert stats.upi() == stats.ulcer_performance_index()
+
+
+def test_ulcer_performance_index_zero_ui(edge):
+    """ulcer_performance_index returns NaN when ulcer_index is 0."""
+    result = edge.stats.ulcer_performance_index()
+    for val in result.values():
+        assert np.isnan(val)
+
+
+def test_serenity_index(stats):
+    """serenity_index returns a finite float per asset."""
+    result = stats.serenity_index()
+    assert isinstance(result, dict)
+    assert set(result.keys()) == set(stats.data.assets)
+    for col in result:
+        assert np.isfinite(result[col])
+    assert result["META"] == pytest.approx(130.9892725940348)
+
+
+def test_serenity_index_zero_ui(edge):
+    """serenity_index returns NaN when ulcer_index is 0."""
+    result = edge.stats.serenity_index()
+    for val in result.values():
+        assert np.isnan(val)
+
+
+def test_serenity_index_no_losses():
+    """serenity_index returns NaN when there are no negative returns."""
+    from jquantstats.data import Data
+
+    returns = pl.DataFrame({"r": [0.01, 0.02, 0.03]})
+    index = pl.DataFrame({"idx": [0, 1, 2]})
+    d = Data(returns=returns, index=index)
+    result = d.stats.serenity_index()
+    for val in result.values():
+        assert np.isnan(val)

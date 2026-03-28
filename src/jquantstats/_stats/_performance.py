@@ -8,7 +8,7 @@ import numpy as np
 import polars as pl
 from scipy.stats import norm
 
-from ._core import columnwise_stat, to_frame
+from ._core import _drawdown_series, _to_float, columnwise_stat, to_frame
 
 # ── Performance statistics mixin ─────────────────────────────────────────────
 
@@ -292,6 +292,101 @@ class _PerformanceStatsMixin:
 
         """
         return _PerformanceStatsMixin.max_drawdown_single_series(series)
+
+    @columnwise_stat
+    def ulcer_index(self, series: pl.Series) -> float:
+        """Calculate the Ulcer Index (root mean square of drawdowns).
+
+        A higher Ulcer Index indicates deeper and/or longer drawdowns.
+        Returns ``nan`` when the series is empty.
+
+        Args:
+            series (pl.Series): Series of additive daily returns.
+
+        Returns:
+            float: The Ulcer Index value.
+
+        """
+        return _PerformanceStatsMixin._ulcer_index_single(series)
+
+    @staticmethod
+    def _ulcer_index_single(series: pl.Series) -> float:
+        """Compute the Ulcer Index for a single returns series.
+
+        Args:
+            series: A Polars Series of additive returns.
+
+        Returns:
+            float: The Ulcer Index, or ``nan`` when the series is empty.
+        """
+        dd = _drawdown_series(series)
+        if dd.len() == 0:
+            return float("nan")
+        return float(np.sqrt(_to_float((dd**2).mean())))
+
+    @columnwise_stat
+    def ulcer_performance_index(self, series: pl.Series, rf: float = 0.0) -> float:
+        """Calculate the Ulcer Performance Index (UPI).
+
+        A Sharpe-like ratio that penalises drawdown depth and duration.
+        Returns ``nan`` when the Ulcer Index is zero or the series is empty.
+
+        Args:
+            series (pl.Series): Series of additive daily returns.
+            rf (float): Risk-free rate (total, not annualised). Defaults to 0.
+
+        Returns:
+            float: The Ulcer Performance Index value.
+
+        """
+        ui = _PerformanceStatsMixin._ulcer_index_single(series)
+        if ui == 0.0 or np.isnan(ui):
+            return float("nan")
+        total_return = _to_float(np.expm1(np.log1p(series.cast(pl.Float64)).sum()))
+        return (total_return - rf) / ui
+
+    def upi(self, rf: float = 0.0) -> dict[str, float]:
+        """Shorthand for :meth:`ulcer_performance_index`.
+
+        Args:
+            rf (float): Risk-free rate (total, not annualised). Defaults to 0.
+
+        Returns:
+            dict[str, float]: Dictionary mapping asset names to UPI values.
+
+        """
+        return self.ulcer_performance_index(rf=rf)
+
+    @columnwise_stat
+    def serenity_index(self, series: pl.Series, rf: float = 0.0) -> float:
+        """Calculate the Serenity Index.
+
+        A Calmar-like ratio that uses the Ulcer Index instead of max drawdown,
+        additionally weighted by a loss ratio and a win/loss ratio.
+        Returns ``nan`` when the Ulcer Index is zero or the series is empty.
+
+        Args:
+            series (pl.Series): Series of additive daily returns.
+            rf (float): Risk-free rate (total, not annualised). Defaults to 0.
+
+        Returns:
+            float: The Serenity Index value.
+
+        """
+        ui = _PerformanceStatsMixin._ulcer_index_single(series)
+        if ui == 0.0 or np.isnan(ui):
+            return float("nan")
+        total_return = _to_float(np.expm1(np.log1p(series.cast(pl.Float64)).sum()))
+        dd = _drawdown_series(series)
+        loss_ratio = 1.0 - _to_float(dd.mean())
+        positive = series.filter(series >= 0)
+        negative = series.filter(series < 0)
+        pos_sum = _to_float(positive.sum())
+        neg_sum = abs(_to_float(negative.sum()))
+        if neg_sum == 0.0:
+            return float("nan")
+        win_ratio = pos_sum / neg_sum
+        return (total_return - rf) / ui * loss_ratio * win_ratio
 
     def adjusted_sortino(self, periods: int | float | None = None) -> dict[str, float]:
         """Calculate Jack Schwager's adjusted Sortino ratio.
