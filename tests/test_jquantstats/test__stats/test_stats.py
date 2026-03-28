@@ -1122,6 +1122,20 @@ def test_rolling_volatility_invalid_periods_type_raises(stats):
         stats.rolling_volatility(rolling_period=5, periods_per_year="252")  # type: ignore[arg-type]
 
 
+def test_pct_rank(stats):
+    """Tests that pct_rank returns a DataFrame with the correct shape and values."""
+    result = stats.pct_rank(window=60)
+    assert result.shape == stats.all.shape
+    assert result["AAPL"].null_count() == 59
+    assert result["AAPL"].drop_nulls()[-1] == pytest.approx(26.666666666666668)
+
+
+def test_pct_rank_invalid_window_raises(stats):
+    """pct_rank raises ValueError for non-positive window."""
+    with pytest.raises(ValueError, match="positive integer"):
+        stats.pct_rank(window=0)
+
+
 def test_repr(stats):
     """Tests that Stats.__repr__ returns an informative string."""
     r = repr(stats)
