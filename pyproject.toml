@@ -30,7 +30,7 @@ classifiers = [
 
 # Project URLs for documentation and reference
 [project.urls]
-repository = "https://github.com/tschm/jquantstats"
+repository = "https://github.com/jebel-quant/jquantstats"
 
 # Optional dependencies that can be installed with extras (e.g., pip install jquantstats[plot])
 [project.optional-dependencies]

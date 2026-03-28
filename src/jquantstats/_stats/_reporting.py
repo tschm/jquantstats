@@ -134,11 +134,80 @@ class _ReportingStatsMixin:
         raw_periods = periods or self.data._periods_per_year
         n = len(series)
         if n == 0:
-            return float("nan")
+            return float("nan")  # pragma: no cover
         excess = series.cast(pl.Float64) - rf / raw_periods
         total = _to_float((1.0 + excess).product()) - 1.0 if compounded else _to_float(excess.sum())
         years = n / raw_periods
         return float(abs(1.0 + total) ** (1.0 / years) - 1.0)
+
+    def expected_return(
+        self,
+        aggregate: str | None = None,
+        compounded: bool = True,
+    ) -> dict[str, float]:
+        """Expected return with optional period aggregation.
+
+        Returns the arithmetic mean of per-period returns.  When *aggregate* is
+        provided the returns are first compounded (or summed) within each
+        calendar period, and the mean is taken over those period returns.
+
+        Args:
+            aggregate (str | None): Period to aggregate to before computing the
+                mean. Accepted values: ``'weekly'``, ``'monthly'``,
+                ``'quarterly'``, ``'annual'`` / ``'yearly'``. Defaults to
+                ``None`` (raw per-period mean).
+            compounded (bool): Compound returns within each period when
+                *aggregate* is set. Defaults to ``True``.
+
+        Returns:
+            dict[str, float]: Mean return per asset for the specified period.
+
+        Raises:
+            ValueError: If *aggregate* is an unrecognised string.
+
+        Note:
+            Requires a temporal (Date / Datetime) index when *aggregate* is not
+            ``None``; falls back to the raw per-period mean otherwise.
+        """
+        _freq_map: dict[str, str] = {
+            "weekly": "1w",
+            "monthly": "1mo",
+            "quarterly": "3mo",
+            "annual": "1y",
+            "yearly": "1y",
+        }
+
+        def _geomean(s: pl.Series) -> float:
+            """Per-period geometric mean: (product(1 + r))^(1/n) - 1."""
+            n = s.count()
+            if n == 0:
+                return float("nan")
+            return float(_to_float((1.0 + s.cast(pl.Float64)).product()) ** (1.0 / n) - 1.0)
+
+        if aggregate is None:
+            return {col: _geomean(series.drop_nulls()) for col, series in self.data.items()}
+
+        if aggregate.lower() not in _freq_map:
+            raise ValueError(f"aggregate must be one of {list(_freq_map)}, got {aggregate!r}")  # noqa: TRY003
+
+        all_df = cast(pl.DataFrame, self.all)
+        date_col_name = self.data.date_col[0] if self.data.date_col else None
+        if date_col_name is None or not all_df[date_col_name].dtype.is_temporal():
+            return {col: _geomean(series.drop_nulls()) for col, series in self.data.items()}
+
+        trunc = _freq_map[aggregate.lower()]
+        agg_expr = ((1.0 + pl.col("ret")).product() - 1.0) if compounded else pl.col("ret").sum()
+
+        result: dict[str, float] = {}
+        for col, series in self.data.items():
+            df = (
+                pl.DataFrame({"date": all_df[date_col_name], "ret": series})
+                .drop_nulls()
+                .with_columns(pl.col("date").dt.truncate(trunc).alias("period"))
+            )
+            period_rets = df.group_by("period").agg(agg_expr.alias("ret"))["ret"]
+            result[col] = _geomean(period_rets)
+        return result
 
     def rar(self, periods: int | float = 252) -> dict[str, float]:
         """Risk-Adjusted Return: CAGR divided by exposure.
