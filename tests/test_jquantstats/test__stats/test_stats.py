@@ -330,6 +330,140 @@ def test_exposure(stats):
     assert result["META"] == pytest.approx(0.40)
 
 
+def test_autocorrelation(stats):
+    """Tests that the autocorrelation method calculates lag-1 autocorrelation correctly.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        The lag-1 autocorrelation value for META matches the expected value.
+
+    """
+    result = stats.autocorrelation()
+    assert result["META"] == pytest.approx(-0.025099872722702105)
+
+
+def test_autocorrelation_lag5(stats):
+    """Tests that the autocorrelation method calculates lag-5 autocorrelation correctly.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        The lag-5 autocorrelation value for META matches the expected value.
+
+    """
+    result = stats.autocorrelation(lag=5)
+    assert result["META"] == pytest.approx(0.012378555376440949)
+
+
+def test_autocorrelation_invalid_lag_zero(stats):
+    """Tests that autocorrelation raises ValueError for lag=0.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        A ValueError is raised when lag is zero.
+
+    """
+    with pytest.raises(ValueError, match="lag must be a positive integer"):
+        stats.autocorrelation(lag=0)
+
+
+def test_autocorrelation_invalid_lag_negative(stats):
+    """Tests that autocorrelation raises ValueError for negative lag.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        A ValueError is raised when lag is negative.
+
+    """
+    with pytest.raises(ValueError, match="lag must be a positive integer"):
+        stats.autocorrelation(lag=-1)
+
+
+def test_autocorrelation_invalid_lag_type(stats):
+    """Tests that autocorrelation raises TypeError for non-integer lag.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        A TypeError is raised when lag is not an int.
+
+    """
+    with pytest.raises(TypeError, match="lag must be an int"):
+        stats.autocorrelation(lag=1.0)  # type: ignore[arg-type]
+
+
+def test_acf_shape(stats):
+    """Tests that the acf method returns a DataFrame with the correct shape.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        The ACF DataFrame has nlags+1 rows and the expected columns.
+
+    """
+    nlags = 20
+    result = stats.acf(nlags=nlags)
+    assert isinstance(result, pl.DataFrame)
+    assert result.height == nlags + 1
+    assert "lag" in result.columns
+    assert "META" in result.columns
+
+
+def test_acf_values(stats):
+    """Tests that the acf method returns correct autocorrelation values.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        The ACF values at specific lags for META match the expected values.
+
+    """
+    result = stats.acf(nlags=20)
+    assert result["lag"].to_list() == list(range(21))
+    assert result["META"][0] == pytest.approx(1.0)
+    assert result["META"][1] == pytest.approx(-0.025099872722702105)
+    assert result["META"][5] == pytest.approx(0.012378555376440949)
+    assert result["META"][20] == pytest.approx(0.049337716067170856)
+
+
+def test_acf_invalid_nlags_negative(stats):
+    """Tests that acf raises ValueError for negative nlags.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        A ValueError is raised when nlags is negative.
+
+    """
+    with pytest.raises(ValueError, match="nlags must be non-negative"):
+        stats.acf(nlags=-1)
+
+
+def test_acf_invalid_nlags_type(stats):
+    """Tests that acf raises TypeError for non-integer nlags.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        A TypeError is raised when nlags is not an int.
+
+    """
+    with pytest.raises(TypeError, match="nlags must be an int"):
+        stats.acf(nlags=1.5)  # type: ignore[arg-type]
+
+
 def test_sharpe(stats):
     """Tests that the sharpe method calculates Sharpe ratio correctly.
 
@@ -435,6 +569,42 @@ def test_sortino(stats):
     """
     result = stats.sortino(periods=252)
     assert result["META"] == pytest.approx(1.06321091920911)
+
+
+def test_omega(stats):
+    """Tests that the omega method calculates the Omega ratio correctly.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        The Omega ratio for META matches the expected value for the default
+        parameters (rf=0, required_return=0), for a non-zero required_return,
+        and for a non-zero risk-free rate.
+
+    """
+    result = stats.omega()
+    assert result["META"] == pytest.approx(1.1491256085785948)
+
+    result_with_threshold = stats.omega(required_return=0.01)
+    assert result_with_threshold["META"] == pytest.approx(1.143589264051078)
+
+    result_with_rf = stats.omega(rf=0.02)
+    assert result_with_rf["META"] == pytest.approx(1.1381333817189756)
+
+
+def test_omega_invalid_required_return(stats):
+    """Tests that the omega method returns NaN for required_return <= -1.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        The Omega ratio is NaN when required_return <= -1.
+
+    """
+    result = stats.omega(required_return=-1.0)
+    assert np.isnan(result["META"])
 
 
 def test_rolling_sortino(stats):
