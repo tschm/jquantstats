@@ -101,7 +101,7 @@ def test_geometric_mean(stats):
 
     """
     result = stats.geometric_mean()
-    assert result["META"] == pytest.approx(0.0008201465942647701)
+    assert result["META"] == pytest.approx(0.0003285438070024238)
 
 
 def test_ghpr(stats):
@@ -115,7 +115,7 @@ def test_ghpr(stats):
 
     """
     result = stats.ghpr()
-    assert result["META"] == pytest.approx(0.0008201465942647701)
+    assert result["META"] == pytest.approx(0.0003285438070024238)
     assert result == stats.geometric_mean()
 
 

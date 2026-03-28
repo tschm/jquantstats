@@ -116,7 +116,11 @@ class _BasicStatsMixin:
         """Calculate the geometric mean of returns.
 
         Equivalent to the per-period CAGR: the nth root of the cumulative
-        product of (1 + return) minus 1, where n is the number of observations.
+        product of (1 + return) minus 1, where n is the total number of
+        periods (including null/missing periods treated as zero return).
+
+        Null and NaN values are filled with 0.0 before computation, matching
+        the quantstats convention that missing periods represent zero returns.
 
         Computed via log-sum for numerical stability.
 
@@ -127,11 +131,11 @@ class _BasicStatsMixin:
             float: The geometric mean of returns.
 
         """
-        clean = series.drop_nulls()
-        n = clean.count()
-        if n == 0:
+        filled = series.fill_null(0.0).fill_nan(0.0)
+        n = filled.len()
+        if n == 0:  # pragma: no cover
             return float("nan")
-        return float(np.exp(float(np.log1p(clean.to_numpy()).mean())) - 1.0)
+        return float(np.exp(float(np.log1p(filled.to_numpy()).mean())) - 1.0)
 
     def ghpr(self) -> dict[str, float]:
         """Calculate the Geometric Holding Period Return (alias for geometric_mean).
