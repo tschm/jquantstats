@@ -8,6 +8,7 @@ import numpy as np
 import polars as pl
 
 from ._core import to_frame
+from ._performance import _PerformanceStatsMixin
 
 # ── Rolling statistics mixin ─────────────────────────────────────────────────
 
@@ -29,6 +30,56 @@ class _RollingStatsMixin:
 
         data: DataLike
         all: pl.DataFrame | None
+
+    @staticmethod
+    def _pct_rank_series(s: pl.Series) -> float:
+        """Percentile rank of the last element among all elements (pandas average method).
+
+        Args:
+            s (pl.Series): Window of price values.
+
+        Returns:
+            float: Rank of s[-1] in [0, 100].
+
+        """
+        arr = s.to_numpy()
+        current = arr[-1]
+        n = len(arr)
+        below = float(np.sum(arr < current))
+        equal = float(np.sum(arr == current))
+        return (below + (equal + 1) / 2) / n * 100.0
+
+    def pct_rank(self, window: int = 60) -> pl.DataFrame:
+        """Calculate the rolling percentile rank of prices within a window.
+
+        Converts returns to a cumulative price series, then for each period
+        returns the percentile rank (0-100) of the current price within the
+        trailing ``window`` prices.  Matches ``qs.stats.pct_rank`` (pandas
+        ``rank(pct=True)`` with ``method='average'``).
+
+        Args:
+            window (int): Rolling window size. Defaults to 60.
+
+        Returns:
+            pl.DataFrame: Date column(s) plus one percentile-rank column per asset.
+
+        Raises:
+            ValueError: If window is not a positive integer.
+
+        """
+        if not isinstance(window, int) or window <= 0:
+            raise ValueError("window must be a positive integer")  # noqa: TRY003
+
+        cols = []
+        for col, series in self.data.items():
+            prices = _PerformanceStatsMixin.prices(series)
+            ranked = prices.rolling_map(
+                function=self._pct_rank_series,
+                window_size=window,
+            ).alias(col)
+            cols.append(ranked)
+
+        return cast(pl.DataFrame, self.all).select([pl.col(name) for name in self.data.date_col] + cols)
 
     @to_frame
     def rolling_sortino(

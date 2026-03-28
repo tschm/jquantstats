@@ -90,6 +90,42 @@ def test_avg_loss(stats):
     assert result["META"] == pytest.approx(-0.01614062422517277)
 
 
+def test_geometric_mean(stats):
+    """Tests that geometric_mean calculates the per-period geometric average correctly."""
+    result = stats.geometric_mean()
+    assert result["META"] == pytest.approx(0.0008201465942647701)
+
+
+def test_geometric_mean_annualized(stats):
+    """Tests that geometric_mean with annualize=True returns the annualized geometric return."""
+    result = stats.geometric_mean(annualize=True)
+    assert result["META"] == pytest.approx(0.22904692100449497)
+
+
+def test_probabilistic_sortino_ratio(stats):
+    """Tests that probabilistic_sortino_ratio matches the expected value."""
+    result = stats.probabilistic_sortino_ratio()
+    assert result["META"] == pytest.approx(0.999936222948045)
+
+
+def test_probabilistic_adjusted_sortino_ratio(stats):
+    """Tests that probabilistic_adjusted_sortino_ratio matches the expected value."""
+    result = stats.probabilistic_adjusted_sortino_ratio()
+    assert result["META"] == pytest.approx(0.9966624180363135)
+
+
+def test_smart_sharpe(stats):
+    """Tests that smart_sharpe applies the autocorrelation penalty to the Sharpe ratio."""
+    result = stats.smart_sharpe(periods=252)
+    assert result["META"] == pytest.approx(0.698132519420813)
+
+
+def test_smart_sortino(stats):
+    """Tests that smart_sortino applies the autocorrelation penalty to the Sortino ratio."""
+    result = stats.smart_sortino(periods=252)
+    assert result["META"] == pytest.approx(1.0368591297457295)
+
+
 def test_volatility(stats):
     """Tests that the volatility method calculates volatility correctly.
 
@@ -1084,6 +1120,20 @@ def test_rolling_volatility_invalid_periods_type_raises(stats):
     """rolling_volatility raises TypeError for non-numeric periods_per_year."""
     with pytest.raises(TypeError):
         stats.rolling_volatility(rolling_period=5, periods_per_year="252")  # type: ignore[arg-type]
+
+
+def test_pct_rank(stats):
+    """Tests that pct_rank returns a DataFrame with the correct shape and values."""
+    result = stats.pct_rank(window=60)
+    assert result.shape == stats.all.shape
+    assert result["AAPL"].null_count() == 59
+    assert result["AAPL"].drop_nulls()[-1] == pytest.approx(26.666666666666668)
+
+
+def test_pct_rank_invalid_window_raises(stats):
+    """pct_rank raises ValueError for non-positive window."""
+    with pytest.raises(ValueError, match="positive integer"):
+        stats.pct_rank(window=0)
 
 
 def test_repr(stats):

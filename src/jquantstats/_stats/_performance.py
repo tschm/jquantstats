@@ -30,6 +30,9 @@ class _PerformanceStatsMixin:
         data: DataLike
         all: pl.DataFrame | None
 
+        def autocorr_penalty(self) -> dict[str, float]:
+            """Defined on _BasicStatsMixin."""
+
     # ── Sharpe & Sortino ──────────────────────────────────────────────────────
 
     @columnwise_stat
@@ -344,6 +347,116 @@ class _PerformanceStatsMixin:
 
         """
         return _PerformanceStatsMixin.max_drawdown_single_series(series)
+
+    @staticmethod
+    def _probabilistic_ratio_from_base(base: float, series: pl.Series) -> float:
+        """Compute the probabilistic ratio given an observed unannualized base ratio.
+
+        Uses the formula: norm.cdf(base / sigma), where
+        sigma = sqrt((1 + 0.5·base² - skew·base + (kurt-3)/4·base²) / (n-1)).
+
+        Args:
+            base (float): Unannualized observed ratio (e.g. Sortino).
+            series (pl.Series): The original returns series (for moments and n).
+
+        Returns:
+            float: Probabilistic ratio in [0, 1].
+
+        """
+        n = series.count()
+        skew_val = series.skew(bias=False)
+        kurt_val = series.kurtosis(bias=False)
+        if skew_val is None or kurt_val is None or n <= 1:
+            return float(np.nan)
+        variance = (1 + 0.5 * base**2 - float(skew_val) * base + ((float(kurt_val) - 3) / 4) * base**2) / (n - 1)
+        if variance <= 0:
+            return float(np.nan)
+        return float(norm.cdf(base / np.sqrt(variance)))
+
+    @columnwise_stat
+    def probabilistic_sortino_ratio(self, series: pl.Series, periods: int | float | None = None) -> float:
+        """Calculate the Probabilistic Sortino Ratio.
+
+        The probability that the observed Sortino ratio is greater than zero,
+        accounting for estimation uncertainty via skewness and kurtosis.
+
+        Args:
+            series (pl.Series): The series to calculate the ratio for.
+            periods (int | float, optional): Accepted for API compatibility; has no effect
+                since the base ratio is un-annualized.
+
+        Returns:
+            float: Probabilistic Sortino ratio in [0, 1].
+
+        """
+        downside_sum = ((series.filter(series < 0)) ** 2).sum()
+        downside_deviation = float(np.sqrt(float(downside_sum) / series.count()))
+        mean_val = cast(float, series.mean())
+        mean_f = mean_val if mean_val is not None else 0.0
+        if downside_deviation == 0.0:
+            return float(np.nan)
+        base = float(mean_f / downside_deviation)
+        return self._probabilistic_ratio_from_base(base, series)
+
+    @columnwise_stat
+    def probabilistic_adjusted_sortino_ratio(self, series: pl.Series, periods: int | float | None = None) -> float:
+        """Calculate the Probabilistic Adjusted Sortino Ratio.
+
+        The probability that the observed adjusted Sortino ratio (divided by sqrt(2)
+        for Sharpe comparability) is greater than zero, accounting for estimation
+        uncertainty via skewness and kurtosis.
+
+        Args:
+            series (pl.Series): The series to calculate the ratio for.
+            periods (int | float, optional): Accepted for API compatibility; has no effect
+                since the base ratio is un-annualized.
+
+        Returns:
+            float: Probabilistic adjusted Sortino ratio in [0, 1].
+
+        """
+        downside_sum = ((series.filter(series < 0)) ** 2).sum()
+        downside_deviation = float(np.sqrt(float(downside_sum) / series.count()))
+        mean_val = cast(float, series.mean())
+        mean_f = mean_val if mean_val is not None else 0.0
+        if downside_deviation == 0.0:
+            return float(np.nan)
+        base = float(mean_f / downside_deviation) / np.sqrt(2)
+        return self._probabilistic_ratio_from_base(base, series)
+
+    def smart_sharpe(self, periods: int | float | None = None) -> dict[str, float]:
+        """Calculate the Smart Sharpe ratio (Sharpe with autocorrelation penalty).
+
+        Divides the Sharpe ratio by the autocorrelation penalty to account for
+        return autocorrelation that can artificially inflate risk-adjusted metrics.
+
+        Args:
+            periods (int | float, optional): Number of periods per year. Defaults to periods_per_year.
+
+        Returns:
+            dict[str, float]: Dictionary mapping asset names to Smart Sharpe ratios.
+
+        """
+        sharpe_data = self.sharpe(periods=periods)
+        penalty_data = self.autocorr_penalty()
+        return {k: sharpe_data[k] / penalty_data[k] for k in sharpe_data}
+
+    def smart_sortino(self, periods: int | float | None = None) -> dict[str, float]:
+        """Calculate the Smart Sortino ratio (Sortino with autocorrelation penalty).
+
+        Divides the Sortino ratio by the autocorrelation penalty to account for
+        return autocorrelation that can artificially inflate risk-adjusted metrics.
+
+        Args:
+            periods (int | float, optional): Number of periods per year. Defaults to periods_per_year.
+
+        Returns:
+            dict[str, float]: Dictionary mapping asset names to Smart Sortino ratios.
+
+        """
+        sortino_data = self.sortino(periods=periods)
+        penalty_data = self.autocorr_penalty()
+        return {k: sortino_data[k] / penalty_data[k] for k in sortino_data}
 
     def adjusted_sortino(self, periods: int | float | None = None) -> dict[str, float]:
         """Calculate Jack Schwager's adjusted Sortino ratio.
