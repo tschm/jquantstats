@@ -291,7 +291,7 @@ If you use jQuantStats in academic work or research reports, please cite it usin
   author    = {Schmelzer, Thomas},
   title     = {jQuantStats: Portfolio Analytics for Quants},
   url       = {https://github.com/tschm/jquantstats},
-  version   = {0.1.1},
+  version   = {0.4.0},
   year      = {2026},
   license   = {MIT}
 }

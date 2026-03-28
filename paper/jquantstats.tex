@@ -99,7 +99,7 @@
 \noindent
 \textbf{jQuantStats} is an open-source Python library for portfolio performance
 analytics designed for systematic traders and quantitative portfolio managers.
-It provides a comprehensive suite of over fifty risk and return metrics,
+It provides a comprehensive suite of over eighty risk and return metrics,
 interactive Plotly visualisations, and an HTML reporting engine, all built on a
 modern, Polars-native stack with zero pandas runtime dependency.
 
@@ -460,10 +460,64 @@ Estimated by OLS of $r_t = \alpha + \beta\,b_t + \varepsilon_t$:
 \end{equation}
 where subscripts denote conditioning on benchmark return sign.
 
+\subsection{Compound Return Metrics}
+
+\paragraph{Compound return.}
+\begin{equation}
+  \mathrm{Comp} = \prod_{t=1}^{T}(1 + r_t) - 1.
+\end{equation}
+
+\paragraph{Geometric holding period return (GHPR).}
+The per-period geometric mean return, equivalent to the $T$-th root of the
+terminal wealth ratio:
+\begin{equation}
+  \mathrm{GHPR} = \left(\prod_{t=1}^{T}(1 + r_t)\right)^{1/T} - 1.
+\end{equation}
+
+\paragraph{Compound annual growth rate.}
+\begin{equation}
+  \mathrm{CAGR} = \left(\prod_{t=1}^{T}(1 + r_t)\right)^{f/T} - 1.
+\end{equation}
+
+\subsection{Omega Ratio}
+
+The Omega ratio \citep{keating2002} measures the probability-weighted ratio of
+gains to losses relative to a threshold return $\tau$:
+\begin{equation}
+  \Omega(\tau) = \frac{\int_\tau^\infty [1 - F(r)]\,\mathrm{d}r}
+                      {\int_{-\infty}^\tau F(r)\,\mathrm{d}r},
+\end{equation}
+where $F$ is the empirical cumulative distribution of returns.  In the
+discrete-sample implementation with $\tau = r_f$:
+\begin{equation}
+  \Omega = \frac{\sum_{t : r_t > \tau}(r_t - \tau)}
+                {\sum_{t : r_t \leq \tau}(\tau - r_t)}.
+\end{equation}
+
+\subsection{Autocorrelation Metrics}
+
+\paragraph{Autocorrelation at lag $\ell$.}
+\begin{equation}
+  \rho(\ell) = \frac{\sum_{t=\ell+1}^{T}(r_t - \bar{r})(r_{t-\ell} - \bar{r})}
+                    {\sum_{t=1}^{T}(r_t - \bar{r})^2}.
+\end{equation}
+
+\paragraph{Autocorrelation penalty (Lo, 2002).}
+Under serially correlated returns, the Sharpe ratio estimator has inflated
+variance.  The autocorrelation penalty scales the Sharpe ratio to correct for
+this bias:
+\begin{equation}
+  \text{penalty} = \sqrt{1 + 2\sum_{\ell=1}^{\min(T-1,\,\lfloor T/5\rfloor)}
+    \rho(\ell)\,\frac{T - \ell}{T}}.
+\end{equation}
+\texttt{smart\_sharpe()} and \texttt{smart\_sortino()} divide the standard
+Sharpe and Sortino estimates by this factor.
+
 \subsection{Rolling Analytics}
 
-jQuantStats computes rolling variants of the Sharpe ratio, Sortino ratio, and
-volatility over a configurable look-back window $w$:
+jQuantStats computes rolling variants of the Sharpe ratio, Sortino ratio,
+volatility, and benchmark greeks (alpha and beta) over a configurable
+look-back window $w$:
 \begin{equation}
   \mathrm{SR}_t^{(w)} = \frac{\bar{r}_{t-w+1:t}\,\sqrt{f}}
                               {\hat\sigma_{t-w+1:t}}.
@@ -611,9 +665,8 @@ capacity-constrained by execution timing.
 
 Both \texttt{Portfolio} and \texttt{Data} expose a \texttt{.report} (or
 \texttt{.reports}) facade.  Calling \texttt{.to\_html(title)} produces a
-self-contained HTML file—embedding all Plotly charts as base64-encoded
-JavaScript—that can be shared without external dependencies.  The underlying
-template uses Jinja2 and is fully customisable.
+self-contained HTML file—embedding all Plotly charts inline as JavaScript—that
+can be shared without external dependencies.
 
 % ==========================================================================
 \section{Annualisation and Frequency Detection}
@@ -842,35 +895,91 @@ Method & Returns \\
 \midrule
 \endhead
 \texttt{.summary()} & Comprehensive statistics DataFrame \\
-\texttt{.sharpe(series, periods)} & Annualised Sharpe ratio \\
-\texttt{.sharpe\_variance()} & Asymptotic variance of Sharpe estimate \\
-\texttt{.prob\_sharpe\_ratio(series, sr*)} & Probabilistic Sharpe ratio \\
-\texttt{.sortino(series, periods)} & Annualised Sortino ratio \\
-\texttt{.adjusted\_sortino()} & Benchmark-adjusted Sortino \\
-\texttt{.calmar(series, periods)} & Calmar ratio \\
-\texttt{.recovery\_factor(series)} & Total return / max drawdown \\
-\texttt{.information\_ratio()} & Information ratio vs benchmark \\
-\texttt{.greeks()} & Dict with alpha and beta \\
-\texttt{.r\_squared(series, bench)} & $R^2$ of return regression \\
-\texttt{.max\_drawdown(series)} & Maximum drawdown \\
-\texttt{.max\_drawdown\_duration()} & Duration of worst drawdown \\
-\texttt{.avg\_drawdown(series)} & Mean drawdown over underwater periods \\
-\texttt{.value\_at\_risk(series, sigma, alpha)} & Cornish--Fisher VaR \\
-\texttt{.conditional\_value\_at\_risk()} & Expected Shortfall \\
-\texttt{.kelly\_criterion()} & Optimal Kelly fraction \\
-\texttt{.volatility(series, periods, annualize)} & Realised volatility \\
+\midrule
+\multicolumn{2}{@{}l@{}}{\textit{Return metrics}} \\
+\texttt{.avg\_return()} & Mean period return \\
+\texttt{.avg\_win()} & Mean positive-period return \\
+\texttt{.avg\_loss()} & Mean negative-period return \\
+\texttt{.best()} & Best single-period return \\
+\texttt{.worst()} & Worst single-period return \\
+\texttt{.comp()} & Compound cumulative return \\
+\texttt{.geometric\_mean()} & Geometric mean period return \\
+\texttt{.cagr()} & Compound annual growth rate \\
+\texttt{.ghpr()} & Geometric holding period return \\
+\texttt{.expected\_return(aggregate)} & Expected return (optionally aggregated) \\
 \texttt{.win\_rate()} & Fraction of positive-return periods \\
 \texttt{.payoff\_ratio()} & Avg win / avg loss \\
 \texttt{.profit\_factor()} & Gross profit / gross loss \\
 \texttt{.gain\_to\_pain\_ratio()} & Cumulative return / sum of losses \\
+\texttt{.exposure()} & Fraction of non-zero return periods \\
+\midrule
+\multicolumn{2}{@{}l@{}}{\textit{Risk and volatility}} \\
+\texttt{.volatility(series, periods, annualize)} & Realised annualised volatility \\
+\texttt{.value\_at\_risk(series, sigma, alpha)} & Cornish--Fisher VaR \\
+\texttt{.conditional\_value\_at\_risk()} & Expected Shortfall \\
+\texttt{.kelly\_criterion()} & Optimal Kelly fraction \\
+\texttt{.tail\_ratio(cutoff)} & Ratio of upper to lower tail \\
+\texttt{.skew()} & Return distribution skewness \\
+\texttt{.kurtosis()} & Return distribution excess kurtosis \\
+\texttt{.outliers(quantile)} & Return outlier periods \\
+\texttt{.remove\_outliers(quantile)} & Return series with outliers removed \\
+\texttt{.outlier\_win\_ratio(quantile)} & Fraction of returns above upper quantile \\
+\texttt{.outlier\_loss\_ratio(quantile)} & Fraction of returns below lower quantile \\
+\midrule
+\multicolumn{2}{@{}l@{}}{\textit{Drawdown}} \\
+\texttt{.max\_drawdown(series)} & Maximum drawdown \\
+\texttt{.max\_drawdown\_duration()} & Duration of worst drawdown \\
+\texttt{.avg\_drawdown(series)} & Mean drawdown over underwater periods \\
+\texttt{.drawdown\_details()} & Per-drawdown-period table per asset \\
+\texttt{.calmar(series, periods)} & Calmar ratio \\
+\texttt{.recovery\_factor(series)} & Total return / max drawdown \\
+\midrule
+\multicolumn{2}{@{}l@{}}{\textit{Risk-adjusted ratios}} \\
+\texttt{.sharpe(series, periods)} & Annualised Sharpe ratio \\
+\texttt{.sharpe\_variance()} & Asymptotic variance of Sharpe estimate \\
+\texttt{.probabilistic\_sharpe\_ratio(sr*)} & Probabilistic Sharpe ratio \\
+\texttt{.probabilistic\_sortino\_ratio()} & Probabilistic Sortino ratio \\
+\texttt{.probabilistic\_adjusted\_sortino\_ratio()} & Probabilistic adjusted Sortino ratio \\
+\texttt{.probabilistic\_ratio(base)} & Generalised probabilistic ratio \\
+\texttt{.sortino(series, periods)} & Annualised Sortino ratio \\
+\texttt{.adjusted\_sortino()} & Sortino / $\sqrt{2}$ \\
+\texttt{.smart\_sharpe()} & Sharpe with autocorrelation penalty \\
+\texttt{.smart\_sortino()} & Sortino with autocorrelation penalty \\
+\texttt{.omega()} & Omega ratio \\
+\texttt{.treynor\_ratio()} & Treynor ratio \\
+\texttt{.ulcer\_index()} & Ulcer Index \\
+\texttt{.serenity\_index()} & Serenity Index \\
+\texttt{.common\_sense\_ratio()} & Common Sense Ratio \\
+\texttt{.cpc\_index()} & CPC Index \\
+\midrule
+\multicolumn{2}{@{}l@{}}{\textit{Benchmark and factor analytics}} \\
+\texttt{.information\_ratio()} & Information ratio vs benchmark \\
+\texttt{.greeks()} & Dict with alpha and beta \\
+\texttt{.r\_squared(series, bench)} & $R^2$ of return regression \\
+\texttt{.up\_capture()} & Return capture during up-market periods \\
+\texttt{.down\_capture()} & Return capture during down-market periods \\
+\midrule
+\multicolumn{2}{@{}l@{}}{\textit{Autocorrelation and serial dependence}} \\
+\texttt{.autocorr(lag)} & Pearson autocorrelation at lag $\ell$ \\
+\texttt{.acf(nlags)} & Full autocorrelation function as DataFrame \\
+\texttt{.autocorr\_penalty()} & Autocorrelation penalty factor \\
+\midrule
+\multicolumn{2}{@{}l@{}}{\textit{Concentration}} \\
 \texttt{.hhi\_positive()} & HHI concentration of gains \\
 \texttt{.hhi\_negative()} & HHI concentration of losses \\
-\texttt{.up\_capture\_ratio()} & Return during up-market periods \\
-\texttt{.down\_capture\_ratio()} & Return during down-market periods \\
-\texttt{.annual\_breakdown()} & Per-year statistics table \\
-\texttt{.rolling\_sharpe(window)} & Rolling Sharpe series \\
-\texttt{.rolling\_sortino(window)} & Rolling Sortino series \\
+\midrule
+\multicolumn{2}{@{}l@{}}{\textit{Rolling analytics}} \\
+\texttt{.rolling\_sharpe(window)} & Rolling Sharpe ratio series \\
+\texttt{.rolling\_sortino(window)} & Rolling Sortino ratio series \\
 \texttt{.rolling\_volatility(window)} & Rolling volatility series \\
+\texttt{.rolling\_greeks(window)} & Rolling alpha/beta vs benchmark \\
+\midrule
+\multicolumn{2}{@{}l@{}}{\textit{Period breakdown}} \\
+\texttt{.monthly\_returns(eoy, compounded)} & Per-month return table \\
+\texttt{.monthly\_win\_rate()} & Win rate aggregated by month \\
+\texttt{.annual\_breakdown()} & Per-year statistics table \\
+\texttt{.distribution(compounded)} & Return distribution by period type \\
+\texttt{.compare(aggregate)} & Strategy vs benchmark return table \\
 \bottomrule
 \end{longtable}
 
