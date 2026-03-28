@@ -25,13 +25,13 @@ def _fmt(value: object, fmt: str = ".4f", suffix: str = "") -> str:
     """Format *value* for display; return ``"N/A"`` for non-finite values."""
     if not _is_finite(value):
         return "N/A"
-    return f"{float(value):{fmt}}{suffix}"
+    return f"{float(value):{fmt}}{suffix}"  # type: ignore[arg-type]
 
 
 def _safe(fn: Any, *args: Any, **kwargs: Any) -> dict[str, float]:
     """Call ``fn(*args, **kwargs)`` and return ``{}`` on any exception."""
     try:
-        return fn(*args, **kwargs)  # type: ignore[no-any-return]
+        return fn(*args, **kwargs)
     except Exception:
         return {}
 
@@ -352,7 +352,7 @@ def _try_plotly_div(fig: Any, include_cdn: bool = False) -> str:
     try:
         import plotly.io as pio
 
-        return pio.to_html(  # type: ignore[no-any-return]
+        return pio.to_html(
             fig,
             full_html=False,
             include_plotlyjs="cdn" if include_cdn else False,
@@ -538,30 +538,30 @@ class Reports:
 
             end_dt = all_df[date_col].max()
             # Use Python date arithmetic; Polars dates are datetime.date
-            today = end_dt  # type: ignore[assignment]
+            today = end_dt
 
             def _cutoff_days(n: int) -> Any:
                 """Return the date *n* days before *today*."""
-                return today - timedelta(days=n)  # type: ignore[operator]
+                return today - timedelta(days=n)
 
             def _cutoff_months(n: int) -> Any:
                 """Return the date *n* calendar months before *today*."""
                 import calendar
 
-                y = today.year  # type: ignore[union-attr]
-                m = today.month  # type: ignore[union-attr]
+                y = today.year
+                m = today.month
                 for _ in range(n):
                     m -= 1
                     if m == 0:
                         m = 12
                         y -= 1
-                d = min(today.day, calendar.monthrange(y, m)[1])  # type: ignore[union-attr]
+                d = min(today.day, calendar.monthrange(y, m)[1])
                 from datetime import date as _date
 
                 return _date(y, m, d)
 
-            mtd_start = today.replace(day=1)  # type: ignore[union-attr]
-            ytd_start = today.replace(month=1, day=1)  # type: ignore[union-attr]
+            mtd_start = today.replace(day=1)
+            ytd_start = today.replace(month=1, day=1)
 
             _row("MTD", _pct(_comp_since(all_df, date_col, asset_cols, mtd_start)))
             _row("3M", _pct(_comp_since(all_df, date_col, asset_cols, _cutoff_months(3))))

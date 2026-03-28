@@ -839,7 +839,7 @@ class _PerformanceStatsMixin:
 
         ppy = periods or self.data._periods_per_year
 
-        benchmark_data = cast(pl.DataFrame, self.data.benchmark)
+        benchmark_data = self.data.benchmark
         benchmark_col = benchmark or benchmark_data.columns[0]
 
         all_data = cast(pl.DataFrame, self.all)
