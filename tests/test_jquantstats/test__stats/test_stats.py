@@ -476,7 +476,7 @@ def test_sharpe_var(stats):
 @pytest.mark.parametrize("benchmark_sr", [0.0, 0.5, 1.0])
 def test_prob_sharpe_ratio(stats, benchmark_sr):
     """Tests that the prob_sharpe_ratio method calculates probabilistic Sharpe ratio correctly."""
-    result = stats.prob_sharpe_ratio(benchmark_sr=benchmark_sr)
+    result = stats.probabilistic_sharpe_ratio(benchmark_sr=benchmark_sr)
     # Unannualized Sharpe ratio
     observed_sr = stats.sharpe(periods=1)["META"]
     skew = stats.skew()["META"]
@@ -1067,23 +1067,23 @@ def test_summary_structure(stats):
 
 
 def test_rolling_sharpe_invalid_window_raises(stats):
-    """rolling_sharpe raises ValueError for non-positive window."""
+    """rolling_sharpe raises ValueError for non-positive rolling_period."""
     with pytest.raises(ValueError, match="positive integer"):
-        stats.rolling_sharpe(window=0)
+        stats.rolling_sharpe(rolling_period=0)
     with pytest.raises(ValueError, match="positive integer"):
-        stats.rolling_sharpe(window=-1)
+        stats.rolling_sharpe(rolling_period=-1)
 
 
 def test_rolling_volatility_invalid_window_raises(stats):
-    """rolling_volatility raises ValueError for non-positive window."""
+    """rolling_volatility raises ValueError for non-positive rolling_period."""
     with pytest.raises(ValueError, match="positive integer"):
-        stats.rolling_volatility(window=0)
+        stats.rolling_volatility(rolling_period=0)
 
 
 def test_rolling_volatility_invalid_periods_type_raises(stats):
-    """rolling_volatility raises TypeError for non-numeric periods."""
+    """rolling_volatility raises TypeError for non-numeric periods_per_year."""
     with pytest.raises(TypeError):
-        stats.rolling_volatility(window=5, periods="252")  # type: ignore[arg-type]
+        stats.rolling_volatility(rolling_period=5, periods_per_year="252")  # type: ignore[arg-type]
 
 
 def test_repr(stats):

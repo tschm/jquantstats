@@ -315,7 +315,7 @@ class PortfolioPlots:
         if not isinstance(window, int) or window <= 0:
             raise ValueError
 
-        rolling = self.portfolio.stats.rolling_sharpe(window=window)  # type: ignore[union-attr]
+        rolling = self.portfolio.stats.rolling_sharpe(rolling_period=window)  # type: ignore[union-attr]
 
         fig = go.Figure()
         date_col = rolling["date"] if "date" in rolling.columns else None
@@ -376,7 +376,7 @@ class PortfolioPlots:
         if not isinstance(window, int) or window <= 0:
             raise ValueError
 
-        rolling = self.portfolio.stats.rolling_volatility(window=window)  # type: ignore[union-attr]
+        rolling = self.portfolio.stats.rolling_volatility(rolling_period=window)  # type: ignore[union-attr]
 
         fig = go.Figure()
         date_col = rolling["date"] if "date" in rolling.columns else None

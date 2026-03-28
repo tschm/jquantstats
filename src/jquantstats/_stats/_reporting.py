@@ -105,7 +105,7 @@ class _ReportingStatsMixin:
 
     @columnwise_stat
     def calmar(self, series: pl.Series, periods: int | float | None = None) -> float:
-        """Calmar ratio (annualised return divided by maximum drawdown).
+        """Calmar ratio (CAGR divided by maximum drawdown).
 
         Returns ``nan`` when the maximum drawdown is zero.
 
@@ -120,12 +120,14 @@ class _ReportingStatsMixin:
         max_dd = _to_float(_drawdown_series(series).max())
         if max_dd <= 0:
             return float("nan")
-        ann_return = _to_float(series.mean()) * raw_periods
-        return ann_return / max_dd
+        n = len(series)
+        comp_return = _to_float((1.0 + series.cast(pl.Float64)).product()) - 1.0
+        cagr = (1.0 + comp_return) ** (raw_periods / n) - 1.0
+        return cagr / max_dd
 
     @columnwise_stat
     def recovery_factor(self, series: pl.Series) -> float:
-        """Recovery factor (total return divided by maximum drawdown).
+        """Recovery factor (compound total return divided by maximum drawdown).
 
         Returns ``nan`` when the maximum drawdown is zero.
 
@@ -138,8 +140,8 @@ class _ReportingStatsMixin:
         max_dd = _to_float(_drawdown_series(series).max())
         if max_dd <= 0:
             return float("nan")
-        total_return = _to_float(series.sum())
-        return total_return / max_dd
+        comp_return = _to_float((1.0 + series.cast(pl.Float64)).product()) - 1.0
+        return comp_return / max_dd
 
     def max_drawdown_duration(self) -> dict[str, float | int | None]:
         """Maximum drawdown duration in calendar days (or periods) per asset.

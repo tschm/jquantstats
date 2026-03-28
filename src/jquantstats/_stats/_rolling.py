@@ -60,35 +60,27 @@ class _RollingStatsMixin:
 
     def rolling_sharpe(
         self,
-        window: int | None = None,
-        periods: int | float | None = None,
-        rolling_period: int | None = None,
+        rolling_period: int = 126,
         periods_per_year: int | float | None = None,
     ) -> pl.DataFrame:
         """Calculate the rolling Sharpe ratio.
 
-        Accepts both the analytics-style (``window``, ``periods``) and the
-        legacy-style (``rolling_period``, ``periods_per_year``) keyword
-        arguments so that callers using either convention continue to work.
-
         Args:
-            window: Rolling window size (analytics style). Defaults to 126.
-            periods: Periods per year for annualisation (analytics style).
-            rolling_period: Alias for ``window`` (legacy style).
-            periods_per_year: Alias for ``periods`` (legacy style).
+            rolling_period: Rolling window size. Defaults to 126.
+            periods_per_year: Periods per year for annualisation.
 
         Returns:
             pl.DataFrame: Date column(s) plus one annualised rolling Sharpe
             column per asset.
 
         Raises:
-            ValueError: If the effective window size is not a positive integer.
+            ValueError: If rolling_period is not a positive integer.
 
         """
-        actual_window = window if window is not None else (rolling_period if rolling_period is not None else 126)
-        actual_periods = periods or periods_per_year or self.data._periods_per_year
+        actual_window = rolling_period
+        actual_periods = periods_per_year or self.data._periods_per_year
         if not isinstance(actual_window, int) or actual_window <= 0:
-            raise ValueError("window must be a positive integer")  # noqa: TRY003
+            raise ValueError("rolling_period must be a positive integer")  # noqa: TRY003
         scale = float(np.sqrt(actual_periods))
         return cast(pl.DataFrame, self.all).select(
             [pl.col(name) for name in self.data.date_col]
@@ -104,38 +96,30 @@ class _RollingStatsMixin:
 
     def rolling_volatility(
         self,
-        window: int | None = None,
-        periods: int | float | None = None,
-        annualize: bool = True,
-        rolling_period: int | None = None,
+        rolling_period: int = 126,
         periods_per_year: int | float | None = None,
+        annualize: bool = True,
     ) -> pl.DataFrame:
         """Calculate the rolling volatility of returns.
 
-        Accepts both the analytics-style (``window``, ``periods``,
-        ``annualize``) and the legacy-style (``rolling_period``,
-        ``periods_per_year``) keyword arguments.
-
         Args:
-            window: Rolling window size (analytics style). Defaults to 126.
-            periods: Periods per year for annualisation (analytics style).
-            annualize: Multiply by ``sqrt(periods)`` when True (default).
-            rolling_period: Alias for ``window`` (legacy style).
-            periods_per_year: Alias for ``periods`` (legacy style).
+            rolling_period: Rolling window size. Defaults to 126.
+            periods_per_year: Periods per year for annualisation.
+            annualize: Multiply by ``sqrt(periods_per_year)`` when True (default).
 
         Returns:
             pl.DataFrame: Date column(s) plus one rolling volatility column
             per asset.
 
         Raises:
-            ValueError: If the effective window size is not a positive integer.
-            TypeError: If the effective periods value is not numeric.
+            ValueError: If rolling_period is not a positive integer.
+            TypeError: If periods_per_year is not numeric.
 
         """
-        actual_window = window if window is not None else (rolling_period if rolling_period is not None else 126)
-        actual_periods = periods or periods_per_year or self.data._periods_per_year
+        actual_window = rolling_period
+        actual_periods = periods_per_year or self.data._periods_per_year
         if not isinstance(actual_window, int) or actual_window <= 0:
-            raise ValueError("window must be a positive integer")  # noqa: TRY003
+            raise ValueError("rolling_period must be a positive integer")  # noqa: TRY003
         if not isinstance(actual_periods, int | float):
             raise TypeError
         factor = float(np.sqrt(actual_periods)) if annualize else 1.0
