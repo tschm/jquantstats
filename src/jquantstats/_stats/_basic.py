@@ -113,6 +113,21 @@ class _BasicStatsMixin:
         return self._mean_negative_expr(series)
 
     @columnwise_stat
+    def comp(self, series: pl.Series) -> float:
+        """Calculate the total compounded return over the full period.
+
+        Computed as product(1 + r) - 1.
+
+        Args:
+            series (pl.Series): The series to calculate compounded return for.
+
+        Returns:
+            float: Total compounded return.
+
+        """
+        return float((1.0 + series.drop_nulls().cast(pl.Float64)).product()) - 1.0
+
+    @columnwise_stat
     def geometric_mean(self, series: pl.Series, periods: int | float | None = None, annualize: bool = False) -> float:
         """Calculate the geometric mean of returns.
 

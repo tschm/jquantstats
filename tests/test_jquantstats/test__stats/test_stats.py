@@ -267,6 +267,24 @@ def test_kelly_criterion(stats):
     assert result["META"] == pytest.approx(0.06817093826936971)
 
 
+def test_comp(stats):
+    """Tests that comp returns the total compounded return."""
+    result = stats.comp()
+    assert result["META"] == pytest.approx(13.382664235863414)
+
+
+def test_ghpr(stats):
+    """Tests that ghpr returns the same value as geometric_mean."""
+    assert stats.ghpr() == stats.geometric_mean()
+
+
+def test_compsum(stats):
+    """Tests that compsum returns a cumulative return series ending at comp()."""
+    result = stats.compsum()
+    assert result.shape == stats.all.shape
+    assert result["META"][-1] == pytest.approx(13.382664235863414)
+
+
 def test_outlier_win_ratio(stats):
     """Tests that outlier_win_ratio returns the ratio of high-quantile to mean positive return."""
     result = stats.outlier_win_ratio()
