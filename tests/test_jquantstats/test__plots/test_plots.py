@@ -312,3 +312,125 @@ def test_annual_sharpe_plot_returns_figure_with_bars(long_portfolio):
         assert isinstance(trace, go.Bar)
     assert "Annual Sharpe" in fig.layout.title.text
     _ = fig.to_dict()
+
+
+# ─── DataPlots.distribution ───────────────────────────────────────────────────
+
+
+def test_data_distribution_returns_figure(plots):
+    """distribution() returns a Plotly Figure with histogram and normal-fit traces."""
+    fig = plots.distribution()
+    assert isinstance(fig, go.Figure)
+    assert len(fig.data) >= 1
+    assert "Return Distribution" in fig.layout.title.text
+    _ = fig.to_dict()
+
+
+def test_data_distribution_compounded_false(plots):
+    """distribution(compounded=False) should also return a valid Figure."""
+    fig = plots.distribution(compounded=False)
+    assert isinstance(fig, go.Figure)
+    assert len(fig.data) >= 1
+    _ = fig.to_dict()
+
+
+def test_data_distribution_has_histogram_trace(plots):
+    """distribution() should include at least one Histogram trace."""
+    fig = plots.distribution()
+    histogram_traces = [t for t in fig.data if isinstance(t, go.Histogram)]
+    assert len(histogram_traces) >= 1
+
+
+def test_data_distribution_has_normal_fit_trace(plots):
+    """distribution() should include at least one Scatter trace for normal fit."""
+    fig = plots.distribution()
+    scatter_traces = [t for t in fig.data if isinstance(t, go.Scatter)]
+    assert len(scatter_traces) >= 1
+
+
+# ─── DataPlots.histogram ──────────────────────────────────────────────────────
+
+
+def test_data_histogram_default(plots):
+    """histogram() with default args returns a valid Figure."""
+    fig = plots.histogram()
+    assert isinstance(fig, go.Figure)
+    assert len(fig.data) >= 1
+    assert "ME" in fig.layout.title.text
+    _ = fig.to_dict()
+
+
+def test_data_histogram_compounded_false(plots):
+    """histogram(compounded=False) returns a valid Figure."""
+    fig = plots.histogram(compounded=False)
+    assert isinstance(fig, go.Figure)
+    assert len(fig.data) >= 1
+    _ = fig.to_dict()
+
+
+def test_data_histogram_has_histogram_traces(plots):
+    """histogram() should include Histogram traces."""
+    fig = plots.histogram()
+    histogram_traces = [t for t in fig.data if isinstance(t, go.Histogram)]
+    assert len(histogram_traces) >= 1
+
+
+# ─── PortfolioPlots.distribution ─────────────────────────────────────────────
+
+
+def test_portfolio_distribution_returns_figure(pf):
+    """PortfolioPlots.distribution() returns a valid Plotly Figure."""
+    fig = pf.plots.distribution()
+    assert isinstance(fig, go.Figure)
+    assert len(fig.data) >= 1
+    assert "Return Distribution" in fig.layout.title.text
+    _ = fig.to_dict()
+
+
+def test_portfolio_distribution_compounded_false(pf):
+    """PortfolioPlots.distribution(compounded=False) returns a valid Figure."""
+    fig = pf.plots.distribution(compounded=False)
+    assert isinstance(fig, go.Figure)
+    assert len(fig.data) >= 1
+    _ = fig.to_dict()
+
+
+def test_portfolio_distribution_has_histogram_trace(pf):
+    """PortfolioPlots.distribution() should include at least one Histogram trace."""
+    fig = pf.plots.distribution()
+    histogram_traces = [t for t in fig.data if isinstance(t, go.Histogram)]
+    assert len(histogram_traces) >= 1
+
+
+def test_portfolio_distribution_has_normal_fit_trace(pf):
+    """PortfolioPlots.distribution() should include a Scatter trace for normal fit."""
+    fig = pf.plots.distribution()
+    scatter_traces = [t for t in fig.data if isinstance(t, go.Scatter)]
+    assert len(scatter_traces) >= 1
+
+
+# ─── PortfolioPlots.histogram ─────────────────────────────────────────────────
+
+
+def test_portfolio_histogram_default(pf):
+    """PortfolioPlots.histogram() with default args returns a valid Figure."""
+    fig = pf.plots.histogram()
+    assert isinstance(fig, go.Figure)
+    assert len(fig.data) >= 1
+    assert "ME" in fig.layout.title.text
+    _ = fig.to_dict()
+
+
+def test_portfolio_histogram_compounded_false(pf):
+    """PortfolioPlots.histogram(compounded=False) returns a valid Figure."""
+    fig = pf.plots.histogram(compounded=False)
+    assert isinstance(fig, go.Figure)
+    assert len(fig.data) >= 1
+    _ = fig.to_dict()
+
+
+def test_portfolio_histogram_has_histogram_trace(pf):
+    """PortfolioPlots.histogram() should include a Histogram trace."""
+    fig = pf.plots.histogram()
+    histogram_traces = [t for t in fig.data if isinstance(t, go.Histogram)]
+    assert len(histogram_traces) >= 1

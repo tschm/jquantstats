@@ -14,6 +14,7 @@ Examples:
 from __future__ import annotations
 
 import dataclasses
+import math
 from typing import TYPE_CHECKING
 
 import plotly.express as px
@@ -671,4 +672,179 @@ class PortfolioPlots:
             gridwidth=0.5,
             gridcolor="lightgrey",
         )
+        return fig
+
+    def distribution(self, compounded: bool = True) -> go.Figure:
+        """Plot the portfolio return distribution with a normal distribution overlay.
+
+        Displays a histogram of daily returns and overlays a fitted Gaussian
+        curve. Key percentiles (5th, 25th, 75th, 95th) are shown as vertical
+        dashed lines.
+
+        Args:
+            compounded (bool, optional): When True the cumulative compounded
+                return series ``(1 + r).cumprod() - 1`` is displayed; when
+                False raw daily returns are used. Defaults to True.
+
+        Returns:
+            go.Figure: An interactive Plotly figure with a histogram, normal
+            fit curve, and percentile markers.
+        """
+        daily = self.portfolio.returns
+        if "returns" not in daily.columns:
+            raise ValueError("Portfolio returns DataFrame must contain a 'returns' column.")  # noqa: TRY003
+
+        raw = daily["returns"].drop_nulls()
+        values = ((raw + 1.0).cum_prod() - 1.0).to_list() if compounded else raw.to_list()
+
+        if len(values) < 2:
+            fig = go.Figure()
+            fig.update_layout(title="Return Distribution", xaxis_title="Return", yaxis_title="Density")
+            return fig
+
+        n = len(values)
+        mean = sum(values) / n
+        variance = sum((v - mean) ** 2 for v in values) / (n - 1)
+        # Fallback to a tiny positive value to avoid division by zero in
+        # the Gaussian formula when all returns are identical.
+        std = math.sqrt(variance) if variance > 0 else 1e-10
+
+        color = px.colors.qualitative.Plotly[0]
+
+        fig = go.Figure()
+
+        # Histogram
+        fig.add_trace(
+            go.Histogram(
+                x=values,
+                name="returns",
+                marker_color=color,
+                opacity=0.5,
+                histnorm="probability density",
+                hovertemplate="Return: %{x:.3%}<extra></extra>",
+            )
+        )
+
+        # Normal distribution overlay
+        x_min = min(values)
+        x_max = max(values)
+        x_range = [x_min + (x_max - x_min) * i / 200 for i in range(201)]
+        normal_y = [math.exp(-0.5 * ((x - mean) / std) ** 2) / (std * math.sqrt(2 * math.pi)) for x in x_range]
+        fig.add_trace(
+            go.Scatter(
+                x=x_range,
+                y=normal_y,
+                mode="lines",
+                name="normal fit",
+                line={"color": color, "width": 2, "dash": "dot"},
+                hoverinfo="skip",
+            )
+        )
+
+        # Percentile lines using linear interpolation on sorted values
+        sorted_vals = sorted(values)
+        for pct, dash in [(5, "dash"), (25, "dashdot"), (75, "dashdot"), (95, "dash")]:
+            # Linear interpolation: index = pct/100 * (n-1)
+            float_idx = pct / 100 * (n - 1)
+            low = int(float_idx)
+            high = min(low + 1, n - 1)
+            frac = float_idx - low
+            pct_val = sorted_vals[low] + frac * (sorted_vals[high] - sorted_vals[low])
+            fig.add_vline(
+                x=pct_val,
+                line={"color": color, "width": 1, "dash": dash},
+                annotation_text=f"p{pct}",
+                annotation_font_size=9,
+            )
+
+        fig.update_layout(
+            title="Return Distribution",
+            xaxis_title="Return",
+            yaxis_title="Density",
+            barmode="overlay",
+            plot_bgcolor="white",
+            hovermode="x unified",
+            legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
+        )
+        fig.update_xaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey", tickformat=".1%")
+        fig.update_yaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
+
+        return fig
+
+    def histogram(self, resample: str = "ME", compounded: bool = True) -> go.Figure:
+        """Plot a histogram of portfolio returns resampled to the requested frequency.
+
+        Aggregates daily returns to the requested calendar period (e.g.
+        monthly, quarterly, yearly) and displays a bar histogram.
+
+        Args:
+            resample (str, optional): Polars offset alias controlling the
+                aggregation period.  Common values:
+
+                - ``"ME"`` — month-end (default, equivalent to monthly)
+                - ``"QE"`` — quarter-end
+                - ``"YE"`` — year-end
+
+                Any valid Polars ``group_by_dynamic`` ``every`` offset string
+                is accepted (e.g. ``"1w"``, ``"3mo"``).
+            compounded (bool, optional): When True each period's return is
+                computed as ``prod(1 + r_d) - 1``; when False returns are
+                summed. Defaults to True.
+
+        Returns:
+            go.Figure: An interactive Plotly figure showing resampled return
+            histogram.
+        """
+        resample_aliases = {
+            "ME": "1mo",
+            "QE": "3mo",
+            "YE": "1y",
+            "MS": "1mo",
+            "QS": "3mo",
+            "YS": "1y",
+        }
+
+        daily = self.portfolio.returns
+        if "returns" not in daily.columns or "date" not in daily.columns:
+            raise ValueError("Portfolio returns DataFrame must contain 'date' and 'returns' columns.")  # noqa: TRY003
+
+        every = resample_aliases.get(resample, resample)
+
+        if compounded:
+            agg_expr = ((pl.col("returns") + 1.0).product() - 1.0).alias("returns")
+        else:
+            agg_expr = pl.col("returns").sum().alias("returns")
+
+        resampled = daily.group_by_dynamic(
+            index_column="date",
+            every=every,
+            period=every,
+            closed="right",
+            label="right",
+        ).agg(agg_expr)
+
+        values = resampled["returns"].drop_nulls().to_list()
+        color = px.colors.qualitative.Plotly[0]
+
+        fig = go.Figure()
+        fig.add_trace(
+            go.Histogram(
+                x=values,
+                name="returns",
+                marker_color=color,
+                opacity=0.7,
+                hovertemplate="Return: %{x:.2%}<extra></extra>",
+            )
+        )
+
+        fig.update_layout(
+            title=f"Return Histogram ({resample})",
+            xaxis_title="Return",
+            yaxis_title="Count",
+            plot_bgcolor="white",
+            hovermode="x unified",
+        )
+        fig.update_xaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey", tickformat=".1%")
+        fig.update_yaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
+
         return fig

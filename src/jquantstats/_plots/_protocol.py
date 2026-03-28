@@ -81,6 +81,11 @@ class PortfolioLike(Protocol):  # pragma: no cover
         ...
 
     @property
+    def returns(self) -> pl.DataFrame:
+        """Daily returns as a DataFrame with 'date' and 'returns' columns."""
+        ...
+
+    @property
     def stats(self) -> object:
         """Statistics facade (rolling_sharpe, rolling_volatility, annual_breakdown, sharpe)."""
         ...
