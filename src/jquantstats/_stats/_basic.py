@@ -415,6 +415,12 @@ class _BasicStatsMixin:
                           column per asset containing the ACF values.
 
         """
+        if not isinstance(nlags, int):
+            msg = f"nlags must be an int, got {type(nlags).__name__}"
+            raise TypeError(msg)
+        if nlags < 0:
+            msg = f"nlags must be non-negative, got {nlags}"
+            raise ValueError(msg)
         result: dict[str, list[float]] = {"lag": list(range(nlags + 1))}
         for col, series in self.data.items():
             arr = series.drop_nulls().to_numpy()
