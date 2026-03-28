@@ -1,22 +1,3 @@
-# This file is part of the jebel-quant/rhiza repository
-# (https://github.com/jebel-quant/rhiza).
-#
-# Workflow: Validate
-#
-# Purpose: Run project validation, static type analysis, and dependency
-#          vulnerability scanning.
-#          - make validate runs the full rhiza validation suite.
-#          - make typecheck runs ty (https://github.com/astral-sh/ty), a fast
-#            Python type checker from the Astral team (same team as ruff/uv).
-#            Type-checker settings live in [tool.ty.environment] in pyproject.toml.
-#          - make security runs pip-audit and bandit security scans (push/PR).
-#          - make semgrep runs Semgrep static analysis with local numpy rules (push/PR).
-#          - pip-audit additionally scans installed dependencies for known CVEs (weekly).
-#
-# Trigger: On push and pull requests to main/master branches.
-#          pip-audit additionally runs on a weekly schedule (Monday 09:00 UTC)
-#          and can be triggered manually via workflow_dispatch.
-
 name: (RHIZA) VALIDATE
 
 permissions:
@@ -31,115 +12,35 @@ on:
     - cron: "0 9 * * 1"  # Every Monday at 09:00 UTC
   workflow_dispatch:
 
+env:
+  UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
+
 jobs:
-  validation:
+  validate:
     runs-on: ubuntu-latest
     if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v6.0.2
         with:
           lfs: true
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7.6.0
+      - uses: astral-sh/setup-uv@v7.6.0
         with:
           version: "0.10.12"
-
-      - name: Configure git auth for private packages
-        uses: ./.github/actions/configure-git-auth
+      - uses: ./.github/actions/configure-git-auth
         with:
           token: ${{ secrets.GH_PAT }}
-
-      - name: Validate
-        shell: bash
-        run: |
-          make validate
-
-  typecheck:
-    name: Type checking
-    runs-on: ubuntu-latest
-    if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
-
-    steps:
-      - uses: actions/checkout@v6.0.2
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7.6.0
-        with:
-          version: "0.10.12"
-
-      - name: Configure git auth for private packages
-        uses: ./.github/actions/configure-git-auth
-        with:
-          token: ${{ secrets.GH_PAT }}
-
-      - name: Run ty type checker (make typecheck)
-        # Runs `uv run ty check src/` as defined in .rhiza/make.d/test.mk.
-        # ty is configured via [tool.ty.environment] in pyproject.toml.
-        env:
-          UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
-        run: make typecheck
-
-  security:
-    name: Security scanning
-    runs-on: ubuntu-latest
-    if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
-
-    steps:
-      - uses: actions/checkout@v6.0.2
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7.6.0
-        with:
-          version: "0.10.12"
-
-      - name: Configure git auth for private packages
-        uses: ./.github/actions/configure-git-auth
-        with:
-          token: ${{ secrets.GH_PAT }}
-
-      - name: Run security scans
-        env:
-          UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
-        run: make security
-
-  semgrep:
-    name: Semgrep (numpy)
-    runs-on: ubuntu-latest
-    if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
-
-    steps:
-      - uses: actions/checkout@v6.0.2
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7.6.0
-        with:
-          version: "0.10.12"
-
-      - name: Configure git auth for private packages
-        uses: ./.github/actions/configure-git-auth
-        with:
-          token: ${{ secrets.GH_PAT }}
-
-      - name: Run Semgrep
-        env:
-          UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
-        run: make semgrep
+      - run: make validate
+      - run: make typecheck
+      - run: make security
+      - run: make semgrep
 
   pip-audit:
     name: Dependency vulnerability scan
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-
     steps:
       - uses: actions/checkout@v6.0.2
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7.6.0
+      - uses: astral-sh/setup-uv@v7.6.0
         with:
           version: "0.10.12"
-
-      - name: Run pip-audit
-        run: uvx pip-audit
+      - run: uvx pip-audit
