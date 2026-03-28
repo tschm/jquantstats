@@ -399,7 +399,7 @@ class _BasicStatsMixin:
         return float(np.corrcoef(paired["x"].to_numpy(), paired["y"].to_numpy())[0, 1])
 
     @columnwise_stat
-    def autocorrelation(self, series: pl.Series, lag: int = 1) -> float:
+    def autocorr(self, series: pl.Series, lag: int = 1) -> float:
         """Compute lag-n autocorrelation of returns.
 
         Args:

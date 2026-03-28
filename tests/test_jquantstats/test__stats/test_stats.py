@@ -311,7 +311,7 @@ def test_autocorrelation(stats):
         The lag-1 autocorrelation value for META matches the expected value.
 
     """
-    result = stats.autocorrelation()
+    result = stats.autocorr()
     assert result["META"] == pytest.approx(-0.025099872722702105)
 
 
@@ -325,7 +325,7 @@ def test_autocorrelation_lag5(stats):
         The lag-5 autocorrelation value for META matches the expected value.
 
     """
-    result = stats.autocorrelation(lag=5)
+    result = stats.autocorr(lag=5)
     assert result["META"] == pytest.approx(0.012378555376440949)
 
 
@@ -340,7 +340,7 @@ def test_autocorrelation_invalid_lag_zero(stats):
 
     """
     with pytest.raises(ValueError, match="lag must be a positive integer"):
-        stats.autocorrelation(lag=0)
+        stats.autocorr(lag=0)
 
 
 def test_autocorrelation_invalid_lag_negative(stats):
@@ -354,7 +354,7 @@ def test_autocorrelation_invalid_lag_negative(stats):
 
     """
     with pytest.raises(ValueError, match="lag must be a positive integer"):
-        stats.autocorrelation(lag=-1)
+        stats.autocorr(lag=-1)
 
 
 def test_autocorrelation_invalid_lag_type(stats):
@@ -368,7 +368,7 @@ def test_autocorrelation_invalid_lag_type(stats):
 
     """
     with pytest.raises(TypeError, match="lag must be an int"):
-        stats.autocorrelation(lag=1.0)  # type: ignore[arg-type]
+        stats.autocorr(lag=1.0)  # type: ignore[arg-type]
 
 
 def test_acf_shape(stats):
