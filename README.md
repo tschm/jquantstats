@@ -1,14 +1,14 @@
-# [jQuantStats](https://tschm.github.io/jquantstats): Portfolio Analytics for Quants
+# [jQuantStats](https://jebel-quant.github.io/jquantstats): Portfolio Analytics for Quants
 
 [![PyPI version](https://badge.fury.io/py/jquantstats.svg)](https://badge.fury.io/py/jquantstats)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://pypi.org/project/jquantstats/)
-[![Coverage](https://raw.githubusercontent.com/tschm/jquantstats/refs/heads/gh-pages/coverage-badge.svg)](https://tschm.github.io/jquantstats/reports/coverage/)
+[![Coverage](https://raw.githubusercontent.com/jebel-quant/jquantstats/refs/heads/gh-pages/coverage-badge.svg)](https://tschm.github.io/jquantstats/reports/coverage/)
 [![Downloads](https://static.pepy.tech/personalized-badge/jquantstats?period=month&units=international_system&left_color=black&right_color=orange&left_text=PyPI%20downloads%20per%20month)](https://pepy.tech/project/jquantstats)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/tschm/jquantstats/blob/main/LICENSE)
-[![CodeFactor](https://www.codefactor.io/repository/github/tschm/jquantstats/badge)](https://www.codefactor.io/repository/github/tschm/jquantstats)
+[![CodeFactor](https://www.codefactor.io/repository/github/jebel-quant/jquantstats/badge)](https://www.codefactor.io/repository/github/tschm/jquantstats)
 [![Rhiza](https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Fraw.githubusercontent.com%2Ftschm%2Fjquantstats%2Fmain%2F.rhiza%2Ftemplate.yml&query=%24.ref&label=rhiza)](https://github.com/jebel-quant/rhiza)
 
-[![Paper](https://img.shields.io/badge/paper-jquantstats.pdf-red?logo=adobeacrobatreader)](https://github.com/tschm/jquantstats/blob/paper/jquantstats.pdf)
+[![Paper](https://img.shields.io/badge/paper-jquantstats.pdf-red?logo=adobeacrobatreader)](https://github.com/jebel-quant/jquantstats/blob/paper/jquantstats.pdf)
 ## 📊 Overview
 
 **jQuantStats** is a Python library for portfolio analytics
