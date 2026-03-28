@@ -413,3 +413,83 @@ def test_information_ratio(stats, aapl, benchmark_pd):
     x = stats.information_ratio(periods_per_year=252)
     y = np.sqrt(252) * qs.stats.information_ratio(aapl, benchmark=benchmark_pd)
     assert x["AAPL"] == pytest.approx(y, abs=1e-4)
+
+
+def test_tail_ratio(stats, aapl):
+    """Tests that the tail_ratio method produces the same results as quantstats.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+        aapl: The aapl fixture containing AAPL returns.
+
+    Verifies:
+        The tail ratio calculated by our library matches the one from quantstats.
+
+    """
+    x = stats.tail_ratio()
+    y = qs.stats.tail_ratio(aapl)
+    assert x["AAPL"] == pytest.approx(y, abs=1e-6)
+
+
+def test_cpc_index(stats, aapl):
+    """Tests that the cpc_index method produces the same results as quantstats.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+        aapl: The aapl fixture containing AAPL returns.
+
+    Verifies:
+        The CPC index calculated by our library matches the one from quantstats.
+
+    """
+    x = stats.cpc_index()
+    y = qs.stats.cpc_index(aapl)
+    assert x["AAPL"] == pytest.approx(y, abs=1e-6)
+
+
+def test_common_sense_ratio(stats, aapl):
+    """Tests that the common_sense_ratio method produces the same results as quantstats.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+        aapl: The aapl fixture containing AAPL returns.
+
+    Verifies:
+        The common sense ratio calculated by our library matches the one from quantstats.
+
+    """
+    x = stats.common_sense_ratio()
+    y = qs.stats.common_sense_ratio(aapl)
+    assert x["AAPL"] == pytest.approx(y, abs=1e-6)
+
+
+def test_outlier_win_ratio(stats, aapl):
+    """Tests that the outlier_win_ratio method produces the same results as quantstats.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+        aapl: The aapl fixture containing AAPL returns.
+
+    Verifies:
+        The outlier win ratio calculated by our library matches the one from quantstats.
+
+    """
+    x = stats.outlier_win_ratio()
+    y = qs.stats.outlier_win_ratio(aapl)
+    assert x["AAPL"] == pytest.approx(y, abs=1e-6)
+
+
+def test_outlier_loss_ratio(stats, aapl):
+    """Tests that the outlier_loss_ratio method produces the same results as quantstats.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+        aapl: The aapl fixture containing AAPL returns.
+
+    Verifies:
+        The outlier loss ratio calculated by our library matches the one from quantstats.
+
+    """
+    x = stats.outlier_loss_ratio()
+    y = qs.stats.outlier_loss_ratio(aapl)
+    assert x["AAPL"] == pytest.approx(y, abs=1e-6)

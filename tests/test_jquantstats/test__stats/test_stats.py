@@ -175,6 +175,76 @@ def test_profit_factor(stats):
     assert result["META"] == pytest.approx(1.149125608578595)
 
 
+def test_tail_ratio(stats):
+    """Tests that the tail_ratio method calculates tail ratio correctly.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        The tail ratio value for META matches the expected value.
+
+    """
+    result = stats.tail_ratio()
+    assert result["META"] == pytest.approx(0.9804240235982282)
+
+
+def test_cpc_index(stats):
+    """Tests that the cpc_index method calculates the CPC index correctly.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        The CPC index value for META matches the expected value.
+
+    """
+    result = stats.cpc_index()
+    assert result["META"] == pytest.approx(0.6268250319999236)
+
+
+def test_common_sense_ratio(stats):
+    """Tests that the common_sense_ratio method calculates the common sense ratio correctly.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        The common sense ratio value for META matches the expected value.
+
+    """
+    result = stats.common_sense_ratio()
+    assert result["META"] == pytest.approx(1.1266303527823889)
+
+
+def test_outlier_win_ratio(stats):
+    """Tests that the outlier_win_ratio method calculates outlier win ratio correctly.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        The outlier win ratio value for META matches the expected value.
+
+    """
+    result = stats.outlier_win_ratio()
+    assert result["META"] == pytest.approx(3.8994031140339662)
+
+
+def test_outlier_loss_ratio(stats):
+    """Tests that the outlier_loss_ratio method calculates outlier loss ratio correctly.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        The outlier loss ratio value for META matches the expected value.
+
+    """
+    result = stats.outlier_loss_ratio()
+    assert result["META"] == pytest.approx(3.9167334238479796)
+
+
 def test_value_at_risk(stats):
     """Tests that the value_at_risk method calculates VaR correctly.
 

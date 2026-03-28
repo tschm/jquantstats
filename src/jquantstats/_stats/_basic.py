@@ -282,6 +282,95 @@ class _BasicStatsMixin:
         return float(num_pos / num_nonzero)
 
     @columnwise_stat
+    def tail_ratio(self, series: pl.Series, cutoff: float = 0.95) -> float:
+        """Calculate the tail ratio between right and left tails.
+
+        Measures the absolute value of the ratio of the ``cutoff``-percentile return
+        (right tail) to the ``(1 - cutoff)``-percentile return (left tail).
+        Higher values indicate more favourable tail characteristics.
+
+        Args:
+            series (pl.Series): The series to calculate tail ratio for.
+            cutoff (float, optional): Percentile cutoff. Defaults to 0.95.
+
+        Returns:
+            float: The tail ratio value.
+
+        """
+        upper = series.quantile(cutoff, interpolation="linear")
+        lower = series.quantile(1 - cutoff, interpolation="linear")
+        if upper is None or lower is None or lower == 0:
+            return float(np.nan)
+        return float(abs(upper / lower))
+
+    def cpc_index(self) -> dict[str, float]:
+        """Calculate the CPC index: profit_factor x win_rate x win_loss_ratio.
+
+        A composite quality-of-returns metric.
+
+        Returns:
+            dict[str, float]: Dictionary mapping asset names to CPC index values.
+
+        """
+        pf = self.profit_factor()
+        wr = self.win_rate()
+        wlr = self.win_loss_ratio()
+        return {col: pf[col] * wr[col] * wlr[col] for col in pf}
+
+    def common_sense_ratio(self) -> dict[str, float]:
+        """Calculate the common sense ratio: tail_ratio x profit_factor.
+
+        A composite metric combining profitability and tail characteristics.
+
+        Returns:
+            dict[str, float]: Dictionary mapping asset names to common sense ratio values.
+
+        """
+        tr = self.tail_ratio()
+        pf = self.profit_factor()
+        return {col: tr[col] * pf[col] for col in tr}
+
+    @columnwise_stat
+    def outlier_win_ratio(self, series: pl.Series, quantile: float = 0.99) -> float:
+        """Calculate the outlier win ratio: 99th-percentile return / avg win.
+
+        Shows how much outlier wins contribute to overall performance.
+
+        Args:
+            series (pl.Series): The series to calculate outlier win ratio for.
+            quantile (float, optional): Quantile for outlier threshold. Defaults to 0.99.
+
+        Returns:
+            float: The outlier win ratio value.
+
+        """
+        avg_win = cast(float, series.filter(series >= 0).mean())
+        q_val = series.quantile(quantile, interpolation="linear")
+        if avg_win is None or avg_win == 0 or q_val is None:
+            return float(np.nan)
+        return float(q_val / avg_win)
+
+    @columnwise_stat
+    def outlier_loss_ratio(self, series: pl.Series, quantile: float = 0.01) -> float:
+        """Calculate the outlier loss ratio: abs(1st-percentile loss) / abs(avg loss).
+
+        Shows how much outlier losses contribute to overall risk.
+
+        Args:
+            series (pl.Series): The series to calculate outlier loss ratio for.
+            quantile (float, optional): Quantile for outlier threshold. Defaults to 0.01.
+
+        Returns:
+            float: The outlier loss ratio value.
+
+        """
+        avg_loss = cast(float, series.filter(series < 0).mean())
+        q_val = series.quantile(quantile, interpolation="linear")
+        if avg_loss is None or avg_loss == 0 or q_val is None:
+            return float(np.nan)
+        return float(q_val / avg_loss)
+
+    @columnwise_stat
     def gain_to_pain_ratio(self, series: pl.Series) -> float:
         """Calculate Jack Schwager's Gain-to-Pain Ratio.
 
