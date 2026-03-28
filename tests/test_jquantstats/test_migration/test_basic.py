@@ -26,6 +26,7 @@ import quantstats as qs
         ("worst", {}, 1e-12),
         ("exposure", {}, 1e-12),
         ("kelly_criterion", {}, 1e-12),
+        ("win_loss_ratio", {}, 1e-12),
         ("sortino", {"periods": 252}, 1e-12),
         ("adjusted_sortino", {"periods": 252}, 1e-12),
         ("probabilistic_sharpe_ratio", {}, 1e-4),

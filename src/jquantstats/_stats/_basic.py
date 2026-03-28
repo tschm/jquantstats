@@ -379,3 +379,74 @@ class _BasicStatsMixin:
         all_data = cast(pl.DataFrame, self.all)
         ex = series.filter(series != 0).count() / all_data.height
         return math.ceil(ex * 100) / 100
+
+    @staticmethod
+    def _pearson_corr_shifted(series: pl.Series, lag: int) -> float:
+        """Compute Pearson correlation between *series* and its lag-*lag* shift.
+
+        Args:
+            series (pl.Series): The input series.
+            lag (int): Number of positions to shift.
+
+        Returns:
+            float: Pearson correlation coefficient, or NaN if no valid pairs remain.
+
+        """
+        shifted = series.shift(lag)
+        paired = pl.DataFrame({"x": series, "y": shifted}).drop_nulls()
+        if paired.is_empty():
+            return float("nan")
+        return float(np.corrcoef(paired["x"].to_numpy(), paired["y"].to_numpy())[0, 1])
+
+    @columnwise_stat
+    def autocorrelation(self, series: pl.Series, lag: int = 1) -> float:
+        """Compute lag-n autocorrelation of returns.
+
+        Args:
+            series (pl.Series): The series to calculate autocorrelation for.
+            lag (int): Number of periods to lag. Must be a positive integer.
+
+        Returns:
+            float: Pearson correlation between returns and their lagged values.
+
+        Raises:
+            TypeError: If *lag* is not an ``int``.
+            ValueError: If *lag* is not a positive integer (>= 1).
+
+        """
+        if not isinstance(lag, int):
+            msg = f"lag must be an int, got {type(lag).__name__}"
+            raise TypeError(msg)
+        if lag <= 0:
+            msg = f"lag must be a positive integer, got {lag}"
+            raise ValueError(msg)
+        return self._pearson_corr_shifted(series, lag)
+
+    def acf(self, nlags: int = 20) -> pl.DataFrame:
+        """Compute the autocorrelation function up to nlags.
+
+        Args:
+            nlags (int): Maximum number of lags to include. Default is 20.
+
+        Returns:
+            pl.DataFrame: DataFrame with a ``lag`` column (0..nlags) and one
+                          column per asset containing the ACF values.
+
+        Raises:
+            TypeError: If *nlags* is not an ``int``.
+            ValueError: If *nlags* is negative.
+
+        """
+        if not isinstance(nlags, int):
+            msg = f"nlags must be an int, got {type(nlags).__name__}"
+            raise TypeError(msg)
+        if nlags < 0:
+            msg = f"nlags must be non-negative, got {nlags}"
+            raise ValueError(msg)
+        result: dict[str, list[float]] = {"lag": list(range(nlags + 1))}
+        for col, series in self.data.items():
+            acf_values: list[float] = [1.0]
+            for k in range(1, nlags + 1):
+                acf_values.append(self._pearson_corr_shifted(series, k))
+            result[col] = acf_values
+        return pl.DataFrame(result)

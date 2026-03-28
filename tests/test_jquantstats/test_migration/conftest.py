@@ -1,4 +1,8 @@
-"""Tests for comparing jquantstats with quantstats library functionality."""
+"""Tests for comparing jquantstats with quantstats library functionality.
+
+Security note: Test files use assert statements (S101) which are safe here since
+pytest relies on them and test code is never run in production.
+"""
 
 import pytest
 
