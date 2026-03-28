@@ -14,6 +14,7 @@ from jquantstats._stats._performance import _PerformanceStatsMixin
         ("rolling_volatility", {"rolling_period": 126, "periods_per_year": 252}, 1e-6),
         ("rolling_sortino", {"rolling_period": 126, "periods_per_year": 252}, 1e-6),
         ("compsum", {}, 1e-12),
+        ("implied_volatility", {"periods": 252, "annualize": True}, 1e-6),
     ],
 )
 def test_rolling(stats, method, kwargs, atol):

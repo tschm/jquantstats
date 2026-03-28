@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import math
 from typing import TYPE_CHECKING, cast
 
 import numpy as np
 import polars as pl
 
-from ._core import to_frame
+from ._core import _to_float, to_frame
 from ._performance import _PerformanceStatsMixin
 
 # ── Rolling statistics mixin ─────────────────────────────────────────────────
@@ -30,6 +31,42 @@ class _RollingStatsMixin:
 
         data: DataLike
         all: pl.DataFrame | None
+
+    def implied_volatility(self, periods: int = 252, annualize: bool = True) -> pl.DataFrame | dict[str, float]:
+        """Calculate implied volatility using log returns.
+
+        Uses log returns (ln(1 + r)) instead of simple returns for mathematical
+        correctness with continuous compounding.
+
+        When ``annualize=True`` (default), returns a rolling DataFrame of
+        annualised log-return volatility: ``rolling_std(periods) * sqrt(periods)``.
+        When ``annualize=False``, returns a scalar standard deviation per asset.
+
+        Args:
+            periods (int): Rolling window size and annualisation factor. Defaults to 252.
+            annualize (bool): Whether to annualize and return a rolling series.
+                Defaults to True.
+
+        Returns:
+            pl.DataFrame: Rolling annualised implied volatility (one column per
+                asset) when ``annualize=True``.
+            dict[str, float]: Scalar log-return std per asset when
+                ``annualize=False``.
+
+        """
+        if annualize:
+            scale = math.sqrt(periods)
+            return cast(pl.DataFrame, self.all).select(
+                [pl.col(name) for name in self.data.date_col]
+                + [
+                    ((1.0 + pl.col(col)).log(math.e).rolling_std(window_size=periods) * scale).alias(col)
+                    for col, _ in self.data.items()
+                ]
+            )
+        return {
+            col: _to_float((1.0 + series.cast(pl.Float64)).log(math.e).cast(pl.Float64).std())
+            for col, series in self.data.items()
+        }
 
     @staticmethod
     def _pct_rank_series(s: pl.Series) -> float:
