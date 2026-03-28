@@ -182,6 +182,63 @@ class _RollingStatsMixin:
             ]
         )
 
+    def rolling_greeks(
+        self,
+        rolling_period: int = 126,
+        periods_per_year: int | float | None = None,
+        benchmark: str | None = None,
+    ) -> pl.DataFrame:
+        """Rolling alpha and beta versus the benchmark.
+
+        Computes rolling alpha (annualised) and beta for each asset against the
+        benchmark using a trailing window.  Beta is estimated via the standard
+        OLS formula: ``cov(asset, bench) / var(bench)``.  Alpha is the
+        per-period intercept annualised by multiplying by *periods_per_year*.
+
+        Args:
+            rolling_period (int): Trailing window size. Defaults to 126.
+            periods_per_year (int | float, optional): Periods per year used to
+                annualise alpha. Defaults to the value inferred from the data.
+            benchmark (str, optional): Benchmark column name. Defaults to the
+                first benchmark column.
+
+        Returns:
+            pl.DataFrame: Date column(s) followed by ``{asset}_alpha`` and
+                ``{asset}_beta`` columns for every asset.
+
+        Raises:
+            AttributeError: If no benchmark data is attached.
+            ValueError: If *rolling_period* is not a positive integer.
+        """
+        if self.data.benchmark is None:
+            raise AttributeError("No benchmark data available")  # noqa: TRY003
+        if not isinstance(rolling_period, int) or rolling_period <= 0:
+            raise ValueError("rolling_period must be a positive integer")  # noqa: TRY003
+
+        ppy = periods_per_year or self.data._periods_per_year
+        all_df = cast(pl.DataFrame, self.all)
+        bench_col = benchmark or self.data.benchmark.columns[0]
+
+        w = rolling_period
+        exprs: list[pl.Expr] = []
+        for col, _ in self.data.items():
+            mean_x = pl.col(col).rolling_mean(window_size=w)
+            mean_y = pl.col(bench_col).rolling_mean(window_size=w)
+            mean_xy = (pl.col(col) * pl.col(bench_col)).rolling_mean(window_size=w)
+            mean_y2 = (pl.col(bench_col) ** 2).rolling_mean(window_size=w)
+
+            bench_var = mean_y2 - mean_y**2
+            bench_cov = mean_xy - mean_x * mean_y
+
+            # beta = cov(asset, bench) / var(bench); NaN when var(bench) = 0
+            beta_expr = (bench_cov / bench_var).alias(f"{col}_beta")
+            # alpha (per period) = mean(asset) - beta * mean(bench), annualised
+            alpha_expr = ((mean_x - (bench_cov / bench_var) * mean_y) * ppy).alias(f"{col}_alpha")
+
+            exprs.extend([beta_expr, alpha_expr])
+
+        return all_df.select([pl.col(name) for name in self.data.date_col] + exprs)
+
     def rolling_volatility(
         self,
         rolling_period: int = 126,

@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import TYPE_CHECKING, cast
 
 import numpy as np
 import polars as pl
 from scipy.stats import norm
 
-from ._core import columnwise_stat, to_frame
+from ._core import _to_float, columnwise_stat, to_frame
 
 # ── Performance statistics mixin ─────────────────────────────────────────────
 
@@ -379,6 +380,119 @@ class _PerformanceStatsMixin:
         """
         return _PerformanceStatsMixin.max_drawdown_single_series(series)
 
+    def drawdown_details(self) -> dict[str, pl.DataFrame]:
+        """Return detailed statistics for each individual drawdown period.
+
+        For each contiguous underwater episode, records the start date, valley
+        (worst point), recovery date, total duration, maximum drawdown, and
+        recovery duration.
+
+        Returns:
+            dict[str, pl.DataFrame]: Per-asset DataFrames with columns
+                ``start``, ``valley``, ``end``, ``duration``, ``max_drawdown``,
+                ``recovery_duration``.
+
+        Note:
+            ``end`` and ``recovery_duration`` are ``null`` for drawdown periods
+            that have not yet recovered by the last observation.
+            ``max_drawdown`` is a negative fraction (e.g. ``-0.2`` for 20%).
+        """
+        all_df = cast(pl.DataFrame, self.all)
+        date_col_name = self.data.date_col[0] if self.data.date_col else None
+        has_date = date_col_name is not None and all_df[date_col_name].dtype.is_temporal()
+
+        result: dict[str, pl.DataFrame] = {}
+        for col, series in self.data.items():
+            nav = (1.0 + series.cast(pl.Float64)).cum_prod()
+            hwm = nav.cum_max()
+            in_dd = nav < hwm
+            dd_pct = nav / hwm - 1  # negative or zero
+
+            if has_date and date_col_name is not None:
+                dates = all_df[date_col_name]
+            else:
+                dates = pl.Series(list(range(len(series))), dtype=pl.Int64)
+
+            date_dtype = dates.dtype
+
+            frame = (
+                pl.DataFrame({"date": dates, "nav": nav, "dd_pct": dd_pct, "in_dd": in_dd})
+                .with_row_index("row_idx")
+                .with_columns(pl.col("in_dd").rle_id().cast(pl.Int64).alias("run_id"))
+            )
+
+            dd_frame = frame.filter(pl.col("in_dd"))
+
+            if dd_frame.is_empty():
+                result[col] = pl.DataFrame(
+                    {
+                        "start": pl.Series([], dtype=date_dtype),
+                        "valley": pl.Series([], dtype=date_dtype),
+                        "end": pl.Series([], dtype=date_dtype),
+                        "duration": pl.Series([], dtype=pl.Int64),
+                        "max_drawdown": pl.Series([], dtype=pl.Float64),
+                        "recovery_duration": pl.Series([], dtype=pl.Int64),
+                    }
+                )
+                continue
+
+            # Per-period stats: start, last_dd_date, valley, max drawdown
+            dd_periods = (
+                dd_frame.group_by("run_id")
+                .agg(
+                    [
+                        pl.col("date").first().alias("start"),
+                        pl.col("date").last().alias("last_dd_date"),
+                        pl.col("date").sort_by("nav").first().alias("valley"),
+                        pl.col("dd_pct").min().alias("max_drawdown"),
+                    ]
+                )
+                .sort("start")
+            )
+
+            # First date of each non-drawdown run → recovery date for the preceding drawdown run
+            non_dd_starts = (
+                frame.filter(~pl.col("in_dd"))
+                .group_by("run_id")
+                .agg(pl.col("date").first().alias("end"))
+                .with_columns((pl.col("run_id") - 1).alias("run_id"))
+            )
+
+            dd_periods = dd_periods.join(non_dd_starts.select(["run_id", "end"]), on="run_id", how="left")
+
+            # Compute durations
+            if has_date:
+                dd_periods = dd_periods.with_columns(
+                    [
+                        pl.when(pl.col("end").is_not_null())
+                        .then((pl.col("end") - pl.col("start")).dt.total_days())
+                        .otherwise((pl.col("last_dd_date") - pl.col("start")).dt.total_days() + 1)
+                        .cast(pl.Int64)
+                        .alias("duration"),
+                        pl.when(pl.col("end").is_not_null())
+                        .then((pl.col("end") - pl.col("valley")).dt.total_days().cast(pl.Int64))
+                        .otherwise(pl.lit(None, dtype=pl.Int64))
+                        .alias("recovery_duration"),
+                    ]
+                )
+            else:
+                dd_periods = dd_periods.with_columns(
+                    [
+                        pl.when(pl.col("end").is_not_null())
+                        .then((pl.col("end") - pl.col("start")).cast(pl.Int64))
+                        .otherwise((pl.col("last_dd_date") - pl.col("start") + 1).cast(pl.Int64))
+                        .alias("duration"),
+                        pl.when(pl.col("end").is_not_null())
+                        .then((pl.col("end") - pl.col("valley")).cast(pl.Int64))
+                        .otherwise(pl.lit(None, dtype=pl.Int64))
+                        .alias("recovery_duration"),
+                    ]
+                )
+
+            result[col] = dd_periods.select(["start", "valley", "end", "duration", "max_drawdown", "recovery_duration"])
+
+        return result
+
     @staticmethod
     def _probabilistic_ratio_from_base(base: float, series: pl.Series) -> float:
         """Compute the probabilistic ratio given an observed unannualized base ratio.
@@ -454,6 +568,69 @@ class _PerformanceStatsMixin:
             return float(np.nan)
         base = float(mean_f / downside_deviation) / np.sqrt(2)
         return self._probabilistic_ratio_from_base(base, series)
+
+    def probabilistic_ratio(
+        self,
+        base: str | Callable[[pl.Series], float] = "sharpe",
+    ) -> dict[str, float]:
+        r"""Generic probabilistic ratio for any base metric.
+
+        Computes the probability that the observed ratio is greater than zero,
+        accounting for estimation uncertainty via skewness and kurtosis using
+        the Lopez de Prado (2018) framework.
+
+        Args:
+            base: Base ratio to use. Either:
+
+                - A string: ``'sharpe'``, ``'sortino'``, ``'adjusted_sortino'``.
+                - A callable ``(series: pl.Series) -> float`` returning the
+                  **unannualized** ratio for a single series.
+
+        Returns:
+            dict[str, float]: Probabilistic ratio in ``[0, 1]`` per asset.
+
+        Raises:
+            ValueError: If *base* is an unrecognised string.
+
+        """
+
+        def _sharpe_base(s: pl.Series) -> float:
+            """Return the per-period Sharpe ratio (mean / std, ddof=1) of *s*."""
+            mean_val = cast(float, s.mean())
+            std_val = cast(float, s.std(ddof=1))
+            if not std_val or std_val == 0:
+                return float("nan")
+            return mean_val / std_val
+
+        def _sortino_base(s: pl.Series) -> float:
+            """Return the per-period Sortino ratio (mean / downside_dev) of *s*."""
+            downside_sum = _to_float((s.filter(s < 0) ** 2).sum())
+            downside_dev = float(np.sqrt(downside_sum / s.count()))
+            if downside_dev == 0.0:
+                return float("nan")
+            return _to_float(s.mean()) / downside_dev
+
+        _builtin: dict[str, Callable[[pl.Series], float]] = {
+            "sharpe": _sharpe_base,
+            "sortino": _sortino_base,
+            "adjusted_sortino": lambda s: _sortino_base(s) / float(np.sqrt(2)),
+        }
+
+        if isinstance(base, str):
+            if base not in _builtin:
+                raise ValueError(f"base must be one of {list(_builtin)}, got {base!r}")  # noqa: TRY003
+            base_fn = _builtin[base]
+        else:
+            base_fn = base
+
+        result: dict[str, float] = {}
+        for col, series in self.data.items():
+            base_val = base_fn(series)
+            if np.isnan(base_val):
+                result[col] = float("nan")
+            else:
+                result[col] = _PerformanceStatsMixin._probabilistic_ratio_from_base(base_val, series)
+        return result
 
     def smart_sharpe(self, periods: int | float | None = None) -> dict[str, float]:
         """Calculate the Smart Sharpe ratio (Sharpe with autocorrelation penalty).
@@ -629,3 +806,61 @@ class _PerformanceStatsMixin:
         alpha = float(np.mean(strategy_np) - beta * np.mean(benchmark_np))
 
         return {"alpha": float(alpha * ppy), "beta": beta}
+
+    @columnwise_stat
+    def treynor_ratio(
+        self,
+        series: pl.Series,
+        periods: int | float | None = None,
+        benchmark: str | None = None,
+    ) -> float:
+        """Treynor ratio: annualised excess return divided by beta.
+
+        Measures return per unit of systematic (market) risk. Unlike the Sharpe
+        ratio, which divides by total volatility, the Treynor ratio divides by
+        beta — making it most meaningful for well-diversified portfolios.
+
+        Args:
+            series (pl.Series): The returns series for one asset.
+            periods (int | float, optional): Periods per year for CAGR
+                annualisation. Defaults to the value inferred from the data.
+            benchmark (str, optional): Benchmark column name. Defaults to the
+                first benchmark column.
+
+        Returns:
+            float: Treynor ratio, or ``nan`` when beta is zero or the benchmark
+                is unavailable.
+
+        Raises:
+            AttributeError: If no benchmark data is attached.
+        """
+        if self.data.benchmark is None:
+            raise AttributeError("No benchmark data available")  # noqa: TRY003
+
+        ppy = periods or self.data._periods_per_year
+
+        benchmark_data = cast(pl.DataFrame, self.data.benchmark)
+        benchmark_col = benchmark or benchmark_data.columns[0]
+
+        all_data = cast(pl.DataFrame, self.all)
+        dframe = all_data.select([series, pl.col(benchmark_col).alias("_bench")]).drop_nulls()
+        matrix = dframe.to_numpy()
+        strategy_np = matrix[:, 0]
+        benchmark_np = matrix[:, 1]
+
+        cov_matrix = np.cov(strategy_np, benchmark_np)
+        var_benchmark = cov_matrix[1, 1]
+        if var_benchmark == 0:
+            return float("nan")
+        beta = float(cov_matrix[0, 1] / var_benchmark)
+        if beta == 0:
+            return float("nan")
+
+        n = len(series)
+        if n == 0:
+            return float("nan")
+        nav_final = _to_float((1.0 + series.cast(pl.Float64)).product())
+        if nav_final <= 0:
+            return float("nan")
+        cagr = float(nav_final ** (ppy / n) - 1.0)
+        return cagr / beta
