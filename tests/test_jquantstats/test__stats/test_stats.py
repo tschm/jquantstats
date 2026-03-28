@@ -408,6 +408,42 @@ def test_sortino(stats):
     assert result["META"] == pytest.approx(1.06321091920911)
 
 
+def test_omega(stats):
+    """Tests that the omega method calculates the Omega ratio correctly.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        The Omega ratio for META matches the expected value for the default
+        parameters (rf=0, required_return=0), for a non-zero required_return,
+        and for a non-zero risk-free rate.
+
+    """
+    result = stats.omega()
+    assert result["META"] == pytest.approx(1.1491256085785948)
+
+    result_with_threshold = stats.omega(required_return=0.01)
+    assert result_with_threshold["META"] == pytest.approx(1.143589264051078)
+
+    result_with_rf = stats.omega(rf=0.02)
+    assert result_with_rf["META"] == pytest.approx(1.1381333817189756)
+
+
+def test_omega_invalid_required_return(stats):
+    """Tests that the omega method returns NaN for required_return <= -1.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        The Omega ratio is NaN when required_return <= -1.
+
+    """
+    result = stats.omega(required_return=-1.0)
+    assert np.isnan(result["META"])
+
+
 def test_rolling_sortino(stats):
     """Tests that the rolling_sortino method calculates rolling Sortino ratio correctly.
 
