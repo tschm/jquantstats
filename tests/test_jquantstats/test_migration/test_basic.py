@@ -39,6 +39,8 @@ import quantstats as qs
         ("geometric_mean", {}, 1e-12),
         ("smart_sharpe", {"periods": 252}, 1e-12),
         ("smart_sortino", {"periods": 252}, 1e-12),
+        ("probabilistic_sortino_ratio", {}, 1e-12),
+        ("probabilistic_adjusted_sortino_ratio", {}, 1e-12),
         ("win_loss_ratio", {}, 1e-12),
         ("sortino", {"periods": 252}, 1e-12),
         ("adjusted_sortino", {"periods": 252}, 1e-12),

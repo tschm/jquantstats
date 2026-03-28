@@ -102,6 +102,18 @@ def test_geometric_mean_annualized(stats):
     assert result["META"] == pytest.approx(0.22904692100449497)
 
 
+def test_probabilistic_sortino_ratio(stats):
+    """Tests that probabilistic_sortino_ratio matches the expected value."""
+    result = stats.probabilistic_sortino_ratio()
+    assert result["META"] == pytest.approx(0.999936222948045)
+
+
+def test_probabilistic_adjusted_sortino_ratio(stats):
+    """Tests that probabilistic_adjusted_sortino_ratio matches the expected value."""
+    result = stats.probabilistic_adjusted_sortino_ratio()
+    assert result["META"] == pytest.approx(0.9966624180363135)
+
+
 def test_smart_sharpe(stats):
     """Tests that smart_sharpe applies the autocorrelation penalty to the Sharpe ratio."""
     result = stats.smart_sharpe(periods=252)
