@@ -203,6 +203,131 @@ class DataPlots:
         """Return a string representation of the DataPlots object."""
         return f"DataPlots(assets={self.data.assets})"
 
+    def daily_returns(
+        self,
+        benchmark: pl.DataFrame | None = None,
+        log_scale: bool = False,
+        active: bool = False,
+    ) -> go.Figure:
+        """Bar chart of individual period returns, coloured by positive/negative.
+
+        Each bar represents a single period's return for each asset in the data.
+        Positive returns are shown in green, negative returns in red.
+
+        When *active* is ``True`` and the data contains an embedded benchmark,
+        active returns (asset return minus the first benchmark column) are plotted
+        instead of raw returns.
+
+        An optional external *benchmark* DataFrame may be passed to overlay a
+        benchmark line on the chart (unless *active* is also ``True``, in which
+        case the benchmark is used for the subtraction).
+
+        Args:
+            benchmark: Optional Polars DataFrame whose first column is a date
+                and second column is a returns series to overlay as a line trace.
+                When *active* is ``True`` this series is used to compute active
+                returns rather than being overlaid.
+            log_scale: If ``True``, display the y-axis on a logarithmic scale.
+            active: If ``True`` and a benchmark is available (either embedded in
+                ``self.data`` or supplied via *benchmark*), plot active returns
+                (asset minus benchmark).
+
+        Returns:
+            A Plotly Figure with one bar trace per asset, optionally with a
+            benchmark line overlay.
+
+        Example:
+            >>> import polars as pl
+            >>> from jquantstats import Data
+            >>> returns = pl.DataFrame({
+            ...     "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+            ...     "Asset": [0.01, -0.02, 0.03],
+            ... }).with_columns(pl.col("Date").str.to_date())
+            >>> data = Data.from_returns(returns=returns)
+            >>> fig = data.plots.daily_returns()
+            >>> fig.show()  # doctest: +SKIP
+
+        """
+        date_col = self.data.index.columns[0]
+        dates = self.data.index[date_col]
+
+        fig = go.Figure()
+
+        for col in self.data.returns.columns:
+            values = self.data.returns[col]
+
+            # Active returns: subtract benchmark if available
+            if active:
+                if benchmark is not None:
+                    bench_val_col = benchmark.columns[1]
+                    bench_date_col = benchmark.columns[0]
+                    # Align benchmark to our index dates by joining.
+                    # Missing benchmark dates are filled with 0.0 (no active return contribution).
+                    aligned = self.data.index.join(
+                        benchmark.rename({bench_date_col: date_col, bench_val_col: "_bench"}),
+                        on=date_col,
+                        how="left",
+                    )
+                    values = values - aligned["_bench"].fill_null(0.0)
+                elif self.data.benchmark is not None:
+                    bench_col = self.data.benchmark.columns[0]
+                    values = values - self.data.benchmark[bench_col]
+
+            values_list = values.to_list()
+            bar_colors = ["green" if v is not None and v >= 0 else "red" for v in values_list]
+
+            fig.add_trace(
+                go.Bar(
+                    x=dates,
+                    y=values_list,
+                    name=col,
+                    marker={"color": bar_colors, "line": {"width": 0}},
+                    opacity=0.8,
+                    hovertemplate=f"{col}: %{{y:.2%}}<extra></extra>",
+                )
+            )
+
+        # Optional benchmark overlay as a line (when not using it for active subtraction)
+        if benchmark is not None and not active:
+            bench_date_col = benchmark.columns[0]
+            bench_val_col = benchmark.columns[1]
+            fig.add_trace(
+                go.Scatter(
+                    x=benchmark[bench_date_col],
+                    y=benchmark[bench_val_col],
+                    mode="lines",
+                    name=bench_val_col,
+                    line={"width": 1, "color": "blue"},
+                    opacity=0.8,
+                )
+            )
+
+        # Show "Active" in title only when active subtraction actually occurred
+        benchmark_available = benchmark is not None or self.data.benchmark is not None
+        title = "Daily Active Returns" if (active and benchmark_available) else "Daily Returns"
+
+        fig.update_layout(
+            title=title,
+            hovermode="x unified",
+            plot_bgcolor="white",
+            barmode="overlay",
+            legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
+        )
+        fig.add_hline(y=0, line_width=1, line_color="gray")
+        fig.update_yaxes(
+            title_text="Return",
+            tickformat=".0%",
+            showgrid=True,
+            gridwidth=0.5,
+            gridcolor="lightgrey",
+        )
+        fig.update_xaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
+
+        if log_scale:
+            fig.update_yaxes(type="log")
+
+        return fig
+
     def plot_snapshot(self, title: str = "Portfolio Summary", log_scale: bool = False) -> go.Figure:
         """Create a comprehensive dashboard with multiple plots for portfolio analysis.
 

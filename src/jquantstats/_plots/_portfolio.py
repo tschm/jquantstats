@@ -457,6 +457,115 @@ class PortfolioPlots:
         fig.update_yaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
         return fig
 
+    def daily_returns(
+        self,
+        benchmark: pl.DataFrame | None = None,
+        log_scale: bool = False,
+        active: bool = False,
+    ) -> go.Figure:
+        """Bar chart of the portfolio's daily returns, coloured by positive/negative.
+
+        Each bar represents a single period's return (profit / AUM).
+        Positive returns are shown in green, negative returns in red.
+
+        An optional external *benchmark* DataFrame may be passed to overlay a
+        benchmark line on the chart.  When *active* is ``True`` and a benchmark
+        is supplied, active returns (portfolio return minus benchmark return)
+        are plotted instead of raw returns.
+
+        Args:
+            benchmark: Optional Polars DataFrame whose first column is a date
+                and second column is a returns series.  When *active* is ``False``
+                it is overlaid as a line trace; when *active* is ``True`` it is
+                used to compute active returns.
+            log_scale: If ``True``, display the y-axis on a logarithmic scale.
+            active: If ``True`` and *benchmark* is supplied, plot active returns
+                (portfolio return minus benchmark return).
+
+        Returns:
+            A Plotly Figure with one bar trace for portfolio returns, optionally
+            with a benchmark line overlay.
+
+        Example:
+            >>> import dataclasses
+            >>> from jquantstats._plots import PortfolioPlots
+            >>> dataclasses.is_dataclass(PortfolioPlots)
+            True
+
+        """
+        nav = self.portfolio.nav_accumulated
+        date_col = "date" if "date" in nav.columns else None
+
+        returns_df = nav.with_columns((pl.col("profit") / self.portfolio.aum).alias("returns"))
+
+        values = returns_df["returns"]
+        dates = returns_df[date_col] if date_col else None
+
+        # Active returns: subtract benchmark returns.
+        # Missing benchmark dates are filled with 0.0 (no active return contribution).
+        if active and benchmark is not None and date_col is not None:
+            bench_date_col = benchmark.columns[0]
+            bench_val_col = benchmark.columns[1]
+            aligned = returns_df.join(
+                benchmark.rename({bench_date_col: date_col, bench_val_col: "_bench"}),
+                on=date_col,
+                how="left",
+            )
+            values = aligned["returns"] - aligned["_bench"].fill_null(0.0)
+
+        values_list = values.to_list()
+        bar_colors = ["green" if v is not None and v >= 0 else "red" for v in values_list]
+
+        fig = go.Figure()
+        fig.add_trace(
+            go.Bar(
+                x=dates,
+                y=values_list,
+                name="returns",
+                marker={"color": bar_colors, "line": {"width": 0}},
+                opacity=0.8,
+                hovertemplate="Return: %{y:.2%}<extra></extra>",
+            )
+        )
+
+        # Optional benchmark overlay as a line (when not using it for active subtraction)
+        if benchmark is not None and not active:
+            bench_date_col = benchmark.columns[0]
+            bench_val_col = benchmark.columns[1]
+            fig.add_trace(
+                go.Scatter(
+                    x=benchmark[bench_date_col],
+                    y=benchmark[bench_val_col],
+                    mode="lines",
+                    name=bench_val_col,
+                    line={"width": 1, "color": "blue"},
+                    opacity=0.8,
+                )
+            )
+
+        title = "Daily Active Returns" if (active and benchmark is not None) else "Daily Returns"
+
+        fig.update_layout(
+            title=title,
+            hovermode="x unified",
+            plot_bgcolor="white",
+            legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
+        )
+        fig.add_hline(y=0, line_width=1, line_color="gray")
+        fig.update_yaxes(
+            title_text="Return",
+            tickformat=".0%",
+            showgrid=True,
+            gridwidth=0.5,
+            gridcolor="lightgrey",
+        )
+        fig.update_xaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
+
+        if log_scale:
+            fig.update_yaxes(type="log")
+
+        return fig
+
     def correlation_heatmap(
         self,
         frame: pl.DataFrame | None = None,

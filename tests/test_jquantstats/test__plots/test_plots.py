@@ -312,3 +312,127 @@ def test_annual_sharpe_plot_returns_figure_with_bars(long_portfolio):
         assert isinstance(trace, go.Bar)
     assert "Annual Sharpe" in fig.layout.title.text
     _ = fig.to_dict()
+
+
+# ─── Daily returns (DataPlots) ───────────────────────────────────────────────
+
+
+def test_data_daily_returns_default(plots):
+    """DataPlots.daily_returns default call returns a bar Figure."""
+    fig = plots.daily_returns()
+    assert isinstance(fig, go.Figure)
+    assert len(fig.data) >= 1
+    assert isinstance(fig.data[0], go.Bar)
+    assert "Daily Returns" in fig.layout.title.text
+    _ = fig.to_dict()
+
+
+def test_data_daily_returns_log_scale(plots):
+    """DataPlots.daily_returns with log_scale=True applies log type to y-axis."""
+    fig = plots.daily_returns(log_scale=True)
+    assert isinstance(fig, go.Figure)
+    assert getattr(fig.layout.yaxis, "type", None) == "log"
+    _ = fig.to_dict()
+
+
+def test_data_daily_returns_active_with_embedded_benchmark(data):
+    """DataPlots.daily_returns active=True uses embedded benchmark for active returns."""
+    fig = data.plots.daily_returns(active=True)
+    assert isinstance(fig, go.Figure)
+    assert "Active" in fig.layout.title.text
+    assert isinstance(fig.data[0], go.Bar)
+    _ = fig.to_dict()
+
+
+def test_data_daily_returns_active_without_benchmark_falls_back_to_default_title(returns):
+    """DataPlots.daily_returns active=True without any benchmark keeps 'Daily Returns' title."""
+    from jquantstats import Data
+
+    data_no_bench = Data.from_returns(returns=returns)
+    fig = data_no_bench.plots.daily_returns(active=True)
+    assert isinstance(fig, go.Figure)
+    assert fig.layout.title.text == "Daily Returns"
+    _ = fig.to_dict()
+
+
+def test_data_daily_returns_with_external_benchmark_overlay(returns):
+    """DataPlots.daily_returns with benchmark param adds a line overlay."""
+    from jquantstats import Data
+
+    bench = returns.rename({"Meta": "Bench"})
+    data_obj = Data.from_returns(returns=returns)
+    fig = data_obj.plots.daily_returns(benchmark=bench)
+    assert isinstance(fig, go.Figure)
+    types = [type(t) for t in fig.data]
+    assert go.Bar in types
+    assert go.Scatter in types
+    _ = fig.to_dict()
+
+
+def test_data_daily_returns_active_with_external_benchmark(returns):
+    """DataPlots.daily_returns active=True with external benchmark subtracts it."""
+    from jquantstats import Data
+
+    bench = returns.rename({"Meta": "Bench"})
+    data_obj = Data.from_returns(returns=returns)
+    fig = data_obj.plots.daily_returns(benchmark=bench, active=True)
+    assert isinstance(fig, go.Figure)
+    assert "Active" in fig.layout.title.text
+    # In active mode the benchmark is not overlaid as a line
+    assert all(isinstance(t, go.Bar) for t in fig.data)
+    _ = fig.to_dict()
+
+
+# ─── Daily returns (PortfolioPlots) ─────────────────────────────────────────
+
+
+def test_portfolio_daily_returns_default(pf):
+    """PortfolioPlots.daily_returns default call returns a bar Figure."""
+    fig = pf.plots.daily_returns()
+    assert isinstance(fig, go.Figure)
+    assert len(fig.data) >= 1
+    assert isinstance(fig.data[0], go.Bar)
+    assert "Daily Returns" in fig.layout.title.text
+    _ = fig.to_dict()
+
+
+def test_portfolio_daily_returns_log_scale(pf):
+    """PortfolioPlots.daily_returns with log_scale=True applies log type to y-axis."""
+    fig = pf.plots.daily_returns(log_scale=True)
+    assert isinstance(fig, go.Figure)
+    assert getattr(fig.layout.yaxis, "type", None) == "log"
+    _ = fig.to_dict()
+
+
+def test_portfolio_daily_returns_with_benchmark_overlay(pf):
+    """PortfolioPlots.daily_returns with benchmark param adds a line overlay."""
+    n = pf.prices.height
+    bench = pl.DataFrame(
+        {
+            "date": pf.prices["date"],
+            "bench": pl.Series([0.001 * i for i in range(n)], dtype=pl.Float64),
+        }
+    )
+    fig = pf.plots.daily_returns(benchmark=bench)
+    assert isinstance(fig, go.Figure)
+    types = [type(t) for t in fig.data]
+    assert go.Bar in types
+    assert go.Scatter in types
+    _ = fig.to_dict()
+
+
+def test_portfolio_daily_returns_active_with_benchmark(pf):
+    """PortfolioPlots.daily_returns active=True subtracts benchmark returns."""
+    n = pf.prices.height
+    bench = pl.DataFrame(
+        {
+            "date": pf.prices["date"],
+            "bench": pl.Series([0.001] * n, dtype=pl.Float64),
+        }
+    )
+    fig = pf.plots.daily_returns(benchmark=bench, active=True)
+    assert isinstance(fig, go.Figure)
+    assert "Active" in fig.layout.title.text
+    # In active mode the benchmark is not overlaid as a line
+    assert all(isinstance(t, go.Bar) for t in fig.data)
+    _ = fig.to_dict()
