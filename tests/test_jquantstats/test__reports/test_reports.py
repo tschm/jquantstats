@@ -9,9 +9,16 @@ import pytest
 from polars.testing import assert_frame_equal
 
 from jquantstats._reports._data import (
+    _add_drawdown_rows,
+    _add_overview_rows,
+    _add_recent_returns_rows,
+    _add_risk_adjusted_rows,
+    _add_trading_rows,
     _build_full_html,
+    _build_metrics_df,
     _cagr_since,
     _comp_since,
+    _cutoff_months,
     _drawdowns_section_html,
     _fmt,
     _is_finite,
@@ -21,6 +28,158 @@ from jquantstats._reports._data import (
 )
 
 # ── Module-level helper unit tests ────────────────────────────────────────────
+
+
+# ── _cutoff_months ────────────────────────────────────────────────────────────
+
+
+def test_cutoff_months_basic():
+    """Subtracting months stays in same year."""
+    today = date(2024, 6, 15)
+    assert _cutoff_months(today, 3) == date(2024, 3, 15)
+
+
+def test_cutoff_months_crosses_year_boundary():
+    """Subtracting months crossing year boundary wraps correctly."""
+    today = date(2024, 2, 10)
+    assert _cutoff_months(today, 3) == date(2023, 11, 10)
+
+
+def test_cutoff_months_clamps_to_month_end():
+    """Day is clamped when target month has fewer days."""
+    today = date(2024, 3, 31)
+    # 1 month back is Feb 2024 which has only 29 days
+    assert _cutoff_months(today, 1) == date(2024, 2, 29)
+
+
+# ── _add_*_rows helpers ───────────────────────────────────────────────────────
+
+
+def _make_stub_stats(**method_returns: dict) -> object:
+    """Return a stats-like stub where each kwarg is a callable returning its value."""
+
+    class _Stub:
+        """Minimal stats-like stub populated by setattr."""
+
+        pass
+
+    stub = _Stub()
+    for name, retval in method_returns.items():
+        setattr(stub, name, lambda rv=retval, **_kw: rv)
+    return stub
+
+
+def test_add_overview_rows_appends_three_rows():
+    """_add_overview_rows appends exactly three labelled rows."""
+    s = _make_stub_stats(exposure={}, comp={}, cagr={})
+    rows: list = []
+    _add_overview_rows(rows, s, 252.0)
+    labels = [r[0] for r in rows]
+    assert labels == ["Time in Market", "Cumulative Return", "CAGR"]
+
+
+def test_add_risk_adjusted_rows_appends_five_rows():
+    """_add_risk_adjusted_rows appends exactly five labelled rows."""
+    s = _make_stub_stats(
+        sharpe={},
+        probabilistic_sharpe_ratio={},
+        sortino={},
+        adjusted_sortino={},
+        omega={},
+    )
+    rows: list = []
+    _add_risk_adjusted_rows(rows, s, 252.0)
+    labels = [r[0] for r in rows]
+    assert labels == ["Sharpe", "Prob. Sharpe Ratio", "Sortino", "Sortino / √2", "Omega"]
+
+
+def test_add_drawdown_rows_appends_six_rows():
+    """_add_drawdown_rows appends exactly six labelled rows."""
+    s = _make_stub_stats(
+        max_drawdown={},
+        max_drawdown_duration={},
+        avg_drawdown={},
+        recovery_factor={},
+        ulcer_index={},
+        serenity_index={},
+    )
+    rows: list = []
+    _add_drawdown_rows(rows, s)
+    labels = [r[0] for r in rows]
+    assert labels == [
+        "Max Drawdown",
+        "Max DD Duration",
+        "Avg Drawdown",
+        "Recovery Factor",
+        "Ulcer Index",
+        "Serenity Index",
+    ]
+
+
+def test_add_trading_rows_appends_nine_rows():
+    """_add_trading_rows appends exactly nine labelled rows."""
+    s = _make_stub_stats(
+        gain_to_pain_ratio={},
+        payoff_ratio={},
+        profit_factor={},
+        common_sense_ratio={},
+        cpc_index={},
+        tail_ratio={},
+        outlier_win_ratio={},
+        outlier_loss_ratio={},
+    )
+    rows: list = []
+    _add_trading_rows(rows, s)
+    labels = [r[0] for r in rows]
+    assert labels == [
+        "Gain/Pain Ratio",
+        "Gain/Pain (1M)",
+        "Payoff Ratio",
+        "Profit Factor",
+        "Common Sense Ratio",
+        "CPC Index",
+        "Tail Ratio",
+        "Outlier Win Ratio",
+        "Outlier Loss Ratio",
+    ]
+
+
+def test_add_recent_returns_rows_appends_eight_rows():
+    """_add_recent_returns_rows appends exactly eight labelled rows."""
+    df = pl.DataFrame({"Date": [date(2023, 1, d) for d in range(1, 6)], "ret": [0.01] * 5}).with_columns(
+        pl.col("Date").cast(pl.Date)
+    )
+    s = _make_stub_stats(cagr={"ret": 0.05})
+    rows: list = []
+    _add_recent_returns_rows(rows, df, "Date", ["ret"], 252.0, s)
+    labels = [r[0] for r in rows]
+    assert labels == ["MTD", "3M", "6M", "YTD", "1Y", "3Y (ann.)", "5Y (ann.)", "All-time (ann.)"]
+
+
+# ── _build_metrics_df ─────────────────────────────────────────────────────────
+
+
+def test_build_metrics_df_basic():
+    """_build_metrics_df builds a DataFrame with a Metric column."""
+    rows = [("Sharpe", {"AAPL": 1.5}), ("Sortino", {"AAPL": 2.0})]
+    df = _build_metrics_df(rows)
+    assert "Metric" in df.columns
+    assert "AAPL" in df.columns
+    assert df["Metric"].to_list() == ["Sharpe", "Sortino"]
+
+
+def test_build_metrics_df_preserves_asset_order():
+    """Assets appear in the order they are first encountered."""
+    rows = [("A", {"X": 1.0, "Y": 2.0}), ("B", {"Y": 3.0, "Z": 4.0})]
+    df = _build_metrics_df(rows)
+    assert df.columns == ["Metric", "X", "Y", "Z"]
+
+
+def test_build_metrics_df_missing_asset_is_none():
+    """Assets absent from a row map to None in that row."""
+    rows = [("A", {"X": 1.0}), ("B", {"Y": 2.0})]
+    df = _build_metrics_df(rows)
+    assert df.filter(pl.col("Metric") == "A")["Y"][0] is None
 
 
 def test_is_finite_accepts_int():
