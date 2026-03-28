@@ -74,6 +74,9 @@ class _ReportingStatsMixin:
         def max_drawdown(self) -> dict[str, float]:
             """Defined on _PerformanceStatsMixin."""
 
+        def geometric_mean(self) -> dict[str, float]:
+            """Defined on _BasicStatsMixin."""
+
     # ── Temporal & reporting ──────────────────────────────────────────────────
 
     @property
@@ -405,6 +408,7 @@ class _ReportingStatsMixin:
 
         metrics: dict[str, dict[str, Any]] = {
             "avg_return": _safe(self.avg_return),
+            "geometric_mean": _safe(self.geometric_mean),
             "avg_win": _safe(self.avg_win),
             "avg_loss": _safe(self.avg_loss),
             "win_rate": _safe(self.win_rate),

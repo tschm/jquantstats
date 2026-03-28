@@ -111,6 +111,37 @@ class _BasicStatsMixin:
         """
         return self._mean_negative_expr(series)
 
+    @columnwise_stat
+    def geometric_mean(self, series: pl.Series) -> float:
+        """Calculate the geometric mean of returns.
+
+        Equivalent to the per-period CAGR: the nth root of the cumulative
+        product of (1 + return) minus 1, where n is the number of observations.
+
+        Computed via log-sum for numerical stability.
+
+        Args:
+            series (pl.Series): The series to calculate geometric mean for.
+
+        Returns:
+            float: The geometric mean of returns.
+
+        """
+        clean = series.drop_nulls()
+        n = clean.count()
+        if n == 0:
+            return float("nan")
+        return float(np.exp(float(np.log1p(clean.to_numpy()).mean())) - 1.0)
+
+    def ghpr(self) -> dict[str, float]:
+        """Calculate the Geometric Holding Period Return (alias for geometric_mean).
+
+        Returns:
+            dict[str, float]: Dictionary mapping asset names to GHPR values.
+
+        """
+        return self.geometric_mean()
+
     # ── Volatility & risk ─────────────────────────────────────────────────────
 
     @columnwise_stat

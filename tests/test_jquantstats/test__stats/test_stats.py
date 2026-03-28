@@ -90,6 +90,35 @@ def test_avg_loss(stats):
     assert result["META"] == pytest.approx(-0.01614062422517277)
 
 
+def test_geometric_mean(stats):
+    """Tests that the geometric_mean method calculates the geometric mean correctly.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        The geometric mean value for META matches the expected value.
+
+    """
+    result = stats.geometric_mean()
+    assert result["META"] == pytest.approx(0.0008201465942647701)
+
+
+def test_ghpr(stats):
+    """Tests that the ghpr method returns the same result as geometric_mean.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        The GHPR value for META equals the geometric mean value.
+
+    """
+    result = stats.ghpr()
+    assert result["META"] == pytest.approx(0.0008201465942647701)
+    assert result == stats.geometric_mean()
+
+
 def test_volatility(stats):
     """Tests that the volatility method calculates volatility correctly.
 
