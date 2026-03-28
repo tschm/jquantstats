@@ -628,12 +628,10 @@ class Reports:
                     bench_col = bench_obj.columns[0]
                     corr_dict: dict[str, float] = {}
                     for ac in asset_cols:
-                        corr_val = float(
-                            all_df[ac]
-                            .drop_nulls()
-                            .cast(pl.Float64)
-                            .pearson_corr(all_df[bench_col].drop_nulls().cast(pl.Float64))
-                        )
+                        if ac == bench_col:
+                            continue
+                        sub = all_df.select([date_col, ac, bench_col]).drop_nulls()
+                        corr_val = float(sub.select(pl.corr(ac, bench_col))[0, 0])
                         corr_dict[ac] = corr_val * 100.0
                     _row("Correlation", corr_dict)
             except Exception:  # noqa: S110
