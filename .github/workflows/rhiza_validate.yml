@@ -9,7 +9,8 @@
 #          - make typecheck runs ty (https://github.com/astral-sh/ty), a fast
 #            Python type checker from the Astral team (same team as ruff/uv).
 #            Type-checker settings live in [tool.ty.environment] in pyproject.toml.
-#          - pip-audit scans installed dependencies for known CVEs (weekly).
+#          - make security runs pip-audit and bandit security scans (push/PR).
+#          - pip-audit additionally scans installed dependencies for known CVEs (weekly).
 #
 # Trigger: On push and pull requests to main/master branches.
 #          pip-audit additionally runs on a weekly schedule (Monday 09:00 UTC)
@@ -79,6 +80,29 @@ jobs:
         env:
           UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
         run: make typecheck
+
+  security:
+    name: Security scanning
+    runs-on: ubuntu-latest
+    if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
+
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7.6.0
+        with:
+          version: "0.10.12"
+
+      - name: Configure git auth for private packages
+        uses: ./.github/actions/configure-git-auth
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Run security scans
+        env:
+          UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
+        run: make security
 
   pip-audit:
     name: Dependency vulnerability scan
