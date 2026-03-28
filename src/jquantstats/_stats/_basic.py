@@ -527,6 +527,82 @@ class _BasicStatsMixin:
         tr = self.tail_ratio()
         return {col: pf[col] * tr[col] for col in pf}
 
+    def outliers(self, quantile: float = 0.95) -> dict[str, pl.Series]:
+        """Return only the returns above a quantile threshold.
+
+        Args:
+            quantile (float): Upper quantile threshold. Defaults to 0.95.
+
+        Returns:
+            dict[str, pl.Series]: Filtered series per asset containing only
+                returns above the quantile.
+
+        """
+        result = {}
+        for col, series in self.data.items():
+            threshold = cast(float, series.quantile(quantile, interpolation="linear"))
+            result[col] = series.filter(series > threshold).drop_nulls()
+        return result
+
+    def remove_outliers(self, quantile: float = 0.95) -> dict[str, pl.Series]:
+        """Return returns with values above a quantile threshold removed.
+
+        Args:
+            quantile (float): Upper quantile threshold. Defaults to 0.95.
+
+        Returns:
+            dict[str, pl.Series]: Filtered series per asset containing only
+                returns below the quantile.
+
+        """
+        result = {}
+        for col, series in self.data.items():
+            threshold = cast(float, series.quantile(quantile, interpolation="linear"))
+            result[col] = series.filter(series < threshold)
+        return result
+
+    @columnwise_stat
+    def outlier_win_ratio(self, series: pl.Series, quantile: float = 0.99) -> float:
+        """Calculate the outlier winners ratio.
+
+        Ratio of the high-quantile return to the mean positive return,
+        showing how much outlier wins contribute to overall performance.
+
+        Args:
+            series (pl.Series): The series to calculate outlier win ratio for.
+            quantile (float): Quantile for the outlier threshold. Defaults to 0.99.
+
+        Returns:
+            float: Outlier win ratio.
+
+        """
+        positive_mean = cast(float, series.filter(series >= 0).mean())
+        if positive_mean is None or positive_mean == 0:
+            return float(np.nan)
+        quantile_val = cast(float, series.quantile(quantile, interpolation="linear"))
+        return float(quantile_val / positive_mean)
+
+    @columnwise_stat
+    def outlier_loss_ratio(self, series: pl.Series, quantile: float = 0.01) -> float:
+        """Calculate the outlier losers ratio.
+
+        Ratio of the low-quantile return to the mean negative return,
+        showing how much outlier losses contribute to overall risk.
+
+        Args:
+            series (pl.Series): The series to calculate outlier loss ratio for.
+            quantile (float): Quantile for the outlier threshold. Defaults to 0.01.
+
+        Returns:
+            float: Outlier loss ratio.
+
+        """
+        negative_mean = cast(float, series.filter(series < 0).mean())
+        if negative_mean is None or negative_mean == 0:
+            return float(np.nan)
+        quantile_val = cast(float, series.quantile(quantile, interpolation="linear"))
+        return float(quantile_val / negative_mean)
+
     @columnwise_stat
     def gain_to_pain_ratio(self, series: pl.Series) -> float:
         """Calculate Jack Schwager's Gain-to-Pain Ratio.

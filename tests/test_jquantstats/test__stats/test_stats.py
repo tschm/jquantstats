@@ -267,6 +267,30 @@ def test_kelly_criterion(stats):
     assert result["META"] == pytest.approx(0.06817093826936971)
 
 
+def test_outlier_win_ratio(stats):
+    """Tests that outlier_win_ratio returns the ratio of high-quantile to mean positive return."""
+    result = stats.outlier_win_ratio()
+    assert result["AAPL"] == pytest.approx(4.254419434089758)
+
+
+def test_outlier_loss_ratio(stats):
+    """Tests that outlier_loss_ratio returns the ratio of low-quantile to mean negative return."""
+    result = stats.outlier_loss_ratio()
+    assert result["AAPL"] == pytest.approx(3.778604041649339)
+
+
+def test_outliers(stats):
+    """Tests that outliers returns only returns above the quantile threshold."""
+    result = stats.outliers()
+    assert len(result["AAPL"]) == 406
+
+
+def test_remove_outliers(stats):
+    """Tests that remove_outliers returns returns below the quantile threshold."""
+    result = stats.remove_outliers()
+    assert len(result["AAPL"]) == 7710
+
+
 def test_gain_to_pain_ratio(stats):
     """Tests that the gain_to_pain_ratio method calculates gain-to-pain ratio correctly.
 
