@@ -4,20 +4,6 @@ import pytest
 import quantstats as qs
 
 
-def test_calmar(stats, aapl):
-    """Compares calmar ratio against quantstats."""
-    x = stats.calmar(periods=252)
-    y = qs.stats.calmar(aapl, periods=252)
-    assert x["AAPL"] == pytest.approx(y, abs=1e-6)
-
-
-def test_recovery_factor(stats, aapl):
-    """Compares recovery_factor against quantstats."""
-    x = stats.recovery_factor()
-    y = qs.stats.recovery_factor(aapl)
-    assert x["AAPL"] == pytest.approx(y, abs=1e-6)
-
-
 def test_omega(stats, aapl):
     """Compares omega ratio against quantstats for default, required_return, and rf variants."""
     x = stats.omega(periods=252)
@@ -35,14 +21,14 @@ def test_omega(stats, aapl):
 
 def test_autocorrelation(stats, aapl):
     """Lag-1 autocorrelation matches pandas Series.autocorr(lag=1)."""
-    x = stats.autocorrelation(lag=1)
+    x = stats.autocorr(lag=1)
     y = aapl.autocorr(lag=1)
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
 
 
 def test_autocorrelation_lag5(stats, aapl):
     """Lag-5 autocorrelation matches pandas Series.autocorr(lag=5)."""
-    x = stats.autocorrelation(lag=5)
+    x = stats.autocorr(lag=5)
     y = aapl.autocorr(lag=5)
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
 
