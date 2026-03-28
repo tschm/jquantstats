@@ -27,12 +27,12 @@ import polars as pl
 def _drawdown_series(series: pl.Series) -> pl.Series:
     """Compute the drawdown percentage series from a returns series.
 
-    Treats ``series`` as additive daily returns and builds a normalised NAV
-    starting at 1.0.  The high-water mark is the running maximum of that NAV;
-    drawdown is expressed as the fraction below the high-water mark.
+    Builds a compound NAV (geometric cumulative product) from the returns
+    series and expresses drawdown as the fraction below the running high-water
+    mark.  This matches the quantstats convention.
 
     Args:
-        series: A Polars Series of additive returns (profit / AUM).
+        series: A Polars Series of multiplicative daily returns.
 
     Returns:
         A Polars Float64 Series whose values are in [0, 1].  A value of 0
@@ -45,7 +45,7 @@ def _drawdown_series(series: pl.Series) -> pl.Series:
         >>> [round(x, 10) for x in _drawdown_series(s).to_list()]
         [0.0, 0.1, 0.0]
     """
-    nav = 1.0 + series.cast(pl.Float64).cum_sum()
+    nav = (1.0 + series.cast(pl.Float64)).cum_prod()
     hwm = nav.cum_max()
     hwm_safe = hwm.clip(lower_bound=1e-10)
     return ((hwm - nav) / hwm_safe).clip(lower_bound=0.0)

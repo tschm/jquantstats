@@ -43,7 +43,7 @@ def test_from_prices_max_drawdown(prices: pl.DataFrame) -> None:
     max_dd = data.stats.max_drawdown()
     assert isinstance(max_dd, dict)
     assert "Asset1" in max_dd
-    assert float(data.stats.max_drawdown()["Asset1"]) >= 0.0
+    assert float(data.stats.max_drawdown()["Asset1"]) <= 0.0
 
 
 def test_from_prices_issue_example() -> None:
