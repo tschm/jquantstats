@@ -345,6 +345,40 @@ class _PerformanceStatsMixin:
         """
         return _PerformanceStatsMixin.max_drawdown_single_series(series)
 
+    def smart_sharpe(self, periods: int | float | None = None) -> dict[str, float]:
+        """Calculate the Smart Sharpe ratio (Sharpe with autocorrelation penalty).
+
+        Divides the Sharpe ratio by the autocorrelation penalty to account for
+        return autocorrelation that can artificially inflate risk-adjusted metrics.
+
+        Args:
+            periods (int | float, optional): Number of periods per year. Defaults to periods_per_year.
+
+        Returns:
+            dict[str, float]: Dictionary mapping asset names to Smart Sharpe ratios.
+
+        """
+        sharpe_data = self.sharpe(periods=periods)
+        penalty_data = self.autocorr_penalty()
+        return {k: sharpe_data[k] / penalty_data[k] for k in sharpe_data}
+
+    def smart_sortino(self, periods: int | float | None = None) -> dict[str, float]:
+        """Calculate the Smart Sortino ratio (Sortino with autocorrelation penalty).
+
+        Divides the Sortino ratio by the autocorrelation penalty to account for
+        return autocorrelation that can artificially inflate risk-adjusted metrics.
+
+        Args:
+            periods (int | float, optional): Number of periods per year. Defaults to periods_per_year.
+
+        Returns:
+            dict[str, float]: Dictionary mapping asset names to Smart Sortino ratios.
+
+        """
+        sortino_data = self.sortino(periods=periods)
+        penalty_data = self.autocorr_penalty()
+        return {k: sortino_data[k] / penalty_data[k] for k in sortino_data}
+
     def adjusted_sortino(self, periods: int | float | None = None) -> dict[str, float]:
         """Calculate Jack Schwager's adjusted Sortino ratio.
 

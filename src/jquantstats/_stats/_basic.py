@@ -112,6 +112,32 @@ class _BasicStatsMixin:
         """
         return self._mean_negative_expr(series)
 
+    @columnwise_stat
+    def geometric_mean(self, series: pl.Series, periods: int | float | None = None, annualize: bool = False) -> float:
+        """Calculate the geometric mean of returns.
+
+        Computed as the per-period geometric average: (∏(1 + rᵢ))^(1/n) - 1.
+        When annualized, raises to the power of periods_per_year instead of 1/n.
+
+        Args:
+            series (pl.Series): The series to calculate geometric mean for.
+            periods (int | float, optional): Periods per year for annualization. Defaults to periods_per_year.
+            annualize (bool): Whether to annualize the result. Defaults to False.
+
+        Returns:
+            float: The geometric mean return.
+
+        """
+        clean = series.drop_nulls().cast(pl.Float64)
+        n = clean.len()
+        if n == 0:
+            return float(np.nan)
+        compound = float((1.0 + clean).product())
+        if compound <= 0:
+            return float(np.nan)
+        exponent = (periods or self.data._periods_per_year) / n if annualize else (1.0 / n)
+        return float(compound**exponent) - 1.0
+
     # ── Volatility & risk ─────────────────────────────────────────────────────
 
     @columnwise_stat
@@ -384,7 +410,7 @@ class _BasicStatsMixin:
             float: Autocorrelation penalty factor (>= 1).
 
         """
-        arr = series.to_numpy()
+        arr = series.drop_nulls().to_numpy()
         num = len(arr)
         coef = float(np.abs(np.corrcoef(arr[:-1], arr[1:])[0, 1]))
         x = np.arange(1, num)

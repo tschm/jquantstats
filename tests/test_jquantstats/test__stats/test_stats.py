@@ -90,6 +90,30 @@ def test_avg_loss(stats):
     assert result["META"] == pytest.approx(-0.01614062422517277)
 
 
+def test_geometric_mean(stats):
+    """Tests that geometric_mean calculates the per-period geometric average correctly."""
+    result = stats.geometric_mean()
+    assert result["META"] == pytest.approx(0.0008201465942647701)
+
+
+def test_geometric_mean_annualized(stats):
+    """Tests that geometric_mean with annualize=True returns the annualized geometric return."""
+    result = stats.geometric_mean(annualize=True)
+    assert result["META"] == pytest.approx(0.22904692100449497)
+
+
+def test_smart_sharpe(stats):
+    """Tests that smart_sharpe applies the autocorrelation penalty to the Sharpe ratio."""
+    result = stats.smart_sharpe(periods=252)
+    assert result["META"] == pytest.approx(0.698132519420813)
+
+
+def test_smart_sortino(stats):
+    """Tests that smart_sortino applies the autocorrelation penalty to the Sortino ratio."""
+    result = stats.smart_sortino(periods=252)
+    assert result["META"] == pytest.approx(1.0368591297457295)
+
+
 def test_volatility(stats):
     """Tests that the volatility method calculates volatility correctly.
 
