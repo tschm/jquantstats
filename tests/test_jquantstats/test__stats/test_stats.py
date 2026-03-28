@@ -943,7 +943,7 @@ def test_ulcer_index(stats):
     assert set(result.keys()) == set(stats.data.assets)
     for col in result:
         assert result[col] >= 0.0
-    assert result["META"] == pytest.approx(0.11054071288725323)
+    assert result["META"] == pytest.approx(0.14639965551149006)
 
 
 def test_ulcer_index_all_zeros(edge):
@@ -960,7 +960,7 @@ def test_ulcer_performance_index(stats):
     assert set(result.keys()) == set(stats.data.assets)
     for col in result:
         assert np.isfinite(result[col])
-    assert result["META"] == pytest.approx(121.06547792498111)
+    assert result["META"] == pytest.approx(91.41185605326159)
 
 
 def test_upi_is_alias(stats):
@@ -982,7 +982,7 @@ def test_serenity_index(stats):
     assert set(result.keys()) == set(stats.data.assets)
     for col in result:
         assert np.isfinite(result[col])
-    assert result["META"] == pytest.approx(130.9892725940348)
+    assert result["META"] == pytest.approx(1.405497989750909)
 
 
 def test_serenity_index_zero_ui(edge):
@@ -992,8 +992,8 @@ def test_serenity_index_zero_ui(edge):
         assert np.isnan(val)
 
 
-def test_serenity_index_no_losses():
-    """serenity_index returns NaN when there are no negative returns."""
+def test_serenity_index_monotone_positive():
+    """serenity_index returns NaN when all returns are non-negative (UI == 0)."""
     from jquantstats.data import Data
 
     returns = pl.DataFrame({"r": [0.01, 0.02, 0.03]})

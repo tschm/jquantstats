@@ -8,7 +8,7 @@ import numpy as np
 import polars as pl
 from scipy.stats import norm
 
-from ._core import _drawdown_series, _to_float, columnwise_stat, to_frame
+from ._core import _to_float, columnwise_stat, to_frame
 
 # ── Performance statistics mixin ─────────────────────────────────────────────
 
@@ -297,8 +297,9 @@ class _PerformanceStatsMixin:
     def ulcer_index(self, series: pl.Series) -> float:
         """Calculate the Ulcer Index (root mean square of drawdowns).
 
-        A higher Ulcer Index indicates deeper and/or longer drawdowns.
-        Returns ``nan`` when the series is empty.
+        Computed as the square root of the mean of squared drawdowns using
+        multiplicative price compounding, matching the quantstats implementation.
+        Returns ``nan`` when the series has fewer than two observations.
 
         Args:
             series (pl.Series): Series of additive daily returns.
@@ -310,26 +311,81 @@ class _PerformanceStatsMixin:
         return _PerformanceStatsMixin._ulcer_index_single(series)
 
     @staticmethod
-    def _ulcer_index_single(series: pl.Series) -> float:
-        """Compute the Ulcer Index for a single returns series.
+    def _filled_drawdowns(series: pl.Series) -> tuple[pl.Series, pl.Series]:
+        """Return the NaN-filled returns series and its equity-curve drawdown series.
+
+        NaN/null values are treated as zero returns (flat, no movement),
+        consistent with the quantstats convention.
 
         Args:
             series: A Polars Series of additive returns.
 
         Returns:
-            float: The Ulcer Index, or ``nan`` when the series is empty.
+            A 2-tuple ``(s, dd)`` where *s* is the Float64 series with NaN/null
+            replaced by ``0.0``, and *dd* is the drawdown series (non-positive
+            Float64 values in ``[-1, 0]``).
         """
-        dd = _drawdown_series(series)
-        if dd.len() == 0:
+        s = series.cast(pl.Float64).fill_null(0.0).fill_nan(0.0)
+        price = (1.0 + s).cum_prod()
+        peak = price.cum_max()
+        dd = (price / peak) - 1.0
+        return s, dd
+
+    @staticmethod
+    def _ulcer_index_single(series: pl.Series) -> float:
+        """Compute the Ulcer Index for a single returns series.
+
+        NaN/null values are treated as zero returns (flat, no movement),
+        consistent with the quantstats convention.
+
+        Args:
+            series: A Polars Series of additive returns.
+
+        Returns:
+            float: The Ulcer Index, or ``nan`` when fewer than two observations.
+        """
+        s, dd = _PerformanceStatsMixin._filled_drawdowns(series)
+        n = s.len()
+        if n <= 1:
             return float("nan")
-        return float(np.sqrt(_to_float((dd**2).mean())))
+        return float(np.sqrt(float((dd**2).sum()) / (n - 1)))
+
+    @staticmethod
+    def _cvar_of_drawdowns(dd: pl.Series) -> float:
+        """Compute the CVaR of a drawdown series using a normal approximation.
+
+        Estimates the Value-at-Risk threshold from the normal distribution
+        fitted to *dd*, then returns the mean of all drawdown values that
+        fall below that threshold (i.e. the expected shortfall tail).
+
+        Args:
+            dd: A Polars Series of drawdown values (non-positive).
+
+        Returns:
+            float: CVaR value, or ``nan`` when fewer than two observations or
+            the standard deviation of drawdowns is zero.
+        """
+        n = dd.len()
+        if n <= 1:
+            return float("nan")
+        dd_np = dd.to_numpy()
+        mean_dd = float(dd_np.mean())
+        std_dd = float(dd_np.std(ddof=1))
+        if std_dd == 0.0:
+            return float("nan")
+        var_threshold = float(norm.ppf(0.05, mean_dd, std_dd))
+        below_var = dd_np[dd_np < var_threshold]
+        return float(below_var.mean()) if len(below_var) > 0 else var_threshold
 
     @columnwise_stat
     def ulcer_performance_index(self, series: pl.Series, rf: float = 0.0) -> float:
         """Calculate the Ulcer Performance Index (UPI).
 
-        A Sharpe-like ratio that penalises drawdown depth and duration.
-        Returns ``nan`` when the Ulcer Index is zero or the series is empty.
+        A Sharpe-like ratio that penalises drawdown depth and duration,
+        defined as ``(comp(returns) - rf) / ulcer_index``.  NaN/null values
+        in the returns series are treated as zero returns.
+        Returns ``nan`` when the Ulcer Index is zero or there are fewer than
+        two observations.
 
         Args:
             series (pl.Series): Series of additive daily returns.
@@ -342,7 +398,8 @@ class _PerformanceStatsMixin:
         ui = _PerformanceStatsMixin._ulcer_index_single(series)
         if ui == 0.0 or np.isnan(ui):
             return float("nan")
-        total_return = _to_float(np.expm1(np.log1p(series.cast(pl.Float64)).sum()))
+        s, _ = _PerformanceStatsMixin._filled_drawdowns(series)
+        total_return = float((1.0 + s).cum_prod()[-1]) - 1.0
         return (total_return - rf) / ui
 
     def upi(self, rf: float = 0.0) -> dict[str, float]:
@@ -359,11 +416,24 @@ class _PerformanceStatsMixin:
 
     @columnwise_stat
     def serenity_index(self, series: pl.Series, rf: float = 0.0) -> float:
-        """Calculate the Serenity Index.
+        r"""Calculate the Serenity Index.
 
-        A Calmar-like ratio that uses the Ulcer Index instead of max drawdown,
-        additionally weighted by a loss ratio and a win/loss ratio.
-        Returns ``nan`` when the Ulcer Index is zero or the series is empty.
+        Based on the KeyQuant whitepaper, the Serenity Index is defined as:
+
+        .. math::
+
+            \mathrm{SI} = \frac{\sum r - r_f}{\mathrm{UI} \times \mathrm{pitfall}}
+
+        where ``pitfall = -\mathrm{CVaR}(dd) / \sigma_r``, ``dd`` is the
+        drawdown series from the equity curve, and :math:`\sigma_r` is the
+        standard deviation of returns.
+
+        NaN/null values are treated as zero returns for price / drawdown
+        computation.  The standard deviation of returns is computed on the
+        original (non-filled) series — skipping NaN values — to be consistent
+        with the quantstats convention (which uses ``pandas.Series.std()``).
+        Returns ``nan`` when the Ulcer Index, the drawdown std, or the return
+        std is zero, or when there are fewer than two observations.
 
         Args:
             series (pl.Series): Series of additive daily returns.
@@ -372,21 +442,30 @@ class _PerformanceStatsMixin:
         Returns:
             float: The Serenity Index value.
 
+        References:
+            https://www.keyquant.com/Download/GetFile?Filename=%5CPublications%5CKeyQuant_WhitePaper_APT_Part1.pdf
+
         """
-        ui = _PerformanceStatsMixin._ulcer_index_single(series)
-        if ui == 0.0 or np.isnan(ui):
+        s, dd = _PerformanceStatsMixin._filled_drawdowns(series)
+        n = s.len()
+        if n <= 1:
             return float("nan")
-        total_return = _to_float(np.expm1(np.log1p(series.cast(pl.Float64)).sum()))
-        dd = _drawdown_series(series)
-        loss_ratio = 1.0 - _to_float(dd.mean())
-        positive = series.filter(series >= 0)
-        negative = series.filter(series < 0)
-        pos_sum = _to_float(positive.sum())
-        neg_sum = abs(_to_float(negative.sum()))
-        if neg_sum == 0.0:
+        ui = float(np.sqrt(float((dd**2).sum()) / (n - 1)))
+        if ui == 0.0:
             return float("nan")
-        win_ratio = pos_sum / neg_sum
-        return (total_return - rf) / ui * loss_ratio * win_ratio
+        cvar_dd = _PerformanceStatsMixin._cvar_of_drawdowns(dd)
+        if np.isnan(cvar_dd):
+            return float("nan")
+        # std computed on original series (NaN excluded) to match quantstats
+        std_returns = _to_float(series.cast(pl.Float64).drop_nulls().drop_nans().std(ddof=1))
+        if std_returns == 0.0:
+            return float("nan")
+        pitfall = -cvar_dd / std_returns
+        denominator = ui * pitfall
+        if denominator == 0.0:
+            return float("nan")
+        total_simple_return = _to_float(s.sum())
+        return (total_simple_return - rf) / denominator
 
     def adjusted_sortino(self, periods: int | float | None = None) -> dict[str, float]:
         """Calculate Jack Schwager's adjusted Sortino ratio.

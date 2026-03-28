@@ -413,3 +413,65 @@ def test_information_ratio(stats, aapl, benchmark_pd):
     x = stats.information_ratio(periods_per_year=252)
     y = np.sqrt(252) * qs.stats.information_ratio(aapl, benchmark=benchmark_pd)
     assert x["AAPL"] == pytest.approx(y, abs=1e-4)
+
+
+def test_ulcer_index(stats, aapl):
+    """Tests that ulcer_index matches quantstats.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+        aapl: The aapl fixture containing AAPL returns.
+
+    Verifies:
+        The Ulcer Index calculated by our library matches the one from quantstats.
+
+    """
+    x = stats.ulcer_index()
+    y = qs.stats.ulcer_index(aapl)
+    assert x["AAPL"] == pytest.approx(y, abs=1e-6)
+
+
+def test_ulcer_performance_index(stats, aapl):
+    """Tests that ulcer_performance_index matches quantstats.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+        aapl: The aapl fixture containing AAPL returns.
+
+    Verifies:
+        The UPI calculated by our library matches the one from quantstats.
+
+    """
+    x = stats.ulcer_performance_index()
+    y = qs.stats.ulcer_performance_index(aapl)
+    assert x["AAPL"] == pytest.approx(y, abs=1e-4)
+
+
+def test_upi_alias(stats, aapl):
+    """Tests that upi() is an alias for ulcer_performance_index().
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+        aapl: The aapl fixture containing AAPL returns.
+
+    Verifies:
+        upi() returns the same value as ulcer_performance_index().
+
+    """
+    assert stats.upi()["AAPL"] == pytest.approx(stats.ulcer_performance_index()["AAPL"])
+
+
+def test_serenity_index(stats, aapl):
+    """Tests that serenity_index matches quantstats.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+        aapl: The aapl fixture containing AAPL returns.
+
+    Verifies:
+        The Serenity Index calculated by our library matches the one from quantstats.
+
+    """
+    x = stats.serenity_index()
+    y = qs.stats.serenity_index(aapl)
+    assert x["AAPL"] == pytest.approx(y, abs=1e-4)
