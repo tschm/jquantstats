@@ -16,6 +16,7 @@
 #   - 💾 Cache pre-commit environments to speed up runs
 #   - 📦 Run deptry to detect missing and obsolete dependencies
 #   - 📝 Enforce 100% docstring coverage with interrogate
+#   - 🔗 Check links in README.md
 
 name: "(RHIZA) QUALITY"
 
@@ -23,7 +24,10 @@ permissions:
   contents: read
 
 on:
-  push
+  push:
+  schedule:
+    - cron: "0 8 * * 1"   # every Monday 08:00 UTC
+  workflow_dispatch:
 
 jobs:
   pre-commit:
@@ -97,3 +101,20 @@ jobs:
         # NOTE: make docs-coverage uses interrogate to enforce 100% docstring
         # coverage on all public methods. Configuration is read from
         # [tool.interrogate] in pyproject.toml.
+
+  link-check:
+    name: Check links in README.md
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check links in README.md
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --verbose
+            --no-progress
+            --accept 200,206,429
+            README.md
+          fail: true
