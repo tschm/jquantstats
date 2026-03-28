@@ -458,6 +458,50 @@ class _BasicStatsMixin:
         return ((1 - wins) / (1 + wins)) ** n
 
     @columnwise_stat
+    def tail_ratio(self, series: pl.Series, cutoff: float = 0.95) -> float:
+        """Calculate the tail ratio (right tail / left tail).
+
+        Measures the ratio between the upper and lower tails of the return
+        distribution: abs(quantile(cutoff) / quantile(1 - cutoff)).
+
+        Args:
+            series (pl.Series): The series to calculate tail ratio for.
+            cutoff (float): Percentile cutoff for tail analysis. Defaults to 0.95.
+
+        Returns:
+            float: Tail ratio.
+
+        """
+        upper = cast(float, series.quantile(cutoff, interpolation="linear"))
+        lower = cast(float, series.quantile(1 - cutoff, interpolation="linear"))
+        if upper is None or lower is None or lower == 0:
+            return float(np.nan)
+        return float(np.abs(upper / lower))
+
+    def cpc_index(self) -> dict[str, float]:
+        """Calculate the CPC Index (Profit Factor * Win Rate * Win-Loss Ratio).
+
+        Returns:
+            dict[str, float]: Dictionary mapping asset names to CPC Index values.
+
+        """
+        pf = self.profit_factor()
+        wr = self.win_rate()
+        wlr = self.win_loss_ratio()
+        return {col: pf[col] * wr[col] * wlr[col] for col in pf}
+
+    def common_sense_ratio(self) -> dict[str, float]:
+        """Calculate the Common Sense Ratio (Profit Factor * Tail Ratio).
+
+        Returns:
+            dict[str, float]: Dictionary mapping asset names to Common Sense Ratio values.
+
+        """
+        pf = self.profit_factor()
+        tr = self.tail_ratio()
+        return {col: pf[col] * tr[col] for col in pf}
+
+    @columnwise_stat
     def gain_to_pain_ratio(self, series: pl.Series) -> float:
         """Calculate Jack Schwager's Gain-to-Pain Ratio.
 
