@@ -3,13 +3,17 @@
 #
 # Workflow: Validate
 #
-# Purpose: Run project validation and static type analysis.
+# Purpose: Run project validation, static type analysis, and dependency
+#          vulnerability scanning.
 #          - make validate runs the full rhiza validation suite.
 #          - make typecheck runs ty (https://github.com/astral-sh/ty), a fast
 #            Python type checker from the Astral team (same team as ruff/uv).
 #            Type-checker settings live in [tool.ty.environment] in pyproject.toml.
+#          - pip-audit scans installed dependencies for known CVEs (weekly).
 #
 # Trigger: On push and pull requests to main/master branches.
+#          pip-audit additionally runs on a weekly schedule (Monday 09:00 UTC)
+#          and can be triggered manually via workflow_dispatch.
 
 name: (RHIZA) VALIDATE
 
@@ -21,10 +25,14 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  schedule:
+    - cron: "0 9 * * 1"  # Every Monday at 09:00 UTC
+  workflow_dispatch:
 
 jobs:
   validation:
     runs-on: ubuntu-latest
+    if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
 
     steps:
       - name: Checkout repository
@@ -50,6 +58,7 @@ jobs:
   typecheck:
     name: Type checking
     runs-on: ubuntu-latest
+    if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
 
     steps:
       - uses: actions/checkout@v6.0.2
@@ -70,3 +79,19 @@ jobs:
         env:
           UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
         run: make typecheck
+
+  pip-audit:
+    name: Dependency vulnerability scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7.6.0
+        with:
+          version: "0.10.12"
+
+      - name: Run pip-audit
+        run: uvx pip-audit
