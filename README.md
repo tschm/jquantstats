@@ -59,7 +59,7 @@ return distributions
 
 ## 🖼️ Dashboard Preview
 
-![Portfolio Performance Dashboard](https://raw.githubusercontent.com/tschm/jquantstats/main/docs/assets/dashboard.png)
+![Portfolio Performance Dashboard](https://raw.githubusercontent.com/jebel-quant/jquantstats/main/docs/assets/dashboard.png)
 
 > *Interactive Plotly dashboard — cumulative returns, drawdowns, and monthly return heatmaps in a single view. Charts are fully interactive (zoom, pan, hover tooltips) when rendered in a browser.*
 
