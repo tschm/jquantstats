@@ -899,3 +899,293 @@ class DataPlots:
         _apply_base_layout(fig, f"{title} — {col}")
         fig.update_yaxes(title_text="Cumulative Return", tickformat=".2f")
         return fig
+
+    def plot_earnings(
+        self,
+        start_balance: float = 1e5,
+        title: str = "Portfolio Earnings",
+        compounded: bool = True,
+    ) -> go.Figure:
+        """Dollar equity curve showing portfolio value over time.
+
+        Scales cumulative returns by *start_balance* so the y-axis reflects
+        an absolute portfolio value rather than a dimensionless growth factor.
+
+        Args:
+            start_balance: Starting portfolio value in currency units.
+                Defaults to 100 000.
+            title: Chart title. Defaults to ``"Portfolio Earnings"``.
+            compounded: Use compounded returns (``cumprod``). When False uses
+                cumulative sum. Defaults to True.
+
+        Returns:
+            go.Figure: Interactive Plotly line chart.
+
+        """
+        df = self.data.all
+        date_col = df.columns[0]
+        tickers = [c for c in df.columns if c != date_col]
+        colors = _ticker_colors(tickers)
+
+        if compounded:
+            equity = df.with_columns([(start_balance * (1.0 + pl.col(t)).cum_prod()).alias(t) for t in tickers])
+        else:
+            equity = df.with_columns([(start_balance * (1.0 + pl.col(t).cum_sum())).alias(t) for t in tickers])
+
+        fig = go.Figure()
+        for ticker in tickers:
+            fig.add_trace(
+                go.Scatter(
+                    x=equity[date_col],
+                    y=equity[ticker],
+                    mode="lines",
+                    name=ticker,
+                    line={"color": colors[ticker], "width": 2},
+                    hovertemplate=f"<b>%{{x|%b %Y}}</b><br>{ticker}: $%{{y:,.0f}}",
+                )
+            )
+
+        _apply_base_layout(fig, title)
+        fig.update_yaxes(
+            title_text=f"Portfolio Value (starting ${start_balance:,.0f})",
+            tickprefix="$",
+            tickformat=",.0f",
+        )
+        return fig
+
+    def plot_rolling_sharpe(
+        self,
+        rolling_period: int = 126,
+        periods_per_year: int = 252,
+        title: str = "Rolling Sharpe Ratio",
+    ) -> go.Figure:
+        """Rolling annualised Sharpe ratio over time.
+
+        Computes ``rolling_mean / rolling_std * sqrt(periods_per_year)`` with a
+        trailing window of *rolling_period* observations for every column in the
+        dataset (assets and benchmark when present).
+
+        Args:
+            rolling_period: Trailing window size. Defaults to 126 (6 months).
+            periods_per_year: Annualisation factor. Defaults to 252.
+            title: Chart title. Defaults to ``"Rolling Sharpe Ratio"``.
+
+        Returns:
+            go.Figure: Interactive Plotly line chart.
+
+        """
+        import math
+
+        df = self.data.all
+        date_col = df.columns[0]
+        tickers = [c for c in df.columns if c != date_col]
+        colors = _ticker_colors(tickers)
+        scale = math.sqrt(periods_per_year)
+
+        rolling = df.with_columns(
+            [
+                (
+                    pl.col(t).rolling_mean(window_size=rolling_period)
+                    / pl.col(t).rolling_std(window_size=rolling_period)
+                    * scale
+                ).alias(t)
+                for t in tickers
+            ]
+        )
+
+        fig = go.Figure()
+        for ticker in tickers:
+            fig.add_trace(
+                go.Scatter(
+                    x=rolling[date_col],
+                    y=rolling[ticker],
+                    mode="lines",
+                    name=ticker,
+                    line={"color": colors[ticker], "width": 1.5},
+                    hovertemplate=f"{ticker}: %{{y:.2f}}",
+                )
+            )
+
+        fig.add_hline(y=0, line_width=1, line_color="gray", line_dash="dash")
+        _apply_base_layout(fig, title)
+        fig.update_yaxes(title_text=f"Sharpe ({rolling_period}-period rolling)")
+        return fig
+
+    def plot_rolling_sortino(
+        self,
+        rolling_period: int = 126,
+        periods_per_year: int = 252,
+        title: str = "Rolling Sortino Ratio",
+    ) -> go.Figure:
+        """Rolling annualised Sortino ratio over time.
+
+        Computes ``rolling_mean / rolling_downside_std * sqrt(periods_per_year)``
+        where downside deviation considers only negative returns.
+
+        Args:
+            rolling_period: Trailing window size. Defaults to 126 (6 months).
+            periods_per_year: Annualisation factor. Defaults to 252.
+            title: Chart title. Defaults to ``"Rolling Sortino Ratio"``.
+
+        Returns:
+            go.Figure: Interactive Plotly line chart.
+
+        """
+        import math
+
+        df = self.data.all
+        date_col = df.columns[0]
+        tickers = [c for c in df.columns if c != date_col]
+        colors = _ticker_colors(tickers)
+        scale = math.sqrt(periods_per_year)
+
+        exprs = []
+        for t in tickers:
+            mean_r = pl.col(t).rolling_mean(window_size=rolling_period)
+            downside = (
+                pl.when(pl.col(t) < 0)
+                .then(pl.col(t) ** 2)
+                .otherwise(0.0)
+                .rolling_mean(window_size=rolling_period)
+                .sqrt()
+            )
+            exprs.append((mean_r / downside * scale).alias(t))
+
+        rolling = df.with_columns(exprs)
+
+        fig = go.Figure()
+        for ticker in tickers:
+            fig.add_trace(
+                go.Scatter(
+                    x=rolling[date_col],
+                    y=rolling[ticker],
+                    mode="lines",
+                    name=ticker,
+                    line={"color": colors[ticker], "width": 1.5},
+                    hovertemplate=f"{ticker}: %{{y:.2f}}",
+                )
+            )
+
+        fig.add_hline(y=0, line_width=1, line_color="gray", line_dash="dash")
+        _apply_base_layout(fig, title)
+        fig.update_yaxes(title_text=f"Sortino ({rolling_period}-period rolling)")
+        return fig
+
+    def plot_rolling_volatility(
+        self,
+        rolling_period: int = 126,
+        periods_per_year: int = 252,
+        title: str = "Rolling Volatility",
+    ) -> go.Figure:
+        """Rolling annualised volatility over time.
+
+        Computes ``rolling_std * sqrt(periods_per_year)`` for every column in
+        the dataset.
+
+        Args:
+            rolling_period: Trailing window size. Defaults to 126 (6 months).
+            periods_per_year: Annualisation factor. Defaults to 252.
+            title: Chart title. Defaults to ``"Rolling Volatility"``.
+
+        Returns:
+            go.Figure: Interactive Plotly line chart.
+
+        """
+        import math
+
+        df = self.data.all
+        date_col = df.columns[0]
+        tickers = [c for c in df.columns if c != date_col]
+        colors = _ticker_colors(tickers)
+        scale = math.sqrt(periods_per_year)
+
+        rolling = df.with_columns(
+            [(pl.col(t).rolling_std(window_size=rolling_period) * scale).alias(t) for t in tickers]
+        )
+
+        fig = go.Figure()
+        for ticker in tickers:
+            fig.add_trace(
+                go.Scatter(
+                    x=rolling[date_col],
+                    y=rolling[ticker],
+                    mode="lines",
+                    name=ticker,
+                    line={"color": colors[ticker], "width": 1.5},
+                    hovertemplate=f"{ticker}: %{{y:.2%}}",
+                )
+            )
+
+        _apply_base_layout(fig, title)
+        fig.update_yaxes(title_text=f"Volatility ({rolling_period}-period rolling)", tickformat=".0%")
+        return fig
+
+    def plot_rolling_beta(
+        self,
+        rolling_period: int = 126,
+        rolling_period2: int | None = 252,
+        title: str = "Rolling Beta",
+    ) -> go.Figure:
+        """Rolling beta versus the benchmark.
+
+        Plots one line per asset per window size.  Beta is estimated via the
+        standard OLS formula: ``cov(asset, bench) / var(bench)`` computed over
+        a trailing window.
+
+        Args:
+            rolling_period: Primary trailing window size. Defaults to 126.
+            rolling_period2: Optional second window size overlaid on the same
+                chart. Defaults to 252. Pass ``None`` to omit.
+            title: Chart title. Defaults to ``"Rolling Beta"``.
+
+        Returns:
+            go.Figure: Interactive Plotly line chart.
+
+        Raises:
+            AttributeError: If no benchmark columns are present in the data.
+
+        """
+        df = self.data.all
+        date_col = df.columns[0]
+
+        benchmark_df = getattr(self.data, "benchmark", None)
+        if benchmark_df is None:
+            raise AttributeError("No benchmark data available")  # noqa: TRY003
+
+        bench_col = benchmark_df.columns[0]
+        returns_df = getattr(self.data, "returns", None)
+        assets = (
+            list(returns_df.columns)
+            if returns_df is not None
+            else [c for c in df.columns if c != date_col and c != bench_col]
+        )
+        colors = _ticker_colors(assets)
+        windows = [w for w in (rolling_period, rolling_period2) if w is not None]
+        line_styles = ["solid", "dash"]
+
+        fig = go.Figure()
+        for asset in assets:
+            for w, dash in zip(windows, line_styles, strict=False):
+                mean_x = pl.col(asset).rolling_mean(window_size=w)
+                mean_y = pl.col(bench_col).rolling_mean(window_size=w)
+                mean_xy = (pl.col(asset) * pl.col(bench_col)).rolling_mean(window_size=w)
+                mean_y2 = (pl.col(bench_col) ** 2).rolling_mean(window_size=w)
+                beta_expr = ((mean_xy - mean_x * mean_y) / (mean_y2 - mean_y**2)).alias("beta")
+
+                beta_df = df.with_columns(beta_expr)
+                label = f"{asset} ({w}d)"
+                fig.add_trace(
+                    go.Scatter(
+                        x=beta_df[date_col],
+                        y=beta_df["beta"],
+                        mode="lines",
+                        name=label,
+                        line={"color": colors[asset], "width": 1.5, "dash": dash},
+                        hovertemplate=f"{label}: %{{y:.2f}}",
+                    )
+                )
+
+        fig.add_hline(y=1, line_width=1, line_color="gray", line_dash="dash")
+        _apply_base_layout(fig, title)
+        fig.update_yaxes(title_text="Beta")
+        return fig
