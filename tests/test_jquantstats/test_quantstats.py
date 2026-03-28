@@ -438,3 +438,59 @@ def test_omega(stats, aapl):
     x_rf = stats.omega(rf=0.02, periods=252)
     y_rf = qs.stats.omega(aapl, rf=0.02)
     assert x_rf["AAPL"] == pytest.approx(y_rf, abs=1e-6)
+
+
+def test_autocorrelation(stats, aapl):
+    """Tests that autocorrelation matches pandas Series.autocorr().
+
+    quantstats does not expose a dedicated autocorrelation function; pandas
+    ``Series.autocorr`` is the canonical reference implementation used by
+    pandas-based financial libraries.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+        aapl: The aapl fixture containing AAPL returns as a pandas Series.
+
+    Verifies:
+        The lag-1 autocorrelation matches ``aapl.autocorr(lag=1)``.
+
+    """
+    x = stats.autocorrelation(lag=1)
+    y = aapl.autocorr(lag=1)
+    assert x["AAPL"] == pytest.approx(y, abs=1e-6)
+
+
+def test_autocorrelation_lag5(stats, aapl):
+    """Tests that autocorrelation at lag 5 matches pandas Series.autocorr(lag=5).
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+        aapl: The aapl fixture containing AAPL returns as a pandas Series.
+
+    Verifies:
+        The lag-5 autocorrelation matches ``aapl.autocorr(lag=5)``.
+
+    """
+    x = stats.autocorrelation(lag=5)
+    y = aapl.autocorr(lag=5)
+    assert x["AAPL"] == pytest.approx(y, abs=1e-6)
+
+
+def test_acf_matches_pandas(stats, aapl):
+    """Tests that acf values at each lag match pandas Series.autocorr().
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+        aapl: The aapl fixture containing AAPL returns as a pandas Series.
+
+    Verifies:
+        Each ACF value in the returned DataFrame matches the corresponding
+        ``aapl.autocorr(lag=k)`` value.
+
+    """
+    nlags = 10
+    result = stats.acf(nlags=nlags)
+    aapl_col = result["AAPL"].to_list()
+    assert aapl_col[0] == pytest.approx(1.0)
+    for k in range(1, nlags + 1):
+        assert aapl_col[k] == pytest.approx(aapl.autocorr(lag=k), abs=1e-6)
