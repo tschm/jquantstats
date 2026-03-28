@@ -534,15 +534,9 @@ class Reports:
 
         # ── Recent Returns (date-filtered) ───────────────────────────────────
         if has_dates and date_col is not None and all_df is not None:
-            from datetime import timedelta
-
             end_dt = all_df[date_col].max()
             # Use Python date arithmetic; Polars dates are datetime.date
             today = end_dt
-
-            def _cutoff_days(n: int) -> Any:
-                """Return the date *n* days before *today*."""
-                return today - timedelta(days=n)
 
             def _cutoff_months(n: int) -> Any:
                 """Return the date *n* calendar months before *today*."""

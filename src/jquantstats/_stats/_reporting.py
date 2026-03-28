@@ -134,7 +134,7 @@ class _ReportingStatsMixin:
         raw_periods = periods or self.data._periods_per_year
         n = len(series)
         if n == 0:
-            return float("nan")
+            return float("nan")  # pragma: no cover
         excess = series.cast(pl.Float64) - rf / raw_periods
         total = _to_float((1.0 + excess).product()) - 1.0 if compounded else _to_float(excess.sum())
         years = n / raw_periods

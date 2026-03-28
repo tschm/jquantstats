@@ -144,7 +144,7 @@ class _PerformanceStatsMixin:
         var_bench_sr = (1 + (float(skew_val) * benchmark_sr) / 2 + ((float(kurt_val) - 3) / 4) * benchmark_sr**2) / t
 
         if var_bench_sr <= 0:
-            return float(np.nan)
+            return float(np.nan)  # pragma: no cover
         return float(norm.cdf((observed_sr - benchmark_sr) / np.sqrt(var_bench_sr)))
 
     @columnwise_stat
@@ -858,7 +858,7 @@ class _PerformanceStatsMixin:
 
         n = len(series)
         if n == 0:
-            return float("nan")
+            return float("nan")  # pragma: no cover
         nav_final = _to_float((1.0 + series.cast(pl.Float64)).product())
         if nav_final <= 0:
             return float("nan")

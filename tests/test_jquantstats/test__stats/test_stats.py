@@ -1286,3 +1286,360 @@ def test_compare_round_vals(stats):
     for df in result.values():
         rounded = df["Returns"].drop_nulls()
         assert all(round(v, 2) == v for v in rounded.to_list())
+
+
+# ── Edge-case coverage ────────────────────────────────────────────────────────
+
+
+@pytest.fixture
+def flat_data():
+    """Data fixture with all-zero returns (no variance)."""
+    from jquantstats import Data
+
+    dates = pl.date_range(pl.date(2020, 1, 1), pl.date(2020, 12, 31), interval="1d", eager=True)
+    df = pl.DataFrame({"Date": dates, "ret": pl.Series([0.0] * len(dates))})
+    return Data.from_returns(returns=df)
+
+
+@pytest.fixture
+def all_positive_data():
+    """Data fixture with all strictly positive returns."""
+    from jquantstats import Data
+
+    dates = pl.date_range(pl.date(2020, 1, 1), pl.date(2020, 12, 31), interval="1d", eager=True)
+    df = pl.DataFrame({"Date": dates, "ret": pl.Series([0.01] * len(dates))})
+    return Data.from_returns(returns=df)
+
+
+@pytest.fixture
+def all_negative_data():
+    """Data fixture with all strictly negative returns."""
+    from jquantstats import Data
+
+    dates = pl.date_range(pl.date(2020, 1, 1), pl.date(2020, 12, 31), interval="1d", eager=True)
+    df = pl.DataFrame({"Date": dates, "ret": pl.Series([-0.01] * len(dates))})
+    return Data.from_returns(returns=df)
+
+
+@pytest.fixture
+def all_null_data():
+    """Data fixture with all-null returns."""
+    from jquantstats import Data
+
+    dates = pl.date_range(pl.date(2020, 1, 1), pl.date(2020, 1, 10), interval="1d", eager=True)
+    df = pl.DataFrame({"Date": dates, "ret": pl.Series([None] * len(dates), dtype=pl.Float64)})
+    return Data.from_returns(returns=df)
+
+
+@pytest.fixture
+def no_temporal_data():
+    """Data fixture with an integer (non-temporal) index column."""
+    from jquantstats import Data
+
+    df = pl.DataFrame({"x": list(range(1, 21)), "ret": [0.01, 0.02, -0.05, 0.03, -0.02] * 4})
+    return Data.from_returns(returns=df, date_col="x")
+
+
+@pytest.fixture
+def partial_year_data():
+    """Data fixture spanning only Jan–Mar of one year (missing 9 months)."""
+    from jquantstats import Data
+
+    dates = pl.date_range(pl.date(2020, 1, 1), pl.date(2020, 3, 31), interval="1d", eager=True)
+    df = pl.DataFrame({"Date": dates, "ret": pl.Series([0.001] * len(dates))})
+    return Data.from_returns(returns=df)
+
+
+@pytest.fixture
+def loss_data(benchmark_frame):
+    """Data fixture with a complete -100% loss on the last day."""
+    from jquantstats import Data
+
+    dates = pl.date_range(pl.date(2020, 1, 1), pl.date(2020, 4, 9), interval="1d", eager=True)[:100]
+    df = pl.DataFrame({"Date": dates, "ret": pl.Series([0.01] * 99 + [-1.0])})
+    bench = benchmark_frame.filter(pl.col("Date").is_between(dates[0], dates[-1]))
+    return Data.from_returns(returns=df, benchmark=bench)
+
+
+@pytest.fixture
+def zero_beta_data():
+    """Data with zero-return strategy and non-zero benchmark (beta == 0)."""
+    from jquantstats import Data
+
+    dates = pl.date_range(pl.date(2020, 1, 1), pl.date(2020, 4, 9), interval="1d", eager=True)[:100]
+    df = pl.DataFrame({"Date": dates, "ret": pl.Series([0.0] * 100)})
+    bench = pl.DataFrame({"Date": dates, "bench": pl.Series([0.01 if i % 2 == 0 else -0.01 for i in range(100)])})
+    return Data.from_returns(returns=df, benchmark=bench)
+
+
+@pytest.fixture
+def zero_bench_var_data():
+    """Data with all-zero benchmark (var_benchmark == 0)."""
+    from jquantstats import Data
+
+    dates = pl.date_range(pl.date(2020, 1, 1), pl.date(2020, 4, 9), interval="1d", eager=True)[:100]
+    df = pl.DataFrame({"Date": dates, "ret": pl.Series([0.01] * 100)})
+    bench = pl.DataFrame({"Date": dates, "bench": pl.Series([0.0] * 100)})
+    return Data.from_returns(returns=df, benchmark=bench)
+
+
+# ── geometric_mean edge cases ─────────────────────────────────────────────────
+
+
+def test_geometric_mean_compound_zero(flat_data):
+    """geometric_mean returns nan when compound product is zero (-100% return)."""
+    from jquantstats import Data
+
+    dates = pl.date_range(pl.date(2020, 1, 1), pl.date(2020, 1, 5), interval="1d", eager=True)
+    df = pl.DataFrame({"Date": dates, "ret": pl.Series([0.1, 0.1, -1.0, 0.1, 0.1])})
+    d = Data.from_returns(returns=df)
+    result = d.stats.geometric_mean()
+    assert np.isnan(result["ret"])
+
+
+# ── serenity_index / tail_ratio / omega / outlier ratios ──────────────────────
+
+
+def test_serenity_index_zero_std(flat_data):
+    """serenity_index returns nan when std is zero."""
+    result = flat_data.stats.serenity_index()
+    assert all(np.isnan(v) for v in result.values())
+
+
+def test_tail_ratio_zero_lower_quantile(flat_data):
+    """tail_ratio returns nan when lower quantile is zero."""
+    result = flat_data.stats.tail_ratio()
+    assert all(np.isnan(v) for v in result.values())
+
+
+def test_omega_all_zero_returns_nan(flat_data):
+    """Omega returns nan when denom is zero (no below-threshold returns)."""
+    result = flat_data.stats.omega()
+    assert all(np.isnan(v) for v in result.values())
+
+
+def test_outlier_win_ratio_no_positive_returns(all_negative_data):
+    """outlier_win_ratio returns nan when no positive returns exist."""
+    result = all_negative_data.stats.outlier_win_ratio()
+    assert all(np.isnan(v) for v in result.values())
+
+
+def test_outlier_loss_ratio_no_negative_returns(all_positive_data):
+    """outlier_loss_ratio returns nan when no negative returns exist."""
+    result = all_positive_data.stats.outlier_loss_ratio()
+    assert all(np.isnan(v) for v in result.values())
+
+
+# ── autocorr with large lag ───────────────────────────────────────────────────
+
+
+def test_autocorr_lag_beyond_series_length():
+    """Autocorr returns nan when lag >= series length (empty paired after shift)."""
+    from jquantstats import Data
+
+    dates = pl.date_range(pl.date(2020, 1, 1), pl.date(2020, 1, 5), interval="1d", eager=True)
+    df = pl.DataFrame({"Date": dates, "ret": pl.Series([0.01, -0.02, 0.03, -0.01, 0.02])})
+    d = Data.from_returns(returns=df)
+    result = d.stats.autocorr(lag=100)
+    assert all(np.isnan(v) for v in result.values())
+
+
+# ── probabilistic_ratio ───────────────────────────────────────────────────────
+
+
+def test_probabilistic_ratio_sharpe_base(stats):
+    """probabilistic_ratio with base='sharpe' returns values in [0, 1]."""
+    result = stats.probabilistic_ratio(base="sharpe")
+    assert isinstance(result, dict)
+    assert all(0 <= v <= 1 for v in result.values() if not np.isnan(v))
+
+
+def test_probabilistic_ratio_sortino_base(stats):
+    """probabilistic_ratio with base='sortino' returns values in [0, 1]."""
+    result = stats.probabilistic_ratio(base="sortino")
+    assert isinstance(result, dict)
+
+
+def test_probabilistic_ratio_adjusted_sortino_base(stats):
+    """probabilistic_ratio with base='adjusted_sortino' returns values in [0, 1]."""
+    result = stats.probabilistic_ratio(base="adjusted_sortino")
+    assert isinstance(result, dict)
+
+
+def test_probabilistic_ratio_callable_base(stats):
+    """probabilistic_ratio with a callable base uses the callable."""
+    result = stats.probabilistic_ratio(base=lambda s: 0.5)
+    assert isinstance(result, dict)
+    assert all(0 <= v <= 1 for v in result.values() if not np.isnan(v))
+
+
+def test_probabilistic_ratio_invalid_base_raises(stats):
+    """probabilistic_ratio with an unrecognised string base raises ValueError."""
+    with pytest.raises(ValueError, match="base must be one of"):
+        stats.probabilistic_ratio(base="invalid")
+
+
+def test_probabilistic_ratio_from_base_small_n():
+    """_probabilistic_ratio_from_base returns nan when n <= 1."""
+    from jquantstats._stats._performance import _PerformanceStatsMixin
+
+    result = _PerformanceStatsMixin._probabilistic_ratio_from_base(1.0, pl.Series([0.01]))
+    assert np.isnan(result)
+
+
+def test_probabilistic_ratio_from_base_negative_variance():
+    """_probabilistic_ratio_from_base returns nan when computed variance <= 0."""
+    from jquantstats._stats._performance import _PerformanceStatsMixin
+
+    # Series with extreme negative skew; base=-0.5 yields negative variance
+    series = pl.Series([0.001] * 10 + [-100.0])
+    result = _PerformanceStatsMixin._probabilistic_ratio_from_base(-0.5, series)
+    assert np.isnan(result)
+
+
+# ── probabilistic_smart_sortino / probabilistic_sortino zero downside ─────────
+
+
+def test_probabilistic_sortino_ratio_zero_downside(flat_data):
+    """probabilistic_sortino_ratio returns nan when downside deviation is zero."""
+    result = flat_data.stats.probabilistic_sortino_ratio()
+    assert all(np.isnan(v) for v in result.values())
+
+
+def test_probabilistic_adjusted_sortino_ratio_zero_downside(flat_data):
+    """probabilistic_adjusted_sortino_ratio returns nan when downside deviation is zero."""
+    result = flat_data.stats.probabilistic_adjusted_sortino_ratio()
+    assert all(np.isnan(v) for v in result.values())
+
+
+# ── drawdown_details edge cases ───────────────────────────────────────────────
+
+
+def test_drawdown_details_no_drawdown(all_positive_data):
+    """drawdown_details returns empty DataFrame when there are no drawdown periods."""
+    result = all_positive_data.stats.drawdown_details()
+    for df in result.values():
+        assert isinstance(df, pl.DataFrame)
+        assert len(df) == 0
+
+
+def test_drawdown_details_integer_index(no_temporal_data):
+    """drawdown_details works with a non-temporal (integer) index."""
+    result = no_temporal_data.stats.drawdown_details()
+    for df in result.values():
+        assert isinstance(df, pl.DataFrame)
+        # duration column uses integer arithmetic
+        assert df.schema["start"] == pl.Int64
+
+
+# ── treynor_ratio edge cases ──────────────────────────────────────────────────
+
+
+def test_treynor_ratio_no_benchmark_raises(data_no_benchmark):
+    """treynor_ratio raises AttributeError when no benchmark is attached."""
+    with pytest.raises(AttributeError):
+        data_no_benchmark.stats.treynor_ratio()
+
+
+def test_treynor_ratio_zero_benchmark_variance(zero_bench_var_data):
+    """treynor_ratio returns nan when benchmark variance is zero."""
+    result = zero_bench_var_data.stats.treynor_ratio()
+    assert all(np.isnan(v) for v in result.values())
+
+
+def test_treynor_ratio_zero_beta(zero_beta_data):
+    """treynor_ratio returns nan when beta is zero (strategy uncorrelated)."""
+    result = zero_beta_data.stats.treynor_ratio()
+    # 'ret' column (all zeros) should give beta=0 -> nan
+    assert np.isnan(result["ret"])
+
+
+def test_treynor_ratio_negative_nav(loss_data):
+    """treynor_ratio returns nan when cumulative NAV is zero (-100% return)."""
+    result = loss_data.stats.treynor_ratio()
+    assert np.isnan(result["ret"])
+
+
+# ── rolling_greeks error paths ────────────────────────────────────────────────
+
+
+def test_rolling_greeks_no_benchmark_raises(data_no_benchmark):
+    """rolling_greeks raises AttributeError when no benchmark is attached."""
+    with pytest.raises(AttributeError):
+        data_no_benchmark.stats.rolling_greeks()
+
+
+def test_rolling_greeks_bad_period_raises(stats):
+    """rolling_greeks raises ValueError for non-positive rolling_period."""
+    with pytest.raises(ValueError, match="rolling_period must be a positive integer"):
+        stats.rolling_greeks(rolling_period=-1)
+
+
+# ── expected_return edge cases ────────────────────────────────────────────────
+
+
+def test_expected_return_empty_series(all_null_data):
+    """expected_return returns nan when all values are null (empty after drop_nulls)."""
+    result = all_null_data.stats.expected_return()
+    assert all(np.isnan(v) for v in result.values())
+
+
+def test_expected_return_invalid_aggregate_raises(stats):
+    """expected_return raises ValueError for an unrecognised aggregate string."""
+    with pytest.raises(ValueError, match="aggregate must be one of"):
+        stats.expected_return(aggregate="INVALID")
+
+
+def test_expected_return_non_temporal_index_with_aggregate(no_temporal_data):
+    """expected_return falls back to per-period mean when index is not temporal."""
+    result = no_temporal_data.stats.expected_return(aggregate="monthly")
+    assert isinstance(result, dict)
+    assert all(isinstance(v, float) for v in result.values())
+
+
+# ── compare with aggregate ────────────────────────────────────────────────────
+
+
+def test_compare_monthly_aggregate(stats):
+    """compare(aggregate='ME') groups returns by month."""
+    result = stats.compare(aggregate="ME")
+    assert isinstance(result, dict)
+    for df in result.values():
+        assert "Returns" in df.columns
+        assert "Benchmark" in df.columns
+
+
+# ── geometric_mean null data ──────────────────────────────────────────────────
+
+
+def test_geometric_mean_all_null(all_null_data):
+    """geometric_mean returns nan when all values are null (n==0 after drop_nulls)."""
+    result = all_null_data.stats.geometric_mean()
+    assert all(np.isnan(v) for v in result.values())
+
+
+# ── probabilistic_ratio zero-std / zero-downside paths ───────────────────────
+
+
+def test_probabilistic_ratio_sharpe_base_zero_std(flat_data):
+    """probabilistic_ratio with base='sharpe' returns nan when std is zero (flat returns)."""
+    result = flat_data.stats.probabilistic_ratio(base="sharpe")
+    assert all(np.isnan(v) for v in result.values())
+
+
+def test_probabilistic_ratio_sortino_base_zero_downside(all_positive_data):
+    """probabilistic_ratio with base='sortino' returns nan when downside_dev is zero."""
+    result = all_positive_data.stats.probabilistic_ratio(base="sortino")
+    assert all(np.isnan(v) for v in result.values())
+
+
+# ── monthly_returns missing months ───────────────────────────────────────────
+
+
+def test_monthly_returns_missing_months_filled(partial_year_data):
+    """monthly_returns fills missing months with 0.0 when data spans < 1 year."""
+    result = partial_year_data.stats.monthly_returns(eoy=True)
+    for df in result.values():
+        # All 12 month columns should be present even if data only covers Jan-Mar
+        for month in ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]:
+            assert month in df.columns

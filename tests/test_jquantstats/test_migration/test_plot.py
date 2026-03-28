@@ -119,3 +119,46 @@ def test_plot_rolling_beta_no_benchmark_raises(data_no_benchmark):
     """plot_rolling_beta raises AttributeError when no benchmark is attached."""
     with pytest.raises(AttributeError):
         data_no_benchmark.plots.plot_rolling_beta()
+
+
+# ── Single-asset path (covers bar_colors = green/red branch) ─────────────────
+
+
+@pytest.fixture
+def data_single(resource_dir):
+    """Data fixture with a single return column (Meta only, no benchmark).
+
+    Args:
+        resource_dir: Path to the test resources directory.
+
+    Returns:
+        Data: Single-asset Data object.
+
+    """
+    import polars as pl
+
+    from jquantstats import Data
+
+    df = pl.read_csv(resource_dir / "meta.csv", try_parse_dates=True).select(["Date", "Meta"])
+    return Data.from_returns(returns=df)
+
+
+def test_plot_yearly_returns_single_asset(data_single):
+    """plot_yearly_returns with one asset uses the green/red bar colour path."""
+    fig = data_single.plots.plot_yearly_returns()
+    assert isinstance(fig, go.Figure)
+    assert len(fig.data) > 0
+
+
+def test_plot_monthly_returns_single_asset(data_single):
+    """plot_monthly_returns with one asset uses the green/red bar colour path."""
+    fig = data_single.plots.plot_monthly_returns()
+    assert isinstance(fig, go.Figure)
+    assert len(fig.data) > 0
+
+
+def test_plot_daily_returns_single_asset(data_single):
+    """plot_daily_returns with one asset uses the green/red bar colour path."""
+    fig = data_single.plots.plot_daily_returns()
+    assert isinstance(fig, go.Figure)
+    assert len(fig.data) > 0
