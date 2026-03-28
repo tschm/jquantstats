@@ -11,7 +11,7 @@
 
 **Do NOT report security vulnerabilities through public GitHub issues.**
 
-Please use [GitHub Security Advisories](https://github.com/tschm/jquantstats/security/advisories) instead:
+Please use [GitHub Security Advisories](https://github.com/jebel-quant/jquantstats/security/advisories) instead:
 
 1. Go to the Security Advisories page linked above.
 2. Click **"New draft security advisory"**.

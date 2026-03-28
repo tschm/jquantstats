@@ -47,13 +47,13 @@ footer = """
 {% if release.version %}\
 {% if release.previous.version %}\
 [{{ release.version | trim_start_matches(pat="v") }}]: \
-  https://github.com/tschm/jquantstats/compare/{{ release.previous.version }}...{{ release.version }}
+  https://github.com/jebel-quant/jquantstats/compare/{{ release.previous.version }}...{{ release.version }}
 {% else %}\
 [{{ release.version | trim_start_matches(pat="v") }}]: \
-  https://github.com/tschm/jquantstats/releases/tag/{{ release.version }}
+  https://github.com/jebel-quant/jquantstats/releases/tag/{{ release.version }}
 {% endif %}\
 {% else %}\
-[Unreleased]: https://github.com/tschm/jquantstats/compare/{{ releases | map(attribute="version") | select | first }}...HEAD
+[Unreleased]: https://github.com/jebel-quant/jquantstats/compare/{{ releases | map(attribute="version") | select | first }}...HEAD
 {% endif %}\
 {% endfor %}
 """
@@ -81,7 +81,7 @@ commit_parsers = [
 
 # Commits matching these patterns are excluded from the changelog
 commit_preprocessors = [
-  { pattern = "\\(#([0-9]+)\\)", replace = "([#${1}](https://github.com/tschm/jquantstats/issues/${1}))" },
+  { pattern = "\\(#([0-9]+)\\)", replace = "([#${1}](https://github.com/jebel-quant/jquantstats/issues/${1}))" },
 ]
 
 # Protect breaking changes from being filtered

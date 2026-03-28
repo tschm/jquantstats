@@ -8,7 +8,7 @@ to help out.
 ## Community & Discussions
 
 Have a question, an idea, or want to explore a contribution opportunity?
-Head over to [GitHub Discussions](https://github.com/tschm/jquantstats/discussions) —
+Head over to [GitHub Discussions](https://github.com/jebel-quant/jquantstats/discussions) —
 it's the right place for:
 
 - **Q&A** — ask how something works or get help with your use-case
@@ -58,14 +58,14 @@ please
 fix your code and send another commit, which will re-trigger the tests.
 
 If you'd like to add a new feature, please start a discussion in
-[Ideas & RFC](https://github.com/tschm/jquantstats/discussions/categories/ideas)
+[Ideas & RFC](https://github.com/jebel-quant/jquantstats/discussions/categories/ideas)
 to make sure that your priorities align with ours before opening a pull request.
 
 If you'd like to contribute code but don't know where to start,
 try one of the following:
 
 - Read the source and enhance the documentation, or address TODOs
-- Browse [Help Wanted discussions](https://github.com/tschm/jquantstats/discussions/categories/help-wanted)
+- Browse [Help Wanted discussions](https://github.com/jebel-quant/jquantstats/discussions/categories/help-wanted)
   for open contribution opportunities
 - Browse the open issues and look for issues tagged "help wanted"
 

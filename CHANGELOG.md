@@ -152,13 +152,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **GitHub Release Notes** — `.github/release.yml` configured to categorise auto-generated release notes by label (breaking changes, features, bug fixes, documentation, maintenance).
 - **Full CI/CD pipeline** via Rhiza templates: tests with coverage, type checking, pre-commit hooks, dependency auditing, CodeQL and Semgrep security scanning, PyPI publishing, and documentation building.
 - **Interactive notebooks** — Marimo notebooks for exploratory analysis.
-- **Documentation book** — rendered documentation available at <https://tschm.github.io/jquantstats/book>.
+- **Documentation book** — rendered documentation available at <https://jebel-quant.github.io/jquantstats/book>.
 
-[Unreleased]: https://github.com/tschm/jquantstats/compare/v0.3.4...HEAD
-[0.3.4]: https://github.com/tschm/jquantstats/compare/v0.3.3...v0.3.4
-[0.3.3]: https://github.com/tschm/jquantstats/compare/v0.3.2...v0.3.3
-[0.3.2]: https://github.com/tschm/jquantstats/compare/v0.3.1...v0.3.2
-[0.3.1]: https://github.com/tschm/jquantstats/compare/v0.3.0...v0.3.1
-[0.3.0]: https://github.com/tschm/jquantstats/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/tschm/jquantstats/compare/v0.1.1...v0.2.0
-[0.1.1]: https://github.com/tschm/jquantstats/releases/tag/v0.1.1
+[Unreleased]: https://github.com/jebel-quant/jquantstats/compare/v0.3.4...HEAD
+[0.3.4]: https://github.com/jebel-quant/jquantstats/compare/v0.3.3...v0.3.4
+[0.3.3]: https://github.com/jebel-quant/jquantstats/compare/v0.3.2...v0.3.3
+[0.3.2]: https://github.com/jebel-quant/jquantstats/compare/v0.3.1...v0.3.2
+[0.3.1]: https://github.com/jebel-quant/jquantstats/compare/v0.3.0...v0.3.1
+[0.3.0]: https://github.com/jebel-quant/jquantstats/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/jebel-quant/jquantstats/compare/v0.1.1...v0.2.0
+[0.1.1]: https://github.com/jebel-quant/jquantstats/releases/tag/v0.1.1
