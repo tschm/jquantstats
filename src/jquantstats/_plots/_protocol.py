@@ -46,6 +46,11 @@ class PortfolioLike(Protocol):  # pragma: no cover
         ...
 
     @property
+    def returns(self) -> pl.DataFrame:
+        """Daily returns (profit / AUM) with ``date`` and ``returns`` columns."""
+        ...
+
+    @property
     def tilt(self) -> PortfolioLike:
         """Tilt component portfolio."""
         ...

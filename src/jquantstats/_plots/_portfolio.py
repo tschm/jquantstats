@@ -672,3 +672,83 @@ class PortfolioPlots:
             gridcolor="lightgrey",
         )
         return fig
+
+    def earnings(self, start_balance: float = 1e5, mode: str = "comp") -> go.Figure:
+        """Plot the equity curve expressed in dollar/currency terms.
+
+        Converts portfolio returns to an equity curve denominated in the
+        currency of ``start_balance``.  Two compounding modes are supported:
+
+        * ``"comp"`` (default): full geometric compounding --
+          ``equity_t = start_balance * prod(1 + r_i)`` for ``i <= t``.
+        * ``"simple"``: linear (additive) compounding --
+          ``equity_t = start_balance * (1 + sum(r_i))`` for ``i <= t``.
+
+        Args:
+            start_balance: Initial portfolio balance in currency units.
+                Defaults to ``100_000``.
+            mode: Compounding mode — ``"comp"`` for geometric or ``"simple"``
+                for additive.  Raises :class:`ValueError` for any other value.
+
+        Returns:
+            go.Figure: A Plotly figure showing the portfolio equity curve
+            denominated in currency terms.
+
+        Raises:
+            ValueError: If ``mode`` is not ``"comp"`` or ``"simple"``.
+            ValueError: If ``start_balance`` is not a positive number.
+        """
+        if mode not in ("comp", "simple"):
+            raise ValueError(f"mode must be 'comp' or 'simple', got {mode!r}")  # noqa: TRY003
+        if not isinstance(start_balance, (int, float)) or start_balance <= 0:
+            raise ValueError("start_balance must be a positive number")  # noqa: TRY003
+
+        rets = self.portfolio.returns
+        dates = rets["date"]
+        returns_col = rets["returns"]
+
+        if mode == "comp":
+            equity = (start_balance * (1 + returns_col).cum_prod()).to_list()
+        else:
+            equity = (start_balance * (1 + returns_col.cum_sum())).to_list()
+
+        fig = go.Figure()
+        fig.add_trace(
+            go.Scatter(
+                x=dates,
+                y=equity,
+                mode="lines",
+                name="Equity",
+                line={"width": 2, "color": "#1f77b4"},
+                hovertemplate="<b>%{x|%b %Y}</b><br>Equity: $%{y:,.0f}",
+            )
+        )
+
+        fig.update_layout(
+            title=f"Earnings (Equity Curve, start = {start_balance:,.0f})",
+            hovermode="x unified",
+            plot_bgcolor="white",
+            xaxis={
+                "rangeselector": {
+                    "buttons": [
+                        {"count": 6, "label": "6m", "step": "month", "stepmode": "backward"},
+                        {"count": 1, "label": "1y", "step": "year", "stepmode": "backward"},
+                        {"count": 3, "label": "3y", "step": "year", "stepmode": "backward"},
+                        {"step": "year", "stepmode": "todate", "label": "YTD"},
+                        {"step": "all", "label": "All"},
+                    ]
+                },
+                "rangeslider": {"visible": False},
+                "type": "date",
+            },
+        )
+        fig.update_xaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
+        fig.update_yaxes(
+            title_text=f"Equity (starting at {start_balance:,.0f})",
+            showgrid=True,
+            gridwidth=0.5,
+            gridcolor="lightgrey",
+            tickformat="$,.0f",
+        )
+
+        return fig

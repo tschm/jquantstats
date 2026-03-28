@@ -238,3 +238,104 @@ class DataPlots:
         """
         fig = _plot_performance_dashboard(returns=self.data.all, log_scale=log_scale)
         return fig
+
+    def earnings(self, start_balance: float = 1e5, mode: str = "comp") -> go.Figure:
+        """Plot the equity curve expressed in dollar/currency terms.
+
+        Converts percentage returns to an equity curve denominated in the
+        currency of ``start_balance``.  Two compounding modes are supported:
+
+        * ``"comp"`` (default): full geometric compounding --
+          ``equity_t = start_balance * prod(1 + r_i)`` for ``i <= t``.
+        * ``"simple"``: linear (additive) compounding --
+          ``equity_t = start_balance * (1 + sum(r_i))`` for ``i <= t``.
+
+        Args:
+            start_balance: Initial portfolio balance in currency units.
+                Defaults to ``100_000``.
+            mode: Compounding mode — ``"comp"`` for geometric or ``"simple"``
+                for additive.  Raises :class:`ValueError` for any other value.
+
+        Returns:
+            go.Figure: A Plotly figure with one line per asset showing the
+            equity curve over time.
+
+        Raises:
+            ValueError: If ``mode`` is not ``"comp"`` or ``"simple"``.
+            ValueError: If ``start_balance`` is not a positive number.
+
+        Example:
+            >>> import polars as pl
+            >>> from jquantstats import Data
+            >>> returns = pl.DataFrame({
+            ...     "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+            ...     "Asset": [0.01, -0.02, 0.03],
+            ... }).with_columns(pl.col("Date").str.to_date())
+            >>> data = Data.from_returns(returns=returns)
+            >>> fig = data.plots.earnings(start_balance=100_000, mode="comp")
+            >>> fig.show()  # doctest: +SKIP
+
+        """
+        if mode not in ("comp", "simple"):
+            raise ValueError(f"mode must be 'comp' or 'simple', got {mode!r}")  # noqa: TRY003
+        if not isinstance(start_balance, (int, float)) or start_balance <= 0:
+            raise ValueError("start_balance must be a positive number")  # noqa: TRY003
+
+        returns = self.data.all
+        date_col = returns.columns[0]
+        tickers = [col for col in returns.columns if col != date_col]
+
+        palette = px.colors.qualitative.Plotly
+        colors = {ticker: palette[i % len(palette)] for i, ticker in enumerate(tickers)}
+
+        if mode == "comp":
+            equity = returns.with_columns(
+                [(start_balance * (1 + pl.col(ticker)).cum_prod()).alias(ticker) for ticker in tickers]
+            )
+        else:
+            equity = returns.with_columns(
+                [(start_balance * (1 + pl.col(ticker).cum_sum())).alias(ticker) for ticker in tickers]
+            )
+
+        fig = go.Figure()
+        for ticker in tickers:
+            fig.add_trace(
+                go.Scatter(
+                    x=equity[date_col],
+                    y=equity[ticker],
+                    mode="lines",
+                    name=ticker,
+                    line={"color": colors[ticker], "width": 2},
+                    hovertemplate=f"<b>%{{x|%b %Y}}</b><br>{ticker}: $%{{y:,.0f}}",
+                )
+            )
+
+        fig.update_layout(
+            title="Earnings (Equity Curve)",
+            hovermode="x unified",
+            plot_bgcolor="white",
+            legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
+            xaxis={
+                "rangeselector": {
+                    "buttons": [
+                        {"count": 6, "label": "6m", "step": "month", "stepmode": "backward"},
+                        {"count": 1, "label": "1y", "step": "year", "stepmode": "backward"},
+                        {"count": 3, "label": "3y", "step": "year", "stepmode": "backward"},
+                        {"step": "year", "stepmode": "todate", "label": "YTD"},
+                        {"step": "all", "label": "All"},
+                    ]
+                },
+                "rangeslider": {"visible": False},
+                "type": "date",
+            },
+        )
+        fig.update_xaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
+        fig.update_yaxes(
+            title_text=f"Equity (starting at {start_balance:,.0f})",
+            showgrid=True,
+            gridwidth=0.5,
+            gridcolor="lightgrey",
+            tickformat="$,.0f",
+        )
+
+        return fig

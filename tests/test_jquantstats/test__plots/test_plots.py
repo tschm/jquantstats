@@ -312,3 +312,114 @@ def test_annual_sharpe_plot_returns_figure_with_bars(long_portfolio):
         assert isinstance(trace, go.Bar)
     assert "Annual Sharpe" in fig.layout.title.text
     _ = fig.to_dict()
+
+
+# ─── Earnings (DataPlots) ────────────────────────────────────────────────────
+
+
+def test_data_earnings_comp_returns_figure(plots):
+    """DataPlots.earnings returns a Figure in comp mode with one trace per asset."""
+    fig = plots.earnings(start_balance=1e5, mode="comp")
+    assert isinstance(fig, go.Figure)
+    assert len(fig.data) >= 1
+    for trace in fig.data:
+        assert isinstance(trace, go.Scatter)
+    assert "Earnings" in fig.layout.title.text
+    _ = fig.to_dict()
+
+
+def test_data_earnings_simple_returns_figure(plots):
+    """DataPlots.earnings returns a Figure in simple mode."""
+    fig = plots.earnings(start_balance=5e4, mode="simple")
+    assert isinstance(fig, go.Figure)
+    assert len(fig.data) >= 1
+    _ = fig.to_dict()
+
+
+def test_data_earnings_invalid_mode_raises(plots):
+    """DataPlots.earnings raises ValueError for unknown mode."""
+    with pytest.raises(ValueError, match="mode must be"):
+        _ = plots.earnings(mode="bad_mode")
+
+
+def test_data_earnings_invalid_start_balance_raises(plots):
+    """DataPlots.earnings raises ValueError for non-positive start_balance."""
+    with pytest.raises(ValueError, match="positive"):
+        _ = plots.earnings(start_balance=-1000)
+    with pytest.raises(ValueError, match="positive"):
+        _ = plots.earnings(start_balance=0)
+
+
+def test_data_earnings_comp_equity_starts_at_balance(returns):
+    """In comp mode the first equity value equals start_balance × (1 + r_0)."""
+    import polars as pl
+
+    from jquantstats import Data
+
+    simple_returns = pl.DataFrame(
+        {
+            "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+            "Asset": [0.10, 0.05, -0.02],
+        }
+    ).with_columns(pl.col("Date").str.to_date())
+
+    data = Data.from_returns(returns=simple_returns)
+    fig = data.plots.earnings(start_balance=1000.0, mode="comp")
+    y_vals = list(fig.data[0].y)
+    assert abs(y_vals[0] - 1000.0 * 1.10) < 1e-6
+    assert abs(y_vals[1] - 1000.0 * 1.10 * 1.05) < 1e-6
+
+
+def test_data_earnings_simple_equity_starts_at_balance(returns):
+    """In simple mode the first equity value equals start_balance × (1 + r_0)."""
+    import polars as pl
+
+    from jquantstats import Data
+
+    simple_returns = pl.DataFrame(
+        {
+            "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+            "Asset": [0.10, 0.05, -0.02],
+        }
+    ).with_columns(pl.col("Date").str.to_date())
+
+    data = Data.from_returns(returns=simple_returns)
+    fig = data.plots.earnings(start_balance=1000.0, mode="simple")
+    y_vals = list(fig.data[0].y)
+    assert abs(y_vals[0] - 1000.0 * 1.10) < 1e-6
+    assert abs(y_vals[1] - 1000.0 * (1.0 + 0.10 + 0.05)) < 1e-6
+
+
+# ─── Earnings (PortfolioPlots) ───────────────────────────────────────────────
+
+
+def test_portfolio_earnings_comp_returns_figure(pf: Portfolio):
+    """PortfolioPlots.earnings returns a Figure in comp mode."""
+    fig = pf.plots.earnings(start_balance=1e5, mode="comp")
+    assert isinstance(fig, go.Figure)
+    assert len(fig.data) == 1
+    assert isinstance(fig.data[0], go.Scatter)
+    assert "Earnings" in fig.layout.title.text
+    _ = fig.to_dict()
+
+
+def test_portfolio_earnings_simple_returns_figure(pf: Portfolio):
+    """PortfolioPlots.earnings returns a Figure in simple mode."""
+    fig = pf.plots.earnings(start_balance=2e5, mode="simple")
+    assert isinstance(fig, go.Figure)
+    assert len(fig.data) == 1
+    _ = fig.to_dict()
+
+
+def test_portfolio_earnings_invalid_mode_raises(pf: Portfolio):
+    """PortfolioPlots.earnings raises ValueError for unknown mode."""
+    with pytest.raises(ValueError, match="mode must be"):
+        _ = pf.plots.earnings(mode="unknown")
+
+
+def test_portfolio_earnings_invalid_start_balance_raises(pf: Portfolio):
+    """PortfolioPlots.earnings raises ValueError for non-positive start_balance."""
+    with pytest.raises(ValueError, match="positive"):
+        _ = pf.plots.earnings(start_balance=0)
+    with pytest.raises(ValueError, match="positive"):
+        _ = pf.plots.earnings(start_balance=-500)
