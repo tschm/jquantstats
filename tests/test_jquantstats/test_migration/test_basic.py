@@ -37,6 +37,8 @@ import quantstats as qs
         ("cpc_index", {}, 1e-12),
         ("common_sense_ratio", {}, 1e-12),
         ("geometric_mean", {}, 1e-12),
+        ("comp", {}, 1e-12),
+        ("ghpr", {}, 1e-12),
         ("smart_sharpe", {"periods": 252}, 1e-12),
         ("smart_sortino", {"periods": 252}, 1e-12),
         ("probabilistic_sortino_ratio", {}, 1e-12),

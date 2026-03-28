@@ -33,6 +33,9 @@ class _PerformanceStatsMixin:
         def autocorr_penalty(self) -> dict[str, float]:
             """Defined on _BasicStatsMixin."""
 
+        def geometric_mean(self) -> dict[str, float]:
+            """Defined on _BasicStatsMixin."""
+
     # ── Sharpe & Sortino ──────────────────────────────────────────────────────
 
     @columnwise_stat
@@ -288,6 +291,34 @@ class _PerformanceStatsMixin:
         if denom <= 0.0:
             return float("nan")
         return numer / denom
+
+    # ── Cumulative returns ────────────────────────────────────────────────────
+
+    @to_frame
+    def compsum(self, series: pl.Expr) -> pl.Expr:
+        """Calculate the rolling compounded (cumulative) returns.
+
+        Computed as cumprod(1 + r) - 1 for each period.
+
+        Args:
+            series (pl.Expr): The expression to calculate cumulative returns for.
+
+        Returns:
+            pl.Expr: Cumulative compounded returns expression.
+
+        """
+        return (1.0 + series).cum_prod() - 1.0
+
+    def ghpr(self) -> dict[str, float]:
+        """Calculate the Geometric Holding Period Return.
+
+        Shorthand for geometric_mean() — the per-period geometric average return.
+
+        Returns:
+            dict[str, float]: Dictionary mapping asset names to GHPR values.
+
+        """
+        return self.geometric_mean()
 
     # ── Drawdown ──────────────────────────────────────────────────────────────
 

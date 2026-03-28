@@ -267,6 +267,24 @@ def test_kelly_criterion(stats):
     assert result["META"] == pytest.approx(0.06817093826936971)
 
 
+def test_comp(stats):
+    """Tests that comp returns the total compounded return."""
+    result = stats.comp()
+    assert result["META"] == pytest.approx(13.382664235863414)
+
+
+def test_ghpr(stats):
+    """Tests that ghpr returns the same value as geometric_mean."""
+    assert stats.ghpr() == stats.geometric_mean()
+
+
+def test_compsum(stats):
+    """Tests that compsum returns a cumulative return series ending at comp()."""
+    result = stats.compsum()
+    assert result.shape == stats.all.shape
+    assert result["META"][-1] == pytest.approx(13.382664235863414)
+
+
 def test_outlier_win_ratio(stats):
     """Tests that outlier_win_ratio returns the ratio of high-quantile to mean positive return."""
     result = stats.outlier_win_ratio()
@@ -1175,3 +1193,96 @@ def test_sortino_all_zero_returns_is_nan(edge):
     result = edge.stats.sortino()
     for val in result.values():
         assert math.isnan(val)
+
+
+def test_monthly_returns_shape(stats):
+    """monthly_returns returns a dict of DataFrames with year and month columns."""
+    result = stats.monthly_returns(eoy=True)
+    assert isinstance(result, dict)
+    for df in result.values():
+        assert isinstance(df, pl.DataFrame)
+        assert "year" in df.columns
+        assert "JAN" in df.columns
+        assert "DEC" in df.columns
+        assert "EOY" in df.columns
+
+
+def test_monthly_returns_no_eoy(stats):
+    """monthly_returns without eoy omits the EOY column."""
+    result = stats.monthly_returns(eoy=False)
+    for df in result.values():
+        assert "EOY" not in df.columns
+        assert len(df.columns) == 13  # year + 12 months
+
+
+def test_monthly_returns_values(stats):
+    """monthly_returns compounded values match expected for a spot-check month."""
+    result = stats.monthly_returns(eoy=True, compounded=True)
+    aapl_df = result["AAPL"]
+    assert aapl_df["year"].dtype == pl.Int32
+    assert aapl_df.height > 0
+    eoy_vals = aapl_df["EOY"].to_list()
+    assert all(v is not None for v in eoy_vals)
+
+
+def test_distribution_structure(stats):
+    """Distribution returns nested dict with all five periods and values/outliers keys."""
+    result = stats.distribution()
+    assert isinstance(result, dict)
+    for asset_data in result.values():
+        for period in ("Daily", "Weekly", "Monthly", "Quarterly", "Yearly"):
+            assert period in asset_data
+            assert "values" in asset_data[period]
+            assert "outliers" in asset_data[period]
+            assert isinstance(asset_data[period]["values"], list)
+            assert isinstance(asset_data[period]["outliers"], list)
+
+
+def test_distribution_counts(stats):
+    """Distribution daily count equals the number of non-null daily returns."""
+    result = stats.distribution()
+    aapl_returns = stats.data.returns["AAPL"].drop_nulls()
+    daily = result["AAPL"]["Daily"]
+    total = len(daily["values"]) + len(daily["outliers"])
+    assert total == len(aapl_returns)
+
+
+def test_implied_volatility_rolling(stats):
+    """implied_volatility annualized returns a DataFrame of rolling vol series."""
+    result = stats.implied_volatility(periods=252, annualize=True)
+    assert isinstance(result, pl.DataFrame)
+    assert "AAPL" in result.columns
+    assert result["AAPL"].null_count() == 251
+
+
+def test_implied_volatility_scalar(stats):
+    """implied_volatility non-annualized returns a dict of scalar values."""
+    result = stats.implied_volatility(annualize=False)
+    assert isinstance(result, dict)
+    for val in result.values():
+        assert isinstance(val, float)
+        assert val > 0
+
+
+def test_compare_structure(stats):
+    """Compare returns a dict of DataFrames with the expected columns."""
+    result = stats.compare()
+    assert isinstance(result, dict)
+    for df in result.values():
+        assert isinstance(df, pl.DataFrame)
+        for col in ("Benchmark", "Returns", "Multiplier", "Won"):
+            assert col in df.columns
+
+
+def test_compare_no_benchmark_raises(data_no_benchmark):
+    """Compare raises AttributeError when no benchmark is attached."""
+    with pytest.raises(AttributeError):
+        data_no_benchmark.stats.compare()
+
+
+def test_compare_round_vals(stats):
+    """Compare round_vals rounds Benchmark and Returns columns."""
+    result = stats.compare(round_vals=2)
+    for df in result.values():
+        rounded = df["Returns"].drop_nulls()
+        assert all(round(v, 2) == v for v in rounded.to_list())
