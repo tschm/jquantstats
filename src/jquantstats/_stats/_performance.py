@@ -234,6 +234,58 @@ class _PerformanceStatsMixin:
         ratio = mean_f / downside_deviation
         return float(ratio * np.sqrt(periods))
 
+    @columnwise_stat
+    def omega(
+        self,
+        series: pl.Series,
+        rf: float = 0.0,
+        required_return: float = 0.0,
+        periods: int | float | None = None,
+    ) -> float:
+        """Calculate the Omega ratio.
+
+        The Omega ratio is the probability-weighted ratio of gains to losses
+        relative to a threshold return.  It is computed as the sum of returns
+        above the threshold divided by the absolute sum of returns below it.
+
+        Args:
+            series (pl.Series): The series to calculate Omega ratio for.
+            rf (float): Annualised risk-free rate. Defaults to 0.0.
+            required_return (float): Annualised minimum acceptable return
+                threshold. Defaults to 0.0.
+            periods (int | float | None): Number of periods per year. Defaults
+                to the value inferred from the data.
+
+        Returns:
+            float: The Omega ratio, or NaN when the denominator is zero or
+                when ``required_return <= -1``.
+
+        Note:
+            See https://en.wikipedia.org/wiki/Omega_ratio for details.
+
+        """
+        if required_return <= -1:
+            return float("nan")
+
+        periods = periods or self.data._periods_per_year
+
+        # Subtract per-period risk-free rate from returns when rf is non-zero.
+        if rf != 0.0:
+            rf_per_period = float((1.0 + rf) ** (1.0 / periods) - 1.0)
+            series = series - rf_per_period
+
+        # Convert annualised required return to a per-period threshold.
+        return_threshold = float((1.0 + required_return) ** (1.0 / periods) - 1.0)
+
+        returns_less_thresh = series - return_threshold
+
+        numer = float(returns_less_thresh.filter(returns_less_thresh > 0.0).sum())
+        denom = float(-returns_less_thresh.filter(returns_less_thresh < 0.0).sum())
+
+        if denom <= 0.0:
+            return float("nan")
+        return numer / denom
+
     # ── Drawdown ──────────────────────────────────────────────────────────────
 
     @to_frame
