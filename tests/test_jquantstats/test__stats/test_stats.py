@@ -931,3 +931,81 @@ def test_sortino_all_zero_returns_is_nan(edge):
     result = edge.stats.sortino()
     for val in result.values():
         assert math.isnan(val)
+
+
+def test_cagr(stats):
+    """Tests that the cagr method calculates Compound Annual Growth Rate correctly.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        1. The cagr method returns a dictionary with the expected structure.
+        2. The CAGR values match the expected values for META and AAPL.
+
+    """
+    result = stats.cagr()
+    assert isinstance(result, dict)
+    assert set(result.keys()) == set(stats.data.assets)
+    assert result["META"] == pytest.approx(0.22912489253883472)
+    assert result["AAPL"] == pytest.approx(0.21111810040373213)
+
+
+def test_cagr_not_compounded(stats):
+    """Cagr with compounded=False uses arithmetic sum of returns."""
+    result = stats.cagr(compounded=False)
+    assert isinstance(result, dict)
+    for col in result:
+        assert isinstance(result[col], float)
+
+
+def test_cagr_insufficient_data():
+    """Cagr returns nan when the series has one or fewer non-null observations."""
+    import math
+
+    from jquantstats.data import Data
+
+    returns = pl.DataFrame({"r": [0.01, None]}, schema={"r": pl.Float64})
+    index = pl.DataFrame({"idx": [0, 1]})
+    tiny_data = Data(returns=returns, index=index)
+    result = tiny_data.stats.cagr()
+    assert math.isnan(result["r"])
+
+
+def test_rar(stats):
+    """Tests that the rar method calculates Risk-Adjusted Return correctly.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        1. The rar method returns a dictionary with the expected structure.
+        2. The RAR values match the expected values for META and AAPL.
+
+    """
+    result = stats.rar()
+    assert isinstance(result, dict)
+    assert set(result.keys()) == set(stats.data.assets)
+    assert result["META"] == pytest.approx(0.29858816722771797)
+    assert result["AAPL"] == pytest.approx(0.2580860209454467)
+
+
+def test_rar_zero_drawdown():
+    """Rar returns nan when max drawdown is zero (no drawdown in the series)."""
+    import math
+
+    from jquantstats.data import Data
+
+    returns = pl.DataFrame({"r": [0.01, 0.02, 0.03, 0.01]})
+    index = pl.DataFrame({"idx": [0, 1, 2, 3]})
+    d = Data(returns=returns, index=index)
+    result = d.stats.rar()
+    assert math.isnan(result["r"])
+
+
+def test_summary_includes_cagr_and_rar(stats):
+    """Summary includes cagr and rar as metrics."""
+    result = stats.summary()
+    metrics = result["metric"].to_list()
+    assert "cagr" in metrics
+    assert "rar" in metrics

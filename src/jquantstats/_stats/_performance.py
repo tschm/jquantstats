@@ -293,6 +293,74 @@ class _PerformanceStatsMixin:
         """
         return _PerformanceStatsMixin.max_drawdown_single_series(series)
 
+    @staticmethod
+    def _cagr_single_series(
+        series: pl.Series, rf: float = 0.0, compounded: bool = True, periods: float = 252.0
+    ) -> float:
+        """Compute CAGR for a single returns series.
+
+        Args:
+            series: A Polars Series of return values.
+            rf: Risk-free rate per period subtracted from each return. Defaults to 0.0.
+            compounded: If ``True`` use geometric total; otherwise use arithmetic sum.
+            periods: Annualisation factor (periods per year).
+
+        Returns:
+            float: CAGR, or ``nan`` if there is insufficient data (n ≤ 1).
+        """
+        clean = series.drop_nulls().cast(pl.Float64)
+        n = clean.len()
+        if n <= 1:
+            return float("nan")
+        adjusted = clean - rf
+        total = float((1.0 + adjusted).product()) - 1.0 if compounded else float(adjusted.sum())
+        years = (n - 1) / periods
+        # Take the absolute value before raising to the power so the operation is
+        # defined for negative totals, then reapply the sign of the total return.
+        res = abs(total + 1.0) ** (1.0 / years) - 1.0
+        if total < 0:
+            res = -res
+        return float(res)
+
+    @columnwise_stat
+    def cagr(
+        self, series: pl.Series, rf: float = 0.0, compounded: bool = True, periods: int | float | None = None
+    ) -> float:
+        """Calculate the Compound Annual Growth Rate (CAGR).
+
+        Args:
+            series (pl.Series): The series of returns to calculate CAGR for.
+            rf (float, optional): Risk-free rate per period. Defaults to 0.0.
+            compounded (bool, optional): Whether to use compounded returns. Defaults to True.
+            periods (int | float, optional): Number of periods per year. Defaults to data periods.
+
+        Returns:
+            float: The CAGR value, or ``nan`` if insufficient data.
+
+        """
+        raw_periods = periods or self.data._periods_per_year
+        return _PerformanceStatsMixin._cagr_single_series(series, rf=rf, compounded=compounded, periods=raw_periods)
+
+    @columnwise_stat
+    def rar(self, series: pl.Series, rf: float = 0.0) -> float:
+        """Calculate the Risk-Adjusted Return (RAR).
+
+        Defined as ``cagr / abs(max_drawdown)``.
+
+        Args:
+            series (pl.Series): The series of returns to calculate RAR for.
+            rf (float, optional): Risk-free rate per period passed to CAGR. Defaults to 0.0.
+
+        Returns:
+            float: The RAR value, or ``nan`` if max drawdown is zero.
+
+        """
+        cagr_val = _PerformanceStatsMixin._cagr_single_series(series, rf=rf, periods=self.data._periods_per_year)
+        max_dd = abs(_PerformanceStatsMixin.max_drawdown_single_series(series))
+        if max_dd == 0.0:
+            return float("nan")
+        return float(cagr_val / max_dd)
+
     def adjusted_sortino(self, periods: int | float | None = None) -> dict[str, float]:
         """Calculate Jack Schwager's adjusted Sortino ratio.
 

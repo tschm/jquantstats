@@ -74,6 +74,12 @@ class _ReportingStatsMixin:
         def max_drawdown(self) -> dict[str, float]:
             """Defined on _PerformanceStatsMixin."""
 
+        def cagr(self) -> dict[str, float]:
+            """Defined on _PerformanceStatsMixin."""
+
+        def rar(self) -> dict[str, float]:
+            """Defined on _PerformanceStatsMixin."""
+
     # ── Temporal & reporting ──────────────────────────────────────────────────
 
     @property
@@ -424,6 +430,8 @@ class _ReportingStatsMixin:
             "max_drawdown_duration": _safe(self.max_drawdown_duration),
             "calmar": _safe(self.calmar),
             "recovery_factor": _safe(self.recovery_factor),
+            "cagr": _safe(self.cagr),
+            "rar": _safe(self.rar),
         }
 
         rows: list[dict[str, object]] = [
