@@ -312,3 +312,88 @@ def test_annual_sharpe_plot_returns_figure_with_bars(long_portfolio):
         assert isinstance(trace, go.Bar)
     assert "Annual Sharpe" in fig.layout.title.text
     _ = fig.to_dict()
+
+
+# ─── Rolling Beta plot (PortfolioPlots) ──────────────────────────────────────
+
+
+def test_rolling_beta_plot_returns_figure_with_traces(long_portfolio):
+    """rolling_beta_plot returns a Figure with two traces (one per window)."""
+    n = len(long_portfolio.stats.data.all)  # type: ignore[union-attr]
+    bmark = pl.Series("SPY", [0.001 * np.sin(0.05 * i) for i in range(n)], dtype=pl.Float64)
+
+    fig = long_portfolio.plots.rolling_beta_plot(benchmark=bmark, window1=63, window2=126)
+
+    assert isinstance(fig, go.Figure)
+    # Two windows x one portfolio returns column = 2 traces
+    assert len(fig.data) == 2
+    for trace in fig.data:
+        assert isinstance(trace, go.Scatter)
+    assert "Rolling Beta" in fig.layout.title.text
+    _ = fig.to_dict()
+
+
+def test_rolling_beta_plot_invalid_window_raises(long_portfolio):
+    """rolling_beta_plot should raise ValueError for non-positive windows."""
+    n = len(long_portfolio.stats.data.all)  # type: ignore[union-attr]
+    bmark = pl.Series("SPY", [0.001] * n, dtype=pl.Float64)
+
+    with pytest.raises(ValueError, match=r".*"):
+        _ = long_portfolio.plots.rolling_beta_plot(benchmark=bmark, window1=0)
+    with pytest.raises(ValueError, match=r".*"):
+        _ = long_portfolio.plots.rolling_beta_plot(benchmark=bmark, window2=-1)
+
+
+def test_rolling_beta_plot_accepts_dataframe_benchmark(long_portfolio):
+    """rolling_beta_plot accepts a DataFrame benchmark with a returns column."""
+    n = len(long_portfolio.stats.data.all)  # type: ignore[union-attr]
+    bmark_df = pl.DataFrame({"SPY": [0.001 * np.sin(0.05 * i) for i in range(n)]})
+
+    fig = long_portfolio.plots.rolling_beta_plot(benchmark=bmark_df, window1=63, window2=126)
+    assert isinstance(fig, go.Figure)
+    assert "SPY" in fig.layout.title.text
+    _ = fig.to_dict()
+
+
+# ─── Rolling Beta (DataPlots) ─────────────────────────────────────────────────
+
+
+@pytest.fixture
+def data_with_benchmark() -> Data:
+    """Data fixture with SPY benchmark used for rolling-beta tests."""
+    from jquantstats import Data
+
+    n = 756
+    start = date(2020, 1, 1)
+    end = start + timedelta(days=n - 1)
+    dates = pl.date_range(start=start, end=end, interval="1d", eager=True).cast(pl.Date)
+
+    a = pl.Series([100.0 * (1.001**i) for i in range(n)], dtype=pl.Float64)
+    b = pl.Series([100.0 + 5.0 * np.sin(0.1 * i) for i in range(n)], dtype=pl.Float64)
+    spy = pl.Series([100.0 * (1.0008**i) for i in range(n)], dtype=pl.Float64)
+
+    prices = pl.DataFrame({"Date": dates, "A": a, "B": b})
+    bmark_df = pl.DataFrame({"Date": dates, "SPY": spy})
+    return Data.from_prices(prices=prices, benchmark=bmark_df)
+
+
+def test_data_rolling_beta_returns_figure_with_traces(data_with_benchmark):
+    """DataPlots.rolling_beta returns a Figure with traces for each (asset, window) pair."""
+    fig = data_with_benchmark.plots.rolling_beta(benchmark="SPY", window1=63, window2=126)
+
+    assert isinstance(fig, go.Figure)
+    # two assets (A, B) x two windows = 4 traces
+    assert len(fig.data) == 4
+    for trace in fig.data:
+        assert isinstance(trace, go.Scatter)
+    assert "Rolling Beta" in fig.layout.title.text
+    assert "SPY" in fig.layout.title.text
+    _ = fig.to_dict()
+
+
+def test_data_rolling_beta_invalid_window_raises(data_with_benchmark):
+    """DataPlots.rolling_beta raises ValueError for non-positive windows."""
+    with pytest.raises(ValueError, match=r".*"):
+        _ = data_with_benchmark.plots.rolling_beta(benchmark="SPY", window1=0)
+    with pytest.raises(ValueError, match=r".*"):
+        _ = data_with_benchmark.plots.rolling_beta(benchmark="SPY", window2=-5)

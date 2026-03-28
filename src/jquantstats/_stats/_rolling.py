@@ -102,6 +102,51 @@ class _RollingStatsMixin:
             ]
         )
 
+    def rolling_greeks(
+        self,
+        benchmark: str | None = None,
+        window: int = 126,
+    ) -> pl.DataFrame:
+        """Calculate the rolling beta of each asset vs a benchmark.
+
+        Computes ``beta = cov(asset, benchmark) / var(benchmark)`` over a
+        rolling window of ``window`` periods.
+
+        Args:
+            benchmark: Name of the benchmark column in the combined DataFrame.
+                Defaults to the first column of ``data.benchmark``.
+            window: Rolling-window size in periods. Defaults to 126.
+
+        Returns:
+            pl.DataFrame: Date column(s) plus one rolling-beta column per
+            asset.
+
+        Raises:
+            ValueError: If no benchmark data is available or if ``window``
+                is not a positive integer.
+
+        """
+        if not isinstance(window, int) or window <= 0:
+            raise ValueError("window must be a positive integer")  # noqa: TRY003
+
+        benchmark_data = cast(pl.DataFrame | None, self.data.benchmark)
+        if benchmark_data is None:
+            raise ValueError("No benchmark data available for rolling_greeks")  # noqa: TRY003
+        benchmark_col = benchmark or benchmark_data.columns[0]
+
+        all_df = cast(pl.DataFrame, self.all)
+
+        return all_df.select(
+            [pl.col(name) for name in self.data.date_col]
+            + [
+                (
+                    pl.rolling_cov(col, benchmark_col, window_size=window)
+                    / pl.col(benchmark_col).rolling_var(window_size=window)
+                ).alias(col)
+                for col, _ in self.data.items()
+            ]
+        )
+
     def rolling_volatility(
         self,
         window: int | None = None,

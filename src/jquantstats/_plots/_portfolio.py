@@ -672,3 +672,119 @@ class PortfolioPlots:
             gridcolor="lightgrey",
         )
         return fig
+
+    def rolling_beta_plot(
+        self,
+        benchmark: pl.Series | pl.DataFrame,
+        window1: int = 126,
+        window2: int = 252,
+    ) -> go.Figure:
+        """Plot rolling beta of the portfolio vs a benchmark at two window lengths.
+
+        Computes ``beta = cov(portfolio, benchmark) / var(benchmark)`` over
+        rolling windows of ``window1`` and ``window2`` periods and renders one
+        line per window.
+
+        Args:
+            benchmark: Benchmark return series as a :class:`polars.Series` or
+                a single-column :class:`polars.DataFrame` aligned to the
+                portfolio's returns.
+            window1: Shorter rolling-window size in periods. Defaults to 126.
+            window2: Longer rolling-window size in periods. Defaults to 252.
+
+        Returns:
+            A Plotly Figure with one trace per window length.
+
+        Raises:
+            ValueError: If either window is not a positive integer.
+        """
+        if not isinstance(window1, int) or window1 <= 0:
+            raise ValueError("window1 must be a positive integer")  # noqa: TRY003
+        if not isinstance(window2, int) or window2 <= 0:
+            raise ValueError("window2 must be a positive integer")  # noqa: TRY003
+
+        # Normalise benchmark to a named Series
+        if isinstance(benchmark, pl.DataFrame):
+            # Accept a DataFrame; extract the first non-date returns column
+            ret_cols = [c for c in benchmark.columns if benchmark.schema[c] not in (pl.Date, pl.Datetime)]
+            bmark_series = benchmark[ret_cols[0]]
+        else:
+            bmark_series = benchmark
+
+        bmark_name = bmark_series.name or "benchmark"
+
+        # Build a two-column DataFrame: portfolio returns + benchmark returns
+        stats = self.portfolio.stats  # type: ignore[union-attr]
+        port_data = stats.data.all  # type: ignore[union-attr]
+        date_cols = stats.data.date_col  # type: ignore[union-attr]
+        asset_cols = stats.data.assets  # type: ignore[union-attr]
+
+        combined = port_data.with_columns(bmark_series.alias(bmark_name))
+
+        def _rolling_beta_df(window: int) -> pl.DataFrame:
+            """Compute rolling beta for all portfolio columns vs the benchmark over *window* periods."""
+            return combined.select(
+                [pl.col(c) for c in date_cols]
+                + [
+                    (
+                        pl.rolling_cov(col, bmark_name, window_size=window)
+                        / pl.col(bmark_name).rolling_var(window_size=window)
+                    ).alias(col)
+                    for col in asset_cols
+                ]
+            )
+
+        rolling1 = _rolling_beta_df(window1)
+        rolling2 = _rolling_beta_df(window2)
+
+        fig = go.Figure()
+        date_col1 = rolling1[date_cols[0]] if date_cols else None
+        date_col2 = rolling2[date_cols[0]] if date_cols else None
+
+        for col in asset_cols:
+            fig.add_trace(
+                go.Scatter(
+                    x=date_col1,
+                    y=rolling1[col],
+                    mode="lines",
+                    name=f"{col} ({window1}d)",
+                    line={"width": 1},
+                )
+            )
+
+        for col in asset_cols:
+            fig.add_trace(
+                go.Scatter(
+                    x=date_col2,
+                    y=rolling2[col],
+                    mode="lines",
+                    name=f"{col} ({window2}d)",
+                    line={"width": 1, "dash": "dash"},
+                )
+            )
+
+        fig.add_hline(y=1, line_width=1, line_dash="dot", line_color="gray")
+
+        fig.update_layout(
+            title=f"Rolling Beta vs {bmark_name} ({window1}/{window2}-period windows)",
+            hovermode="x unified",
+            plot_bgcolor="white",
+            legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
+            xaxis={
+                "rangeselector": {
+                    "buttons": [
+                        {"count": 6, "label": "6m", "step": "month", "stepmode": "backward"},
+                        {"count": 1, "label": "1y", "step": "year", "stepmode": "backward"},
+                        {"count": 3, "label": "3y", "step": "year", "stepmode": "backward"},
+                        {"step": "year", "stepmode": "todate", "label": "YTD"},
+                        {"step": "all", "label": "All"},
+                    ]
+                },
+                "rangeslider": {"visible": False},
+                "type": "date",
+            },
+        )
+        fig.update_yaxes(title_text="Beta")
+        fig.update_xaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
+        fig.update_yaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
+        return fig

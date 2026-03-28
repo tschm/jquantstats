@@ -661,6 +661,38 @@ def test_greeks(stats):
     # assert result["AAPL"]["alpha"] == pytest.approx(0.1576003006124853)
 
 
+def test_rolling_greeks(stats):
+    """rolling_greeks returns a DataFrame with date and one beta column per asset."""
+    result = stats.rolling_greeks(window=63)
+    assert isinstance(result, pl.DataFrame)
+    assert "Date" in result.columns
+    assert "AAPL" in result.columns
+    # The benchmark column also appears (beta of benchmark vs itself ≈ 1)
+    assert len(result) > 0
+
+
+def test_rolling_greeks_values_finite(stats):
+    """rolling_greeks returns finite beta values after the warm-up period."""
+    result = stats.rolling_greeks(window=63)
+    aapl_beta = result["AAPL"].drop_nulls().drop_nans()
+    assert len(aapl_beta) > 0
+    assert all(np.isfinite(v) for v in aapl_beta.to_list())
+
+
+def test_rolling_greeks_invalid_window_raises(stats):
+    """rolling_greeks raises ValueError for non-positive window sizes."""
+    with pytest.raises(ValueError, match="window must be a positive integer"):
+        _ = stats.rolling_greeks(window=0)
+    with pytest.raises(ValueError, match="window must be a positive integer"):
+        _ = stats.rolling_greeks(window=-10)
+
+
+def test_rolling_greeks_no_benchmark_raises(data_no_benchmark):
+    """rolling_greeks raises ValueError when no benchmark is available."""
+    with pytest.raises(ValueError, match="No benchmark"):
+        _ = data_no_benchmark.stats.rolling_greeks(window=63)
+
+
 def test_r_squared(stats):
     """Tests that the r_squared method calculates R-squared correctly.
 

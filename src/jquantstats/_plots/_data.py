@@ -238,3 +238,105 @@ class DataPlots:
         """
         fig = _plot_performance_dashboard(returns=self.data.all, log_scale=log_scale)
         return fig
+
+    def rolling_beta(
+        self,
+        benchmark: str,
+        window1: int = 126,
+        window2: int = 252,
+    ) -> go.Figure:
+        """Plot rolling beta of each asset vs a benchmark at two window lengths.
+
+        Computes ``beta = cov(asset, benchmark) / var(benchmark)`` over rolling
+        windows of ``window1`` and ``window2`` periods and renders one line per
+        (asset, window) pair.
+
+        Args:
+            benchmark: Name of the benchmark column within ``data.all``.
+            window1: Shorter rolling-window size in periods. Defaults to 126.
+            window2: Longer rolling-window size in periods. Defaults to 252.
+
+        Returns:
+            A Plotly Figure with one trace per (asset, window) combination.
+
+        Raises:
+            ValueError: If either window is not a positive integer.
+        """
+        if not isinstance(window1, int) or window1 <= 0:
+            raise ValueError("window1 must be a positive integer")  # noqa: TRY003
+        if not isinstance(window2, int) or window2 <= 0:
+            raise ValueError("window2 must be a positive integer")  # noqa: TRY003
+
+        all_df = self.data.all
+        # Identify date column (first column that is not an asset and not the benchmark)
+        date_col = [c for c in all_df.columns if c not in self.data.assets and c != benchmark]
+        # Exclude the benchmark itself from the per-asset beta traces
+        asset_cols = [a for a in self.data.assets if a != benchmark]
+
+        def _rolling_beta_df(window: int) -> pl.DataFrame:
+            """Compute rolling beta for all assets vs the benchmark over *window* periods."""
+            return all_df.select(
+                [pl.col(c) for c in date_col]
+                + [
+                    (
+                        pl.rolling_cov(asset, benchmark, window_size=window)
+                        / pl.col(benchmark).rolling_var(window_size=window)
+                    ).alias(asset)
+                    for asset in asset_cols
+                ]
+            )
+
+        rolling1 = _rolling_beta_df(window1)
+        rolling2 = _rolling_beta_df(window2)
+
+        fig = go.Figure()
+        x1 = rolling1[date_col[0]] if date_col else None
+        x2 = rolling2[date_col[0]] if date_col else None
+
+        for col in asset_cols:
+            fig.add_trace(
+                go.Scatter(
+                    x=x1,
+                    y=rolling1[col],
+                    mode="lines",
+                    name=f"{col} ({window1}d)",
+                    line={"width": 1},
+                )
+            )
+
+        for col in asset_cols:
+            fig.add_trace(
+                go.Scatter(
+                    x=x2,
+                    y=rolling2[col],
+                    mode="lines",
+                    name=f"{col} ({window2}d)",
+                    line={"width": 1, "dash": "dash"},
+                )
+            )
+
+        fig.add_hline(y=1, line_width=1, line_dash="dot", line_color="gray")
+
+        fig.update_layout(
+            title=f"Rolling Beta vs {benchmark} ({window1}/{window2}-period windows)",
+            hovermode="x unified",
+            plot_bgcolor="white",
+            legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
+            xaxis={
+                "rangeselector": {
+                    "buttons": [
+                        {"count": 6, "label": "6m", "step": "month", "stepmode": "backward"},
+                        {"count": 1, "label": "1y", "step": "year", "stepmode": "backward"},
+                        {"count": 3, "label": "3y", "step": "year", "stepmode": "backward"},
+                        {"step": "year", "stepmode": "todate", "label": "YTD"},
+                        {"step": "all", "label": "All"},
+                    ]
+                },
+                "rangeslider": {"visible": False},
+                "type": "date",
+            },
+        )
+        fig.update_yaxes(title_text="Beta")
+        fig.update_xaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
+        fig.update_yaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
+        return fig
