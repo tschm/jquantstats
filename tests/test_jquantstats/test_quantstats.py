@@ -415,6 +415,31 @@ def test_information_ratio(stats, aapl, benchmark_pd):
     assert x["AAPL"] == pytest.approx(y, abs=1e-4)
 
 
+def test_omega(stats, aapl):
+    """Tests that the omega method produces the same results as quantstats.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+        aapl: The aapl fixture containing AAPL returns.
+
+    Verifies:
+        The Omega ratio calculated by our library matches the one from quantstats
+        for the default parameters, a non-zero required_return, and a non-zero rf.
+
+    """
+    x = stats.omega(periods=252)
+    y = qs.stats.omega(aapl)
+    assert x["AAPL"] == pytest.approx(y, abs=1e-6)
+
+    x_threshold = stats.omega(required_return=0.01, periods=252)
+    y_threshold = qs.stats.omega(aapl, required_return=0.01)
+    assert x_threshold["AAPL"] == pytest.approx(y_threshold, abs=1e-6)
+
+    x_rf = stats.omega(rf=0.02, periods=252)
+    y_rf = qs.stats.omega(aapl, rf=0.02)
+    assert x_rf["AAPL"] == pytest.approx(y_rf, abs=1e-6)
+
+
 def test_autocorrelation(stats, aapl):
     """Tests that autocorrelation matches pandas Series.autocorr().
 
