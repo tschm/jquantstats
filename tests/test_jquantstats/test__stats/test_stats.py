@@ -649,6 +649,27 @@ def test_greeks(stats):
     result = stats.greeks(periods_per_year=252)
     print(result)
 
+
+def test_treynor_ratio(stats):
+    """Tests that the treynor_ratio method calculates correctly.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        - Returns a float per asset.
+        - Formula: (annualised_return - rf) / beta.
+        - A non-zero rf reduces the numerator and thus the ratio.
+
+    """
+    result = stats.treynor_ratio(periods_per_year=252, rf=0.0)
+    assert isinstance(result["META"], float)
+    assert not np.isnan(result["META"])
+
+    result_rf = stats.treynor_ratio(periods_per_year=252, rf=0.02)
+    # A positive rf reduces the numerator, so the ratio should be smaller
+    assert result_rf["META"] < result["META"]
+
     #
     # assert isinstance(result, pd.DataFrame)
     # assert "alpha" in result.index

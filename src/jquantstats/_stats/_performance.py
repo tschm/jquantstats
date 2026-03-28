@@ -485,3 +485,57 @@ class _PerformanceStatsMixin:
         alpha = float(np.mean(strategy_np) - beta * np.mean(benchmark_np))
 
         return {"alpha": float(alpha * ppy), "beta": beta}
+
+    @columnwise_stat
+    def treynor_ratio(
+        self,
+        series: pl.Series,
+        periods_per_year: int | float | None = None,
+        rf: float = 0.0,
+        benchmark: str | None = None,
+    ) -> float:
+        """Calculate the Treynor ratio of the portfolio.
+
+        The Treynor ratio measures excess return per unit of systematic risk (beta).
+
+        Args:
+            series (pl.Series): The series to calculate the Treynor ratio for.
+            periods_per_year (int, optional): Number of periods per year. Defaults to 252.
+            rf (float): Annualized risk-free rate. Defaults to 0.0.
+            benchmark (str, optional): The benchmark column name. Defaults to None.
+
+        Returns:
+            float: The Treynor ratio value, or NaN if beta is zero or NaN.
+
+        """
+        ppy = periods_per_year or self.data._periods_per_year
+
+        benchmark_data = cast(pl.DataFrame, self.data.benchmark)
+        benchmark_col = benchmark or benchmark_data.columns[0]
+
+        # Evaluate both series and benchmark as Series
+        all_data = cast(pl.DataFrame, self.all)
+        dframe = all_data.select([series, pl.col(benchmark_col).alias("benchmark")])
+
+        # Drop nulls
+        dframe = dframe.drop_nulls()
+        matrix = dframe.to_numpy()
+
+        strategy_np = matrix[:, 0]
+        benchmark_np = matrix[:, 1]
+
+        cov_matrix = np.cov(strategy_np, benchmark_np)
+        cov = cov_matrix[0, 1]
+        var_benchmark = cov_matrix[1, 1]
+
+        beta = float(cov / var_benchmark) if var_benchmark != 0 else float("nan")
+
+        if beta == 0 or np.isnan(beta):
+            return float("nan")
+
+        n = len(strategy_np)
+        total = float(np.prod(1.0 + strategy_np)) - 1.0
+        years = n / ppy
+        ann_return = float((1.0 + total) ** (1.0 / years) - 1.0)
+
+        return (ann_return - rf) / beta
