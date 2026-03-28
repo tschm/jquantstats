@@ -31,6 +31,7 @@ import quantstats as qs
         ("probabilistic_sharpe_ratio", {}, 1e-4),
         ("max_drawdown", {}, 1e-12),
         ("cagr", {"periods": 252}, 1e-12),
+        ("rar", {}, 1e-12),
     ],
 )
 def test_migration(stats, method, kwargs, tol):

@@ -74,6 +74,12 @@ class _ReportingStatsMixin:
         def max_drawdown(self) -> dict[str, float]:
             """Defined on _PerformanceStatsMixin."""
 
+        def cagr(self, periods: int | float | None = None) -> dict[str, float]:
+            """Defined on _ReportingStatsMixin."""
+
+        def exposure(self) -> dict[str, float]:
+            """Defined on _BasicStatsMixin."""
+
     # ── Temporal & reporting ──────────────────────────────────────────────────
 
     @property
@@ -133,6 +139,22 @@ class _ReportingStatsMixin:
         total = _to_float((1.0 + excess).product()) - 1.0 if compounded else _to_float(excess.sum())
         years = n / raw_periods
         return float(abs(1.0 + total) ** (1.0 / years) - 1.0)
+
+    def rar(self, periods: int | float = 252) -> dict[str, float]:
+        """Risk-Adjusted Return: CAGR divided by exposure.
+
+        Measures annualised return per unit of market participation time,
+        matching the quantstats convention.
+
+        Args:
+            periods: Periods per year for CAGR annualisation. Defaults to ``periods_per_year``.
+
+        Returns:
+            dict[str, float]: RAR per asset.
+        """
+        cagr = self.cagr(periods=periods)
+        exp = self.exposure()
+        return {col: cagr[col] / exp[col] for col in cagr}
 
     @columnwise_stat
     def calmar(self, series: pl.Series, periods: int | float | None = None) -> float:
