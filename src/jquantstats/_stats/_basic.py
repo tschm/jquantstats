@@ -282,6 +282,46 @@ class _BasicStatsMixin:
         return float(num_pos / num_nonzero)
 
     @columnwise_stat
+    def consecutive_wins(self, series: pl.Series) -> int:
+        """Calculate the length of the longest consecutive winning streak.
+
+        A winning period is defined as a return strictly greater than zero.
+        Null values are excluded before computing streaks.
+
+        Args:
+            series (pl.Series): The series to calculate consecutive wins for.
+
+        Returns:
+            int: The length of the longest consecutive winning streak.
+
+        """
+        clean = series.drop_nulls()
+        wins = clean > 0
+        rle = wins.rle()
+        lengths = rle.struct.field("len").filter(rle.struct.field("value"))
+        return int(lengths.max()) if not lengths.is_empty() else 0
+
+    @columnwise_stat
+    def consecutive_losses(self, series: pl.Series) -> int:
+        """Calculate the length of the longest consecutive losing streak.
+
+        A losing period is defined as a return strictly less than zero.
+        Null values are excluded before computing streaks.
+
+        Args:
+            series (pl.Series): The series to calculate consecutive losses for.
+
+        Returns:
+            int: The length of the longest consecutive losing streak.
+
+        """
+        clean = series.drop_nulls()
+        losses = clean < 0
+        rle = losses.rle()
+        lengths = rle.struct.field("len").filter(rle.struct.field("value"))
+        return int(lengths.max()) if not lengths.is_empty() else 0
+
+    @columnwise_stat
     def gain_to_pain_ratio(self, series: pl.Series) -> float:
         """Calculate Jack Schwager's Gain-to-Pain Ratio.
 

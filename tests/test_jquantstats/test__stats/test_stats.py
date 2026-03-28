@@ -217,6 +217,34 @@ def test_win_rate(stats):
     assert result["META"] == pytest.approx(0.525309)
 
 
+def test_consecutive_wins(stats):
+    """Tests that the consecutive_wins method calculates the longest winning streak correctly.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        The consecutive wins value for META matches the expected value.
+
+    """
+    result = stats.consecutive_wins()
+    assert result["META"] == 20
+
+
+def test_consecutive_losses(stats):
+    """Tests that the consecutive_losses method calculates the longest losing streak correctly.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        The consecutive losses value for META matches the expected value.
+
+    """
+    result = stats.consecutive_losses()
+    assert result["META"] == 7
+
+
 def test_kelly_criterion(stats):
     """Tests that the kelly_criterion method calculates Kelly criterion correctly.
 
