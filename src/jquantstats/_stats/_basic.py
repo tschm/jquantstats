@@ -267,6 +267,94 @@ class _BasicStatsMixin:
         mask = cast(Iterable[bool], series < var)
         return cast(float, series.filter(mask).mean())
 
+    @staticmethod
+    def _drawdown_with_baseline(series: pl.Series) -> pl.Series:
+        """Compute drawdown series with a phantom zero-return baseline prepended.
+
+        Matches the quantstats convention: a negative first return is treated as
+        a drawdown from the initial capital of 1.0, not as the new high-water mark.
+        """
+        extended = pl.concat([pl.Series([0.0]), series.cast(pl.Float64)])
+        nav = (1.0 + extended).cum_prod()
+        hwm = nav.cum_max()
+        dd = ((hwm - nav) / hwm.clip(lower_bound=1e-10)).clip(lower_bound=0.0)
+        return dd[1:]  # drop phantom point
+
+    @staticmethod
+    def _ulcer_index_series(series: pl.Series) -> float:
+        """Compute ulcer index for a single returns series."""
+        dd = _BasicStatsMixin._drawdown_with_baseline(series)
+        n = series.len()
+        return float(np.sqrt(float((dd**2).sum()) / (n - 1)))
+
+    @columnwise_stat
+    def ulcer_index(self, series: pl.Series) -> float:
+        """Calculate the Ulcer Index (downside risk measurement).
+
+        Measures the depth and duration of drawdowns as the root mean square
+        of squared drawdowns: sqrt(sum(dd²) / (n - 1)).
+
+        Args:
+            series (pl.Series): The series to calculate ulcer index for.
+
+        Returns:
+            float: Ulcer Index value.
+
+        """
+        return self._ulcer_index_series(series)
+
+    @columnwise_stat
+    def ulcer_performance_index(self, series: pl.Series, rf: float = 0.0) -> float:
+        """Calculate the Ulcer Performance Index (UPI).
+
+        Risk-adjusted return using Ulcer Index as the risk measure:
+        (compounded_return - rf) / ulcer_index.
+
+        Args:
+            series (pl.Series): The series to calculate UPI for.
+            rf (float): Risk-free rate. Defaults to 0.
+
+        Returns:
+            float: Ulcer Performance Index.
+
+        """
+        comp = float((1 + series.cast(pl.Float64)).product()) - 1
+        ui = self._ulcer_index_series(series)
+        return float(np.nan) if ui == 0 else (comp - rf) / ui
+
+    @columnwise_stat
+    def serenity_index(self, series: pl.Series, rf: float = 0.0) -> float:
+        """Calculate the Serenity Index.
+
+        Combines the Ulcer Index with a CVaR-based pitfall measure:
+        (sum_returns - rf) / (ulcer_index * pitfall), where
+        pitfall = -CVaR(drawdowns) / std(returns).
+
+        Args:
+            series (pl.Series): The series to calculate serenity index for.
+            rf (float): Risk-free rate. Defaults to 0.
+
+        Returns:
+            float: Serenity Index.
+
+        """
+        std_val = cast(float, series.std())
+        if not std_val:
+            return float(np.nan)
+
+        # Negate drawdowns to match quantstats sign convention (negative = below peak)
+        dd_neg = -self._drawdown_with_baseline(series)
+        mu = cast(float, dd_neg.mean())
+        sigma = cast(float, dd_neg.std())
+        var_threshold = float(norm.ppf(0.05, mu, sigma))
+        mask = cast(Iterable[bool], dd_neg < var_threshold)
+        cvar_val = cast(float, dd_neg.filter(mask).mean())
+
+        pitfall = -cvar_val / std_val
+        ui = self._ulcer_index_series(series)
+        denominator = ui * pitfall
+        return float(np.nan) if denominator == 0 else (float(series.sum()) - rf) / denominator
+
     @columnwise_stat
     def win_rate(self, series: pl.Series) -> float:
         """Calculate the win ratio for a period.
@@ -281,6 +369,93 @@ class _BasicStatsMixin:
         num_pos = series.filter(series > 0).count()
         num_nonzero = series.filter(series != 0).count()
         return float(num_pos / num_nonzero)
+
+    @columnwise_stat
+    def autocorr_penalty(self, series: pl.Series) -> float:
+        """Calculate the autocorrelation penalty for risk-adjusted metrics.
+
+        Computes a penalty factor that accounts for autocorrelation in returns,
+        which can inflate Sharpe and Sortino ratios.
+
+        Args:
+            series (pl.Series): The series to calculate autocorrelation penalty for.
+
+        Returns:
+            float: Autocorrelation penalty factor (>= 1).
+
+        """
+        arr = series.to_numpy()
+        num = len(arr)
+        coef = float(np.abs(np.corrcoef(arr[:-1], arr[1:])[0, 1]))
+        x = np.arange(1, num)
+        corr = ((num - x) / num) * (coef**x)
+        return float(np.sqrt(1 + 2 * np.sum(corr)))
+
+    @staticmethod
+    def _max_consecutive(mask: pl.Series) -> int:
+        """Return the longest run of True values in a boolean mask.
+
+        Args:
+            mask (pl.Series): Boolean series (True = qualifying period).
+
+        Returns:
+            int: Length of the longest consecutive True run.
+
+        """
+        group_ids = mask.rle_id()
+        df = pl.DataFrame({"v": mask.cast(pl.Int32), "g": group_ids})
+        result = (
+            df.with_columns((pl.int_range(pl.len()).over("g") + 1).alias("rank"))
+            .select((pl.col("v") * pl.col("rank")).max())
+            .item()
+        )
+        return int(result) if result is not None else 0
+
+    @columnwise_stat
+    def consecutive_wins(self, series: pl.Series) -> int:
+        """Calculate the maximum number of consecutive winning periods.
+
+        Args:
+            series (pl.Series): The series to calculate consecutive wins for.
+
+        Returns:
+            int: Maximum number of consecutive winning periods.
+
+        """
+        return self._max_consecutive(series > 0)
+
+    @columnwise_stat
+    def consecutive_losses(self, series: pl.Series) -> int:
+        """Calculate the maximum number of consecutive losing periods.
+
+        Args:
+            series (pl.Series): The series to calculate consecutive losses for.
+
+        Returns:
+            int: Maximum number of consecutive losing periods.
+
+        """
+        return self._max_consecutive(series < 0)
+
+    @columnwise_stat
+    def risk_of_ruin(self, series: pl.Series) -> float:
+        """Calculate the risk of ruin (probability of losing all capital).
+
+        Uses the formula: ((1 - win_rate) / (1 + win_rate)) ^ n,
+        where n is the number of periods.
+
+        Args:
+            series (pl.Series): The series to calculate risk of ruin for.
+
+        Returns:
+            float: The risk of ruin probability.
+
+        """
+        num_pos = series.filter(series > 0).count()
+        num_nonzero = series.filter(series != 0).count()
+        wins = float(num_pos / num_nonzero)
+        n = series.len()
+        return ((1 - wins) / (1 + wins)) ** n
 
     @columnwise_stat
     def gain_to_pain_ratio(self, series: pl.Series) -> float:
