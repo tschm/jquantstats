@@ -30,6 +30,9 @@ class _PerformanceStatsMixin:
         data: DataLike
         all: pl.DataFrame | None
 
+        def autocorr_penalty(self) -> dict[str, float]:
+            """Defined on _BasicStatsMixin."""
+
     # ── Sharpe & Sortino ──────────────────────────────────────────────────────
 
     @columnwise_stat
