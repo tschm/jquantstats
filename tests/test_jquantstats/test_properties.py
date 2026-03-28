@@ -88,7 +88,7 @@ def test_max_drawdown_always_nonnegative(returns: list[float]) -> None:
     df = _make_returns_df(returns)
     data = Data.from_returns(returns=df)
     max_dd = data.stats.max_drawdown()["Asset"]
-    assert max_dd >= 0, f"Expected max_drawdown >= 0, got {max_dd}"
+    assert max_dd <= 0, f"Expected max_drawdown <= 0, got {max_dd}"
 
 
 @pytest.mark.property

@@ -1,0 +1,48 @@
+"""Parametrized migration tests comparing basic stats against quantstats."""
+
+import pytest
+import quantstats as qs
+
+
+@pytest.mark.parametrize(
+    ("method", "kwargs", "tol"),
+    [
+        ("sharpe", {"periods": 252}, 1e-12),
+        ("skew", {}, 1e-12),
+        ("kurtosis", {}, 1e-12),
+        ("avg_return", {}, 1e-12),
+        ("avg_win", {}, 1e-12),
+        ("avg_loss", {}, 1e-12),
+        ("volatility", {"periods": 252}, 1e-12),
+        ("payoff_ratio", {}, 1e-12),
+        ("profit_factor", {}, 1e-12),
+        ("profit_ratio", {}, 1e-12),
+        ("value_at_risk", {}, 1e-12),
+        ("conditional_value_at_risk", {}, 1e-12),
+        ("win_rate", {}, 1e-12),
+        ("gain_to_pain_ratio", {}, 1e-12),
+        ("risk_return_ratio", {}, 1e-12),
+        ("best", {}, 1e-12),
+        ("worst", {}, 1e-12),
+        ("exposure", {}, 1e-12),
+        ("kelly_criterion", {}, 1e-12),
+        ("win_loss_ratio", {}, 1e-12),
+        ("sortino", {"periods": 252}, 1e-12),
+        ("adjusted_sortino", {"periods": 252}, 1e-12),
+        ("probabilistic_sharpe_ratio", {}, 1e-4),
+        ("max_drawdown", {}, 1e-12),
+        ("cagr", {"periods": 252}, 1e-12),
+        ("rar", {}, 1e-12),
+        ("calmar", {"periods": 252}, 1e-12),
+        ("recovery_factor", {}, 1e-12),
+        ("omega", {"periods": 252}, 1e-12),
+        ("omega", {"periods": 252, "required_return": 0.01}, 1e-12),
+        ("omega", {"periods": 252, "rf": 0.02}, 1e-12),
+    ],
+)
+def test_migration(stats, method, kwargs, tol):
+    """Verify each stat method produces the same result as quantstats."""
+    aapl = stats.all.to_pandas().set_index("Date")["AAPL"]
+    x = getattr(stats, method)(**kwargs)["AAPL"]
+    y = getattr(qs.stats, method)(aapl, **kwargs)
+    assert x == pytest.approx(y, abs=tol)

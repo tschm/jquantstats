@@ -74,6 +74,12 @@ class _ReportingStatsMixin:
         def max_drawdown(self) -> dict[str, float]:
             """Defined on _PerformanceStatsMixin."""
 
+        def cagr(self, periods: int | float | None = None) -> dict[str, float]:
+            """Defined on _ReportingStatsMixin."""
+
+        def exposure(self) -> dict[str, float]:
+            """Defined on _BasicStatsMixin."""
+
     # ── Temporal & reporting ──────────────────────────────────────────────────
 
     @property
@@ -104,8 +110,55 @@ class _ReportingStatsMixin:
         return _to_float(in_dd.mean())
 
     @columnwise_stat
+    def cagr(
+        self,
+        series: pl.Series,
+        rf: float = 0.0,
+        compounded: bool = True,
+        periods: int | float | None = None,
+    ) -> float:
+        """Calculate the Compound Annual Growth Rate (CAGR) of excess returns.
+
+        CAGR represents the geometric mean annual growth rate, providing a
+        smoothed annualized return that accounts for compounding effects.
+
+        Args:
+            series (pl.Series): Series of additive daily returns.
+            rf (float): Annualized risk-free rate. Defaults to 0.0.
+            compounded (bool): Whether to compound returns. Defaults to True.
+            periods: Periods per year for annualisation. Defaults to ``periods_per_year``.
+
+        Returns:
+            float: CAGR of excess returns.
+        """
+        raw_periods = periods or self.data._periods_per_year
+        n = len(series)
+        if n == 0:
+            return float("nan")
+        excess = series.cast(pl.Float64) - rf / raw_periods
+        total = _to_float((1.0 + excess).product()) - 1.0 if compounded else _to_float(excess.sum())
+        years = n / raw_periods
+        return float(abs(1.0 + total) ** (1.0 / years) - 1.0)
+
+    def rar(self, periods: int | float = 252) -> dict[str, float]:
+        """Risk-Adjusted Return: CAGR divided by exposure.
+
+        Measures annualised return per unit of market participation time,
+        matching the quantstats convention.
+
+        Args:
+            periods: Periods per year for CAGR annualisation. Defaults to ``periods_per_year``.
+
+        Returns:
+            dict[str, float]: RAR per asset.
+        """
+        cagr = self.cagr(periods=periods)
+        exp = self.exposure()
+        return {col: cagr[col] / exp[col] for col in cagr}
+
+    @columnwise_stat
     def calmar(self, series: pl.Series, periods: int | float | None = None) -> float:
-        """Calmar ratio (annualised return divided by maximum drawdown).
+        """Calmar ratio (CAGR divided by maximum drawdown).
 
         Returns ``nan`` when the maximum drawdown is zero.
 
@@ -120,14 +173,18 @@ class _ReportingStatsMixin:
         max_dd = _to_float(_drawdown_series(series).max())
         if max_dd <= 0:
             return float("nan")
-        ann_return = _to_float(series.mean()) * raw_periods
-        return ann_return / max_dd
+        n = len(series)
+        comp_return = _to_float((1.0 + series.cast(pl.Float64)).product()) - 1.0
+        cagr = (1.0 + comp_return) ** (raw_periods / n) - 1.0
+        return cagr / max_dd
 
     @columnwise_stat
     def recovery_factor(self, series: pl.Series) -> float:
         """Recovery factor (total return divided by maximum drawdown).
 
-        Returns ``nan`` when the maximum drawdown is zero.
+        Matches the quantstats convention: total return is the simple sum of
+        returns, not compounded.  Returns ``nan`` when the maximum drawdown
+        is zero.
 
         Args:
             series (pl.Series): Series of additive daily returns.
@@ -139,7 +196,7 @@ class _ReportingStatsMixin:
         if max_dd <= 0:
             return float("nan")
         total_return = _to_float(series.sum())
-        return total_return / max_dd
+        return abs(total_return) / max_dd
 
     def max_drawdown_duration(self) -> dict[str, float | int | None]:
         """Maximum drawdown duration in calendar days (or periods) per asset.

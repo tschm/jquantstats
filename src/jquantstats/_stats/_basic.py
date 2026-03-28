@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, cast
 
@@ -41,27 +42,6 @@ class _BasicStatsMixin:
     def _mean_negative_expr(series: pl.Series) -> float:
         """Return the mean of all negative values in *series*, or NaN if none exist."""
         return cast(float, series.filter(series < 0).mean())
-
-    @staticmethod
-    def _pearson_corr_shifted(series: pl.Series, lag: int) -> float:
-        """Compute Pearson correlation between *series* and its lag-*lag* shift.
-
-        Pairs observations by position after shifting (preserving alignment),
-        then drops any null pairs before computing the correlation.
-
-        Args:
-            series (pl.Series): The input series.
-            lag (int): Number of positions to shift.
-
-        Returns:
-            float: Pearson correlation coefficient, or NaN if no valid pairs remain.
-
-        """
-        shifted = series.shift(lag)
-        paired = pl.DataFrame({"x": series, "y": shifted}).drop_nulls()
-        if paired.is_empty():
-            return float("nan")
-        return float(np.corrcoef(paired["x"].to_numpy(), paired["y"].to_numpy())[0, 1])
 
     # ── Basic statistics ──────────────────────────────────────────────────────
 
@@ -397,27 +377,37 @@ class _BasicStatsMixin:
 
         """
         all_data = cast(pl.DataFrame, self.all)
-        return float(np.round((series.filter(series != 0).count() / all_data.height), decimals=2))
+        ex = series.filter(series != 0).count() / all_data.height
+        return math.ceil(ex * 100) / 100
 
-    # ── Autocorrelation ───────────────────────────────────────────────────────
+    @staticmethod
+    def _pearson_corr_shifted(series: pl.Series, lag: int) -> float:
+        """Compute Pearson correlation between *series* and its lag-*lag* shift.
+
+        Args:
+            series (pl.Series): The input series.
+            lag (int): Number of positions to shift.
+
+        Returns:
+            float: Pearson correlation coefficient, or NaN if no valid pairs remain.
+
+        """
+        shifted = series.shift(lag)
+        paired = pl.DataFrame({"x": series, "y": shifted}).drop_nulls()
+        if paired.is_empty():
+            return float("nan")
+        return float(np.corrcoef(paired["x"].to_numpy(), paired["y"].to_numpy())[0, 1])
 
     @columnwise_stat
-    def autocorrelation(self, series: pl.Series, lag: int = 1) -> float:
+    def autocorr(self, series: pl.Series, lag: int = 1) -> float:
         """Compute lag-n autocorrelation of returns.
-
-        Calculates the Pearson correlation between the returns series and its
-        lagged version.  Uses a shift-based pairing so that alignment across
-        the original time index is preserved (matching ``pandas.Series.autocorr``
-        semantics).
 
         Args:
             series (pl.Series): The series to calculate autocorrelation for.
             lag (int): Number of periods to lag. Must be a positive integer.
-                Default is 1.
 
         Returns:
-            float: Pearson correlation between returns and their lagged values,
-                   or NaN if the resulting paired series is empty.
+            float: Pearson correlation between returns and their lagged values.
 
         Raises:
             TypeError: If *lag* is not an ``int``.
@@ -435,13 +425,8 @@ class _BasicStatsMixin:
     def acf(self, nlags: int = 20) -> pl.DataFrame:
         """Compute the autocorrelation function up to nlags.
 
-        For each asset, computes the Pearson autocorrelation at lags 0 through
-        *nlags* (inclusive) using a shift-based approach that matches
-        ``pandas.Series.autocorr`` semantics.
-
         Args:
-            nlags (int): Maximum number of lags to include. Must be a
-                non-negative integer. Default is 20.
+            nlags (int): Maximum number of lags to include. Default is 20.
 
         Returns:
             pl.DataFrame: DataFrame with a ``lag`` column (0..nlags) and one

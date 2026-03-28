@@ -311,7 +311,7 @@ def test_autocorrelation(stats):
         The lag-1 autocorrelation value for META matches the expected value.
 
     """
-    result = stats.autocorrelation()
+    result = stats.autocorr()
     assert result["META"] == pytest.approx(-0.025099872722702105)
 
 
@@ -325,7 +325,7 @@ def test_autocorrelation_lag5(stats):
         The lag-5 autocorrelation value for META matches the expected value.
 
     """
-    result = stats.autocorrelation(lag=5)
+    result = stats.autocorr(lag=5)
     assert result["META"] == pytest.approx(0.012378555376440949)
 
 
@@ -340,7 +340,7 @@ def test_autocorrelation_invalid_lag_zero(stats):
 
     """
     with pytest.raises(ValueError, match="lag must be a positive integer"):
-        stats.autocorrelation(lag=0)
+        stats.autocorr(lag=0)
 
 
 def test_autocorrelation_invalid_lag_negative(stats):
@@ -354,7 +354,7 @@ def test_autocorrelation_invalid_lag_negative(stats):
 
     """
     with pytest.raises(ValueError, match="lag must be a positive integer"):
-        stats.autocorrelation(lag=-1)
+        stats.autocorr(lag=-1)
 
 
 def test_autocorrelation_invalid_lag_type(stats):
@@ -368,7 +368,7 @@ def test_autocorrelation_invalid_lag_type(stats):
 
     """
     with pytest.raises(TypeError, match="lag must be an int"):
-        stats.autocorrelation(lag=1.0)  # type: ignore[arg-type]
+        stats.autocorr(lag=1.0)  # type: ignore[arg-type]
 
 
 def test_acf_shape(stats):
@@ -473,15 +473,15 @@ def test_sharpe_var(stats):
     assert result["META"] == pytest.approx(expected_var)
 
 
-@pytest.mark.parametrize("benchmark_sr", [0.0, 0.5, 1.0])
-def test_prob_sharpe_ratio(stats, benchmark_sr):
+def test_prob_sharpe_ratio(stats):
     """Tests that the prob_sharpe_ratio method calculates probabilistic Sharpe ratio correctly."""
-    result = stats.prob_sharpe_ratio(benchmark_sr=benchmark_sr)
+    result = stats.probabilistic_sharpe_ratio()
     # Unannualized Sharpe ratio
     observed_sr = stats.sharpe(periods=1)["META"]
     skew = stats.skew()["META"]
     kurt = stats.kurtosis()["META"]
     t_meta_not_nan = stats.data.returns["META"].drop_nulls().shape[0]
+    benchmark_sr = 0.0
     var_bench_sr = (1 + (float(skew) * benchmark_sr) / 2 + ((float(kurt) - 3) / 4) * benchmark_sr**2) / t_meta_not_nan
     expected_prob_sr = norm.cdf((observed_sr - benchmark_sr) / np.sqrt(var_bench_sr))
     assert result["META"] == pytest.approx(expected_prob_sr)
@@ -777,13 +777,13 @@ def test_max_drawdown(stats):
     assert set(max_dd.keys()) == set(stats.data.assets)
 
     # Verify values for specific assets
-    assert max_dd["META"] == pytest.approx(0.76, abs=0.01)
-    assert max_dd["AAPL"] == pytest.approx(0.82, abs=0.01)
+    assert max_dd["META"] == pytest.approx(-0.76, abs=0.01)
+    assert max_dd["AAPL"] == pytest.approx(-0.82, abs=0.01)
 
     # Verify that max_drawdown returns the same values as the maximum of the drawdown series
     dd = stats.drawdown()
     for col in stats.data.assets:
-        assert max_dd[col] == pytest.approx(dd[col].max(), abs=0.0001)
+        assert max_dd[col] == pytest.approx(-dd[col].max(), abs=0.0001)
 
 
 # ── Ported analytics methods ──────────────────────────────────────────────────
@@ -1067,23 +1067,23 @@ def test_summary_structure(stats):
 
 
 def test_rolling_sharpe_invalid_window_raises(stats):
-    """rolling_sharpe raises ValueError for non-positive window."""
+    """rolling_sharpe raises ValueError for non-positive rolling_period."""
     with pytest.raises(ValueError, match="positive integer"):
-        stats.rolling_sharpe(window=0)
+        stats.rolling_sharpe(rolling_period=0)
     with pytest.raises(ValueError, match="positive integer"):
-        stats.rolling_sharpe(window=-1)
+        stats.rolling_sharpe(rolling_period=-1)
 
 
 def test_rolling_volatility_invalid_window_raises(stats):
-    """rolling_volatility raises ValueError for non-positive window."""
+    """rolling_volatility raises ValueError for non-positive rolling_period."""
     with pytest.raises(ValueError, match="positive integer"):
-        stats.rolling_volatility(window=0)
+        stats.rolling_volatility(rolling_period=0)
 
 
 def test_rolling_volatility_invalid_periods_type_raises(stats):
-    """rolling_volatility raises TypeError for non-numeric periods."""
+    """rolling_volatility raises TypeError for non-numeric periods_per_year."""
     with pytest.raises(TypeError):
-        stats.rolling_volatility(window=5, periods="252")  # type: ignore[arg-type]
+        stats.rolling_volatility(rolling_period=5, periods_per_year="252")  # type: ignore[arg-type]
 
 
 def test_repr(stats):

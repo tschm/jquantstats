@@ -134,7 +134,7 @@ def test_sharpe_variance_nan_short_series():
 
 def test_prob_sharpe_ratio_nan_zero_std(edge):
     """Tests that prob_sharpe_ratio returns NaN when std is zero (all-zero returns)."""
-    result = edge.stats.prob_sharpe_ratio(benchmark_sr=0.0)
+    result = edge.stats.probabilistic_sharpe_ratio()
     assert np.isnan(result["returns"])
 
 
@@ -149,25 +149,7 @@ def test_prob_sharpe_ratio_nan_short_series():
         }
     )
     data = Data.from_returns(returns=returns)
-    result = data.stats.prob_sharpe_ratio(benchmark_sr=0.0)
-    assert np.isnan(result["asset"])
-
-
-def test_prob_sharpe_ratio_nan_negative_variance():
-    """Tests that prob_sharpe_ratio returns NaN when var_bench_sr <= 0.
-
-    [1,-1,1,-1] has excess kurtosis ≈ -6, making var_bench_sr negative for benchmark_sr=1.
-    """
-    from datetime import date
-
-    returns = pl.DataFrame(
-        {
-            "Date": [date(2023, 1, 1), date(2023, 1, 2), date(2023, 1, 3), date(2023, 1, 4)],
-            "asset": [1.0, -1.0, 1.0, -1.0],
-        }
-    )
-    data = Data.from_returns(returns=returns)
-    result = data.stats.prob_sharpe_ratio(benchmark_sr=1.0)
+    result = data.stats.probabilistic_sharpe_ratio()
     assert np.isnan(result["asset"])
 
 

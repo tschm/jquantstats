@@ -46,10 +46,10 @@ class _PerformanceStatsMixin:
         """
         periods = periods or self.data._periods_per_year
 
-        std_val = cast(float, series.std(ddof=1))
-        mean_val = cast(float, series.mean())
-        divisor = std_val if std_val is not None else 0.0
-        mean_f = mean_val if mean_val is not None else 0.0
+        std_val = series.std(ddof=1)
+        mean_val = series.mean()
+        divisor = cast(float, std_val) if std_val is not None else 0.0
+        mean_f = cast(float, mean_val) if mean_val is not None else 0.0
 
         _eps = np.finfo(np.float64).eps
         if divisor <= _eps * max(abs(mean_f), _eps) * 10:
@@ -102,12 +102,11 @@ class _PerformanceStatsMixin:
         return float(base_variance * factor)
 
     @columnwise_stat
-    def prob_sharpe_ratio(self, series: pl.Series, benchmark_sr: float) -> float:
+    def probabilistic_sharpe_ratio(self, series: pl.Series) -> float:
         r"""Calculate the probabilistic sharpe ratio (PSR).
 
         Args:
             series (pl.Series): The series to calculate probabilistic Sharpe ratio for.
-            benchmark_sr (float): The target Sharpe ratio to compare against. This should be unannualized.
 
         Returns:
             float: Probabilistic Sharpe Ratio.
@@ -133,6 +132,7 @@ class _PerformanceStatsMixin:
         if skew_val is None or kurt_val is None:
             return float(np.nan)
 
+        benchmark_sr = 0.0
         # Calculate variance using unannualized benchmark Sharpe ratio
         var_bench_sr = (1 + (float(skew_val) * benchmark_sr) / 2 + ((float(kurt_val) - 3) / 4) * benchmark_sr**2) / t
 
@@ -330,7 +330,7 @@ class _PerformanceStatsMixin:
         peak = price.cum_max()
         drawdown = price / peak - 1
         dd_min = cast(float, drawdown.min())
-        return -dd_min if dd_min is not None else 0.0
+        return dd_min if dd_min is not None else 0.0
 
     @columnwise_stat
     def max_drawdown(self, series: pl.Series) -> float:
