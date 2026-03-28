@@ -2,7 +2,7 @@
 
 RHIZA_BADGE_URL = (
     "https://img.shields.io/badge/dynamic/yaml"
-    "?url=https%3A%2F%2Fraw.githubusercontent.com%2Ftschm%2Fjquantstats%2Fmain%2F.rhiza%2Ftemplate.yml"
+    "?url=https%3A%2F%2Fraw.githubusercontent.com%2Fjebel-quant%2Fjquantstats%2Fmain%2F.rhiza%2Ftemplate.yml"
     "&query=%24.ref"
     "&label=rhiza"
 )
