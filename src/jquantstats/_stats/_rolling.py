@@ -102,6 +102,61 @@ class _RollingStatsMixin:
             ]
         )
 
+    def rolling_greeks(
+        self,
+        window: int | None = None,
+        periods: int | float | None = None,
+        rolling_period: int | None = None,
+        periods_per_year: int | float | None = None,
+    ) -> pl.DataFrame:
+        """Calculate rolling alpha and beta (greeks) vs the benchmark.
+
+        For each rolling window of size ``window``, estimates beta as the ratio
+        of the rolling covariance between the asset and benchmark to the rolling
+        variance of the benchmark, and alpha as the excess mean return annualised
+        by ``periods``.
+
+        Accepts both the analytics-style (``window``, ``periods``) and the
+        legacy-style (``rolling_period``, ``periods_per_year``) keyword
+        arguments so that callers using either convention continue to work.
+
+        Args:
+            window: Rolling window size (analytics style). Defaults to 126.
+            periods: Periods per year for annualisation of alpha (analytics style).
+            rolling_period: Alias for ``window`` (legacy style).
+            periods_per_year: Alias for ``periods`` (legacy style).
+
+        Returns:
+            pl.DataFrame: Date column(s) plus ``{col}_alpha`` and ``{col}_beta``
+            columns for every asset.
+
+        Raises:
+            ValueError: If the effective window size is not a positive integer.
+
+        """
+        actual_window = window if window is not None else (rolling_period if rolling_period is not None else 126)
+        actual_periods = periods or periods_per_year or self.data._periods_per_year
+        if not isinstance(actual_window, int) or actual_window <= 0:
+            raise ValueError("window must be a positive integer")  # noqa: TRY003
+
+        benchmark_data = cast(pl.DataFrame, self.data.benchmark)
+        benchmark_col = benchmark_data.columns[0]
+        all_data = cast(pl.DataFrame, self.all)
+
+        result_cols = [pl.col(name) for name in self.data.date_col]
+        for col, _ in self.data.items():
+            beta_expr = pl.rolling_cov(col, benchmark_col, window_size=actual_window) / pl.col(
+                benchmark_col
+            ).rolling_var(window_size=actual_window)
+            alpha_expr = (
+                pl.col(col).rolling_mean(window_size=actual_window)
+                - beta_expr * pl.col(benchmark_col).rolling_mean(window_size=actual_window)
+            ) * float(actual_periods)
+            result_cols.append(beta_expr.alias(f"{col}_beta"))
+            result_cols.append(alpha_expr.alias(f"{col}_alpha"))
+
+        return all_data.select(result_cols)
+
     def rolling_volatility(
         self,
         window: int | None = None,

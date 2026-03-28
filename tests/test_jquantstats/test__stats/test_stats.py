@@ -491,6 +491,34 @@ def test_greeks(stats):
     # assert result["AAPL"]["alpha"] == pytest.approx(0.1576003006124853)
 
 
+def test_rolling_greeks(stats):
+    """Tests that the rolling_greeks method calculates rolling alpha and beta correctly.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        1. The result contains date columns plus alpha and beta columns for each asset.
+        2. The number of rows matches the input data.
+        3. Beta values are finite for rows after the window is filled.
+
+    """
+    result = stats.rolling_greeks(rolling_period=20, periods_per_year=252)
+    # Should have date columns + 2 columns per asset (alpha and beta)
+    n_assets = len(stats.data.assets)
+    n_date_cols = len(stats.data.date_col)
+    assert result.shape == (stats.all.shape[0], n_date_cols + 2 * n_assets)
+    # Column names include _alpha and _beta suffixes
+    for asset in stats.data.assets:
+        assert f"{asset}_beta" in result.columns
+        assert f"{asset}_alpha" in result.columns
+    # After the window is filled, values should be non-null
+    tail = result.tail(10)
+    for asset in stats.data.assets:
+        assert tail[f"{asset}_beta"].drop_nulls().len() > 0
+    print(result.tail(5))
+
+
 def test_r_squared(stats):
     """Tests that the r_squared method calculates R-squared correctly.
 
