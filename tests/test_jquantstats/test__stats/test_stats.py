@@ -301,6 +301,70 @@ def test_exposure(stats):
     assert result["META"] == pytest.approx(0.40)
 
 
+def test_autocorrelation(stats):
+    """Tests that the autocorrelation method calculates lag-1 autocorrelation correctly.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        The lag-1 autocorrelation value for META matches the expected value.
+
+    """
+    result = stats.autocorrelation()
+    assert result["META"] == pytest.approx(-0.025099872722702105)
+
+
+def test_autocorrelation_lag5(stats):
+    """Tests that the autocorrelation method calculates lag-5 autocorrelation correctly.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        The lag-5 autocorrelation value for META matches the expected value.
+
+    """
+    result = stats.autocorrelation(lag=5)
+    assert result["META"] == pytest.approx(0.012378555376440949)
+
+
+def test_acf_shape(stats):
+    """Tests that the acf method returns a DataFrame with the correct shape.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        The ACF DataFrame has nlags+1 rows and the expected columns.
+
+    """
+    nlags = 20
+    result = stats.acf(nlags=nlags)
+    assert isinstance(result, pl.DataFrame)
+    assert result.height == nlags + 1
+    assert "lag" in result.columns
+    assert "META" in result.columns
+
+
+def test_acf_values(stats):
+    """Tests that the acf method returns correct autocorrelation values.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        The ACF values at specific lags for META match the expected values.
+
+    """
+    result = stats.acf(nlags=20)
+    assert result["lag"].to_list() == list(range(21))
+    assert result["META"][0] == pytest.approx(1.0)
+    assert result["META"][1] == pytest.approx(-0.025099872722702105)
+    assert result["META"][5] == pytest.approx(0.012378555376440949)
+    assert result["META"][20] == pytest.approx(0.049337716067170856)
+
+
 def test_sharpe(stats):
     """Tests that the sharpe method calculates Sharpe ratio correctly.
 

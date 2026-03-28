@@ -377,3 +377,50 @@ class _BasicStatsMixin:
         """
         all_data = cast(pl.DataFrame, self.all)
         return float(np.round((series.filter(series != 0).count() / all_data.height), decimals=2))
+
+    # ── Autocorrelation ───────────────────────────────────────────────────────
+
+    @columnwise_stat
+    def autocorrelation(self, series: pl.Series, lag: int = 1) -> float:
+        """Compute lag-n autocorrelation of returns.
+
+        Calculates the Pearson correlation between the returns series and its
+        lagged version.
+
+        Args:
+            series (pl.Series): The series to calculate autocorrelation for.
+            lag (int): Number of periods to lag. Default is 1.
+
+        Returns:
+            float: Pearson correlation between returns and their lagged values,
+                   or NaN if the series is too short.
+
+        """
+        arr = series.drop_nulls().to_numpy()
+        if len(arr) <= lag:
+            return float("nan")
+        return float(np.corrcoef(arr[:-lag], arr[lag:])[0, 1])
+
+    def acf(self, nlags: int = 20) -> pl.DataFrame:
+        """Compute the autocorrelation function up to nlags.
+
+        For each asset, computes the Pearson autocorrelation at lags 0 through
+        *nlags* (inclusive) using a pure NumPy implementation.
+
+        Args:
+            nlags (int): Maximum number of lags to include. Default is 20.
+
+        Returns:
+            pl.DataFrame: DataFrame with a ``lag`` column (0..nlags) and one
+                          column per asset containing the ACF values.
+
+        """
+        result: dict[str, list[float]] = {"lag": list(range(nlags + 1))}
+        for col, series in self.data.items():
+            arr = series.drop_nulls().to_numpy()
+            acf_values: list[float] = [1.0] + [
+                float(np.corrcoef(arr[:-k], arr[k:])[0, 1]) if len(arr) > k else float("nan")
+                for k in range(1, nlags + 1)
+            ]
+            result[col] = acf_values
+        return pl.DataFrame(result)
