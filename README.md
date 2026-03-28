@@ -43,7 +43,7 @@ enhanced visualization capabilities. Key improvements include:
 | **Max drawdown** | `data.stats.max_drawdown()` | `qs.stats.max_drawdown(returns)` |
 | **Python version** | 3.11+ | 3.7+ |
 | **Type annotations** | Full (`py.typed`) | Partial |
-| **Test coverage** | [![Coverage](https://raw.githubusercontent.com/tschm/jquantstats/refs/heads/gh-pages/coverage-badge.svg)](https://tschm.github.io/jquantstats/reports/coverage/) | — |
+| **Test coverage** | [![Coverage](https://raw.githubusercontent.com/jebel-quant/jquantstats/refs/heads/gh-pages/coverage-badge.svg)](https://jebel-quant.github.io/jquantstats/reports/coverage/) | — |
 
 ## ✨ Features
 
@@ -261,7 +261,7 @@ can always drop from a `Portfolio` into the returns-series API.
 
 ## 📚 Documentation
 
-For detailed documentation, visit [jQuantStats Documentation](https://tschm.github.io/jquantstats).
+For detailed documentation, visit [jQuantStats Documentation](https://jebel-quant.github.io/jquantstats).
 
 ## 🔧 Requirements
 
@@ -284,13 +284,13 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## 📝 Citing
 
 If you use jQuantStats in academic work or research reports, please cite it using the
-[CITATIONS.bib](https://github.com/tschm/jquantstats/blob/main/CITATIONS.bib) file provided in this repository:
+[CITATIONS.bib](https://github.com/jebel-quant/jquantstats/blob/main/CITATIONS.bib) file provided in this repository:
 
 ```bibtex
 @software{jquantstats,
   author    = {Schmelzer, Thomas},
   title     = {jQuantStats: Portfolio Analytics for Quants},
-  url       = {https://github.com/tschm/jquantstats},
+  url       = {https://github.com/jebel-quant/jquantstats},
   version   = {0.4.0},
   year      = {2026},
   license   = {MIT}
@@ -300,4 +300,4 @@ If you use jQuantStats in academic work or research reports, please cite it usin
 ## ⚖️ License
 
 This project is licensed under the MIT
-License - see the [LICENSE](https://github.com/tschm/jquantstats/blob/main/LICENSE) file for details.
+License - see the [LICENSE](https://github.com/jebel-quant/jquantstats/blob/main/LICENSE) file for details.

@@ -39,7 +39,7 @@ data.plots.plot_snapshot(title="Performance")
 The two APIs are layered: ``portfolio.data`` returns a :class:`~jquantstats.data.Data`
 object so you can always drop into the returns-series API from a Portfolio.
 
-For more information, visit the `jQuantStats Documentation <https://tschm.github.io/jquantstats/book>`_.
+For more information, visit the `jQuantStats Documentation <https://jebel-quant.github.io/jquantstats/book>`_.
 """
 
 import importlib.metadata

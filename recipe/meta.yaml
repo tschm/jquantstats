@@ -36,7 +36,7 @@ test:
     - pip
 
 about:
-  home: https://github.com/tschm/jquantstats
+  home: https://github.com/jebel-quant/jquantstats
   summary: Analytics for quants
   description: |
     jQuantStats is a Python library for portfolio analytics that helps quants
@@ -46,7 +46,7 @@ about:
     interactive Plotly charts.
   license: MIT
   license_file: LICENSE
-  doc_url: https://tschm.github.io/jquantstats/book
+  doc_url: https://jebel-quant.github.io/jquantstats/book
 
 extra:
   recipe-maintainers:

@@ -1,8 +1,8 @@
 site_name: jquantstats
 site_description: Quantitative financial analysis tools for Python
-site_url: https://tschm.github.io/jquantstats/
-repo_url: https://github.com/tschm/jquantstats
-repo_name: tschm/jquantstats
+site_url: https://jebel-quant.github.io/jquantstats/
+repo_url: https://github.com/jebel-quant/jquantstats
+repo_name: jebel-quant/jquantstats
 
 docs_dir: docs
 site_dir: _mkdocs
