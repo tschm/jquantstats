@@ -65,3 +65,11 @@ def test_migration(stats, method, kwargs, tol):
     x = getattr(stats, method)(**kwargs)["AAPL"]
     y = getattr(qs.stats, method)(aapl, **kwargs)
     assert x == pytest.approx(y, abs=tol)
+
+
+def test_conditional_value_at_risk(stats):
+    """Test conditional_value_at_risk matches QuantStats output."""
+    returns = stats.all.to_pandas().set_index("Date")["AAPL"]
+    x = qs.stats.conditional_value_at_risk(returns, confidence=0.99)
+    y = stats.conditional_value_at_risk(confidence=0.99)["AAPL"]
+    assert x == pytest.approx(y, abs=1e-12)

@@ -1,6 +1,5 @@
 """Migration tests for benchmark-dependent stats against quantstats."""
 
-import numpy as np
 import pytest
 import quantstats as qs
 
@@ -14,7 +13,7 @@ def aligned(pandas_frame):
 def test_information_ratio(stats, aapl, benchmark_pd):
     """Quantstats does not annualise its information ratio, so we scale by sqrt(252)."""
     x = stats.information_ratio(periods_per_year=252)
-    y = np.sqrt(252) * qs.stats.information_ratio(aapl, benchmark=benchmark_pd)
+    y = qs.stats.information_ratio(aapl, benchmark=benchmark_pd)
     assert x["AAPL"] == pytest.approx(y, abs=1e-4)
 
 

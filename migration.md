@@ -163,8 +163,8 @@ data = jqs.Data.from_returns(returns=returns_pl, benchmark=benchmark_pl)
 | `qs.stats.volatility(r, periods=252)` | `data.stats.volatility(periods=252)` |
 | `qs.stats.skew(r)` | `data.stats.skew()` |
 | `qs.stats.kurtosis(r)` | `data.stats.kurtosis()` |
-| `qs.stats.max_drawdown(r)` | `data.stats.max_drawdown()` | Same sign convention — negative fraction |
-| `qs.stats.avg_drawdown(r)` | `data.stats.avg_drawdown()` | Same sign convention — negative fraction |
+| `qs.stats.max_drawdown(r)` | `data.stats.max_drawdown()` |
+| `qs.stats.avg_drawdown(r)` | `data.stats.avg_drawdown()` |
 | `qs.stats.value_at_risk(r)` | `data.stats.value_at_risk(alpha=0.05)` |
 | `qs.stats.conditional_value_at_risk(r, confidence=0.95)` | `data.stats.conditional_value_at_risk(alpha=0.05)` |
 | `qs.stats.win_rate(r)` | `data.stats.win_rate()` |
@@ -269,40 +269,6 @@ jqs_ir_raw = data.stats.information_ratio(periods_per_year=252, annualise=False)
 # jqs_ir_raw ≈ qs_ir
 ```
 
-### `conditional_value_at_risk` — parameter name
-
-QuantStats uses `confidence` (e.g. `0.95`). jquantstats uses `alpha`
-(tail probability, e.g. `0.05`).
-
-```python
-# QuantStats
-cvar = qs.stats.conditional_value_at_risk(returns_pd, confidence=0.95)
-
-# jquantstats  (alpha = 1 − confidence)
-cvar = data.stats.conditional_value_at_risk(alpha=0.05)["MyStrategy"]
-```
-
-For migration convenience, passing `confidence` is accepted but emits a
-`DeprecationWarning` and will be removed in a future release:
-
-```python
-# Accepted but deprecated — emits DeprecationWarning
-cvar = data.stats.conditional_value_at_risk(confidence=0.95)["MyStrategy"]
-```
-
-### Drawdown sign convention
-
-Both `max_drawdown` and `avg_drawdown` follow the **QuantStats sign
-convention**: drawdowns are returned as **negative** fractions (≤ 0).
-
-```python
-qs.stats.max_drawdown(r)                        # e.g. -0.35
-data.stats.max_drawdown()                       # e.g. {"MyStrategy": -0.35}
-
-qs.stats.avg_drawdown(r)                        # e.g. -0.12
-data.stats.avg_drawdown()                       # e.g. {"MyStrategy": -0.12}
-```
-
 ### NaN / null handling
 
 pandas (and QuantStats) silently drop `NaN` values in most calculations.
@@ -396,12 +362,9 @@ pf.trading_cost_impact(max_bps=20)          # sweep cost sensitivity 0 → 20 bp
 2. **Convert** your `pd.Series` to a `pl.DataFrame` with a date column.
 3. **Construct** a `Data` object once with `Data.from_returns(...)`.
 4. **Replace** every `qs.stats.foo(r)` call with `data.stats.foo()["col"]`.
-5. **Update** `conditional_value_at_risk(confidence=0.95)` →
-   `conditional_value_at_risk(alpha=0.05)`.
-6. **Scale** any stored `information_ratio` values by `1 / √252` if you need
+5. **Scale** any stored `information_ratio` values by `1 / √252` if you need
    to match old QuantStats numbers; or pass `annualise=False` to get the raw IR.
-7. **Drawdown signs** match QuantStats (negative fractions) — no change needed.
-8. **Drop** any `NaN`-filled rows before passing data in, or use `null_strategy`.
+7. **Drop** any `NaN`-filled rows before passing data in, or use `null_strategy`.
 
 ---
 

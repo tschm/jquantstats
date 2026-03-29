@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import math
-import warnings
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, cast
 
@@ -297,13 +296,17 @@ class _BasicStatsMixin:
         mask = cast(Iterable[bool], series < var)
         return cast(float, series.filter(mask).mean())
 
-    def conditional_value_at_risk(self, sigma: float = 1.0, alpha: float = 0.05, **kwargs: float) -> dict[str, float]:
+    def conditional_value_at_risk(
+        self, sigma: float = 1.0, confidence: float = 0.95, **kwargs: float
+    ) -> dict[str, float]:
         """Calculate the conditional value-at-risk (CVaR / Expected Shortfall).
 
         Also known as CVaR or expected shortfall, calculated for each numeric column.
 
         Args:
             sigma (float, optional): Standard deviation multiplier. Defaults to 1.0.
+            confidence (float, optional): Confidence level (e.g. 0.95 for 95 %).
+                Converted internally to ``alpha = 1 - confidence``. Defaults to 0.95.
             alpha (float, optional): Tail probability (lower tail).  ``alpha`` is the
                 probability mass in the *loss* tail, so ``alpha = 1 - confidence``.
                 For example, a 95 % confidence level corresponds to ``alpha = 0.05``
@@ -320,21 +323,7 @@ class _BasicStatsMixin:
             TypeError: If unexpected keyword arguments are passed.
 
         """
-        if "confidence" in kwargs:
-            confidence = kwargs.pop("confidence")
-            warnings.warn(
-                f"The 'confidence' parameter is deprecated and will be removed in a future release. "
-                f"Use 'alpha = 1 - confidence' instead (received confidence={confidence}, "
-                f"converting to alpha={1.0 - confidence}).",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            alpha = 1.0 - confidence
-        if kwargs:
-            unexpected = ", ".join(repr(k) for k in kwargs)
-            msg = f"conditional_value_at_risk() got unexpected keyword argument(s): {unexpected}"
-            raise TypeError(msg)
-        return self._conditional_value_at_risk_impl(sigma=sigma, alpha=alpha)
+        return self._conditional_value_at_risk_impl(sigma=sigma, alpha=1.0 - confidence)
 
     @staticmethod
     def _drawdown_with_baseline(series: pl.Series) -> pl.Series:

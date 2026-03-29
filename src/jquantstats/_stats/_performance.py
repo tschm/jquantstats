@@ -736,7 +736,7 @@ class _PerformanceStatsMixin:
         series: pl.Series,
         periods_per_year: int | float | None = None,
         benchmark: str | None = None,
-        annualise: bool = True,
+        annualise: bool = False,
     ) -> float:
         """Calculate the information ratio.
 
