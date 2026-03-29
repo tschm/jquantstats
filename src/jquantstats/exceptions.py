@@ -139,3 +139,38 @@ class IntegerIndexBoundError(JQuantStatsError, TypeError):
         super().__init__(f"{param} must be an integer, got {actual_type}.")
         self.param = param
         self.actual_type = actual_type
+
+
+class NullsInReturnsError(JQuantStatsError, ValueError):
+    """Raised when null values are detected in returns (or benchmark) data.
+
+    Polars propagates ``null`` through calculations whereas pandas silently
+    drops ``NaN``.  Leaving nulls in place will cause most statistics to
+    return ``null`` instead of a numeric result.
+
+    Use the ``null_strategy`` parameter on :meth:`~jquantstats.data.Data.from_returns`
+    or :meth:`~jquantstats.data.Data.from_prices` to handle nulls automatically, or
+    clean the data before construction.
+
+    Args:
+        frame_name: Descriptive name of the frame that contains nulls
+            (e.g. ``"returns"`` or ``"benchmark"``).
+        columns: Names of the columns that contain at least one null.
+
+    Examples:
+        >>> raise NullsInReturnsError("returns", ["Asset1", "Asset2"])
+        Traceback (most recent call last):
+            ...
+        jquantstats.exceptions.NullsInReturnsError: ...
+    """
+
+    def __init__(self, frame_name: str, columns: list[str]) -> None:
+        """Initialize with the frame name and the columns that contain nulls."""
+        cols_str = ", ".join(f"'{c}'" for c in columns)
+        super().__init__(
+            f"DataFrame '{frame_name}' contains null values in column(s): {cols_str}. "
+            f"Pass null_strategy='drop' or null_strategy='forward_fill' to handle nulls "
+            f"automatically, or clean the data before construction."
+        )
+        self.frame_name = frame_name
+        self.columns = columns

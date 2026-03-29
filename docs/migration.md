@@ -268,6 +268,76 @@ data = jqs.Data.from_returns(returns=returns_pl)
 data.stats.sharpe()
 ```
 
+### `null` / missing-value handling
+
+pandas (and QuantStats) **silently drop** `NaN` values in aggregate
+calculations.  Polars **propagates** `null` values — if any value in a
+column is `null`, most statistics will return `null` instead of a
+numeric result.
+
+> **Important:** in Polars, `null` (a missing entry, equivalent to
+> pandas `NaN`) and `NaN` (IEEE-754 "Not a Number", a valid float value)
+> are different things.  jquantstats uses the Polars convention throughout:
+> `null` means "missing" and is subject to the `null_strategy` below;
+> `NaN` is a numeric value that propagates through calculations.
+
+#### Recommended pre-processing
+
+Clean your data **before** calling `Data.from_returns` or
+`Data.from_prices`:
+
+```python
+import polars as pl
+
+# Option 1 — drop rows that contain any null
+returns_pl = returns_pl.drop_nulls()
+
+# Option 2 — forward-fill missing values
+returns_pl = returns_pl.with_columns(pl.all().forward_fill())
+```
+
+#### Using `null_strategy` for automatic handling
+
+Both `Data.from_returns` and `Data.from_prices` accept a `null_strategy`
+parameter that applies the chosen strategy at construction time:
+
+```python
+import jquantstats as jqs
+
+# Mirrors pandas / QuantStats behaviour: silently drop rows with nulls
+data = jqs.Data.from_returns(returns=returns_pl, null_strategy="drop")
+
+# Forward-fill nulls before computing excess returns
+data = jqs.Data.from_returns(returns=returns_pl, null_strategy="forward_fill")
+
+# Raise an informative error if any null is found (useful during development)
+data = jqs.Data.from_returns(returns=returns_pl, null_strategy="raise")
+```
+
+The default (`null_strategy=None`) preserves the current behaviour:
+nulls are passed through unchanged and will propagate into statistics.
+
+#### Multi-asset portfolios with different start dates
+
+A common case is a multi-asset DataFrame where some assets have a shorter
+history than others.  The earlier rows for newer assets will be `null`:
+
+```python
+# AAPL has data from 1980; META only from 2012 → META column is mostly null
+returns_multi = pl.DataFrame({
+    "Date": dates,          # starts 1980
+    "AAPL": aapl_returns,
+    "META": meta_returns,   # null before 2012
+})
+
+# Drop rows where any column is null (keeps only dates where ALL assets
+# have data — shortest common history)
+data = jqs.Data.from_returns(returns=returns_multi, null_strategy="drop")
+
+# Alternatively, keep all dates and fill nulls for META before 2012
+data = jqs.Data.from_returns(returns=returns_multi, null_strategy="forward_fill")
+```
+
 ---
 
 ## Further reading
