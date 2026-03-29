@@ -1,4 +1,8 @@
-"""Shared fixtures for Portfolio test suite."""
+"""Shared fixtures for Portfolio test suite.
+
+Security note: Test code uses pytest assertions (S101), which are intentional
+and safe in the test context. No subprocess calls (S603/S607) are used here.
+"""
 
 from __future__ import annotations
 
