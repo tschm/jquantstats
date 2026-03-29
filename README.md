@@ -9,25 +9,138 @@
 [![Rhiza](https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Fraw.githubusercontent.com%2Fjebel-quant%2Fjquantstats%2Fmain%2F.rhiza%2Ftemplate.yml&query=%24.ref&label=rhiza)](https://github.com/jebel-quant/rhiza)
 
 [![Paper](https://img.shields.io/badge/paper-jquantstats.pdf-red?logo=adobeacrobatreader)](https://github.com/jebel-quant/jquantstats/blob/paper/jquantstats.pdf)
-## 📊 Overview
 
-**jQuantStats** is a Python library for portfolio analytics
-that helps quants and portfolio managers understand their performance
-through in-depth analytics and risk metrics. It provides tools
-for calculating various performance metrics and visualizing
-portfolio performance using interactive Plotly charts.
+## Overview
 
-The library is inspired by [QuantStats](https://github.com/ranaroussi/quantstats),
-but focuses on providing a clean, modern API with
-enhanced visualization capabilities. Key improvements include:
+**jQuantStats** is a Python library for portfolio analytics that helps quants and portfolio managers
+understand their strategy performance in depth. It provides two complementary entry points:
+a **Portfolio route** that works directly from price and position data, and a **Data route**
+for arbitrary return streams. All analytics, visualizations, and HTML reports are available
+from either entry point.
+
+The library is inspired by [QuantStats](https://github.com/ranaroussi/quantstats), but extends
+it significantly — particularly around position-level analysis that is impossible when you
+start from a return series alone. Key improvements include:
 
 - Polars-native design with zero pandas runtime dependency
 - Modern interactive visualizations using Plotly
+- A **Portfolio route** — the primary entry point — that exposes tools unavailable in QuantStats
 - Comprehensive test coverage with pytest
-- Clean, well-documented API
-- Efficient data processing with polars
+- Clean, fully type-annotated API
 
-## ⚡ jQuantStats vs QuantStats
+## The Portfolio Route — Why It Matters
+
+The original QuantStats only accepts a return series. That is convenient but lossy: once you
+reduce prices and positions to returns, you lose the information needed to answer the
+questions that matter most in practice.
+
+**jQuantStats** introduces `Portfolio` as the primary entry point. You provide the raw
+price series and the cash positions your strategy held over time, and the library compiles
+the NAV for you. This unlocks a class of analysis tools that simply do not exist in
+QuantStats:
+
+### Execution-Delay Analysis
+
+Real strategies suffer from **execution lag**: the signal fires at the close, but the trade
+fills the next open, or the next close, or later. A return series hides this completely.
+A `Portfolio` exposes it.
+
+```python
+import polars as pl
+from jquantstats import Portfolio
+
+pf = Portfolio.from_cash_position(prices=prices, cash_position=positions, aum=1_000_000)
+
+# Shift all positions forward by one period — simulate T+1 execution
+pf_lagged = pf.lag(1)
+
+print(pf.stats.sharpe())          # ideal (no delay)
+print(pf_lagged.stats.sharpe())   # realistic (T+1 fill)
+```
+
+`lag(n)` returns a new `Portfolio` with positions shifted by `n` periods.
+Because every downstream accessor — `.stats`, `.plots`, `.report` — recomputes
+on the shifted positions, a single call gives you the full analytics picture
+under a different execution assumption.
+
+`lead_lag_ir_plot()` sweeps the entire range at once and renders it as an
+interactive Plotly bar chart:
+
+```python
+fig = pf.plots.lead_lag_ir_plot(start=-5, end=10)
+fig.show()  # Sharpe ratio at each lag, from lead-5 to lag+10
+```
+
+This chart immediately answers: *how much does a one-day execution delay cost
+in Sharpe? At what lag does the signal degrade to noise?*
+
+### Tilt / Timing Attribution
+
+Even without lag analysis, starting from positions lets you decompose performance
+into two orthogonal sources:
+
+- **Tilt** — the portfolio with constant average weights (pure allocation skill)
+- **Timing** — the deviation from average weights (pure timing skill)
+
+```python
+tilt_pf    = pf.tilt    # constant-weight version of the strategy
+timing_pf  = pf.timing  # weight deviations only
+
+print(tilt_pf.stats.sharpe())
+print(timing_pf.stats.sharpe())
+
+decomp = pf.tilt_timing_decomp  # DataFrame: portfolio | tilt | timing NAVs side by side
+```
+
+### Turnover Analytics
+
+```python
+print(pf.turnover)           # daily one-way turnover as fraction of AUM
+print(pf.turnover_weekly)    # weekly aggregate (or 5-period rolling sum)
+print(pf.turnover_summary()) # mean_daily, mean_weekly, turnover_std
+```
+
+### Cost Modeling
+
+Two independent cost models, never accidentally combined:
+
+```python
+from jquantstats import Portfolio
+from jquantstats._cost_model import CostModel
+
+# Model A: per-unit cost (equity, futures tick-size costs)
+pf_net = Portfolio.from_cash_position(
+    prices=prices, cash_position=positions, aum=1_000_000,
+    cost_model=CostModel.per_unit(0.01),
+)
+print(pf_net.net_cost_nav)      # NAV path after deducting position-delta costs
+
+# Model B: turnover-bps cost (macro, fund-of-funds)
+pf_bps = Portfolio.from_cash_position(
+    prices=prices, cash_position=positions, aum=1_000_000,
+    cost_model=CostModel.turnover_bps(5.0),
+)
+# Sweep Sharpe across 0 → 20 bps in a single call
+impact = pf_bps.trading_cost_impact(max_bps=20)
+```
+
+### Position Variants
+
+```python
+# From unit positions (quantity × price → cash automatically)
+pf = Portfolio.from_position(prices=prices, position=units, aum=1_000_000)
+
+# From risk positions (de-volatized via EWMA, optional vol cap)
+pf = Portfolio.from_risk_position(
+    prices=prices, risk_position=risk_units, aum=1_000_000,
+    vola=0.10, vol_cap=0.20,
+)
+
+# Smooth noisy positions with a rolling mean
+pf_smooth = pf.smoothed_holding(window=5)
+```
+
+## jQuantStats vs QuantStats
 
 | Feature | jQuantStats | QuantStats |
 |---|---|---|
@@ -36,34 +149,26 @@ enhanced visualization capabilities. Key improvements include:
 | **Input format** | `polars.DataFrame` | `pandas.Series` / `pandas.DataFrame` |
 | **Entry point — positions** | `Portfolio.from_cash_position(prices, cash_position, aum)` | — |
 | **Entry point — returns** | `Data.from_returns(returns, benchmark)` | `qs.reports.full(returns)` |
-| **HTML report** | `portfolio.report.full()` | `qs.reports.html(returns)` |
-| **Snapshot chart** | `data.plots.plot_snapshot()` | `qs.plots.snapshot(returns)` |
-| **Sharpe ratio** | `data.stats.sharpe()` | `qs.stats.sharpe(returns)` |
-| **Sortino ratio** | `data.stats.sortino()` | `qs.stats.sortino(returns)` |
-| **Max drawdown** | `data.stats.max_drawdown()` | `qs.stats.max_drawdown(returns)` |
+| **Execution-delay analysis** | `pf.lag(n)` + `pf.plots.lead_lag_ir_plot()` | — |
+| **Tilt / timing decomposition** | `pf.tilt`, `pf.timing`, `pf.tilt_timing_decomp` | — |
+| **Turnover analytics** | `pf.turnover`, `pf.turnover_summary()` | — |
+| **Cost models** | Two models: per-unit and turnover-bps | — |
+| **Cost-impact sweep** | `pf.trading_cost_impact(max_bps=20)` | — |
+| **HTML report** | `pf.report.to_html()` | `qs.reports.html(returns)` |
+| **Snapshot chart** | `pf.plots.snapshot()` | `qs.plots.snapshot(returns)` |
+| **Sharpe ratio** | `pf.stats.sharpe()` | `qs.stats.sharpe(returns)` |
+| **Max drawdown** | `pf.stats.max_drawdown()` | `qs.stats.max_drawdown(returns)` |
 | **Python version** | 3.11+ | 3.7+ |
 | **Type annotations** | Full (`py.typed`) | Partial |
 | **Test coverage** | [![Coverage](https://raw.githubusercontent.com/jebel-quant/jquantstats/refs/heads/gh-pages/coverage-badge.svg)](https://jebel-quant.github.io/jquantstats/reports/coverage/) | — |
 
-## ✨ Features
-
-- **Performance Metrics**: Calculate key metrics like Sharpe ratio,
-Sortino ratio, drawdowns, volatility, and more
-- **Risk Analysis**: Analyze risk through metrics like
-Value at Risk (VaR), Conditional VaR, and drawdown analysis
-- **Interactive Visualizations**: Create interactive
-plots for portfolio performance, drawdowns, and
-return distributions
-- **Benchmark Comparison**: Compare your portfolio performance against benchmarks
-- **Polars-native**: Pure polars at runtime; pandas is not required and not supported as input
-
-## 🖼️ Dashboard Preview
+## Dashboard Preview
 
 ![Portfolio Performance Dashboard](https://raw.githubusercontent.com/jebel-quant/jquantstats/main/docs/assets/dashboard.png)
 
 > *Interactive Plotly dashboard — cumulative returns, drawdowns, and monthly return heatmaps in a single view. Charts are fully interactive (zoom, pan, hover tooltips) when rendered in a browser.*
 
-## 📦 Installation
+## Installation
 
 **Using pip:**
 
@@ -83,11 +188,51 @@ For development:
 pip install jquantstats[dev]
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
-**Five lines to your first analytics result:**
+### Start from prices and positions (recommended)
 
-```python +RHIZA_SKIP
+```python
+import polars as pl
+from jquantstats import Portfolio
+
+prices = pl.DataFrame({
+    "date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+    "AAPL": [150.0, 152.0, 149.5],
+    "MSFT": [250.0, 253.0, 251.0],
+}).with_columns(pl.col("date").str.to_date())
+
+positions = pl.DataFrame({
+    "date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+    "AAPL": [500.0, 500.0, 600.0],
+    "MSFT": [300.0, 300.0, 300.0],
+}).with_columns(pl.col("date").str.to_date())
+
+pf = Portfolio.from_cash_position(prices=prices, cash_position=positions, aum=1_000_000)
+
+print(pf.stats.sharpe())
+fig = pf.plots.snapshot()   # call fig.show() to display
+```
+
+### Compare ideal vs. delayed execution
+
+```python
+pf_t0 = pf                # signal executed immediately
+pf_t1 = pf.lag(1)         # T+1 execution
+pf_t2 = pf.lag(2)         # T+2 execution
+
+print(pf_t0.stats.sharpe())
+print(pf_t1.stats.sharpe())
+print(pf_t2.stats.sharpe())
+
+# Or visualize the full lead/lag Sharpe profile in one chart
+fig = pf.plots.lead_lag_ir_plot(start=-5, end=10)
+fig.show()
+```
+
+### Start from a return series
+
+```python
 import polars as pl
 from jquantstats import Data
 
@@ -110,125 +255,42 @@ print(data.stats.max_drawdown())
 # {'Strategy': 0.03, 'Benchmark': 0.01}
 
 fig = data.plots.plot_snapshot(title="Strategy vs Benchmark")
-fig.show()  # opens an interactive Plotly chart in your browser
+fig.show()
 ```
 
-**If you have price series and position sizes** (recommended):
+### Risk metrics
 
 ```python
-import polars as pl
-from jquantstats import Portfolio
-
-prices = pl.DataFrame({
-    "date": ["2023-01-01", "2023-01-02", "2023-01-03"],
-    "Asset1": [100.0, 101.0, 99.5],
-}).with_columns(pl.col("date").str.to_date())
-
-positions = pl.DataFrame({
-    "date": ["2023-01-01", "2023-01-02", "2023-01-03"],
-    "Asset1": [1000.0, 1000.0, 1200.0],
-}).with_columns(pl.col("date").str.to_date())
-
-pf = Portfolio.from_cash_position(prices=prices, cash_position=positions, aum=1_000_000)
-
-sharpe = pf.stats.sharpe()
-fig = pf.plots.snapshot()  # call fig.show() to display
-```
-
-**If you already have a returns series**:
-
-```python
-import polars as pl
-from jquantstats import Data
-
-returns = pl.DataFrame({
-    "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
-    "Asset1": [0.01, -0.02, 0.03],
-    "Asset2": [0.02, 0.01, -0.01]
-}).with_columns(pl.col("Date").str.to_date())
-
-data = Data.from_returns(returns=returns)
-
-sharpe = data.stats.sharpe()
-fig = data.plots.plot_snapshot(title="Portfolio Performance")  # call fig.show() to display
-```
-
-**Risk metrics and drawdown analysis**:
-
-```python
-import polars as pl
-from jquantstats import Data
-
-returns = pl.DataFrame({
-    "Date": ["2023-01-01", "2023-01-02", "2023-01-03", "2023-01-04", "2023-01-05"],
-    "Strategy": [0.01, -0.03, 0.02, -0.01, 0.04],
-}).with_columns(pl.col("Date").str.to_date())
-
-data = Data.from_returns(returns=returns)
-
-sharpe = data.stats.sharpe()
+sharpe  = data.stats.sharpe()
 sortino = data.stats.sortino()
-max_dd = data.stats.max_drawdown()
-vol = data.stats.volatility()
-var = data.stats.value_at_risk()
-cvar = data.stats.conditional_value_at_risk()
-calmar = data.stats.calmar()
-win = data.stats.win_rate()
+max_dd  = data.stats.max_drawdown()
+vol     = data.stats.volatility()
+var     = data.stats.value_at_risk()
+cvar    = data.stats.conditional_value_at_risk()
+calmar  = data.stats.calmar()
+win     = data.stats.win_rate()
 ```
 
-**Benchmark comparison**:
+### Benchmark comparison
 
 ```python
-import polars as pl
-from jquantstats import Data
-
-returns = pl.DataFrame({
-    "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
-    "Strategy": [0.01, -0.02, 0.03],
-}).with_columns(pl.col("Date").str.to_date())
-
-benchmark = pl.DataFrame({
-    "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
-    "Benchmark": [0.005, -0.01, 0.015],
-}).with_columns(pl.col("Date").str.to_date())
-
-data = Data.from_returns(returns=returns, benchmark=benchmark)
-
-ir = data.stats.information_ratio()
+ir     = data.stats.information_ratio()
 greeks = data.stats.greeks()
-alpha = greeks["Strategy"]["alpha"]
-beta = greeks["Strategy"]["beta"]
-fig = data.plots.plot_snapshot(title="Strategy vs Benchmark")
+alpha  = greeks["Strategy"]["alpha"]
+beta   = greeks["Strategy"]["beta"]
 ```
 
-**Generate a full HTML report**:
+### Generate a full HTML report
 
 ```python
-import polars as pl
-from jquantstats import Portfolio
-
-prices = pl.DataFrame({
-    "date": ["2023-01-01", "2023-01-02", "2023-01-03"],
-    "AAPL": [150.0, 152.0, 149.5],
-    "MSFT": [250.0, 253.0, 251.0],
-}).with_columns(pl.col("date").str.to_date())
-
-positions = pl.DataFrame({
-    "date": ["2023-01-01", "2023-01-02", "2023-01-03"],
-    "AAPL": [500.0, 500.0, 600.0],
-    "MSFT": [300.0, 300.0, 300.0],
-}).with_columns(pl.col("date").str.to_date())
-
 pf = Portfolio.from_cash_position(prices=prices, cash_position=positions, aum=1_000_000)
 
-# Save a complete HTML performance report
 html = pf.report.to_html()
 with open("report.html", "w") as f:
     f.write(html)
 ```
 
-
-## 🏗️ Architecture
+## Architecture
 
 jQuantStats has two layered entry points:
 
@@ -238,32 +300,67 @@ flowchart TD
     NAV compiler"]
     B --> C[".stats  —  full stats suite"]
     B --> D[".plots.snapshot()  —  portfolio plots"]
-    B --> E[".report.full()  —  HTML report"]
+    B --> E[".report.to_html()  —  HTML report"]
     B --> F[".data"]
+    B --> G[".lag(n)  —  execution-delay variant"]
+    B --> H[".tilt / .timing  —  attribution"]
+    B --> I[".turnover / .trading_cost_impact()"]
 
-    G["returns_df [+ benchmark_df]"] --> H["Data.from_returns(returns=..., benchmark=...)
+    G --> B2["Portfolio (lagged)  →  same API"]
+
+    J["returns_df [+ benchmark_df]"] --> K["Data.from_returns(returns=..., benchmark=...)
     Data object"]
-    H --> I[".stats  —  full stats suite"]
-    H --> J[".plots.plot_snapshot()  —  snapshot chart"]
+    K --> L[".stats  —  full stats suite"]
+    K --> M[".plots.plot_snapshot()  —  snapshot chart"]
 
-    F --> H
+    F --> K
 ```
 
-**Entry point 1** (`Portfolio`) is for active portfolios where you have
-price series and position sizes. It compiles the NAV curve and exposes
-the full analytics suite.
+**Entry point 1** (`Portfolio`) is for active portfolios where you have price series and
+position sizes. It compiles the NAV curve and exposes the full analytics suite including
+tools that require position-level data: execution-lag analysis, tilt/timing attribution,
+turnover analytics, and cost modeling.
 
-**Entry point 2** (`Data.from_returns`) is for arbitrary return streams — e.g.
-returns downloaded from a data vendor — with optional benchmark comparison.
+**Entry point 2** (`Data.from_returns`) is for arbitrary return streams — e.g. returns
+downloaded from a data vendor — with optional benchmark comparison.
 
-The two APIs are layered: `portfolio.data` returns a `Data` object, so you
-can always drop from a `Portfolio` into the returns-series API.
+The two APIs are layered: `portfolio.data` returns a `Data` object, so you can always
+drop from a `Portfolio` into the returns-series API.
 
-## 📚 Documentation
+## Features
 
-For detailed documentation, visit [jQuantStats Documentation](https://jebel-quant.github.io/jquantstats).
+**Performance Metrics** — Sharpe, Sortino, Calmar, Omega, Treynor, Information Ratio,
+probabilistic Sharpe/Sortino, smart Sharpe/Sortino, CAGR, GHPR, and more.
 
-## 🔧 Requirements
+**Risk Analysis** — Value at Risk (VaR), Conditional VaR, drawdown details,
+max drawdown duration, Ulcer Index, Ulcer Performance Index, risk of ruin.
+
+**Win/Loss Statistics** — win rate, monthly win rate, profit factor, payoff ratio,
+consecutive wins/losses, tail ratio, gain-to-pain ratio, outlier win/loss ratios.
+
+**Benchmark Analysis** — alpha, beta, correlation, tracking error, information ratio,
+up/down capture ratios, R².
+
+**Rolling Analytics** — rolling Sharpe, Sortino, volatility, and Greeks
+with configurable windows.
+
+**Portfolio-native (not available in QuantStats):**
+- Execution-delay analysis via `lag(n)` and `lead_lag_ir_plot()`
+- Tilt / timing attribution via `tilt`, `timing`, `tilt_timing_decomp`
+- Turnover analytics via `turnover`, `turnover_weekly`, `turnover_summary()`
+- Cost modeling via `CostModel.per_unit()` / `CostModel.turnover_bps()`
+- Cost-impact sweep via `trading_cost_impact(max_bps)`
+- Position smoothing via `smoothed_holding(window)`
+- Risk-position entry via `from_risk_position()` with EWMA de-volatization
+
+**Interactive Visualizations** — all charts are Plotly (zoom, pan, hover tooltips,
+range selectors). Includes portfolio snapshot, lead/lag IR, correlation heatmap,
+drawdown, rolling returns, rolling volatility, return distribution, monthly heatmap.
+
+**HTML Reports** — self-contained reports with embedded interactive charts and
+categorized metric tables, rendered via Jinja2 templates.
+
+## Requirements
 
 - Python 3.11+
 - numpy
@@ -271,7 +368,11 @@ For detailed documentation, visit [jQuantStats Documentation](https://jebel-quan
 - plotly
 - scipy
 
-## 👥 Contributing
+## Documentation
+
+For detailed documentation, visit [jQuantStats Documentation](https://jebel-quant.github.io/jquantstats).
+
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
@@ -281,7 +382,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📝 Citing
+## Citing
 
 If you use jQuantStats in academic work or research reports, please cite it using the
 [CITATIONS.bib](https://github.com/jebel-quant/jquantstats/blob/main/.github/CITATIONS.bib) file provided in this repository:
@@ -297,7 +398,7 @@ If you use jQuantStats in academic work or research reports, please cite it usin
 }
 ```
 
-## ⚖️ License
+## License
 
 This project is licensed under the MIT
 License - see the [LICENSE](https://github.com/jebel-quant/jquantstats/blob/main/LICENSE) file for details.
