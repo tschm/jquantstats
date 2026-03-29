@@ -97,17 +97,20 @@ class _ReportingStatsMixin:
 
         Returns 0.0 when there are no underwater periods.
 
+        Matches the QuantStats sign convention: drawdown is expressed as a
+        negative fraction (e.g. ``-0.2`` for 20% below peak).
+
         Args:
             series (pl.Series): Series of additive daily returns.
 
         Returns:
-            float: Mean drawdown in [0, 1].
+            float: Mean drawdown in [-1, 0].
         """
         dd = _drawdown_series(series)
         in_dd = dd.filter(dd > 0)
         if in_dd.is_empty():
             return 0.0
-        return _to_float(in_dd.mean())
+        return -_to_float(in_dd.mean())
 
     @columnwise_stat
     def cagr(
