@@ -5,12 +5,13 @@ from __future__ import annotations
 import dataclasses
 from collections.abc import Iterator
 from datetime import timedelta
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Literal, cast
 
 import narwhals as nw
 import polars as pl
 
 from ._types import NativeFrame, NativeFrameOrScalar
+from .exceptions import NullsInReturnsError
 
 if TYPE_CHECKING:
     from ._plots import DataPlots
@@ -24,6 +25,63 @@ def _to_polars(df: NativeFrame) -> pl.DataFrame:
     if isinstance(df, pl.DataFrame):
         return df
     return nw.from_native(df, eager_only=True).to_polars()
+
+
+def _apply_null_strategy(
+    dframe: pl.DataFrame,
+    date_col: str,
+    frame_name: str,
+    null_strategy: Literal["raise", "drop", "forward_fill"] | None,
+) -> pl.DataFrame:
+    """Check for nulls in *dframe* and apply *null_strategy*.
+
+    Parameters
+    ----------
+    dframe : pl.DataFrame
+        DataFrame to inspect. The date column is excluded from the null scan.
+    date_col : str
+        Name of the column to treat as the date index (excluded from null check).
+    frame_name : str
+        Descriptive name used in the error message (e.g. ``"returns"``).
+    null_strategy : {"raise", "drop", "forward_fill"} | None
+        How to handle null values:
+
+        - ``None`` — leave nulls as-is (current default behaviour; nulls will
+          propagate through calculations).
+        - ``"raise"`` — raise :exc:`~jquantstats.exceptions.NullsInReturnsError`
+          if any null is found.
+        - ``"drop"`` — drop every row that contains at least one null value.
+        - ``"forward_fill"`` — fill each null with the most recent non-null
+          value in the same column.
+
+    Returns:
+    -------
+    pl.DataFrame
+        The original DataFrame (``None`` / ``"raise"``), a filtered DataFrame
+        (``"drop"``), or a filled DataFrame (``"forward_fill"``).
+
+    Raises:
+    ------
+    NullsInReturnsError
+        When *null_strategy* is ``"raise"`` and nulls are present.
+
+    """
+    if null_strategy is None:
+        return dframe
+
+    value_cols = [c for c in dframe.columns if c != date_col]
+    null_counts = dframe.select(value_cols).null_count().row(0)
+    cols_with_nulls = [col for col, count in zip(value_cols, null_counts) if count > 0]
+
+    if not cols_with_nulls:
+        return dframe
+
+    if null_strategy == "raise":
+        raise NullsInReturnsError(frame_name, cols_with_nulls)
+    if null_strategy == "drop":
+        return dframe.drop_nulls(subset=value_cols)
+    # forward_fill
+    return dframe.with_columns([pl.col(c).forward_fill() for c in value_cols])
 
 
 def _subtract_risk_free(dframe: pl.DataFrame, rf: float | pl.DataFrame, date_col: str) -> pl.DataFrame:
@@ -114,6 +172,7 @@ class Data:
         rf: NativeFrameOrScalar = 0.0,
         benchmark: NativeFrame | None = None,
         date_col: str = "Date",
+        null_strategy: Literal["raise", "drop", "forward_fill"] | None = None,
     ) -> Data:
         """Create a Data object from returns and optional benchmark.
 
@@ -136,6 +195,27 @@ class Data:
         date_col : str, optional
             Name of the date column in the DataFrames. Default is "Date".
 
+        null_strategy : {"raise", "drop", "forward_fill"} | None, optional
+            How to handle ``null`` (missing) values in *returns* and *benchmark*.
+            Default is ``None`` (nulls are left as-is and will propagate through
+            calculations, matching the current Polars behaviour).
+
+            - ``None`` — no null checking; nulls propagate through all
+              downstream calculations.  This matches Polars' default semantics.
+            - ``"raise"`` — raise :exc:`~jquantstats.exceptions.NullsInReturnsError`
+              if any null is found.  Use this to be notified of missing data
+              and clean it yourself before construction.
+            - ``"drop"`` — silently drop every row that contains at least one null.
+              Mirrors the pandas/QuantStats silent-drop behaviour.
+            - ``"forward_fill"`` — fill each null with the most recent non-null value
+              in the same column.
+
+            .. note::
+               This parameter affects only Polars ``null`` values (i.e. ``None`` /
+               missing entries).  IEEE-754 ``NaN`` values (``float("nan")``) are not
+               nulls in Polars and are **not** affected — they continue to propagate
+               through calculations as per IEEE-754 semantics.
+
         Returns:
         -------
         Data
@@ -144,6 +224,8 @@ class Data:
 
         Raises:
         ------
+        NullsInReturnsError
+            If *null_strategy* is ``"raise"`` and the data contains null values.
         ValueError
             If there are no overlapping dates between returns and benchmark.
 
@@ -174,6 +256,21 @@ class Data:
         data = Data.from_returns(returns=returns, benchmark=benchmark, rf=0.0002)
         ```
 
+        Handling nulls automatically:
+
+        ```python
+        returns_with_nulls = pl.DataFrame({
+            "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+            "Asset1": [0.01, None, 0.03]
+        }).with_columns(pl.col("Date").str.to_date())
+
+        # Drop rows with nulls (mirrors pandas/QuantStats behaviour)
+        data = Data.from_returns(returns=returns_with_nulls, null_strategy="drop")
+
+        # Or forward-fill nulls
+        data = Data.from_returns(returns=returns_with_nulls, null_strategy="forward_fill")
+        ```
+
         """
         returns_pl = _to_polars(returns)
         benchmark_pl = _to_polars(benchmark) if benchmark is not None else None
@@ -182,6 +279,10 @@ class Data:
             rf_converted = _to_polars(rf)
         else:
             rf_converted = rf  # int is not float/DataFrame: _subtract_risk_free raises TypeError
+
+        returns_pl = _apply_null_strategy(returns_pl, date_col, "returns", null_strategy)
+        if benchmark_pl is not None:
+            benchmark_pl = _apply_null_strategy(benchmark_pl, date_col, "benchmark", null_strategy)
 
         if benchmark_pl is not None:
             joined_dates = returns_pl.join(benchmark_pl, on=date_col, how="inner").select(date_col)
@@ -207,6 +308,7 @@ class Data:
         rf: NativeFrameOrScalar = 0.0,
         benchmark: NativeFrame | None = None,
         date_col: str = "Date",
+        null_strategy: Literal["raise", "drop", "forward_fill"] | None = None,
     ) -> Data:
         """Create a Data object from prices and optional benchmark.
 
@@ -231,6 +333,22 @@ class Data:
 
         date_col : str, optional
             Name of the date column in the DataFrames.  Default is ``"Date"``.
+
+        null_strategy : {"raise", "drop", "forward_fill"} | None, optional
+            How to handle ``null`` (missing) values after converting prices to
+            returns.  Forwarded unchanged to :meth:`from_returns`.
+            Default is ``None`` (nulls propagate through calculations).
+
+            - ``None`` — no null checking; nulls propagate.
+            - ``"raise"`` — raise :exc:`~jquantstats.exceptions.NullsInReturnsError`
+              if any null is found in the derived returns.
+            - ``"drop"`` — silently drop every row that contains at least one null.
+            - ``"forward_fill"`` — fill each null with the most recent non-null value.
+
+            .. note::
+               Prices that contain nulls will produce null returns via
+               ``pct_change()``.  If you expect missing price entries, pass
+               ``null_strategy="drop"`` or ``null_strategy="forward_fill"``.
 
         Returns:
         -------
@@ -266,7 +384,7 @@ class Data:
                 1
             )
 
-        return cls.from_returns(returns=returns_pl, rf=rf, benchmark=benchmark_returns, date_col=date_col)
+        return cls.from_returns(returns=returns_pl, rf=rf, benchmark=benchmark_returns, date_col=date_col, null_strategy=null_strategy)
 
     def __repr__(self) -> str:
         """Return a string representation of the Data object."""

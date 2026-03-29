@@ -335,3 +335,134 @@ def test_partial_date_overlap_aligns_correctly():
     assert data.benchmark is not None
     assert data.benchmark.shape[0] == 6
     assert data.index.shape[0] == 6
+
+
+# ── null_strategy parameter ───────────────────────────────────────────────────
+
+
+def _make_returns_with_null(n: int = 4) -> pl.DataFrame:
+    """Build a minimal returns frame with one null in the middle."""
+    from datetime import date, timedelta
+
+    base = date(2023, 1, 1)
+    return pl.DataFrame(
+        {
+            "Date": [base + timedelta(days=i) for i in range(n)],
+            "asset": [0.01, None, 0.03, 0.02],
+        }
+    )
+
+
+def test_null_strategy_none_default_passes_through():
+    """Default null_strategy=None leaves null values in place (backward compat)."""
+    returns = _make_returns_with_null()
+    data = Data.from_returns(returns=returns)
+    # null is preserved — returns frame has all 4 rows
+    assert data.returns.shape[0] == 4
+    assert data.returns["asset"].null_count() == 1
+
+
+def test_null_strategy_raise_on_null():
+    """null_strategy='raise' raises NullsInReturnsError when nulls are found."""
+    from jquantstats.exceptions import NullsInReturnsError
+
+    returns = _make_returns_with_null()
+    with pytest.raises(NullsInReturnsError, match="'asset'"):
+        Data.from_returns(returns=returns, null_strategy="raise")
+
+
+def test_null_strategy_raise_no_error_when_clean():
+    """null_strategy='raise' does not raise when data has no null values."""
+    from datetime import date, timedelta
+
+    returns = pl.DataFrame(
+        {
+            "Date": [date(2023, 1, 1) + timedelta(days=i) for i in range(3)],
+            "asset": [0.01, 0.02, 0.03],
+        }
+    )
+    data = Data.from_returns(returns=returns, null_strategy="raise")
+    assert data.returns.shape[0] == 3
+
+
+def test_null_strategy_drop_removes_null_rows():
+    """null_strategy='drop' drops rows that contain at least one null."""
+    returns = _make_returns_with_null()
+    data = Data.from_returns(returns=returns, null_strategy="drop")
+    # row 1 (index 1) was null → 3 rows remain
+    assert data.returns.shape[0] == 3
+    assert data.returns["asset"].null_count() == 0
+
+
+def test_null_strategy_forward_fill_fills_nulls():
+    """null_strategy='forward_fill' fills each null with the previous non-null value."""
+    returns = _make_returns_with_null()
+    data = Data.from_returns(returns=returns, null_strategy="forward_fill")
+    # All 4 rows are kept, no nulls remain
+    assert data.returns.shape[0] == 4
+    assert data.returns["asset"].null_count() == 0
+    # The null at position 1 was filled with the value at position 0
+    assert data.returns["asset"][1] == pytest.approx(0.01)
+
+
+def test_null_strategy_nan_not_affected_by_null_strategy():
+    """NaN (IEEE-754) values are NOT treated as null by null_strategy.
+
+    null_strategy only affects Polars null (missing) values; IEEE-754 NaN
+    values are a distinct float value and must be unaffected.
+    """
+    from datetime import date, timedelta
+
+    returns = pl.DataFrame(
+        {
+            "Date": [date(2023, 1, 1) + timedelta(days=i) for i in range(3)],
+            "asset": [0.01, float("nan"), 0.03],
+        }
+    )
+    # "raise" should not trigger because there are no *null* values (only NaN)
+    data = Data.from_returns(returns=returns, null_strategy="raise")
+    assert data.returns.shape[0] == 3
+    # "drop" should leave the NaN row in place
+    data_drop = Data.from_returns(returns=returns, null_strategy="drop")
+    assert data_drop.returns.shape[0] == 3
+
+
+def test_null_strategy_applied_to_benchmark():
+    """null_strategy is applied to benchmark as well as returns."""
+    from datetime import date, timedelta
+    from jquantstats.exceptions import NullsInReturnsError
+
+    base = date(2023, 1, 1)
+    dates = [base + timedelta(days=i) for i in range(4)]
+    returns = pl.DataFrame({"Date": dates, "asset": [0.01, 0.02, 0.03, 0.04]})
+    benchmark = pl.DataFrame({"Date": dates, "bench": [0.01, None, 0.03, 0.04]})
+
+    with pytest.raises(NullsInReturnsError, match="'bench'"):
+        Data.from_returns(returns=returns, benchmark=benchmark, null_strategy="raise")
+
+    data = Data.from_returns(returns=returns, benchmark=benchmark, null_strategy="drop")
+    assert data.benchmark is not None
+    assert data.benchmark.shape[0] == 3
+
+
+def test_from_prices_null_strategy_forwarded():
+    """from_prices passes null_strategy through to from_returns."""
+    from datetime import date, timedelta
+    from jquantstats.exceptions import NullsInReturnsError
+
+    base = date(2023, 1, 1)
+    # Null price in the middle → null pct_change returns
+    prices = pl.DataFrame(
+        {
+            "Date": [base + timedelta(days=i) for i in range(6)],
+            "asset": [100.0, None, 102.0, 103.0, 104.0, 105.0],
+        }
+    )
+    with pytest.raises(NullsInReturnsError, match="'asset'"):
+        Data.from_prices(prices=prices, null_strategy="raise")
+
+    data = Data.from_prices(prices=prices, null_strategy="drop")
+    # pct_change on [100, null, 102, 103, 104, 105] → slice(1) gives 5 rows,
+    # 2 of which are null (the null and the row after it); drop_nulls leaves 3 rows
+    assert data.returns["asset"].null_count() == 0
+    assert data.returns.shape[0] >= 2
