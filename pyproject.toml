@@ -51,6 +51,7 @@ dev = [
     "marimo>=0.13.15",
     "pytest>=9.0.2",
     "pytest-cov>=7.1.0",
+    "httpx>=0.28.1",
 ]
 
 
