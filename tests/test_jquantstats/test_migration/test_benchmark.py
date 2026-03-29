@@ -18,6 +18,13 @@ def test_information_ratio(stats, aapl, benchmark_pd):
     assert x["AAPL"] == pytest.approx(y, abs=1e-4)
 
 
+def test_information_ratio_no_annualise(stats, aapl, benchmark_pd):
+    """annualise=False matches the raw QuantStats information ratio directly."""
+    x = stats.information_ratio(periods_per_year=252, annualise=False)
+    y = qs.stats.information_ratio(aapl, benchmark=benchmark_pd)
+    assert x["AAPL"] == pytest.approx(y, abs=1e-4)
+
+
 def test_r_squared(stats, aligned):
     """Series are inner-joined on Date to handle the leading NaN in SPY."""
     x = stats.r_squared()
