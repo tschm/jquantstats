@@ -45,7 +45,7 @@ Real strategies suffer from **execution lag**: the signal fires at the close, bu
 fills the next open, or the next close, or later. A return series hides this completely.
 A `Portfolio` exposes it.
 
-```python
+```python +RHIZA_SKIP
 import polars as pl
 from jquantstats import Portfolio
 
@@ -66,7 +66,7 @@ under a different execution assumption.
 `lead_lag_ir_plot()` sweeps the entire range at once and renders it as an
 interactive Plotly bar chart:
 
-```python
+```python +RHIZA_SKIP
 fig = pf.plots.lead_lag_ir_plot(start=-5, end=10)
 fig.show()  # Sharpe ratio at each lag, from lead-5 to lag+10
 ```
@@ -82,7 +82,7 @@ into two orthogonal sources:
 - **Tilt** — the portfolio with constant average weights (pure allocation skill)
 - **Timing** — the deviation from average weights (pure timing skill)
 
-```python
+```python +RHIZA_SKIP
 tilt_pf    = pf.tilt    # constant-weight version of the strategy
 timing_pf  = pf.timing  # weight deviations only
 
@@ -94,7 +94,7 @@ decomp = pf.tilt_timing_decomp  # DataFrame: portfolio | tilt | timing NAVs side
 
 ### Turnover Analytics
 
-```python
+```python +RHIZA_SKIP
 print(pf.turnover)           # daily one-way turnover as fraction of AUM
 print(pf.turnover_weekly)    # weekly aggregate (or 5-period rolling sum)
 print(pf.turnover_summary()) # mean_daily, mean_weekly, turnover_std
@@ -104,7 +104,7 @@ print(pf.turnover_summary()) # mean_daily, mean_weekly, turnover_std
 
 Two independent cost models, never accidentally combined:
 
-```python
+```python +RHIZA_SKIP
 from jquantstats import Portfolio
 from jquantstats._cost_model import CostModel
 
@@ -126,7 +126,7 @@ impact = pf_bps.trading_cost_impact(max_bps=20)
 
 ### Position Variants
 
-```python
+```python +RHIZA_SKIP
 # From unit positions (quantity × price → cash automatically)
 pf = Portfolio.from_position(prices=prices, position=units, aum=1_000_000)
 
@@ -210,13 +210,13 @@ positions = pl.DataFrame({
 
 pf = Portfolio.from_cash_position(prices=prices, cash_position=positions, aum=1_000_000)
 
-print(pf.stats.sharpe())
+sharpe = pf.stats.sharpe()
 fig = pf.plots.snapshot()   # call fig.show() to display
 ```
 
 ### Compare ideal vs. delayed execution
 
-```python
+```python +RHIZA_SKIP
 pf_t0 = pf                # signal executed immediately
 pf_t1 = pf.lag(1)         # T+1 execution
 pf_t2 = pf.lag(2)         # T+2 execution
@@ -248,14 +248,9 @@ benchmark = pl.DataFrame({
 
 data = Data.from_returns(returns=returns, benchmark=benchmark)
 
-print(data.stats.sharpe())
-# {'Strategy': 4.24, 'Benchmark': 4.94}
-
-print(data.stats.max_drawdown())
-# {'Strategy': 0.03, 'Benchmark': 0.01}
-
-fig = data.plots.plot_snapshot(title="Strategy vs Benchmark")
-fig.show()
+sharpe   = data.stats.sharpe()        # {'Strategy': 4.24, 'Benchmark': 4.94}
+max_dd   = data.stats.max_drawdown()  # {'Strategy': 0.03, 'Benchmark': 0.01}
+fig      = data.plots.plot_snapshot(title="Strategy vs Benchmark")  # call fig.show() to display
 ```
 
 ### Risk metrics
