@@ -71,7 +71,7 @@ def _apply_null_strategy(
 
     value_cols = [c for c in dframe.columns if c != date_col]
     null_counts = dframe.select(value_cols).null_count().row(0)
-    cols_with_nulls = [col for col, count in zip(value_cols, null_counts) if count > 0]
+    cols_with_nulls = [col for col, count in zip(value_cols, null_counts, strict=False) if count > 0]
 
     if not cols_with_nulls:
         return dframe

@@ -430,6 +430,7 @@ def test_null_strategy_nan_not_affected_by_null_strategy():
 def test_null_strategy_applied_to_benchmark():
     """null_strategy is applied to benchmark as well as returns."""
     from datetime import date, timedelta
+
     from jquantstats.exceptions import NullsInReturnsError
 
     base = date(2023, 1, 1)
@@ -448,6 +449,7 @@ def test_null_strategy_applied_to_benchmark():
 def test_from_prices_null_strategy_forwarded():
     """from_prices passes null_strategy through to from_returns."""
     from datetime import date, timedelta
+
     from jquantstats.exceptions import NullsInReturnsError
 
     base = date(2023, 1, 1)
