@@ -239,6 +239,38 @@ def test_conditional_value_at_risk(stats):
     assert result["META"] == pytest.approx(-0.06084410598898649)
 
 
+def test_conditional_value_at_risk_confidence_deprecated(stats):
+    """Tests that passing 'confidence' emits a DeprecationWarning and gives the same result.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        - A DeprecationWarning is raised when 'confidence' is passed.
+        - The warning message mentions 'alpha = 1 - confidence'.
+        - The result equals the equivalent alpha-based call (alpha = 1 - confidence).
+
+    """
+    with pytest.warns(DeprecationWarning, match=r"alpha = 1 - confidence"):
+        result_confidence = stats.conditional_value_at_risk(confidence=0.95)
+    result_alpha = stats.conditional_value_at_risk(alpha=0.05)
+    assert result_confidence["META"] == pytest.approx(result_alpha["META"])
+
+
+def test_conditional_value_at_risk_unexpected_kwarg(stats):
+    """Tests that unexpected keyword arguments raise a TypeError.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        A TypeError is raised when an unrecognised keyword argument is passed.
+
+    """
+    with pytest.raises(TypeError, match="unexpected keyword argument"):
+        stats.conditional_value_at_risk(typo=0.95)
+
+
 def test_win_rate(stats):
     """Tests that the win_rate method calculates win rate correctly.
 

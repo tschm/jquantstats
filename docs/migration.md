@@ -215,7 +215,7 @@ jqs_ir_raw = data.stats.information_ratio(periods_per_year=252, annualise=False)
 ### `conditional_value_at_risk` — parameter naming
 
 QuantStats uses `confidence` (e.g. `0.95`) for the confidence level.
-jquantstats uses `alpha` (e.g. `0.05`) for the tail probability.
+jquantstats uses `alpha` (e.g. `0.05`) for the tail probability (`alpha = 1 − confidence`).
 
 ```python
 # QuantStats
@@ -223,6 +223,14 @@ cvar = qs.stats.conditional_value_at_risk(returns_pd, confidence=0.95)
 
 # jquantstats (alpha = 1 - confidence)
 cvar = data.stats.conditional_value_at_risk(alpha=0.05)["MyStrategy"]
+```
+
+For migration convenience, passing `confidence` is accepted but emits a
+`DeprecationWarning` and will be removed in a future release:
+
+```python
+# Accepted but deprecated — emits DeprecationWarning
+cvar = data.stats.conditional_value_at_risk(confidence=0.95)["MyStrategy"]
 ```
 
 ### Multi-asset results
