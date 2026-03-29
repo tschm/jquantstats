@@ -21,6 +21,7 @@ class PortfolioTurnoverMixin:
             ``'turnover'`` column (dimensionless fraction of AUM).
 
         Examples:
+            >>> from jquantstats.portfolio import Portfolio
             >>> import polars as pl
             >>> from datetime import date
             >>> _d = [date(2020, 1, 1), date(2020, 1, 2), date(2020, 1, 3)]
@@ -76,6 +77,7 @@ class PortfolioTurnoverMixin:
             ``'value'``.
 
         Examples:
+            >>> from jquantstats.portfolio import Portfolio
             >>> import polars as pl
             >>> from datetime import date, timedelta
             >>> import numpy as np

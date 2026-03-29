@@ -26,6 +26,7 @@ class PortfolioCostMixin:
             ``'cost'`` column (absolute cash cost per period).
 
         Examples:
+            >>> from jquantstats.portfolio import Portfolio
             >>> import polars as pl
             >>> from datetime import date
             >>> _d = [date(2020, 1, 1), date(2020, 1, 2), date(2020, 1, 3)]
@@ -60,6 +61,7 @@ class PortfolioCostMixin:
             ``'profit'``, ``'cost'``, and ``'NAV_accumulated_net'`` columns.
 
         Examples:
+            >>> from jquantstats.portfolio import Portfolio
             >>> import polars as pl
             >>> from datetime import date
             >>> _d = [date(2020, 1, 1), date(2020, 1, 2), date(2020, 1, 3)]
@@ -106,6 +108,7 @@ class PortfolioCostMixin:
             ValueError: If ``cost_bps`` is negative.
 
         Examples:
+            >>> from jquantstats.portfolio import Portfolio
             >>> import polars as pl
             >>> from datetime import date
             >>> _d = [date(2020, 1, 1), date(2020, 1, 2), date(2020, 1, 3)]
@@ -145,6 +148,7 @@ class PortfolioCostMixin:
             ValueError: If ``max_bps`` is not a positive integer.
 
         Examples:
+            >>> from jquantstats.portfolio import Portfolio
             >>> import polars as pl
             >>> from datetime import date, timedelta
             >>> import numpy as np

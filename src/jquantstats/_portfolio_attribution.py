@@ -14,7 +14,7 @@ class PortfolioAttributionMixin:
     """Mixin providing tilt/timing attribution properties for Portfolio."""
 
     @property
-    def tilt(self) -> "Portfolio":
+    def tilt(self) -> Portfolio:
         """Return the 'tilt' portfolio with constant average weights.
 
         Computes the time-average of each asset's cash position (ignoring
@@ -33,7 +33,7 @@ class PortfolioAttributionMixin:
         )
 
     @property
-    def timing(self) -> "Portfolio":
+    def timing(self) -> Portfolio:
         """Return the 'timing' portfolio capturing deviations from the tilt.
 
         Constructs weights as original cash positions minus the tilt's

@@ -19,6 +19,7 @@ class PortfolioNavMixin:
             non-numeric columns (e.g., ``'date'``).
 
         Examples:
+            >>> from jquantstats.portfolio import Portfolio
             >>> import polars as pl
             >>> prices = pl.DataFrame({"A": [100.0, 110.0, 105.0]})
             >>> pos = pl.DataFrame({"A": [1000.0, 1000.0, 1000.0]})
