@@ -7,12 +7,7 @@ test:: ; @:
 benchmark:: ; @:
 stress:: ; @:
 hypothesis-test:: ; @:
-
-# No-op stub — overridden by docs.mk when present
-mkdocs-build:: install-uv
-	@if [ ! -f "mkdocs.yml" ]; then \
-	  printf "${BLUE}[INFO] No mkdocs.yml found, skipping MkDocs${RESET}\n"; \
-	fi
+mkdocs:: ; @:
 
 BOOK_OUTPUT ?= _book
 
