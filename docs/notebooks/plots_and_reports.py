@@ -43,8 +43,8 @@ def cell_intro() -> None:
 
         | Section | Entry point | What you get |
         |---------|-------------|--------------|
-        | **Part 1 — Data (returns-series)** | `Data.from_returns(...)` | 15 `DataPlots` methods · `Reports.metrics()` · `Reports.full()` HTML |
-        | **Part 2 — Portfolio (prices + positions)** | `Portfolio.from_cash_position(...)` | 10 `PortfolioPlots` methods · `Report.to_html()` |
+        | **Part 1 — Data** | `Data.from_returns(...)` | 15 `DataPlots` methods · `metrics()` · `full()` |
+        | **Part 2 — Portfolio** | `Portfolio.from_cash_position(...)` | 10 `PortfolioPlots` · `to_html()` |
 
         **Data used in Part 1:** real AAPL + META daily returns (≈ 11 k rows) with SPY as benchmark,
         loaded from CSV files bundled with the repository.
@@ -80,9 +80,7 @@ def cell_load_data():
         ]
     )
 
-    benchmark_df = pl.read_csv(data_dir / "benchmark.csv", try_parse_dates=True).select(
-        ["Date", "SPY -- Benchmark"]
-    )
+    benchmark_df = pl.read_csv(data_dir / "benchmark.csv", try_parse_dates=True).select(["Date", "SPY -- Benchmark"])
 
     data = Data.from_returns(returns=returns_df, benchmark=benchmark_df)
 
@@ -323,9 +321,7 @@ def cell_dp_drawdown_periods_header() -> None:
 @app.cell
 def cell_dp_drawdown_periods(data):
     """DataPlots.plot_drawdowns_periods."""
-    fig_dd_periods = data.plots.plot_drawdowns_periods(
-        n=5, title="Top 5 Drawdown Periods — AAPL", asset="AAPL"
-    )
+    fig_dd_periods = data.plots.plot_drawdowns_periods(n=5, title="Top 5 Drawdown Periods — AAPL", asset="AAPL")
     return (fig_dd_periods,)
 
 
@@ -367,9 +363,7 @@ def cell_dp_rolling_sharpe_header() -> None:
 @app.cell
 def cell_dp_rolling_sharpe(data):
     """DataPlots.plot_rolling_sharpe."""
-    fig_rolling_sharpe = data.plots.plot_rolling_sharpe(
-        rolling_period=126, title="Rolling Sharpe (126-day)"
-    )
+    fig_rolling_sharpe = data.plots.plot_rolling_sharpe(rolling_period=126, title="Rolling Sharpe (126-day)")
     return (fig_rolling_sharpe,)
 
 
@@ -390,9 +384,7 @@ def cell_dp_rolling_sortino_header() -> None:
 @app.cell
 def cell_dp_rolling_sortino(data):
     """DataPlots.plot_rolling_sortino."""
-    fig_rolling_sortino = data.plots.plot_rolling_sortino(
-        rolling_period=126, title="Rolling Sortino (126-day)"
-    )
+    fig_rolling_sortino = data.plots.plot_rolling_sortino(rolling_period=126, title="Rolling Sortino (126-day)")
     return (fig_rolling_sortino,)
 
 
@@ -413,9 +405,7 @@ def cell_dp_rolling_vol_header() -> None:
 @app.cell
 def cell_dp_rolling_vol(data):
     """DataPlots.plot_rolling_volatility."""
-    fig_rolling_vol = data.plots.plot_rolling_volatility(
-        rolling_period=126, title="Rolling Volatility (126-day)"
-    )
+    fig_rolling_vol = data.plots.plot_rolling_volatility(rolling_period=126, title="Rolling Volatility (126-day)")
     return (fig_rolling_vol,)
 
 
@@ -436,9 +426,7 @@ def cell_dp_rolling_beta_header() -> None:
 @app.cell
 def cell_dp_rolling_beta(data):
     """DataPlots.plot_rolling_beta."""
-    fig_rolling_beta = data.plots.plot_rolling_beta(
-        rolling_period=126, title="Rolling Beta vs SPY (126-day)"
-    )
+    fig_rolling_beta = data.plots.plot_rolling_beta(rolling_period=126, title="Rolling Beta vs SPY (126-day)")
     return (fig_rolling_beta,)
 
 
