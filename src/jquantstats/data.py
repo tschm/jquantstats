@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from ._plots import DataPlots
     from ._reports import Reports
     from ._stats import Stats
+    from ._utils import DataUtils
 
 
 def _to_polars(df: NativeFrame) -> pl.DataFrame:
@@ -313,6 +314,18 @@ class Data:
         from ._reports import Reports
 
         return Reports(self)
+
+    @property
+    def utils(self) -> DataUtils:
+        """Provides access to utility transforms and conversions for the financial data.
+
+        Returns:
+            DataUtils: An instance of the DataUtils class initialized with this data.
+
+        """
+        from ._utils import DataUtils
+
+        return DataUtils(self)
 
     @property
     def date_col(self) -> list[str]:
