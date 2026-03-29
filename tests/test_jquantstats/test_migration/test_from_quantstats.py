@@ -31,7 +31,6 @@ import pytest
 
 from jquantstats import Data
 
-
 # ── Module-level synthetic fixtures ───────────────────────────────────────────
 
 
@@ -312,19 +311,15 @@ class TestEdgeCases:
 
     def test_empty_returns_raises(self) -> None:
         """Data.from_returns with a zero-row DataFrame raises ValueError."""
-        empty = pl.DataFrame(
-            {"Date": pl.Series([], dtype=pl.Date), "asset": pl.Series([], dtype=pl.Float64)}
-        )
-        with pytest.raises(ValueError):
+        empty = pl.DataFrame({"Date": pl.Series([], dtype=pl.Date), "asset": pl.Series([], dtype=pl.Float64)})
+        with pytest.raises(ValueError, match="at least two timestamps"):
             Data.from_returns(returns=empty)
 
     def test_comp_with_minimal_series(self) -> None:
         """comp() is finite for a two-observation series (minimum valid input)."""
         from datetime import date
 
-        two_row = pl.DataFrame(
-            {"Date": [date(2020, 1, 1), date(2020, 1, 2)], "asset": [0.01, 0.02]}
-        )
+        two_row = pl.DataFrame({"Date": [date(2020, 1, 1), date(2020, 1, 2)], "asset": [0.01, 0.02]})
         data = Data.from_returns(returns=two_row)
         result = data.stats.comp()
         assert np.isfinite(result["asset"])
