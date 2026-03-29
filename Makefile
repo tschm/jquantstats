@@ -45,7 +45,7 @@ security: install ## run security scans (pip-audit and bandit)
 semgrep: install ## run Semgrep static analysis (numpy rules)
 	@printf "${BLUE}[INFO] Running Semgrep (numpy rules)...${RESET}\n"
 	@if [ -d ${SOURCE_FOLDER} ]; then \
-		${UVX_BIN} semgrep --config .semgrep.yml ${SOURCE_FOLDER}; \
+		${UVX_BIN} semgrep --config .github/semgrep.yml ${SOURCE_FOLDER}; \
 	else \
 		printf "${YELLOW}[WARN] SOURCE_FOLDER '${SOURCE_FOLDER}' not found, skipping semgrep.${RESET}\n"; \
 	fi
