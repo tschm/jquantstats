@@ -163,8 +163,8 @@ data = jqs.Data.from_returns(returns=returns_pl, benchmark=benchmark_pl)
 | `qs.stats.volatility(r, periods=252)` | `data.stats.volatility(periods=252)` |
 | `qs.stats.skew(r)` | `data.stats.skew()` |
 | `qs.stats.kurtosis(r)` | `data.stats.kurtosis()` |
-| `qs.stats.max_drawdown(r)` | `data.stats.max_drawdown()` |
-| `qs.stats.avg_drawdown(r)` | `data.stats.avg_drawdown()` |
+| `qs.stats.max_drawdown(r)` | `data.stats.max_drawdown()` | Same sign convention — negative fraction |
+| `qs.stats.avg_drawdown(r)` | `data.stats.avg_drawdown()` | Same sign convention — negative fraction |
 | `qs.stats.value_at_risk(r)` | `data.stats.value_at_risk(alpha=0.05)` |
 | `qs.stats.conditional_value_at_risk(r, confidence=0.95)` | `data.stats.conditional_value_at_risk(alpha=0.05)` |
 | `qs.stats.win_rate(r)` | `data.stats.win_rate()` |
@@ -262,6 +262,13 @@ jqs_ir = data.stats.information_ratio(periods_per_year=252)["MyStrategy"]
 # qs_ir * np.sqrt(252) ≈ jqs_ir
 ```
 
+To obtain the raw, non-annualised ratio (matching QuantStats), pass `annualise=False`:
+
+```python
+jqs_ir_raw = data.stats.information_ratio(periods_per_year=252, annualise=False)["MyStrategy"]
+# jqs_ir_raw ≈ qs_ir
+```
+
 ### `conditional_value_at_risk` — parameter name
 
 QuantStats uses `confidence` (e.g. `0.95`). jquantstats uses `alpha`
@@ -275,27 +282,59 @@ cvar = qs.stats.conditional_value_at_risk(returns_pd, confidence=0.95)
 cvar = data.stats.conditional_value_at_risk(alpha=0.05)["MyStrategy"]
 ```
 
-### Drawdown sign convention
-
-QuantStats returns drawdowns as **negative** values (≤ 0).
-jquantstats returns them as **positive** fractions (≥ 0).
+For migration convenience, passing `confidence` is accepted but emits a
+`DeprecationWarning` and will be removed in a future release:
 
 ```python
-qs.stats.max_drawdown(r)          # e.g. -0.35
-data.stats.max_drawdown()         # e.g. {"MyStrategy": 0.35}
+# Accepted but deprecated — emits DeprecationWarning
+cvar = data.stats.conditional_value_at_risk(confidence=0.95)["MyStrategy"]
 ```
 
-### NaN handling
+### Drawdown sign convention
 
-pandas (and QuantStats) silently drops `NaN` values in most calculations.
-Polars propagates `NaN`/`null` by default. If your return series contains
-missing values, clean them before constructing `Data`:
+Both `max_drawdown` and `avg_drawdown` follow the **QuantStats sign
+convention**: drawdowns are returned as **negative** fractions (≤ 0).
+
+```python
+qs.stats.max_drawdown(r)                        # e.g. -0.35
+data.stats.max_drawdown()                       # e.g. {"MyStrategy": -0.35}
+
+qs.stats.avg_drawdown(r)                        # e.g. -0.12
+data.stats.avg_drawdown()                       # e.g. {"MyStrategy": -0.12}
+```
+
+### NaN / null handling
+
+pandas (and QuantStats) silently drop `NaN` values in most calculations.
+Polars propagates `null` by default — if any value in a column is `null`,
+most statistics will return `null` instead of a numeric result.
+
+> **Note:** in Polars, `null` (a missing entry, equivalent to pandas `NaN`)
+> and `NaN` (IEEE-754 "Not a Number") are distinct. jquantstats treats `null`
+> as missing; `NaN` is a numeric value that propagates through calculations.
+
+You can clean data manually before constructing `Data`:
 
 ```python
 returns_pl = returns_pl.drop_nulls()
 # or fill forward
-returns_pl = returns_pl.fill_null(strategy="forward")
+returns_pl = returns_pl.with_columns(pl.all().forward_fill())
 ```
+
+Or use the `null_strategy` parameter on `Data.from_returns` / `Data.from_prices`:
+
+```python
+# Mirrors pandas / QuantStats behaviour: silently drop rows with nulls
+data = jqs.Data.from_returns(returns=returns_pl, null_strategy="drop")
+
+# Forward-fill nulls before computing statistics
+data = jqs.Data.from_returns(returns=returns_pl, null_strategy="forward_fill")
+
+# Raise an informative error if any null is found (useful during development)
+data = jqs.Data.from_returns(returns=returns_pl, null_strategy="raise")
+```
+
+The default (`null_strategy=None`) passes nulls through unchanged.
 
 ### No top-level functions
 
@@ -360,9 +399,9 @@ pf.trading_cost_impact(max_bps=20)          # sweep cost sensitivity 0 → 20 bp
 5. **Update** `conditional_value_at_risk(confidence=0.95)` →
    `conditional_value_at_risk(alpha=0.05)`.
 6. **Scale** any stored `information_ratio` values by `1 / √252` if you need
-   to match old QuantStats numbers.
-7. **Flip** any drawdown sign checks (jquantstats drawdowns are positive).
-8. **Drop** any `NaN`-filled rows before passing data in.
+   to match old QuantStats numbers; or pass `annualise=False` to get the raw IR.
+7. **Drawdown signs** match QuantStats (negative fractions) — no change needed.
+8. **Drop** any `NaN`-filled rows before passing data in, or use `null_strategy`.
 
 ---
 
