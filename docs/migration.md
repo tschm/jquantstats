@@ -122,8 +122,8 @@ data = jqs.Data.from_returns(returns=returns_pl, benchmark=benchmark_pl)
 | `qs.stats.sharpe(r, periods=252)` | `data.stats.sharpe(periods=252)` | Same formula; `periods` defaults to the inferred frequency |
 | `qs.stats.sortino(r)` | `data.stats.sortino(periods=252)` | Pass `periods` explicitly when you want a specific annualisation |
 | `qs.stats.volatility(r, periods=252)` | `data.stats.volatility(periods=252)` | Same formula |
-| `qs.stats.max_drawdown(r)` | `data.stats.max_drawdown()` | Identical result |
-| `qs.stats.avg_drawdown(r)` | `data.stats.avg_drawdown()` | Identical result |
+| `qs.stats.max_drawdown(r)` | `data.stats.max_drawdown()` | Identical result; both return a negative fraction |
+| `qs.stats.avg_drawdown(r)` | `data.stats.avg_drawdown()` | Identical result; both return a negative fraction |
 | `qs.stats.calmar(r)` | `data.stats.calmar()` | Identical result |
 | `qs.stats.value_at_risk(r)` | `data.stats.value_at_risk(alpha=0.05)` | See note on parameter naming below |
 | `qs.stats.conditional_value_at_risk(r, confidence=0.95)` | `data.stats.conditional_value_at_risk(alpha=0.05)` | `alpha = 1 - confidence` |
@@ -165,6 +165,29 @@ sharpe_value = result["MyStrategy"]                        # float
 ---
 
 ## What's different
+
+### Drawdown sign convention
+
+Both `max_drawdown` and `avg_drawdown` follow the **QuantStats sign
+convention**: drawdowns are returned as **negative fractions** (≤ 0).
+
+```python
+# QuantStats
+qs.stats.max_drawdown(returns_pd)   # e.g. -0.35
+qs.stats.avg_drawdown(returns_pd)   # e.g. -0.12
+
+# jquantstats — same sign convention
+data.stats.max_drawdown()["MyStrategy"]   # e.g. -0.35
+data.stats.avg_drawdown()["MyStrategy"]   # e.g. -0.12
+```
+
+> **Tip:** If you compare against a threshold, use negative values as you
+> would with QuantStats:
+>
+> ```python
+> if data.stats.max_drawdown()["MyStrategy"] < -0.20:
+>     print("Drawdown exceeds 20 %")
+> ```
 
 ### `information_ratio` — annualisation
 
