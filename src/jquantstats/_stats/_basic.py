@@ -332,7 +332,8 @@ class _BasicStatsMixin:
             alpha = 1.0 - confidence
         if kwargs:
             unexpected = ", ".join(repr(k) for k in kwargs)
-            raise TypeError(f"conditional_value_at_risk() got unexpected keyword argument(s): {unexpected}")
+            msg = f"conditional_value_at_risk() got unexpected keyword argument(s): {unexpected}"
+            raise TypeError(msg)
         return self._conditional_value_at_risk_impl(sigma=sigma, alpha=alpha)
 
     @staticmethod
