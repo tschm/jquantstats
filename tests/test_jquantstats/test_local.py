@@ -12,7 +12,7 @@ from datetime import date, timedelta
 import pytest
 from starlette.testclient import TestClient
 
-from app import app
+from api.app import app
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
