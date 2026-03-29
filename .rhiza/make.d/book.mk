@@ -2,7 +2,8 @@
 
 .PHONY: mkdocs-build book test benchmark stress hypothesis-test _book-reports _book-notebooks
 
-# No-op stubs — overridden by test.mk / bench.mk when present
+# No-op stubs — test/benchmark/stress/hypothesis-test overridden by test.mk when present;
+#               mkdocs overridden by docs.mk when present
 test:: ; @:
 benchmark:: ; @:
 stress:: ; @:
