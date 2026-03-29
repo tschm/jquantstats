@@ -135,7 +135,7 @@ class StatsLike(Protocol):  # pragma: no cover
         """Value at Risk per asset."""
         ...
 
-    def conditional_value_at_risk(self, alpha: float = 0.05) -> dict[str, float]:
+    def conditional_value_at_risk(self, sigma: float = 1.0, alpha: float = 0.05, **kwargs: float) -> dict[str, float]:
         """Conditional Value at Risk per asset."""
         ...
 
