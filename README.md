@@ -284,7 +284,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## 📝 Citing
 
 If you use jQuantStats in academic work or research reports, please cite it using the
-[CITATIONS.bib](https://github.com/jebel-quant/jquantstats/blob/main/CITATIONS.bib) file provided in this repository:
+[CITATIONS.bib](https://github.com/jebel-quant/jquantstats/blob/main/.github/CITATIONS.bib) file provided in this repository:
 
 ```bibtex
 @software{jquantstats,

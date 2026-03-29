@@ -107,7 +107,7 @@ files:
 - .rhiza/tests/sync/test_rhiza_version.py
 - .rhiza/tests/test_utils.py
 - .rhiza/tests/utils/test_git_repo_fixture.py
-- .semgrep.yml
+- .github/semgrep.yml
 - CODE_OF_CONDUCT.md
 - CONTRIBUTING.md
 - LICENSE

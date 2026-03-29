@@ -9,7 +9,7 @@
 #     "jinja2>=3.1.0",
 # ]
 # [tool.uv.sources]
-# jquantstats = { path = "../../..", editable = true }
+# jquantstats = { path = "../..", editable = true }
 # ///
 
 import marimo

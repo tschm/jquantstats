@@ -28,7 +28,7 @@ test-kaleido: install ## run kaleido static image export tests (requires jquants
 .PHONY: changelog
 changelog: ## generate/update CHANGELOG.md from git history using git-cliff
 	@printf "${BLUE}[INFO] Generating CHANGELOG.md with git-cliff...${RESET}\n"
-	@${UVX_BIN} git-cliff --output CHANGELOG.md
+	@${UVX_BIN} git-cliff --config .github/cliff.toml --output CHANGELOG.md
 	@printf "${GREEN}[OK] CHANGELOG.md updated.${RESET}\n"
 
 # Override the rhiza template's security target to ignore CVE-2026-4539
@@ -45,7 +45,7 @@ security: install ## run security scans (pip-audit and bandit)
 semgrep: install ## run Semgrep static analysis (numpy rules)
 	@printf "${BLUE}[INFO] Running Semgrep (numpy rules)...${RESET}\n"
 	@if [ -d ${SOURCE_FOLDER} ]; then \
-		${UVX_BIN} semgrep --config .semgrep.yml ${SOURCE_FOLDER}; \
+		${UVX_BIN} semgrep --config .github/semgrep.yml ${SOURCE_FOLDER}; \
 	else \
 		printf "${YELLOW}[WARN] SOURCE_FOLDER '${SOURCE_FOLDER}' not found, skipping semgrep.${RESET}\n"; \
 	fi
@@ -59,7 +59,7 @@ license: install ## run license compliance scan (fail on GPL, LGPL, AGPL) and ge
 	@printf "${GREEN}[OK] LICENSES.md generated.${RESET}\n"
 
 .PHONY: adr
-adr: install-gh-aw ## Create a new Architecture Decision Record (ADR) using AI assistance
+adr: install ## Create a new Architecture Decision Record (ADR) using AI assistance
 	@echo "Creating a new ADR..."
 	@echo "This will trigger the adr-create workflow."
 	@echo ""
