@@ -384,7 +384,13 @@ class Data:
                 1
             )
 
-        return cls.from_returns(returns=returns_pl, rf=rf, benchmark=benchmark_returns, date_col=date_col, null_strategy=null_strategy)
+        return cls.from_returns(
+            returns=returns_pl,
+            rf=rf,
+            benchmark=benchmark_returns,
+            date_col=date_col,
+            null_strategy=null_strategy,
+        )
 
     def __repr__(self) -> str:
         """Return a string representation of the Data object."""

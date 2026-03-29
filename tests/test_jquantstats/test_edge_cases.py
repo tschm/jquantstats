@@ -353,7 +353,7 @@ def _make_returns_with_null(n: int = 4) -> pl.DataFrame:
     )
 
 
-def test_null_strategy_none_default_passes_through():
+def test_null_strategy_none_preserves_nulls():
     """Default null_strategy=None leaves null values in place (backward compat)."""
     returns = _make_returns_with_null()
     data = Data.from_returns(returns=returns)
@@ -465,4 +465,4 @@ def test_from_prices_null_strategy_forwarded():
     # pct_change on [100, null, 102, 103, 104, 105] → slice(1) gives 5 rows,
     # 2 of which are null (the null and the row after it); drop_nulls leaves 3 rows
     assert data.returns["asset"].null_count() == 0
-    assert data.returns.shape[0] >= 2
+    assert data.returns.shape[0] == 3
