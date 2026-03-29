@@ -35,6 +35,11 @@ repository = "https://github.com/jebel-quant/jquantstats"
 # Optional dependencies that can be installed with extras (e.g., pip install jquantstats[plot])
 [project.optional-dependencies]
 plot = ["kaleido==1.2.0"]
+web = [
+    "fastapi>=0.115.0",
+    "uvicorn>=0.32.0",
+    "python-multipart>=0.0.12",
+]
 
 [dependency-groups]
 dev = [
@@ -73,7 +78,7 @@ exclude_dirs = ["src/tests"]  # Exclude test directories from security scanning
 
 # Ignore specific dependency issues
 [tool.deptry.per_rule_ignores]
-DEP002 = ["kaleido"]  # DEP002: Unused direct dependencies
+DEP002 = ["kaleido", "fastapi", "uvicorn", "python-multipart"]  # DEP002: Unused direct dependencies
 
 # Package to module name mapping
 [tool.deptry.package_module_name_map]
@@ -84,6 +89,8 @@ polars = "polars"
 pandas = "pandas"
 scipy = "scipy"
 kaleido = "kaleido"
+fastapi = "fastapi"
+uvicorn = "uvicorn"
 yfinance = "yfinance"
 ipython = "ipython"
 quantstats = "quantstats"
