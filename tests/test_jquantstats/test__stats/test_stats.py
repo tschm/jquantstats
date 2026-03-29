@@ -937,11 +937,11 @@ def test_periods_per_year(stats):
 
 
 def test_avg_drawdown(stats):
-    """avg_drawdown returns a non-negative float per asset."""
+    """avg_drawdown returns a non-positive float per asset (negative convention)."""
     result = stats.avg_drawdown()
     assert isinstance(result, dict)
     for col in result:
-        assert result[col] >= 0.0
+        assert result[col] <= 0.0
 
 
 def test_calmar(stats):
