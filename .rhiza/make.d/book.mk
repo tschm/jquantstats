@@ -2,17 +2,13 @@
 
 .PHONY: mkdocs-build book test benchmark stress hypothesis-test _book-reports _book-notebooks
 
-# No-op stubs — overridden by test.mk / bench.mk when present
+# No-op stubs — test/benchmark/stress/hypothesis-test overridden by test.mk when present;
+#               mkdocs overridden by docs.mk when present
 test:: ; @:
 benchmark:: ; @:
 stress:: ; @:
 hypothesis-test:: ; @:
-
-# No-op stub — overridden by docs.mk when present
-mkdocs-build:: install-uv
-	@if [ ! -f "mkdocs.yml" ]; then \
-	  printf "${BLUE}[INFO] No mkdocs.yml found, skipping MkDocs${RESET}\n"; \
-	fi
+mkdocs:: ; @:
 
 BOOK_OUTPUT ?= _book
 

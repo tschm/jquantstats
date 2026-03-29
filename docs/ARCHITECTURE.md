@@ -330,8 +330,8 @@ flowchart LR
 Makefiles follow these conventions:
 
 1. **Lowercase with hyphens**: All makefile names use lowercase letters with hyphens for word separation
-   - ✅ `bootstrap.mk`, `custom-task.mk`, `github.mk`
-   - ❌ `Bootstrap.mk`, `customTask.mk`, `GitHub.mk`
+   - ✅ `bootstrap.mk`, `marimo.mk`, `github.mk`
+   - ❌ `Bootstrap.mk`, `marioNotebooks.mk`, `GitHub.mk`
 
 2. **Descriptive domain names**: Each file represents a logical domain or feature area
    - `agentic.mk` - AI agent integrations
@@ -340,11 +340,9 @@ Makefiles follow these conventions:
    - `marimo.mk` - Marimo notebooks
    - `test.mk` - Testing infrastructure
 
-3. **Example vs. Production files**:
-   - Files prefixed with `custom-` are **examples** for user customization
-   - `custom-env.mk` - Example environment variable customizations
-   - `custom-task.mk` - Example custom task definitions
-   - Users should create their own files or modify the root `Makefile` for customizations
+3. **Project customizations**:
+   - Add project-specific targets and variables to the root `Makefile` (before `include .rhiza/rhiza.mk`)
+   - Use a `local.mk` in the project root for developer-local shortcuts that should not be committed
 
 ### Target Naming
 

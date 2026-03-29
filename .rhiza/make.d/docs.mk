@@ -43,4 +43,4 @@ mkdocs-serve: install-uv ## serve MkDocs site with live reload
 	fi
 
 # Convenience alias
-mkdocs: mkdocs-serve ## alias for mkdocs-serve
+mkdocs:: mkdocs-serve ## alias for mkdocs-serve

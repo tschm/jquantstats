@@ -88,8 +88,6 @@ pre-install::
 | `agentic.mk` | AI agent integrations (copilot, claude) |
 | `book.mk` | Documentation book generation |
 | `bootstrap.mk` | Installation and environment setup |
-| `custom-env.mk` | Example environment customizations |
-| `custom-task.mk` | Example custom tasks |
 | `docker.mk` | Docker build and run targets |
 | `docs.mk` | Documentation generation (MkDocs) |
 | `github.mk` | GitHub CLI integrations |
@@ -100,7 +98,7 @@ pre-install::
 | `releasing.mk` | Release and versioning |
 | `test.mk` | Testing infrastructure |
 
-Files prefixed with `custom-` are **examples** showing how to customize Rhiza. Don't edit them directly; instead, add your customizations to the root `Makefile`.
+Add your customizations to the root `Makefile` (before the `include .rhiza/rhiza.mk` line).
 
 ### Naming Conventions
 
