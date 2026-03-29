@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import warnings
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, cast
 
@@ -281,20 +282,8 @@ class _BasicStatsMixin:
         return float(norm.ppf(alpha, mu, sigma))
 
     @columnwise_stat
-    def conditional_value_at_risk(self, series: pl.Series, sigma: float = 1.0, alpha: float = 0.05) -> float:
-        """Calculate the conditional value-at-risk.
-
-        Also known as CVaR or expected shortfall, calculated for each numeric column.
-
-        Args:
-            series (pl.Series): The series to calculate conditional value at risk for.
-            alpha (float, optional): Confidence level. Defaults to 0.05.
-            sigma (float, optional): Standard deviation multiplier. Defaults to 1.0.
-
-        Returns:
-            float: The conditional value at risk.
-
-        """
+    def _conditional_value_at_risk_impl(self, series: pl.Series, sigma: float = 1.0, alpha: float = 0.05) -> float:
+        """Inner per-series implementation of conditional value-at-risk."""
         mean_val = cast(float, series.mean())
         std_val = cast(float, series.std())
         mu = mean_val if mean_val is not None else 0.0
@@ -307,6 +296,44 @@ class _BasicStatsMixin:
         # Cast the mask to pl.Expr to satisfy type checker
         mask = cast(Iterable[bool], series < var)
         return cast(float, series.filter(mask).mean())
+
+    def conditional_value_at_risk(self, sigma: float = 1.0, alpha: float = 0.05, **kwargs: float) -> dict[str, float]:
+        """Calculate the conditional value-at-risk (CVaR / Expected Shortfall).
+
+        Also known as CVaR or expected shortfall, calculated for each numeric column.
+
+        Args:
+            sigma (float, optional): Standard deviation multiplier. Defaults to 1.0.
+            alpha (float, optional): Tail probability (lower tail).  ``alpha`` is the
+                probability mass in the *loss* tail, so ``alpha = 1 - confidence``.
+                For example, a 95 % confidence level corresponds to ``alpha = 0.05``
+                (the default).
+            **kwargs: Legacy keyword arguments.  Passing ``confidence`` (e.g.
+                ``confidence=0.95``) is accepted for backwards compatibility with
+                QuantStats but emits a :class:`DeprecationWarning`.  Use
+                ``alpha = 1 - confidence`` instead.
+
+        Returns:
+            dict[str, float]: The conditional value at risk per asset column.
+
+        Raises:
+            TypeError: If unexpected keyword arguments are passed.
+
+        """
+        if "confidence" in kwargs:
+            confidence = kwargs.pop("confidence")
+            warnings.warn(
+                f"The 'confidence' parameter is deprecated and will be removed in a future release. "
+                f"Use 'alpha = 1 - confidence' instead (received confidence={confidence}, "
+                f"converting to alpha={1.0 - confidence}).",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            alpha = 1.0 - confidence
+        if kwargs:
+            unexpected = ", ".join(repr(k) for k in kwargs)
+            raise TypeError(f"conditional_value_at_risk() got unexpected keyword argument(s): {unexpected}")
+        return self._conditional_value_at_risk_impl(sigma=sigma, alpha=alpha)
 
     @staticmethod
     def _drawdown_with_baseline(series: pl.Series) -> pl.Series:
