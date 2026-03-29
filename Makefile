@@ -59,7 +59,7 @@ license: install ## run license compliance scan (fail on GPL, LGPL, AGPL) and ge
 	@printf "${GREEN}[OK] LICENSES.md generated.${RESET}\n"
 
 .PHONY: adr
-adr: install-gh-aw ## Create a new Architecture Decision Record (ADR) using AI assistance
+adr: install ## Create a new Architecture Decision Record (ADR) using AI assistance
 	@echo "Creating a new ADR..."
 	@echo "This will trigger the adr-create workflow."
 	@echo ""
