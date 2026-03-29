@@ -18,6 +18,7 @@ __generated_with = "0.20.4"
 app = marimo.App(width="medium")
 
 with app.setup:
+    import os
     from datetime import date, timedelta
     from pathlib import Path
 
@@ -27,7 +28,7 @@ with app.setup:
 
     from jquantstats import Data, Portfolio
 
-    _NOTEBOOK_DIR = Path(__file__).parent
+    NOTEBOOK_DIR = Path(__file__).parent
 
 
 @app.cell
@@ -70,7 +71,7 @@ def cell_part1_header() -> None:
 @app.cell
 def cell_load_data():
     """Load portfolio returns and SPY benchmark from CSV."""
-    data_dir = _NOTEBOOK_DIR / "data"
+    data_dir = NOTEBOOK_DIR / "data"
 
     returns_df = pl.read_csv(data_dir / "portfolio.csv", try_parse_dates=True).with_columns(
         [
@@ -471,6 +472,22 @@ def cell_reports_full(data):
     return (html_report,)
 
 
+@app.cell
+def cell_reports_full_export(html_report) -> None:
+    """Write the Data HTML report to NOTEBOOK_OUTPUT_FOLDER if set."""
+    _output_folder = os.environ.get("NOTEBOOK_OUTPUT_FOLDER")
+    if _output_folder:
+        _artefact_path = Path(_output_folder) / "data_report.html"
+        _artefact_path.write_text(html_report)
+        _msg = mo.md(f"✅ Data report saved to `{_artefact_path}`")
+    else:
+        _msg = mo.md(
+            "ℹ️ `NOTEBOOK_OUTPUT_FOLDER` is not set — artefact saving is skipped "
+            "(this variable is set automatically by `rhiza_marimo`)."
+        )
+    return
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # PART 2 — PORTFOLIO (PRICES + POSITIONS)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -780,6 +797,22 @@ def cell_pf_report(portfolio):
     pf_html = portfolio.report.to_html(title="Synthetic 3-Asset Portfolio Report")
     mo.md(f"Portfolio HTML report generated: **{len(pf_html):,}** characters.")
     return (pf_html,)
+
+
+@app.cell
+def cell_pf_report_export(pf_html) -> None:
+    """Write the Portfolio HTML report to NOTEBOOK_OUTPUT_FOLDER if set."""
+    _output_folder = os.environ.get("NOTEBOOK_OUTPUT_FOLDER")
+    if _output_folder:
+        _artefact_path = Path(_output_folder) / "portfolio_report.html"
+        _artefact_path.write_text(pf_html)
+        _msg = mo.md(f"✅ Portfolio report saved to `{_artefact_path}`")
+    else:
+        _msg = mo.md(
+            "ℹ️ `NOTEBOOK_OUTPUT_FOLDER` is not set — artefact saving is skipped "
+            "(this variable is set automatically by `rhiza_marimo`)."
+        )
+    return
 
 
 if __name__ == "__main__":
