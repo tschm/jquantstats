@@ -204,6 +204,14 @@ jqs_ir = data.stats.information_ratio(periods_per_year=252)["MyStrategy"]
 # qs_ir * sqrt(252) ≈ jqs_ir
 ```
 
+To obtain the raw, non-annualised ratio (matching QuantStats), pass `annualise=False`:
+
+```python
+# non-annualised — matches qs.stats.information_ratio directly
+jqs_ir_raw = data.stats.information_ratio(periods_per_year=252, annualise=False)["MyStrategy"]
+# jqs_ir_raw ≈ qs_ir
+```
+
 ### `conditional_value_at_risk` — parameter naming
 
 QuantStats uses `confidence` (e.g. `0.95`) for the confidence level.

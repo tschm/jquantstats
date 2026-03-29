@@ -732,7 +732,11 @@ class _PerformanceStatsMixin:
 
     @columnwise_stat
     def information_ratio(
-        self, series: pl.Series, periods_per_year: int | float | None = None, benchmark: str | None = None
+        self,
+        series: pl.Series,
+        periods_per_year: int | float | None = None,
+        benchmark: str | None = None,
+        annualise: bool = True,
     ) -> float:
         """Calculate the information ratio.
 
@@ -742,6 +746,10 @@ class _PerformanceStatsMixin:
             series (pl.Series): The series to calculate information ratio for.
             periods_per_year (int, optional): Number of periods per year. Defaults to 252.
             benchmark (str, optional): The benchmark column name. Defaults to None.
+            annualise (bool, optional): Whether to annualise the ratio by multiplying by
+                ``sqrt(periods_per_year)``. Defaults to ``True``.  Set to ``False`` to
+                obtain the raw (non-annualised) information ratio, which matches the value
+                returned by ``qs.stats.information_ratio``.
 
         Returns:
             float: The information ratio value.
@@ -760,7 +768,8 @@ class _PerformanceStatsMixin:
         try:
             mean_f = mean_val if mean_val is not None else 0.0
             std_f = std_val if std_val is not None else 1.0
-            return float((mean_f / std_f) * (ppy**0.5))
+            ir = mean_f / std_f
+            return float(ir * (ppy**0.5) if annualise else ir)
         except ZeroDivisionError:
             return 0.0
 
