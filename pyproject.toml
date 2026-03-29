@@ -78,7 +78,7 @@ exclude_dirs = ["src/tests"]  # Exclude test directories from security scanning
 
 # Ignore specific dependency issues
 [tool.deptry.per_rule_ignores]
-DEP002 = ["kaleido"]  # DEP002: Unused direct dependencies
+DEP002 = ["kaleido", "fastapi", "uvicorn", "python-multipart"]  # DEP002: Unused direct dependencies
 
 # Package to module name mapping
 [tool.deptry.package_module_name_map]

@@ -1,6 +1,9 @@
+"""FastAPI web application for jquantstats portfolio analysis."""
+
+import polars as pl
 from fastapi import FastAPI, UploadFile
 from fastapi.responses import HTMLResponse
-import polars as pl
+
 from jquantstats import Portfolio
 
 app = FastAPI(title="jquantstats API")
