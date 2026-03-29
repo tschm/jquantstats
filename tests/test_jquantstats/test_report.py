@@ -301,6 +301,21 @@ def test_stats_table_html_skips_missing_metric():
     assert "Avg Return" not in html
 
 
+def test_stats_table_html_return_metrics_formatted_as_pct():
+    """Return metrics (avg_return, best, worst, VaR) display as percentages.
+
+    Raw decimal values like 0.015 should be shown as '1.50%', not '0.015000'.
+    """
+    summary = pl.DataFrame({"metric": ["avg_return", "best", "worst", "value_at_risk"], "A": [0.015, 0.03, -0.02, -0.01]})
+    html = _stats_table_html(summary)
+    assert "1.50%" in html
+    assert "3.00%" in html
+    assert "-2.00%" in html
+    assert "-1.00%" in html
+    # Ensure raw decimal form is not present
+    assert "0.015000" not in html
+
+
 # ── dateless portfolio ────────────────────────────────────────────────────────
 
 
