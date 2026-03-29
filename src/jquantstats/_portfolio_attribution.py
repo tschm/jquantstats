@@ -2,19 +2,40 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 
 import polars as pl
 
 if TYPE_CHECKING:
-    from .portfolio import Portfolio
+    pass
 
 
 class PortfolioAttributionMixin:
     """Mixin providing tilt/timing attribution properties for Portfolio."""
 
+    if TYPE_CHECKING:
+        cashposition: pl.DataFrame
+        prices: pl.DataFrame
+        aum: float
+        cost_per_unit: float
+        cost_bps: float
+        assets: list[str]
+        nav_accumulated: pl.DataFrame
+
+        @classmethod
+        def from_cash_position(
+            cls,
+            prices: pl.DataFrame,
+            cash_position: pl.DataFrame,
+            aum: float,
+            cost_per_unit: float = 0.0,
+            cost_bps: float = 0.0,
+        ) -> Self:
+            """Create a Portfolio directly from cash positions aligned with prices."""
+            ...
+
     @property
-    def tilt(self) -> Portfolio:
+    def tilt(self) -> Self:
         """Return the 'tilt' portfolio with constant average weights.
 
         Computes the time-average of each asset's cash position (ignoring
@@ -33,7 +54,7 @@ class PortfolioAttributionMixin:
         )
 
     @property
-    def timing(self) -> Portfolio:
+    def timing(self) -> Self:
         """Return the 'timing' portfolio capturing deviations from the tilt.
 
         Constructs weights as original cash positions minus the tilt's

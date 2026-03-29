@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import polars as pl
 
 from .exceptions import MissingDateColumnError
@@ -9,6 +11,16 @@ from .exceptions import MissingDateColumnError
 
 class PortfolioNavMixin:
     """Mixin providing NAV & returns chain properties for Portfolio."""
+
+    if TYPE_CHECKING:
+        prices: pl.DataFrame
+        cashposition: pl.DataFrame
+        aum: float
+
+        @staticmethod
+        def _assert_clean_series(series: pl.Series, name: str = "") -> None:
+            """Raise ValueError if *series* contains nulls or non-finite values."""
+            ...
 
     @property
     def profits(self) -> pl.DataFrame:

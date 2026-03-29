@@ -2,11 +2,26 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import polars as pl
+
+if TYPE_CHECKING:
+    from .data import Data
 
 
 class PortfolioCostMixin:
     """Mixin providing cost analysis methods for Portfolio."""
+
+    if TYPE_CHECKING:
+        cashposition: pl.DataFrame
+        aum: float
+        cost_per_unit: float
+        cost_bps: float
+        returns: pl.DataFrame
+        turnover: pl.DataFrame
+        profit: pl.DataFrame
+        data: Data
 
     @property
     def position_delta_costs(self) -> pl.DataFrame:

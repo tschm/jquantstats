@@ -2,11 +2,17 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import polars as pl
 
 
 class PortfolioTurnoverMixin:
     """Mixin providing turnover analytics for Portfolio."""
+
+    if TYPE_CHECKING:
+        cashposition: pl.DataFrame
+        aum: float
 
     @property
     def turnover(self) -> pl.DataFrame:
