@@ -475,11 +475,11 @@ def cell_reports_full(data):
 @app.cell
 def cell_reports_full_export(html_report) -> None:
     """Write the Data HTML report to NOTEBOOK_OUTPUT_FOLDER if set."""
-    output_folder = os.environ.get("NOTEBOOK_OUTPUT_FOLDER")
-    if output_folder:
-        artefact_path = Path(output_folder) / "data_report.html"
-        artefact_path.write_text(html_report)
-        _msg = mo.md(f"✅ Data report saved to `{artefact_path}`")
+    _output_folder = os.environ.get("NOTEBOOK_OUTPUT_FOLDER")
+    if _output_folder:
+        _artefact_path = Path(_output_folder) / "data_report.html"
+        _artefact_path.write_text(html_report)
+        _msg = mo.md(f"✅ Data report saved to `{_artefact_path}`")
     else:
         _msg = mo.md(
             "ℹ️ `NOTEBOOK_OUTPUT_FOLDER` is not set — artefact saving is skipped "
@@ -802,11 +802,11 @@ def cell_pf_report(portfolio):
 @app.cell
 def cell_pf_report_export(pf_html) -> None:
     """Write the Portfolio HTML report to NOTEBOOK_OUTPUT_FOLDER if set."""
-    output_folder = os.environ.get("NOTEBOOK_OUTPUT_FOLDER")
-    if output_folder:
-        artefact_path = Path(output_folder) / "portfolio_report.html"
-        artefact_path.write_text(pf_html)
-        _msg = mo.md(f"✅ Portfolio report saved to `{artefact_path}`")
+    _output_folder = os.environ.get("NOTEBOOK_OUTPUT_FOLDER")
+    if _output_folder:
+        _artefact_path = Path(_output_folder) / "portfolio_report.html"
+        _artefact_path.write_text(pf_html)
+        _msg = mo.md(f"✅ Portfolio report saved to `{_artefact_path}`")
     else:
         _msg = mo.md(
             "ℹ️ `NOTEBOOK_OUTPUT_FOLDER` is not set — artefact saving is skipped "
