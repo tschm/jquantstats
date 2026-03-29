@@ -29,6 +29,7 @@ from typing import TYPE_CHECKING, Self
 
 if TYPE_CHECKING:
     from ._stats import Stats as Stats
+    from ._utils import PortfolioUtils as PortfolioUtils
     from .data import Data as Data
 
 import polars as pl
@@ -153,6 +154,7 @@ class Portfolio(
     _stats_cache: "Stats | None" = dataclasses.field(init=False, repr=False, compare=False, hash=False)
     _plots_cache: "PortfolioPlots | None" = dataclasses.field(init=False, repr=False, compare=False, hash=False)
     _report_cache: "Report | None" = dataclasses.field(init=False, repr=False, compare=False, hash=False)
+    _utils_cache: "PortfolioUtils | None" = dataclasses.field(init=False, repr=False, compare=False, hash=False)
 
     @staticmethod
     def _build_data_bridge(ret: pl.DataFrame) -> "Data":
@@ -189,6 +191,7 @@ class Portfolio(
         object.__setattr__(self, "_stats_cache", None)
         object.__setattr__(self, "_plots_cache", None)
         object.__setattr__(self, "_report_cache", None)
+        object.__setattr__(self, "_utils_cache", None)
 
     def _date_range(self) -> tuple[int, object, object]:
         """Return (rows, start, end) for the portfolio's returns series.
@@ -525,6 +528,26 @@ class Portfolio(
         if self._report_cache is None:
             object.__setattr__(self, "_report_cache", Report(self))
         return self._report_cache  # type: ignore[return-value]
+
+    @property
+    def utils(self) -> "PortfolioUtils":
+        """Convenience accessor returning a PortfolioUtils facade for this portfolio.
+
+        Use this for common data transformations such as converting returns to
+        prices, computing log returns, rebasing, aggregating by period, and
+        computing exponential standard deviation.
+
+        Returns:
+            :class:`~jquantstats._utils.PortfolioUtils`: Helper object with
+            utility transform methods.
+
+        The result is cached after first access so repeated calls are O(1).
+        """
+        if self._utils_cache is None:
+            from ._utils import PortfolioUtils
+
+            object.__setattr__(self, "_utils_cache", PortfolioUtils(self))
+        return self._utils_cache  # type: ignore[return-value]
 
     # ── Portfolio transforms ───────────────────────────────────────────────────
 
