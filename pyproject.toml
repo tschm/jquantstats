@@ -43,7 +43,9 @@ dev = [
     "yfinance==1.2.0",
     "ipython==9.10.1",
     "quantstats==0.0.81",  # reference implementation used in test_quantstats.py for metric validation
-    "marimo>=0.13.15"
+    "marimo>=0.13.15",
+    "pytest>=9.0.2",
+    "pytest-cov>=7.1.0",
 ]
 
 
