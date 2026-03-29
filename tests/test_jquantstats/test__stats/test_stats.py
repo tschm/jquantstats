@@ -746,6 +746,21 @@ def test_information_ratio(stats):
     assert result["AAPL"] == pytest.approx(0.45766323376481344)
 
 
+def test_information_ratio_no_annualise(stats):
+    """Tests that annualise=False returns a non-annualised information ratio.
+
+    Args:
+        stats: The stats fixture containing a Stats object.
+
+    Verifies:
+        annualise=False divides the annualised value by sqrt(252).
+
+    """
+    annualised = stats.information_ratio(periods_per_year=252)["AAPL"]
+    raw = stats.information_ratio(periods_per_year=252, annualise=False)["AAPL"]
+    assert raw == pytest.approx(annualised / (252**0.5))
+
+
 def test_greeks(stats):
     """Tests that the greeks method calculates alpha and beta correctly.
 
