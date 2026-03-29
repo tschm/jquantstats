@@ -11,7 +11,7 @@
 #          branches (including from forks)
 #
 # Components:
-#   - 🔎 Discover notebooks in book/marimo
+#   - 🔎 Discover notebooks in docs/notebooks
 #   - 🧪 Run each notebook in parallel using a matrix strategy
 #   - ✅ Fail-fast disabled to report all failing notebooks
 

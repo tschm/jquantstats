@@ -116,7 +116,7 @@ A security linter for Python code. Finds common security issues. Integrated in p
 GitHub's semantic code analysis engine. Scans for security vulnerabilities in Python code and GitHub Actions workflows.
 
 ### Marimo
-A reactive Python notebook format. Rhiza includes support for marimo notebooks in the `book/` directory.
+A reactive Python notebook format. Rhiza includes support for marimo notebooks in the `docs/notebooks/` directory.
 
 ## Configuration Files
 

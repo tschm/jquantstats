@@ -15,9 +15,11 @@ repos:
     hooks:
       - id: ruff
         args: [ --fix, --exit-non-zero-on-fix, --unsafe-fixes ]
+        exclude: ^docs/notebooks/
 
       # Run the formatter
       - id: ruff-format
+        exclude: ^docs/notebooks/
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.48.0
@@ -60,7 +62,7 @@ repos:
     hooks:
       - id: interrogate
         args: [--config=pyproject.toml]
-        exclude: ^docs/book/
+        exclude: ^docs/notebooks/
 
   - repo: https://github.com/Jebel-Quant/rhiza-hooks
     rev: v0.3.0  # Use the latest release

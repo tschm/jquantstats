@@ -94,9 +94,10 @@ exclude_lines = [
     "if TYPE_CHECKING:",  # type-only imports are never executed at runtime
 ]
 
+
 # Interrogate docstring coverage configuration
 [tool.interrogate]
 fail-under = 100
 ignore-init-method = true
 ignore-magic = true
-exclude = ["docs/book"]
+
