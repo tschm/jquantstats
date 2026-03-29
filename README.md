@@ -285,43 +285,6 @@ with open("report.html", "w") as f:
     f.write(html)
 ```
 
-## Architecture
-
-jQuantStats has two layered entry points:
-
-```mermaid
-flowchart TD
-    A["prices_df + cash_position_df + aum"] --> B["Portfolio.from_cash_position(...)
-    NAV compiler"]
-    B --> C[".stats  —  full stats suite"]
-    B --> D[".plots.snapshot()  —  portfolio plots"]
-    B --> E[".report.to_html()  —  HTML report"]
-    B --> F[".data"]
-    B --> G[".lag(n)  —  execution-delay variant"]
-    B --> H[".tilt / .timing  —  attribution"]
-    B --> I[".turnover / .trading_cost_impact()"]
-
-    G --> B2["Portfolio (lagged)  →  same API"]
-
-    J["returns_df [+ benchmark_df]"] --> K["Data.from_returns(returns=..., benchmark=...)
-    Data object"]
-    K --> L[".stats  —  full stats suite"]
-    K --> M[".plots.plot_snapshot()  —  snapshot chart"]
-
-    F --> K
-```
-
-**Entry point 1** (`Portfolio`) is for active portfolios where you have price series and
-position sizes. It compiles the NAV curve and exposes the full analytics suite including
-tools that require position-level data: execution-lag analysis, tilt/timing attribution,
-turnover analytics, and cost modeling.
-
-**Entry point 2** (`Data.from_returns`) is for arbitrary return streams — e.g. returns
-downloaded from a data vendor — with optional benchmark comparison.
-
-The two APIs are layered: `portfolio.data` returns a `Data` object, so you can always
-drop from a `Portfolio` into the returns-series API.
-
 ## Features
 
 **Performance Metrics** — Sharpe, Sortino, Calmar, Omega, Treynor, Information Ratio,
