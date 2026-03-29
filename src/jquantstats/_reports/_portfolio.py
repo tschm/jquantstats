@@ -57,11 +57,11 @@ def _fmt(value: object, fmt: str = ".4f", suffix: str = "") -> str:
 # ── Stats table ───────────────────────────────────────────────────────────────
 
 _METRIC_FORMATS: dict[str, tuple[str, str]] = {
-    "avg_return": (".6f", ""),
-    "avg_win": (".6f", ""),
-    "avg_loss": (".6f", ""),
-    "best": (".6f", ""),
-    "worst": (".6f", ""),
+    "avg_return": (".2%", ""),
+    "avg_win": (".2%", ""),
+    "avg_loss": (".2%", ""),
+    "best": (".2%", ""),
+    "worst": (".2%", ""),
     "sharpe": (".2f", ""),
     "calmar": (".2f", ""),
     "recovery_factor": (".2f", ""),
@@ -75,8 +75,8 @@ _METRIC_FORMATS: dict[str, tuple[str, str]] = {
     "volatility": (".2%", ""),
     "skew": (".2f", ""),
     "kurtosis": (".2f", ""),
-    "value_at_risk": (".6f", ""),
-    "conditional_value_at_risk": (".6f", ""),
+    "value_at_risk": (".2%", ""),
+    "conditional_value_at_risk": (".2%", ""),
 }
 
 _METRIC_LABELS: dict[str, str] = {

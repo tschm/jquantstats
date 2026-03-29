@@ -274,6 +274,28 @@ def test_metrics_table_html_unrecognised_string_metric():
     assert "some text" in html
 
 
+def test_metrics_table_html_pct_metrics_not_double_multiplied():
+    """Pre-multiplied percentage values must not be multiplied again by .2% format.
+
+    Values in _PCT_METRICS rows arrive pre-multiplied by 100 (via _pct()).
+    The HTML table must display e.g. 15.00% not 1500.00%.
+    """
+    # Simulate a pre-multiplied value of 15.0 (represents 15%)
+    df = pl.DataFrame({"Metric": ["Max Drawdown"], "A": [-15.0]})
+    html = _metrics_table_html(df)
+    assert "-15.00%" in html
+    assert "-1500" not in html
+
+
+def test_metrics_table_html_win_rate_pct_format():
+    """Win Rate pre-multiplied value is formatted correctly as a percentage."""
+    # Win rate of 65% arrives as 65.0 after _pct()
+    df = pl.DataFrame({"Metric": ["Win Rate"], "A": [65.0]})
+    html = _metrics_table_html(df)
+    assert "65.00%" in html
+    assert "6500" not in html
+
+
 def test_drawdowns_section_html_no_stats_attr():
     """Returns fallback message when data has no 'stats' attribute."""
 

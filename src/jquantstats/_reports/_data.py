@@ -501,8 +501,8 @@ def _metrics_table_html(df: pl.DataFrame) -> str:
                 continue
             vals = rows_by_label[label]
             rendered.add(label)
-            fmt = ".2%" if label in _PCT_METRICS else ".2f"
-            cells = "".join(f'<td class="metric-value">{_fmt(vals.get(a), fmt)}</td>' for a in assets)
+            suffix = "%" if label in _PCT_METRICS else ""
+            cells = "".join(f'<td class="metric-value">{_fmt(vals.get(a), ".2f", suffix)}</td>' for a in assets)
             section_rows.append(f'<tr><td class="metric-name">{label}</td>{cells}</tr>\n')
 
         if section_rows:
