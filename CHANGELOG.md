@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-03-29
+
+### Added
+
+- `drawdown_details`, `expected_return`, `rolling_greeks`, and related stats (#583)
+- `comp`, `compsum`, `ghpr` stats (#582)
+- `outliers`, `remove_outliers`, `outlier_win_ratio`, `outlier_loss_ratio` stats
+- `geometric_mean` and risk stats (value-at-risk, conditional-VaR, etc.) (#581)
+- `autocorrelation()` and `acf()` in Stats (#544)
+- `omega_ratio` in Stats (#554)
+- Quantstats parity benchmarks (#579)
+
+### Fixed
+
+- GitHub org rename: updated all remaining `tschm` → `jebel-quant` references
+
+### Changed
+
+- `Reports.metrics()` decomposed into focused helper methods (#586)
+- CI workflows consolidated: `rhiza_validate`, `rhiza_quality` now cover security, semgrep, typecheck, pip-audit, deptry, pre-commit, and link-check in unified jobs
+- Copilot agent hooks and setup workflow removed (sync out #587)
+- `demo_report.html` and `REPOSITORY_ANALYSIS.md` removed from repository
+
+## [0.4.0] - 2026-03-26
+
 ### Added
 
 - `Portfolio.from_position()` — fourth factory method for unit-position portfolios
