@@ -28,7 +28,7 @@ test-kaleido: install ## run kaleido static image export tests (requires jquants
 .PHONY: changelog
 changelog: ## generate/update CHANGELOG.md from git history using git-cliff
 	@printf "${BLUE}[INFO] Generating CHANGELOG.md with git-cliff...${RESET}\n"
-	@${UVX_BIN} git-cliff --output CHANGELOG.md
+	@${UVX_BIN} git-cliff --config .github/cliff.toml --output CHANGELOG.md
 	@printf "${GREEN}[OK] CHANGELOG.md updated.${RESET}\n"
 
 # Override the rhiza template's security target to ignore CVE-2026-4539

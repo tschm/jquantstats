@@ -234,7 +234,7 @@ jobs:
           version: "0.10.12"
 
       - name: Generate release notes with git-cliff
-        run: uvx git-cliff --latest --output RELEASE_NOTES.md
+        run: uvx git-cliff --config .github/cliff.toml --latest --output RELEASE_NOTES.md
 
       - name: Download SBOM artifact
         # Downloads sbom.cdx.json and sbom.cdx.xml into sbom/ directory

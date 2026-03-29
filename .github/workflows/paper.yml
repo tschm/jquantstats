@@ -4,12 +4,12 @@ on:
   push:
     branches: [ main, master ]
     paths:
-      - 'paper/**'
+      - 'docs/paper/**'
       - '.github/workflows/paper.yml'
   pull_request:
     branches: [ main, master ]
     paths:
-      - 'paper/**'
+      - 'docs/paper/**'
       - '.github/workflows/paper.yml'
   workflow_dispatch:
 
@@ -34,7 +34,7 @@ jobs:
             latexmk
 
       - name: Compile LaTeX document
-        working-directory: paper
+        working-directory: docs/paper
         run: |
           latexmk -pdf -interaction=nonstopmode jquantstats.tex
 
@@ -42,7 +42,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: jquantstats.pdf
-          path: paper/jquantstats.pdf
+          path: docs/paper/jquantstats.pdf
           retention-days: 30
 
       - name: Push PDF to paper branch
@@ -50,7 +50,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          cp paper/jquantstats.pdf /tmp/jquantstats.pdf
+          cp docs/paper/jquantstats.pdf /tmp/jquantstats.pdf
           git fetch origin paper 2>/dev/null || true
           if git show-ref --verify --quiet refs/remotes/origin/paper; then
             git checkout -b paper origin/paper

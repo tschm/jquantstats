@@ -42,9 +42,9 @@ _book-reports: test benchmark stress hypothesis-test
 	@[ -f "docs/reports/coverage/index.html" ]     && echo "- [Coverage Report](reports/coverage/index.html)"      >> docs/reports.md || true
 
 _book-notebooks:
-	@if [ -d "book/marimo/notebooks" ]; then \
+	@if [ -d "docs/book/marimo/notebooks" ]; then \
 	  rm -rf docs/notebooks && mkdir -p docs/notebooks; \
-	  for nb in book/marimo/notebooks/*.py; do \
+	  for nb in docs/book/marimo/notebooks/*.py; do \
 	    name=$$(basename "$$nb" .py); \
 	    printf "${BLUE}[INFO] Exporting $$nb${RESET}\n"; \
 	    abs_output="$$(pwd)/docs/notebooks/$$name.html"; \
