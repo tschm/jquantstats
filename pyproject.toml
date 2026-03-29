@@ -99,4 +99,4 @@ exclude_lines = [
 fail-under = 100
 ignore-init-method = true
 ignore-magic = true
-exclude = ["book"]
+exclude = ["docs/book"]
