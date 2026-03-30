@@ -250,25 +250,6 @@ data.stats.sharpe()
 
 ## Behavioural differences
 
-### `information_ratio` — annualisation
-
-QuantStats returns a **non-annualised** IR. jquantstats **annualises** by
-default (`× √periods_per_year`).
-
-```python
-import numpy as np
-qs_ir  = qs.stats.information_ratio(returns_pd, benchmark=benchmark_pd)
-jqs_ir = data.stats.information_ratio(periods_per_year=252)["MyStrategy"]
-# qs_ir * np.sqrt(252) ≈ jqs_ir
-```
-
-To obtain the raw, non-annualised ratio (matching QuantStats), pass `annualise=False`:
-
-```python
-jqs_ir_raw = data.stats.information_ratio(periods_per_year=252, annualise=False)["MyStrategy"]
-# jqs_ir_raw ≈ qs_ir
-```
-
 ### NaN / null handling
 
 pandas (and QuantStats) silently drop `NaN` values in most calculations.
