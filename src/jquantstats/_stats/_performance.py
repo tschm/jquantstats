@@ -10,6 +10,7 @@ import polars as pl
 from scipy.stats import norm
 
 from ._core import _to_float, columnwise_stat, to_frame
+from ._internals import _annualization_factor, _comp_return, _downside_deviation, _nav_series
 
 # ── Performance statistics mixin ─────────────────────────────────────────────
 
@@ -64,7 +65,7 @@ class _PerformanceStatsMixin:
 
         res = mean_f / divisor
         factor = periods or 1
-        return float(res * np.sqrt(factor))
+        return float(res * _annualization_factor(factor))
 
     @columnwise_stat
     def sharpe_variance(self, series: pl.Series, periods: int | float | None = None) -> float:
@@ -106,7 +107,7 @@ class _PerformanceStatsMixin:
         # Annualize by scaling with the number of periods
         periods = periods or self.data._periods_per_year
         factor = periods or 1
-        return float(base_variance * factor)
+        return float(base_variance * _annualization_factor(factor, sqrt=False))
 
     @columnwise_stat
     def probabilistic_sharpe_ratio(self, series: pl.Series) -> float:
@@ -227,8 +228,7 @@ class _PerformanceStatsMixin:
 
         """
         periods = periods or self.data._periods_per_year
-        downside_sum = ((series.filter(series < 0)) ** 2).sum()
-        downside_deviation = float(np.sqrt(float(downside_sum) / series.count()))
+        downside_deviation = _downside_deviation(series)
         mean_val = cast(float, series.mean())
         mean_f = mean_val if mean_val is not None else 0.0
         if downside_deviation == 0.0:
@@ -239,7 +239,7 @@ class _PerformanceStatsMixin:
             else:
                 return float("nan")
         ratio = mean_f / downside_deviation
-        return float(ratio * np.sqrt(periods))
+        return float(ratio * _annualization_factor(periods))
 
     @columnwise_stat
     def omega(
@@ -349,7 +349,7 @@ class _PerformanceStatsMixin:
             pl.Series: The price series.
 
         """
-        return (1.0 + series).cum_prod()
+        return _nav_series(series)
 
     @staticmethod
     def max_drawdown_single_series(series: pl.Series) -> float:
@@ -403,7 +403,7 @@ class _PerformanceStatsMixin:
 
         result: dict[str, pl.DataFrame] = {}
         for col, series in self.data.items():
-            nav = (1.0 + series.cast(pl.Float64)).cum_prod()
+            nav = _nav_series(series)
             hwm = nav.cum_max()
             in_dd = nav < hwm
             dd_pct = nav / hwm - 1  # negative or zero
@@ -534,8 +534,7 @@ class _PerformanceStatsMixin:
             float: Probabilistic Sortino ratio in [0, 1].
 
         """
-        downside_sum = ((series.filter(series < 0)) ** 2).sum()
-        downside_deviation = float(np.sqrt(float(downside_sum) / series.count()))
+        downside_deviation = _downside_deviation(series)
         mean_val = cast(float, series.mean())
         mean_f = mean_val if mean_val is not None else 0.0
         if downside_deviation == 0.0:
@@ -560,8 +559,7 @@ class _PerformanceStatsMixin:
             float: Probabilistic adjusted Sortino ratio in [0, 1].
 
         """
-        downside_sum = ((series.filter(series < 0)) ** 2).sum()
-        downside_deviation = float(np.sqrt(float(downside_sum) / series.count()))
+        downside_deviation = _downside_deviation(series)
         mean_val = cast(float, series.mean())
         mean_f = mean_val if mean_val is not None else 0.0
         if downside_deviation == 0.0:
@@ -868,7 +866,7 @@ class _PerformanceStatsMixin:
         n = len(series)
         if n == 0:
             return float("nan")  # pragma: no cover
-        nav_final = _to_float((1.0 + series.cast(pl.Float64)).product())
+        nav_final = 1.0 + _comp_return(series)
         if nav_final <= 0:
             return float("nan")
         cagr = float(nav_final ** (ppy / n) - 1.0)
