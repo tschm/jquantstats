@@ -1737,9 +1737,9 @@ def test_annualization_factor_invalid():
     """_annualization_factor raises ValueError for non-positive periods."""
     from jquantstats._stats._internals import _annualization_factor
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="positive finite number"):
         _annualization_factor(0)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="positive finite number"):
         _annualization_factor(-1)
 
 
