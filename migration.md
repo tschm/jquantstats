@@ -97,7 +97,7 @@ data = jqs.Data.from_returns(
 )
 
 data.stats.sharpe()
-data.plots.plot_snapshot()
+data.plots.snapshot()
 data.reports.summary()
 ```
 
@@ -193,13 +193,13 @@ data = jqs.Data.from_returns(returns=returns_pl, benchmark=benchmark_pl)
 
 | QuantStats | jquantstats |
 |---|---|
-| `qs.plots.snapshot(r)` | `data.plots.plot_snapshot()` |
-| `qs.plots.drawdown(r)` | `data.plots.plot_drawdown()` |
-| `qs.plots.returns(r)` | `data.plots.plot_returns()` |
-| `qs.plots.monthly_heatmap(r)` | `data.plots.plot_monthly_heatmap()` |
-| `qs.plots.distribution(r)` | `data.plots.plot_distribution()` |
-| `qs.plots.rolling_sharpe(r)` | `data.plots.plot_rolling_sharpe()` |
-| `qs.plots.rolling_volatility(r)` | `data.plots.plot_rolling_volatility()` |
+| `qs.plots.snapshot(r)` | `data.plots.snapshot()` |
+| `qs.plots.drawdown(r)` | `data.plots.drawdown()` |
+| `qs.plots.returns(r)` | `data.plots.returns()` |
+| `qs.plots.monthly_heatmap(r)` | `data.plots.monthly_heatmap()` |
+| `qs.plots.distribution(r)` | `data.plots.distribution()` |
+| `qs.plots.rolling_sharpe(r)` | `data.plots.rolling_sharpe()` |
+| `qs.plots.rolling_volatility(r)` | `data.plots.rolling_volatility()` |
 
 All `data.plots.*` methods return an interactive **Plotly figure** instead
 of a static matplotlib figure.

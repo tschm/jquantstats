@@ -337,7 +337,7 @@ class DataPlots:
         """Return a string representation of the DataPlots object."""
         return f"DataPlots(assets={self.data.assets})"
 
-    def plot_snapshot(self, title: str = "Portfolio Summary", log_scale: bool = False) -> go.Figure:
+    def snapshot(self, title: str = "Portfolio Summary", log_scale: bool = False) -> go.Figure:
         """Create a comprehensive dashboard with multiple plots for portfolio analysis.
 
         This function generates a three-panel plot showing:
@@ -365,7 +365,7 @@ class DataPlots:
             ...     "Asset": [0.01, -0.02, 0.03],
             ... }).with_columns(pl.col("Date").str.to_date())
             >>> data = Data.from_returns(returns=returns)
-            >>> fig = data.plots.plot_snapshot(title="My Portfolio Performance")
+            >>> fig = data.plots.snapshot(title="My Portfolio Performance")
             >>> # Optional: display the interactive figure
             >>> fig.show()  # doctest: +SKIP
 
@@ -373,7 +373,7 @@ class DataPlots:
         fig = _plot_performance_dashboard(returns=self.data.all, log_scale=log_scale)
         return fig
 
-    def plot_returns(self, title: str = "Cumulative Returns", log_scale: bool = False) -> go.Figure:
+    def returns(self, title: str = "Cumulative Returns", log_scale: bool = False) -> go.Figure:
         """Cumulative compounded returns over time.
 
         Plots ``(1 + r).cumprod()`` for every column in the dataset (including
@@ -413,7 +413,7 @@ class DataPlots:
             fig.update_yaxes(type="log")
         return fig
 
-    def plot_log_returns(self, title: str = "Log Returns") -> go.Figure:
+    def log_returns(self, title: str = "Log Returns") -> go.Figure:
         """Cumulative log returns over time.
 
         Plots ``log((1 + r).cumprod())`` — the natural log of the compounded
@@ -453,7 +453,7 @@ class DataPlots:
         fig.update_yaxes(title_text="Log Return")
         return fig
 
-    def plot_daily_returns(self, title: str = "Daily Returns") -> go.Figure:
+    def daily_returns(self, title: str = "Daily Returns") -> go.Figure:
         """Daily returns as a bar chart.
 
         Each bar is coloured green for positive returns and red for negative
@@ -499,7 +499,7 @@ class DataPlots:
         fig.update_yaxes(title_text="Return", tickformat=".1%")
         return fig
 
-    def plot_yearly_returns(self, title: str = "Yearly Returns", compounded: bool = True) -> go.Figure:
+    def yearly_returns(self, title: str = "Yearly Returns", compounded: bool = True) -> go.Figure:
         """Annual compounded (or summed) returns as a grouped bar chart.
 
         Args:
@@ -546,7 +546,7 @@ class DataPlots:
         fig.update_yaxes(title_text="Annual Return", tickformat=".1%")
         return fig
 
-    def plot_monthly_returns(self, title: str = "Monthly Returns", compounded: bool = True) -> go.Figure:
+    def monthly_returns(self, title: str = "Monthly Returns", compounded: bool = True) -> go.Figure:
         """Monthly compounded (or summed) returns as a bar chart.
 
         Args:
@@ -594,7 +594,7 @@ class DataPlots:
         fig.update_yaxes(title_text="Monthly Return", tickformat=".1%")
         return fig
 
-    def plot_monthly_heatmap(
+    def monthly_heatmap(
         self,
         title: str = "Monthly Returns Heatmap",
         compounded: bool = True,
@@ -670,7 +670,7 @@ class DataPlots:
         )
         return fig
 
-    def plot_histogram(self, title: str = "Returns Distribution", bins: int = 50) -> go.Figure:
+    def histogram(self, title: str = "Returns Distribution", bins: int = 50) -> go.Figure:
         """Return histogram with a kernel density overlay.
 
         Each asset is shown as a semi-transparent histogram overlaid on the
@@ -709,7 +709,7 @@ class DataPlots:
         fig.update_yaxes(title_text="Count")
         return fig
 
-    def plot_distribution(
+    def distribution(
         self,
         title: str = "Return Distribution by Period",
         compounded: bool = True,
@@ -790,7 +790,7 @@ class DataPlots:
         fig.update_xaxes(showgrid=False)
         return fig
 
-    def plot_drawdown(self, title: str = "Drawdowns") -> go.Figure:
+    def drawdown(self, title: str = "Drawdowns") -> go.Figure:
         """Underwater equity curve (drawdown) chart.
 
         Shows the percentage decline from the running peak for every column
@@ -834,7 +834,7 @@ class DataPlots:
         fig.update_yaxes(title_text="Drawdown", tickformat=".0%")
         return fig
 
-    def plot_drawdowns_periods(
+    def drawdowns_periods(
         self,
         n: int = 5,
         title: str = "Top Drawdown Periods",
@@ -900,7 +900,7 @@ class DataPlots:
         fig.update_yaxes(title_text="Cumulative Return", tickformat=".2f")
         return fig
 
-    def plot_earnings(
+    def earnings(
         self,
         start_balance: float = 1e5,
         title: str = "Portfolio Earnings",
@@ -953,7 +953,7 @@ class DataPlots:
         )
         return fig
 
-    def plot_rolling_sharpe(
+    def rolling_sharpe(
         self,
         rolling_period: int = 126,
         periods_per_year: int = 252,
@@ -1011,7 +1011,7 @@ class DataPlots:
         fig.update_yaxes(title_text=f"Sharpe ({rolling_period}-period rolling)")
         return fig
 
-    def plot_rolling_sortino(
+    def rolling_sortino(
         self,
         rolling_period: int = 126,
         periods_per_year: int = 252,
@@ -1071,7 +1071,7 @@ class DataPlots:
         fig.update_yaxes(title_text=f"Sortino ({rolling_period}-period rolling)")
         return fig
 
-    def plot_rolling_volatility(
+    def rolling_volatility(
         self,
         rolling_period: int = 126,
         periods_per_year: int = 252,
@@ -1120,7 +1120,7 @@ class DataPlots:
         fig.update_yaxes(title_text=f"Volatility ({rolling_period}-period rolling)", tickformat=".0%")
         return fig
 
-    def plot_rolling_beta(
+    def rolling_beta(
         self,
         rolling_period: int = 126,
         rolling_period2: int | None = 252,

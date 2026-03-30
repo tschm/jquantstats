@@ -33,7 +33,7 @@ import polars as pl
 
 data = Data.from_returns(returns=returns_df, benchmark=bench_df)
 data.stats.sharpe()
-data.plots.plot_snapshot(title="Performance")
+data.plots.snapshot(title="Performance")
 ```
 
 The two APIs are layered: ``portfolio.data`` returns a :class:`~jquantstats.data.Data`

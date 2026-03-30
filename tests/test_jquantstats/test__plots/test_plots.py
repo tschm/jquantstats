@@ -41,12 +41,12 @@ def test_plot_snapshot(plots):
 
     """
     # Test with default parameters
-    fig = plots.plot_snapshot()
+    fig = plots.snapshot()
     assert fig is not None
     assert hasattr(fig, "show")
 
     # Test with custom parameters
-    fig = plots.plot_snapshot(title="Custom Title", log_scale=True)
+    fig = plots.snapshot(title="Custom Title", log_scale=True)
     assert fig is not None
     assert hasattr(fig, "show")
 
@@ -65,7 +65,7 @@ def test_plot_snapshot_one_symbol(returns):
         2. The method doesn't raise any exceptions when working with a single symbol.
 
     """
-    fig = Data.from_returns(returns=returns).plots.plot_snapshot()
+    fig = Data.from_returns(returns=returns).plots.snapshot()
 
     assert fig is not None
     assert hasattr(fig, "show")

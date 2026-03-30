@@ -146,9 +146,9 @@ data = jqs.Data.from_returns(returns=returns_pl, benchmark=benchmark_pl)
 | `qs.stats.exposure(r)` | `data.stats.exposure()` | Identical result |
 | `qs.stats.skew(r)` | `data.stats.skew()` | Identical result |
 | `qs.stats.kurtosis(r)` | `data.stats.kurtosis()` | Identical result |
-| `qs.plots.snapshot(r)` | `data.plots.plot_snapshot()` | Returns an interactive Plotly figure |
-| `qs.plots.drawdown(r)` | `data.plots.plot_drawdown()` | Returns an interactive Plotly figure |
-| `qs.plots.returns(r)` | `data.plots.plot_returns()` | Returns an interactive Plotly figure |
+| `qs.plots.snapshot(r)` | `data.plots.snapshot()` | Returns an interactive Plotly figure |
+| `qs.plots.drawdown(r)` | `data.plots.drawdown()` | Returns an interactive Plotly figure |
+| `qs.plots.returns(r)` | `data.plots.returns()` | Returns an interactive Plotly figure |
 | `qs.reports.full(r)` | `data.reports.summary()` | See entry-point mapping above |
 
 ### Accessing a single-asset result
