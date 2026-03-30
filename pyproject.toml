@@ -52,6 +52,7 @@ dev = [
     "pytest>=9.0.2",
     "pytest-cov>=7.1.0",
     "httpx>=0.28.1",
+    "hypothesis>=6.0.0",   # property-based testing for financial metric invariants
 ]
 
 
@@ -96,6 +97,7 @@ yfinance = "yfinance"
 ipython = "ipython"
 quantstats = "quantstats"
 marimo = "marimo"
+hypothesis = "hypothesis"
 
 # Coverage configuration
 [tool.coverage.report]
