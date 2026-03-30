@@ -105,8 +105,7 @@ print(pf.turnover_summary()) # mean_daily, mean_weekly, turnover_std
 Two independent cost models, never accidentally combined:
 
 ```python +RHIZA_SKIP
-from jquantstats import Portfolio
-from jquantstats._cost_model import CostModel
+from jquantstats import Portfolio, CostModel
 
 # Model A: per-unit cost (equity, futures tick-size costs)
 pf_net = Portfolio.from_cash_position(
