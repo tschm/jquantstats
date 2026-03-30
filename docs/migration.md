@@ -6,12 +6,17 @@ library that has helped countless quants and portfolio managers understand their
 strategies better. This project would simply not exist without that foundation.
 We have enormous respect for the original work and encourage everyone to check it out.**
 
-`jquantstats` is a modern reimplementation built on top of Polars/Narwhals. It does
-**not** aim to replace or compete with QuantStats, but rather to offer an alternative
-interface for those already working in the Polars ecosystem. If QuantStats fits your
-workflow, use it — it's great! This guide covers everything you need to move from
-[QuantStats](https://github.com/ranaroussi/quantstats) to **jquantstats**.
-You may also learn about the move from pandas to polars.
+`jquantstats` is a modern variation on the theme set by QuantStats — not a copy, not a
+drop-in replacement, but a different take on the same problem space. Where QuantStats
+offers a collection of standalone functions each operating on a return series,
+jquantstats is built around a **portfolio-centric entry point**: you start from a
+`Portfolio` object constructed from prices and positions, and analytics flow naturally
+from there. This makes multi-asset analysis, cost modelling, and execution-lag studies
+first-class citizens rather than afterthoughts.
+
+This guide explains the **key conceptual and API differences** between the two libraries
+so you know what to expect, and provides **concrete code translations** to help you move
+your existing workflows over.
 
 
 ---
