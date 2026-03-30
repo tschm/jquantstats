@@ -242,3 +242,24 @@ def test_tilt_timing_decomp_works_without_date_column(int_portfolio):
     # Numerical check: portfolio NAV ≈ tilt NAV + timing NAV - aum (decomposition identity)
     expected_portfolio = decomp["tilt"].to_numpy() + decomp["timing"].to_numpy() - int_portfolio.aum
     assert np.allclose(decomp["portfolio"].to_numpy(), expected_portfolio, rtol=1e-10, atol=1e-6)
+
+
+# ─── Tilt caching tests ───────────────────────────────────────────────────────
+
+
+def test_tilt_cache_is_none_before_first_access(portfolio):
+    """_tilt_cache should be None before tilt is accessed."""
+    assert portfolio._tilt_cache is None
+
+
+def test_tilt_cache_is_set_after_first_access(portfolio):
+    """_tilt_cache should be populated after tilt is accessed."""
+    _ = portfolio.tilt
+    assert portfolio._tilt_cache is not None
+
+
+def test_tilt_returns_cached_object_on_second_access(portfolio):
+    """Repeated access to tilt should return the same cached Portfolio object."""
+    first = portfolio.tilt
+    second = portfolio.tilt
+    assert first is second

@@ -155,6 +155,10 @@ class Portfolio(
     _plots_cache: "PortfolioPlots | None" = dataclasses.field(init=False, repr=False, compare=False, hash=False)
     _report_cache: "Report | None" = dataclasses.field(init=False, repr=False, compare=False, hash=False)
     _utils_cache: "PortfolioUtils | None" = dataclasses.field(init=False, repr=False, compare=False, hash=False)
+    _profits_cache: "pl.DataFrame | None" = dataclasses.field(init=False, repr=False, compare=False, hash=False)
+    _returns_cache: "pl.DataFrame | None" = dataclasses.field(init=False, repr=False, compare=False, hash=False)
+    _tilt_cache: "Portfolio | None" = dataclasses.field(init=False, repr=False, compare=False, hash=False)
+    _turnover_cache: "pl.DataFrame | None" = dataclasses.field(init=False, repr=False, compare=False, hash=False)
 
     @staticmethod
     def _build_data_bridge(ret: pl.DataFrame) -> "Data":
@@ -192,6 +196,10 @@ class Portfolio(
         object.__setattr__(self, "_plots_cache", None)
         object.__setattr__(self, "_report_cache", None)
         object.__setattr__(self, "_utils_cache", None)
+        object.__setattr__(self, "_profits_cache", None)
+        object.__setattr__(self, "_returns_cache", None)
+        object.__setattr__(self, "_tilt_cache", None)
+        object.__setattr__(self, "_turnover_cache", None)
 
     def _date_range(self) -> tuple[int, object, object]:
         """Return (rows, start, end) for the portfolio's returns series.
