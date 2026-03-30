@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 from typing import TYPE_CHECKING
 
 import polars as pl
@@ -16,6 +17,8 @@ class PortfolioNavMixin:
         prices: pl.DataFrame
         cashposition: pl.DataFrame
         aum: float
+        _profits_cache: pl.DataFrame | None
+        _returns_cache: pl.DataFrame | None
 
         @staticmethod
         def _assert_clean_series(series: pl.Series, name: str = "") -> None:
@@ -30,6 +33,14 @@ class PortfolioNavMixin:
             pl.DataFrame: Per-asset daily profit series along with any
             non-numeric columns (e.g., ``'date'``).
 
+        The result is cached after first access so repeated calls are O(1).
+
+        Note:
+            Caching is not thread-safe.  Concurrent access from multiple
+            threads may trigger redundant computation, but will never produce
+            incorrect results because each thread stores the same deterministic
+            value.
+
         Examples:
             >>> from jquantstats.portfolio import Portfolio
             >>> import polars as pl
@@ -39,6 +50,10 @@ class PortfolioNavMixin:
             >>> pf.profits.columns
             ['A']
         """
+        cache = getattr(self, "_profits_cache", None)
+        if cache is not None:
+            return cache
+
         assets = [c for c in self.prices.columns if self.prices[c].dtype.is_numeric()]
 
         result = self.prices.with_columns(
@@ -52,6 +67,9 @@ class PortfolioNavMixin:
             result = result.with_columns(
                 pl.when(pl.col(c).is_finite()).then(pl.col(c)).otherwise(0.0).fill_null(0.0).alias(c) for c in assets
             )
+
+        with contextlib.suppress(AttributeError, TypeError):
+            object.__setattr__(self, "_profits_cache", result)
         return result
 
     @property
@@ -88,10 +106,24 @@ class PortfolioNavMixin:
         ``'profit'`` column scaled by AUM (i.e., per-period returns), and also
         an additional convenience column named ``'returns'`` with the same
         values for downstream consumers.
+
+        The result is cached after first access so repeated calls are O(1).
+
+        Note:
+            Caching is not thread-safe.  Concurrent access from multiple
+            threads may trigger redundant computation, but will never produce
+            incorrect results because each thread stores the same deterministic
+            value.
         """
-        return self.nav_accumulated.with_columns(
+        cache = getattr(self, "_returns_cache", None)
+        if cache is not None:
+            return cache
+        result = self.nav_accumulated.with_columns(
             (pl.col("profit") / self.aum).alias("returns"),
         )
+        with contextlib.suppress(AttributeError, TypeError):
+            object.__setattr__(self, "_returns_cache", result)
+        return result
 
     @property
     def monthly(self) -> pl.DataFrame:
