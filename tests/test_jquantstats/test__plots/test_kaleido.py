@@ -19,7 +19,7 @@ _PNG_MAGIC = b"\x89PNG"
 
 @pytest.mark.kaleido
 def test_data_plot_snapshot_to_image_returns_png_bytes(data):
-    """to_image() on plot_snapshot returns non-empty PNG bytes."""
+    """to_image() on snapshot() returns non-empty PNG bytes."""
     fig = data.plots.snapshot()
     img = fig.to_image(format="png")
     assert isinstance(img, bytes)
