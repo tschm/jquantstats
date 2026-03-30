@@ -49,6 +49,14 @@ A `Portfolio` exposes it.
 import polars as pl
 from jquantstats import Portfolio
 
+prices = pl.read_csv("tests/test_jquantstats/resources/prices.csv", try_parse_dates=True)
+
+# Allocate $500k to each asset as constant cash positions
+positions = prices.select("date").with_columns([
+    pl.lit(500_000.0).alias("AAPL"),
+    pl.lit(500_000.0).alias("META"),
+])
+
 pf = Portfolio.from_cash_position(prices=prices, cash_position=positions, aum=1_000_000)
 
 # Shift all positions forward by one period — simulate T+1 execution
