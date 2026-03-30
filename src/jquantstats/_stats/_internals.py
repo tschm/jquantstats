@@ -48,7 +48,7 @@ def _comp_return(series: pl.Series) -> float:
         0.254
 
         >>> _comp_return(pl.Series([], dtype=pl.Float64))
-        -1.0
+        0.0
     """
     return float((1.0 + series.drop_nulls().cast(pl.Float64)).product()) - 1.0
 
@@ -98,7 +98,7 @@ def _annualization_factor(periods: int | float, sqrt: bool = True) -> float:
         15.874507866387544
 
         >>> _annualization_factor(252, sqrt=False)
-        252
+        252.0
 
         >>> _annualization_factor(12)
         3.4641016151377544
