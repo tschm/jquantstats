@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 from typing import TYPE_CHECKING, Self
 
 import polars as pl
@@ -21,7 +22,7 @@ class PortfolioAttributionMixin:
         cost_bps: float
         assets: list[str]
         nav_accumulated: pl.DataFrame
-        _tilt_cache: "Self | None"
+        _tilt_cache: Self | None
 
         @classmethod
         def from_cash_position(
@@ -64,10 +65,8 @@ class PortfolioAttributionMixin:
             cost_per_unit=self.cost_per_unit,
             cost_bps=self.cost_bps,
         )
-        try:
+        with contextlib.suppress(AttributeError, TypeError):
             object.__setattr__(self, "_tilt_cache", result)
-        except (AttributeError, TypeError):
-            pass
         return result
 
     @property

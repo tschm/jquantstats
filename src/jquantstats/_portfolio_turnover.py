@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 from typing import TYPE_CHECKING
 
 import polars as pl
@@ -13,7 +14,7 @@ class PortfolioTurnoverMixin:
     if TYPE_CHECKING:
         cashposition: pl.DataFrame
         aum: float
-        _turnover_cache: "pl.DataFrame | None"
+        _turnover_cache: pl.DataFrame | None
 
     @property
     def turnover(self) -> pl.DataFrame:
@@ -60,10 +61,8 @@ class PortfolioTurnoverMixin:
         cols.append(daily_abs_chg)
         result = self.cashposition.select(cols)
 
-        try:
+        with contextlib.suppress(AttributeError, TypeError):
             object.__setattr__(self, "_turnover_cache", result)
-        except (AttributeError, TypeError):
-            pass
         return result
 
     @property

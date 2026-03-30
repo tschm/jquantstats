@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 from typing import TYPE_CHECKING
 
 import polars as pl
@@ -16,8 +17,8 @@ class PortfolioNavMixin:
         prices: pl.DataFrame
         cashposition: pl.DataFrame
         aum: float
-        _profits_cache: "pl.DataFrame | None"
-        _returns_cache: "pl.DataFrame | None"
+        _profits_cache: pl.DataFrame | None
+        _returns_cache: pl.DataFrame | None
 
         @staticmethod
         def _assert_clean_series(series: pl.Series, name: str = "") -> None:
@@ -67,10 +68,8 @@ class PortfolioNavMixin:
                 pl.when(pl.col(c).is_finite()).then(pl.col(c)).otherwise(0.0).fill_null(0.0).alias(c) for c in assets
             )
 
-        try:
+        with contextlib.suppress(AttributeError, TypeError):
             object.__setattr__(self, "_profits_cache", result)
-        except (AttributeError, TypeError):
-            pass
         return result
 
     @property
@@ -122,10 +121,8 @@ class PortfolioNavMixin:
         result = self.nav_accumulated.with_columns(
             (pl.col("profit") / self.aum).alias("returns"),
         )
-        try:
+        with contextlib.suppress(AttributeError, TypeError):
             object.__setattr__(self, "_returns_cache", result)
-        except (AttributeError, TypeError):
-            pass
         return result
 
     @property
