@@ -154,40 +154,101 @@ data = jqs.Data.from_returns(returns=returns_pl, benchmark=benchmark_pl)
 
 ### Statistics
 
-| QuantStats | jquantstats |
+| QuantStats | jquantstats | Notes |
+|---|---|---|
+| `qs.stats.sharpe(r, periods=252)` | `data.stats.sharpe(periods=252)` | |
+| `qs.stats.smart_sharpe(r, periods=252)` | `data.stats.smart_sharpe(periods=252)` | |
+| `qs.stats.sortino(r, periods=252)` | `data.stats.sortino(periods=252)` | |
+| `qs.stats.smart_sortino(r)` | `data.stats.smart_sortino()` | |
+| `qs.stats.adjusted_sortino(r)` | `data.stats.adjusted_sortino()` | |
+| `qs.stats.calmar(r)` | `data.stats.calmar()` | |
+| `qs.stats.omega(r)` | `data.stats.omega()` | |
+| `qs.stats.treynor_ratio(r, benchmark=b)` | `data.stats.treynor_ratio()` | |
+| `qs.stats.volatility(r, periods=252)` | `data.stats.volatility(periods=252)` | |
+| `qs.stats.implied_volatility(r)` | `data.stats.implied_volatility()` | |
+| `qs.stats.skew(r)` | `data.stats.skew()` | |
+| `qs.stats.kurtosis(r)` | `data.stats.kurtosis()` | |
+| `qs.stats.max_drawdown(r)` | `data.stats.max_drawdown()` | |
+| `qs.stats.value_at_risk(r)` | `data.stats.value_at_risk(alpha=0.05)` | |
+| `qs.stats.conditional_value_at_risk(r, confidence=0.95)` | `data.stats.conditional_value_at_risk(alpha=0.05)` | `alpha = 1 − confidence`; see note below |
+| `qs.stats.win_rate(r)` | `data.stats.win_rate()` | |
+| `qs.stats.avg_return(r)` | `data.stats.avg_return()` | |
+| `qs.stats.avg_win(r)` | `data.stats.avg_win()` | |
+| `qs.stats.avg_loss(r)` | `data.stats.avg_loss()` | |
+| `qs.stats.best(r)` | `data.stats.best()` | |
+| `qs.stats.worst(r)` | `data.stats.worst()` | |
+| `qs.stats.consecutive_wins(r)` | `data.stats.consecutive_wins()` | |
+| `qs.stats.consecutive_losses(r)` | `data.stats.consecutive_losses()` | |
+| `qs.stats.profit_factor(r)` | `data.stats.profit_factor()` | |
+| `qs.stats.profit_ratio(r)` | `data.stats.profit_ratio()` | |
+| `qs.stats.payoff_ratio(r)` | `data.stats.payoff_ratio()` | |
+| `qs.stats.win_loss_ratio(r)` | `data.stats.win_loss_ratio()` | |
+| `qs.stats.gain_to_pain_ratio(r)` | `data.stats.gain_to_pain_ratio()` | |
+| `qs.stats.risk_return_ratio(r)` | `data.stats.risk_return_ratio()` | |
+| `qs.stats.cpc_index(r)` | `data.stats.cpc_index()` | |
+| `qs.stats.common_sense_ratio(r)` | `data.stats.common_sense_ratio()` | |
+| `qs.stats.tail_ratio(r)` | `data.stats.tail_ratio()` | |
+| `qs.stats.outlier_win_ratio(r)` | `data.stats.outlier_win_ratio()` | |
+| `qs.stats.outlier_loss_ratio(r)` | `data.stats.outlier_loss_ratio()` | |
+| `qs.stats.kelly_criterion(r)` | `data.stats.kelly_criterion()` | |
+| `qs.stats.exposure(r)` | `data.stats.exposure()` | |
+| `qs.stats.cagr(r)` | `data.stats.cagr()` | |
+| `qs.stats.rar(r)` | `data.stats.rar()` | |
+| `qs.stats.recovery_factor(r)` | `data.stats.recovery_factor()` | |
+| `qs.stats.risk_of_ruin(r)` | `data.stats.risk_of_ruin()` | |
+| `qs.stats.ulcer_index(r)` | `data.stats.ulcer_index()` | |
+| `qs.stats.ulcer_performance_index(r)` | `data.stats.ulcer_performance_index()` | |
+| `qs.stats.serenity_index(r)` | `data.stats.serenity_index()` | |
+| `qs.stats.information_ratio(r, benchmark=b)` | `data.stats.information_ratio()` | jquantstats annualises; see note below |
+| `qs.stats.r_squared(r, benchmark=b)` | `data.stats.r_squared()` | |
+| `qs.stats.greeks(r, benchmark=b)` | `data.stats.greeks()` | |
+| `qs.stats.probabilistic_sharpe_ratio(r)` | `data.stats.probabilistic_sharpe_ratio()` | |
+| `qs.stats.probabilistic_sortino_ratio(r)` | `data.stats.probabilistic_sortino_ratio()` | |
+| `qs.stats.probabilistic_adjusted_sortino_ratio(r)` | `data.stats.probabilistic_adjusted_sortino_ratio()` | |
+| `qs.stats.geometric_mean(r)` | `data.stats.geometric_mean()` | |
+| `qs.stats.ghpr(r)` | `data.stats.ghpr()` | |
+| `qs.stats.expected_return(r)` | `data.stats.expected_return()` | |
+| `qs.stats.outliers(r)` | `data.stats.outliers()` | |
+| `qs.stats.remove_outliers(r)` | `data.stats.remove_outliers()` | |
+| `qs.stats.drawdown_details(r)` | `data.stats.drawdown_details()` | |
+| `qs.stats.monthly_returns(r)` | `data.stats.monthly_returns()` | |
+| `qs.stats.compare(r, benchmark=b)` | `data.stats.compare()` | |
+| `qs.stats.rolling_sharpe(r)` | `data.stats.rolling_sharpe()` | |
+| `qs.stats.rolling_sortino(r)` | `data.stats.rolling_sortino()` | |
+| `qs.stats.rolling_volatility(r)` | `data.stats.rolling_volatility()` | |
+| `qs.stats.rolling_greeks(r, benchmark=b)` | `data.stats.rolling_greeks()` | |
+| `qs.stats.autocorr_penalty(r)` | `data.stats.autocorr_penalty()` | |
+| `qs.stats.pct_rank(r)` | `data.stats.pct_rank()` | |
+
+#### QuantStats functions with no jquantstats equivalent
+
+| QuantStats | Notes |
 |---|---|
-| `qs.stats.sharpe(r, periods=252)` | `data.stats.sharpe(periods=252)` |
-| `qs.stats.sortino(r, periods=252)` | `data.stats.sortino(periods=252)` |
-| `qs.stats.calmar(r)` | `data.stats.calmar()` |
-| `qs.stats.omega(r)` | `data.stats.omega()` |
-| `qs.stats.volatility(r, periods=252)` | `data.stats.volatility(periods=252)` |
-| `qs.stats.skew(r)` | `data.stats.skew()` |
-| `qs.stats.kurtosis(r)` | `data.stats.kurtosis()` |
-| `qs.stats.max_drawdown(r)` | `data.stats.max_drawdown()` |
-| `qs.stats.avg_drawdown(r)` | `data.stats.avg_drawdown()` |
-| `qs.stats.value_at_risk(r)` | `data.stats.value_at_risk(alpha=0.05)` |
-| `qs.stats.conditional_value_at_risk(r, confidence=0.95)` | `data.stats.conditional_value_at_risk(alpha=0.05)` |
-| `qs.stats.win_rate(r)` | `data.stats.win_rate()` |
-| `qs.stats.avg_return(r)` | `data.stats.avg_return()` |
-| `qs.stats.avg_win(r)` | `data.stats.avg_win()` |
-| `qs.stats.avg_loss(r)` | `data.stats.avg_loss()` |
-| `qs.stats.best(r)` | `data.stats.best()` |
-| `qs.stats.worst(r)` | `data.stats.worst()` |
-| `qs.stats.profit_factor(r)` | `data.stats.profit_factor()` |
-| `qs.stats.profit_ratio(r)` | `data.stats.profit_ratio()` |
-| `qs.stats.payoff_ratio(r)` | `data.stats.payoff_ratio()` |
-| `qs.stats.win_loss_ratio(r)` | `data.stats.win_loss_ratio()` |
-| `qs.stats.gain_to_pain_ratio(r)` | `data.stats.gain_to_pain_ratio()` |
-| `qs.stats.kelly_criterion(r)` | `data.stats.kelly_criterion()` |
-| `qs.stats.exposure(r)` | `data.stats.exposure()` |
-| `qs.stats.cagr(r)` | `data.stats.cagr()` |
-| `qs.stats.rar(r)` | `data.stats.rar()` |
-| `qs.stats.information_ratio(r, benchmark=b)` | `data.stats.information_ratio()` |
-| `qs.stats.r_squared(r, benchmark=b)` | `data.stats.r_squared()` |
-| `qs.stats.greeks(r, benchmark=b)` | `data.stats.greeks()` |
-| `qs.stats.rolling_sharpe(r)` | `data.stats.rolling_sharpe()` |
-| `qs.stats.rolling_sortino(r)` | `data.stats.rolling_sortino()` |
-| `qs.stats.rolling_volatility(r)` | `data.stats.rolling_volatility()` |
+| `qs.stats.montecarlo(r)` | Monte Carlo simulations not currently implemented |
+| `qs.stats.montecarlo_sharpe(r)` | |
+| `qs.stats.montecarlo_drawdown(r)` | |
+| `qs.stats.montecarlo_cagr(r)` | |
+
+#### jquantstats-only stats methods
+
+These methods have **no QuantStats equivalent** and are unique to jquantstats.
+
+| jquantstats | Description |
+|---|---|
+| `data.stats.acf(nlags=20)` | Full autocorrelation function series |
+| `data.stats.annual_breakdown()` | Year-by-year performance table |
+| `data.stats.autocorr(lag=1)` | Autocorrelation at a given lag (qs only has `autocorr_penalty`) |
+| `data.stats.avg_drawdown()` | Average drawdown across all drawdown episodes |
+| `data.stats.down_capture()` | Downside capture ratio vs benchmark |
+| `data.stats.hhi_positive()` | Herfindahl-Hirschman concentration index for positive returns |
+| `data.stats.hhi_negative()` | Herfindahl-Hirschman concentration index for negative returns |
+| `data.stats.max_drawdown_duration()` | Duration of the maximum drawdown in periods |
+| `data.stats.monthly_win_rate()` | Win rate computed on monthly aggregated returns |
+| `data.stats.periods_per_year` | Inferred annualisation factor (property) |
+| `data.stats.sharpe_variance()` | Variance-penalised Sharpe variant |
+| `data.stats.summary()` | Composite stats summary as a `pl.DataFrame` |
+| `data.stats.up_capture()` | Upside capture ratio vs benchmark |
+| `data.stats.worst_n_periods(n=5)` | Worst N individual return periods |
 
 ### Plots
 
