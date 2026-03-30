@@ -21,6 +21,7 @@ class PortfolioAttributionMixin:
         cost_bps: float
         assets: list[str]
         nav_accumulated: pl.DataFrame
+        _tilt_cache: "Self | None"
 
         @classmethod
         def from_cash_position(
@@ -41,17 +42,33 @@ class PortfolioAttributionMixin:
         Computes the time-average of each asset's cash position (ignoring
         nulls/NaNs) and builds a new Portfolio with those constant weights
         applied across time. Prices and AUM are preserved.
+
+        The result is cached after first access so repeated calls are O(1).
+
+        Note:
+            Caching is not thread-safe.  Concurrent access from multiple
+            threads may trigger redundant computation, but will never produce
+            incorrect results because each thread stores the same deterministic
+            value.
         """
+        cache = getattr(self, "_tilt_cache", None)
+        if cache is not None:
+            return cache
         const_position = self.cashposition.with_columns(
             pl.col(col).drop_nulls().drop_nans().mean().alias(col) for col in self.assets
         )
-        return type(self).from_cash_position(
+        result = type(self).from_cash_position(
             self.prices,
             const_position,
             aum=self.aum,
             cost_per_unit=self.cost_per_unit,
             cost_bps=self.cost_bps,
         )
+        try:
+            object.__setattr__(self, "_tilt_cache", result)
+        except (AttributeError, TypeError):
+            pass
+        return result
 
     @property
     def timing(self) -> Self:

@@ -103,3 +103,42 @@ def test_portfolio_all_merges_drawdown_and_nav_compounded(portfolio):
     assert "NAV_compounded" in result.columns
     assert "drawdown" in result.columns
     assert len(result) == len(portfolio.prices)
+
+
+# ─── Caching tests ────────────────────────────────────────────────────────────
+
+
+def test_profits_cache_is_none_before_first_access(portfolio):
+    """_profits_cache should be None before profits is accessed."""
+    assert portfolio._profits_cache is None
+
+
+def test_profits_cache_is_set_after_first_access(portfolio):
+    """_profits_cache should be populated after profits is accessed."""
+    _ = portfolio.profits
+    assert portfolio._profits_cache is not None
+
+
+def test_profits_returns_cached_object_on_second_access(portfolio):
+    """Repeated access to profits should return the same cached DataFrame object."""
+    first = portfolio.profits
+    second = portfolio.profits
+    assert first is second
+
+
+def test_returns_cache_is_none_before_first_access(portfolio):
+    """_returns_cache should be None before returns is accessed."""
+    assert portfolio._returns_cache is None
+
+
+def test_returns_cache_is_set_after_first_access(portfolio):
+    """_returns_cache should be populated after returns is accessed."""
+    _ = portfolio.returns
+    assert portfolio._returns_cache is not None
+
+
+def test_returns_returns_cached_object_on_second_access(portfolio):
+    """Repeated access to returns should return the same cached DataFrame object."""
+    first = portfolio.returns
+    second = portfolio.returns
+    assert first is second
