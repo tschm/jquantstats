@@ -62,8 +62,8 @@ pf = Portfolio.from_cash_position(prices=prices, cash_position=positions, aum=1_
 # Shift all positions forward by one period — simulate T+1 execution
 pf_lagged = pf.lag(1)
 
-print(pf.stats.sharpe())          # ideal (no delay)
-print(pf_lagged.stats.sharpe())   # realistic (T+1 fill)
+sharpe_t0 = pf.stats.sharpe()          # ideal (no delay)
+sharpe_t1 = pf_lagged.stats.sharpe()   # realistic (T+1 fill)
 ```
 
 `lag(n)` returns a new `Portfolio` with positions shifted by `n` periods.
@@ -76,7 +76,7 @@ interactive Plotly bar chart:
 
 ```python
 fig = pf.plots.lead_lag_ir_plot(start=-5, end=10)
-fig.show()  # Sharpe ratio at each lag, from lead-5 to lag+10
+# fig.show()  — Sharpe ratio at each lag, from lead-5 to lag+10
 ```
 
 This chart immediately answers: *how much does a one-day execution delay cost
@@ -90,12 +90,12 @@ into two orthogonal sources:
 - **Tilt** — the portfolio with constant average weights (pure allocation skill)
 - **Timing** — the deviation from average weights (pure timing skill)
 
-```python +RHIZA_SKIP
+```python
 tilt_pf    = pf.tilt    # constant-weight version of the strategy
 timing_pf  = pf.timing  # weight deviations only
 
-print(tilt_pf.stats.sharpe())
-print(timing_pf.stats.sharpe())
+tilt_sharpe   = tilt_pf.stats.sharpe()
+timing_sharpe = timing_pf.stats.sharpe()
 
 decomp = pf.tilt_timing_decomp  # DataFrame: portfolio | tilt | timing NAVs side by side
 ```
@@ -103,16 +103,16 @@ decomp = pf.tilt_timing_decomp  # DataFrame: portfolio | tilt | timing NAVs side
 ### Turnover Analytics
 
 ```python
-print(pf.turnover)           # daily one-way turnover as fraction of AUM
-print(pf.turnover_weekly)    # weekly aggregate (or 5-period rolling sum)
-print(pf.turnover_summary()) # mean_daily, mean_weekly, turnover_std
+turnover         = pf.turnover           # daily one-way turnover as fraction of AUM
+turnover_weekly  = pf.turnover_weekly    # weekly aggregate (or 5-period rolling sum)
+turnover_summary = pf.turnover_summary() # mean_daily, mean_weekly, turnover_std
 ```
 
 ### Cost Modeling
 
 Two independent cost models, never accidentally combined:
 
-```python +RHIZA_SKIP
+```python
 from jquantstats import Portfolio, CostModel
 
 # Model A: per-unit cost (equity, futures tick-size costs)
@@ -120,7 +120,7 @@ pf_net = Portfolio.from_cash_position(
     prices=prices, cash_position=positions, aum=1_000_000,
     cost_model=CostModel.per_unit(0.01),
 )
-print(pf_net.net_cost_nav)      # NAV path after deducting position-delta costs
+net_cost_nav = pf_net.net_cost_nav      # NAV path after deducting position-delta costs
 
 # Model B: turnover-bps cost (macro, fund-of-funds)
 pf_bps = Portfolio.from_cash_position(
@@ -133,18 +133,23 @@ impact = pf_bps.trading_cost_impact(max_bps=20)
 
 ### Position Variants
 
-```python +RHIZA_SKIP
+```python
 # From unit positions (quantity × price → cash automatically)
+units = prices.select("date").with_columns([
+    pl.lit(1_000.0).alias("AAPL"),
+    pl.lit(500.0).alias("META"),
+])
 pf = Portfolio.from_position(prices=prices, position=units, aum=1_000_000)
 
 # From risk positions (de-volatized via EWMA, optional vol cap)
+risk_units = units
 pf = Portfolio.from_risk_position(
     prices=prices, risk_position=risk_units, aum=1_000_000,
-    vola=0.10, vol_cap=0.20,
+    vol_cap=0.20,
 )
 
 # Smooth noisy positions with a rolling mean
-pf_smooth = pf.smoothed_holding(window=5)
+pf_smooth = pf.smoothed_holding(n=5)
 ```
 
 ## jQuantStats vs QuantStats
@@ -223,18 +228,18 @@ fig = pf.plots.snapshot()   # call fig.show() to display
 
 ### Compare ideal vs. delayed execution
 
-```python +RHIZA_SKIP
+```python
 pf_t0 = pf                # signal executed immediately
 pf_t1 = pf.lag(1)         # T+1 execution
 pf_t2 = pf.lag(2)         # T+2 execution
 
-print(pf_t0.stats.sharpe())
-print(pf_t1.stats.sharpe())
-print(pf_t2.stats.sharpe())
+sharpe_t0 = pf_t0.stats.sharpe()
+sharpe_t1 = pf_t1.stats.sharpe()
+sharpe_t2 = pf_t2.stats.sharpe()
 
 # Or visualize the full lead/lag Sharpe profile in one chart
 fig = pf.plots.lead_lag_ir_plot(start=-5, end=10)
-fig.show()
+# fig.show()
 ```
 
 ### Start from a return series
