@@ -8,9 +8,9 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
-  schedule:
-    - cron: "0 9 * * 1"  # Every Monday at 09:00 UTC
-  workflow_dispatch:
+  #schedule:
+  #  - cron: "0 9 * * 1"  # Every Monday at 09:00 UTC
+  #workflow_dispatch:
 
 env:
   UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
@@ -18,7 +18,6 @@ env:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v6.0.2
         with:
@@ -26,26 +25,26 @@ jobs:
       - uses: astral-sh/setup-uv@v7.6.0
         with:
           version: "0.10.12"
-      - uses: ./.github/actions/configure-git-auth
-        with:
-          token: ${{ secrets.GH_PAT }}
+      #- uses: ./.github/actions/configure-git-auth
+      #  with:
+      #    token: ${{ secrets.GH_PAT }}
       - run: make validate
       - run: make typecheck
       - run: make security
       - run: make semgrep
+      #- run: make license
 
-  license:
+  licenses:
     name: License compliance scan
     runs-on: ubuntu-latest
-    if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v6.0.2
       - uses: astral-sh/setup-uv@v7.6.0
         with:
           version: "0.10.12"
-      - uses: ./.github/actions/configure-git-auth
-        with:
-          token: ${{ secrets.GH_PAT }}
+      #- uses: ./.github/actions/configure-git-auth
+      #  with:
+      #    token: ${{ secrets.GH_PAT }}
       - run: make license
       - uses: actions/upload-artifact@v4
         if: always()
@@ -56,7 +55,6 @@ jobs:
   pip-audit:
     name: Dependency vulnerability scan
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v6.0.2
       - uses: astral-sh/setup-uv@v7.6.0
