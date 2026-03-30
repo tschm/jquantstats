@@ -1,7 +1,18 @@
 # Migrating from QuantStats to jquantstats
 
-This guide covers everything you need to move from
+**A heartfelt thank you to [Ran Aroussi](https://github.com/ranaroussi) for creating
+[QuantStats](https://github.com/ranaroussi/quantstats) — a brilliant and widely loved
+library that has helped countless quants and portfolio managers understand their
+strategies better. This project would simply not exist without that foundation.
+We have enormous respect for the original work and encourage everyone to check it out.**
+
+`jquantstats` is a modern reimplementation built on top of Polars/Narwhals. It does
+**not** aim to replace or compete with QuantStats, but rather to offer an alternative
+interface for those already working in the Polars ecosystem. If QuantStats fits your
+workflow, use it — it's great! This guide covers everything you need to move from
 [QuantStats](https://github.com/ranaroussi/quantstats) to **jquantstats**.
+You may also learn about the move from pandas to polars.
+
 
 ---
 
@@ -404,9 +415,7 @@ pf.trading_cost_impact(max_bps=20)          # sweep cost sensitivity 0 → 20 bp
 2. **Convert** your `pd.Series` to a `pl.DataFrame` with a date column.
 3. **Construct** a `Data` object once with `Data.from_returns(...)`.
 4. **Replace** every `qs.stats.foo(r)` call with `data.stats.foo()["col"]`.
-5. **Scale** any stored `information_ratio` values by `1 / √252` if you need
-   to match old QuantStats numbers; or pass `annualise=False` to get the raw IR.
-7. **Drop** any `NaN`-filled rows before passing data in, or use `null_strategy`.
+5. **Drop** any `NaN`-filled rows before passing data in, or use `null_strategy`.
 
 ---
 
