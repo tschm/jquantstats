@@ -6,9 +6,8 @@ We actively support the following versions with security updates:
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 0.8.x   | :white_check_mark: |
-| 0.7.x   | :white_check_mark: |
-| < 0.7   | :x:                |
+| 0.6.x   | :white_check_mark: |
+| < 0.6   | :x:                |
 
 ## Reporting a Vulnerability
 
@@ -21,7 +20,7 @@ We take security vulnerabilities seriously. If you discover a security issue, pl
 Instead, please report them via one of the following methods:
 
 1. **GitHub Security Advisories** (Preferred)
-   - Go to the [Security Advisories](https://github.com/jebel-quant/rhiza/security/advisories) page
+   - Go to the [Security Advisories](https://github.com/jebel-quant/jquantstats/security/advisories) page
    - Click "New draft security advisory"
    - Fill in the details and submit
 
@@ -50,10 +49,9 @@ Please include the following information in your report:
 
 This security policy applies to:
 
-- The Rhiza template system and configuration files
+- The jquantstats Python package and its public API
 - GitHub Actions workflows provided by this repository
-- Shell scripts in `.rhiza/scripts/`
-- Python utilities in `.rhiza/utils/`
+- The REST API (`api/`)
 
 ### Out of Scope
 
@@ -85,14 +83,13 @@ This project implements several security measures:
 
 ## Security Best Practices for Users
 
-When using Rhiza templates in your projects:
+When using jquantstats in your projects:
 
-1. **Keep Updated**: Regularly sync with upstream templates
-2. **Review Changes**: Review template sync PRs before merging
-3. **Enable Security Features**: Enable CodeQL and Dependabot in your repositories
-4. **Use Locked Dependencies**: Always commit `uv.lock` for reproducible builds
-5. **Configure Branch Protection**: Require PR reviews and status checks
+1. **Pin your dependencies**: Always commit `uv.lock` or equivalent for reproducible builds
+2. **Keep Updated**: Upgrade to the latest jquantstats release to receive security patches
+3. **Enable Dependabot**: Enable Dependabot in your repositories to catch vulnerable transitive dependencies
+4. **Configure Branch Protection**: Require PR reviews and status checks
 
 ## Acknowledgments
 
-We thank the security researchers and community members who help keep Rhiza secure.
+We thank the security researchers and community members who help keep jquantstats secure.

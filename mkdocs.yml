@@ -53,12 +53,13 @@ nav:
   - Cost Models: cost_models.md
   - API Reference: api.md
   - Docs:
-    - Migration Guide: migration.md
-    - Quick Reference: QUICK_REFERENCE.md
-    - Architecture: ARCHITECTURE.md
-    - Customization: CUSTOMIZATION.md
-    - API Stability: stability.md
-    - Glossary: GLOSSARY.md
-    - Testing: TESTS.md
-    - Security: SECURITY.md
-    - Demo: DEMO.md
+    - Migration Guide: MIGRATION.md
+    - API Stability: STABILITY.md
+  - Rhiza:
+    - Quick Reference: rhiza/QUICK_REFERENCE.md
+    - Architecture: rhiza/ARCHITECTURE.md
+    - Customization: rhiza/CUSTOMIZATION.md
+    - Glossary: rhiza/GLOSSARY.md
+    - Testing: rhiza/TESTS.md
+    - Security: rhiza/SECURITY.md
+    - Demo: rhiza/DEMO.md
