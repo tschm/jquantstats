@@ -50,4 +50,5 @@ nav:
   - Home: index.md
   - Marimo Notebooks: notebooks.md
   - Reports: reports.md
+  - Cost Models: cost_models.md
   - API Reference: api.md
