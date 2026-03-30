@@ -45,7 +45,7 @@ Real strategies suffer from **execution lag**: the signal fires at the close, bu
 fills the next open, or the next close, or later. A return series hides this completely.
 A `Portfolio` exposes it.
 
-```python +RHIZA_SKIP
+```python
 import polars as pl
 from jquantstats import Portfolio
 
@@ -66,7 +66,7 @@ under a different execution assumption.
 `lead_lag_ir_plot()` sweeps the entire range at once and renders it as an
 interactive Plotly bar chart:
 
-```python +RHIZA_SKIP
+```python
 fig = pf.plots.lead_lag_ir_plot(start=-5, end=10)
 fig.show()  # Sharpe ratio at each lag, from lead-5 to lag+10
 ```
@@ -82,7 +82,7 @@ into two orthogonal sources:
 - **Tilt** — the portfolio with constant average weights (pure allocation skill)
 - **Timing** — the deviation from average weights (pure timing skill)
 
-```python +RHIZA_SKIP
+```python
 tilt_pf    = pf.tilt    # constant-weight version of the strategy
 timing_pf  = pf.timing  # weight deviations only
 
@@ -94,7 +94,7 @@ decomp = pf.tilt_timing_decomp  # DataFrame: portfolio | tilt | timing NAVs side
 
 ### Turnover Analytics
 
-```python +RHIZA_SKIP
+```python
 print(pf.turnover)           # daily one-way turnover as fraction of AUM
 print(pf.turnover_weekly)    # weekly aggregate (or 5-period rolling sum)
 print(pf.turnover_summary()) # mean_daily, mean_weekly, turnover_std
