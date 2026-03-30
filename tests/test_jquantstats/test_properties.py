@@ -204,8 +204,17 @@ def test_sharpe_scale_invariance(returns: list[float], scale: float) -> None:
     data_scaled = Data.from_returns(returns=df_scaled)
     sharpe_scaled = data_scaled.stats.sharpe()["Asset"]
 
-    both_nan = math.isnan(sharpe_original) and math.isnan(sharpe_scaled)
-    if not both_nan and not math.isnan(sharpe_original) and not math.isnan(sharpe_scaled):
+    is_nan_original = math.isnan(sharpe_original)
+    is_nan_scaled = math.isnan(sharpe_scaled)
+
+    if is_nan_original or is_nan_scaled:
+        # If either Sharpe is NaN, they must both be NaN; otherwise, scaling changed
+        # the NaN/finite status, which violates scale invariance of the metric.
+        assert is_nan_original == is_nan_scaled, (
+            f"Sharpe NaN-handling not scale-invariant: "
+            f"original={sharpe_original}, scaled={sharpe_scaled} (k={scale})"
+        )
+    else:
         assert sharpe_scaled == pytest.approx(sharpe_original, rel=1e-6), (
             f"Sharpe not scale-invariant: original={sharpe_original}, scaled={sharpe_scaled} (k={scale})"
         )
