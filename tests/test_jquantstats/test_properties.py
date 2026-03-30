@@ -211,8 +211,7 @@ def test_sharpe_scale_invariance(returns: list[float], scale: float) -> None:
         # If either Sharpe is NaN, they must both be NaN; otherwise, scaling changed
         # the NaN/finite status, which violates scale invariance of the metric.
         assert is_nan_original == is_nan_scaled, (
-            f"Sharpe NaN-handling not scale-invariant: "
-            f"original={sharpe_original}, scaled={sharpe_scaled} (k={scale})"
+            f"Sharpe NaN-handling not scale-invariant: original={sharpe_original}, scaled={sharpe_scaled} (k={scale})"
         )
     else:
         assert sharpe_scaled == pytest.approx(sharpe_original, rel=1e-6), (
