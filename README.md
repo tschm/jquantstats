@@ -90,7 +90,7 @@ into two orthogonal sources:
 - **Tilt** — the portfolio with constant average weights (pure allocation skill)
 - **Timing** — the deviation from average weights (pure timing skill)
 
-```python
+```python +RHIZA_SKIP
 tilt_pf    = pf.tilt    # constant-weight version of the strategy
 timing_pf  = pf.timing  # weight deviations only
 
