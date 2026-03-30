@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, cast
 import polars as pl
 
 from ._core import _drawdown_series, _to_float, columnwise_stat
+from ._internals import _comp_return
 
 # ── Reporting statistics mixin ───────────────────────────────────────────────
 
@@ -139,7 +140,7 @@ class _ReportingStatsMixin:
         if n == 0:
             return float("nan")  # pragma: no cover
         excess = series.cast(pl.Float64) - rf / raw_periods
-        total = _to_float((1.0 + excess).product()) - 1.0 if compounded else _to_float(excess.sum())
+        total = _comp_return(excess) if compounded else _to_float(excess.sum())
         years = n / raw_periods
         return float(abs(1.0 + total) ** (1.0 / years) - 1.0)
 
@@ -246,7 +247,7 @@ class _ReportingStatsMixin:
         if max_dd <= 0:
             return float("nan")
         n = len(series)
-        comp_return = _to_float((1.0 + series.cast(pl.Float64)).product()) - 1.0
+        comp_return = _comp_return(series)
         cagr = (1.0 + comp_return) ** (raw_periods / n) - 1.0
         return cagr / max_dd
 

@@ -9,6 +9,7 @@ import numpy as np
 import polars as pl
 
 from ._core import _to_float, to_frame
+from ._internals import _annualization_factor
 from ._performance import _PerformanceStatsMixin
 
 # ── Rolling statistics mixin ─────────────────────────────────────────────────
@@ -55,7 +56,7 @@ class _RollingStatsMixin:
 
         """
         if annualize:
-            scale = math.sqrt(periods)
+            scale = _annualization_factor(periods)
             return cast(pl.DataFrame, self.all).select(
                 [pl.col(name) for name in self.data.date_col]
                 + [
@@ -169,7 +170,7 @@ class _RollingStatsMixin:
         actual_periods = periods_per_year or self.data._periods_per_year
         if not isinstance(actual_window, int) or actual_window <= 0:
             raise ValueError("rolling_period must be a positive integer")  # noqa: TRY003
-        scale = float(np.sqrt(actual_periods))
+        scale = _annualization_factor(actual_periods)
         return cast(pl.DataFrame, self.all).select(
             [pl.col(name) for name in self.data.date_col]
             + [
@@ -267,7 +268,7 @@ class _RollingStatsMixin:
             raise ValueError("rolling_period must be a positive integer")  # noqa: TRY003
         if not isinstance(actual_periods, int | float):
             raise TypeError
-        factor = float(np.sqrt(actual_periods)) if annualize else 1.0
+        factor = _annualization_factor(actual_periods) if annualize else 1.0
         return cast(pl.DataFrame, self.all).select(
             [pl.col(name) for name in self.data.date_col]
             + [(pl.col(col).rolling_std(window_size=actual_window) * factor).alias(col) for col, _ in self.data.items()]

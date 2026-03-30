@@ -32,6 +32,12 @@ from ._core import (
     columnwise_stat,
     to_frame,
 )
+from ._internals import (
+    _annualization_factor,
+    _comp_return,
+    _downside_deviation,
+    _nav_series,
+)
 from ._performance import _PerformanceStatsMixin
 from ._reporting import _ReportingStatsMixin
 from ._rolling import _RollingStatsMixin
@@ -41,7 +47,11 @@ if TYPE_CHECKING:
 
 __all__ = [
     "Stats",
+    "_annualization_factor",
+    "_comp_return",
+    "_downside_deviation",
     "_drawdown_series",
+    "_nav_series",
     "_to_float",
     "columnwise_stat",
     "to_frame",
