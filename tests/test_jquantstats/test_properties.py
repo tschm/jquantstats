@@ -5,8 +5,8 @@ returns series, regardless of the specific values.  Examples include:
 
 - Sharpe ratio ≥ 0 when all returns are strictly positive
 - Sharpe ratio is scale-invariant: sharpe(k·r) = sharpe(r) for k > 0
-- Max drawdown is always ≥ 0 (expressed as a non-negative magnitude)
-- Max drawdown = 0 when all returns are non-negative
+- Max drawdown is always in [-1, 0] (signed drawdown in return space)
+- Max drawdown = 0 when all returns are non-negative (no peak-to-trough loss)
 - Max drawdown is bounded below by −1 (cannot lose more than 100 %)
 - Win rate is always in [0, 1]
 - Win rate = 1 when every return is strictly positive
