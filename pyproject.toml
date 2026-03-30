@@ -95,6 +95,10 @@ ipython = "ipython"
 quantstats = "quantstats"
 marimo = "marimo"
 hypothesis = "hypothesis"
+narwhals = "narwhals"
+python-multipart = "python_multipart"
+pyarrow = "pyarrow"
+httpx = "httpx"
 
 # Coverage configuration
 [tool.coverage.report]
