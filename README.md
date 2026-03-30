@@ -106,6 +106,9 @@ decomp = pf.tilt_timing_decomp  # DataFrame: portfolio | tilt | timing NAVs side
 turnover         = pf.turnover           # daily one-way turnover as fraction of AUM
 turnover_weekly  = pf.turnover_weekly    # weekly aggregate (or 5-period rolling sum)
 turnover_summary = pf.turnover_summary() # mean_daily, mean_weekly, turnover_std
+turnover         = pf.turnover           # daily one-way turnover as fraction of AUM
+turnover_weekly  = pf.turnover_weekly    # weekly aggregate (or 5-period rolling sum)
+turnover_summary = pf.turnover_summary() # mean_daily, mean_weekly, turnover_std
 ```
 
 ### Cost Modeling
