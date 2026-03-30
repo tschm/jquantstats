@@ -103,6 +103,10 @@ decomp = pf.tilt_timing_decomp  # DataFrame: portfolio | tilt | timing NAVs side
 ### Turnover Analytics
 
 ```python
+print(pf.turnover)           # daily one-way turnover as fraction of AUM
+print(pf.turnover_weekly)    # weekly aggregate (or 5-period rolling sum)
+print(pf.turnover_summary()) # mean_daily, mean_weekly, turnover_std
+```python
 turnover         = pf.turnover           # daily one-way turnover as fraction of AUM
 turnover_weekly  = pf.turnover_weekly    # weekly aggregate (or 5-period rolling sum)
 turnover_summary = pf.turnover_summary() # mean_daily, mean_weekly, turnover_std
