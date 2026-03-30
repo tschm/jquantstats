@@ -11,6 +11,7 @@ import polars as pl
 from scipy.stats import norm
 
 from ._core import columnwise_stat
+from ._internals import _annualization_factor, _comp_return
 
 # ── Basic statistics mixin ───────────────────────────────────────────────────
 
@@ -125,7 +126,7 @@ class _BasicStatsMixin:
             float: Total compounded return.
 
         """
-        return float((1.0 + series.drop_nulls().cast(pl.Float64)).product()) - 1.0
+        return _comp_return(series)
 
     @columnwise_stat
     def geometric_mean(self, series: pl.Series, periods: int | float | None = None, annualize: bool = False) -> float:
@@ -177,7 +178,7 @@ class _BasicStatsMixin:
         if not isinstance(raw_periods, int | float):
             raise TypeError(f"Expected int or float for periods, got {type(raw_periods).__name__}")  # noqa: TRY003
 
-        factor = float(np.sqrt(raw_periods)) if annualize else 1.0
+        factor = _annualization_factor(raw_periods) if annualize else 1.0
         std_val = cast(float, series.std())
         return (std_val if std_val is not None else 0.0) * factor
 
@@ -376,7 +377,7 @@ class _BasicStatsMixin:
             float: Ulcer Performance Index.
 
         """
-        comp = float((1 + series.cast(pl.Float64)).product()) - 1
+        comp = _comp_return(series)
         ui = self._ulcer_index_series(series)
         return float(np.nan) if ui == 0 else (comp - rf) / ui
 

@@ -1658,3 +1658,119 @@ def test_monthly_returns_missing_months_filled(partial_year_data):
         # All 12 month columns should be present even if data only covers Jan-Mar
         for month in ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]:
             assert month in df.columns
+
+
+# ── _internals shared helpers ─────────────────────────────────────────────────
+
+
+def test_comp_return_known_values():
+    """_comp_return returns the correct compounded return for a simple series."""
+    import polars as pl
+
+    from jquantstats._stats._internals import _comp_return
+
+    s = pl.Series([0.1, -0.05, 0.2])
+    # (1.1)(0.95)(1.2) - 1 = 1.254 - 1 = 0.254
+    assert _comp_return(s) == pytest.approx(1.1 * 0.95 * 1.2 - 1.0)
+
+
+def test_comp_return_all_zeros():
+    """_comp_return returns 0.0 for a series of zeros."""
+    import polars as pl
+
+    from jquantstats._stats._internals import _comp_return
+
+    assert _comp_return(pl.Series([0.0, 0.0, 0.0])) == pytest.approx(0.0)
+
+
+def test_comp_return_drops_nulls():
+    """_comp_return ignores null values when computing the product."""
+    import polars as pl
+
+    from jquantstats._stats._internals import _comp_return
+
+    s_with_null = pl.Series([0.1, None, 0.1], dtype=pl.Float64)
+    s_no_null = pl.Series([0.1, 0.1])
+    assert _comp_return(s_with_null) == pytest.approx(_comp_return(s_no_null))
+
+
+def test_nav_series_starts_at_one_plus_r():
+    """_nav_series first value equals 1 + first return."""
+    import polars as pl
+
+    from jquantstats._stats._internals import _nav_series
+
+    s = pl.Series([0.05, -0.02, 0.03])
+    nav = _nav_series(s)
+    assert nav[0] == pytest.approx(1.05)
+    assert nav[1] == pytest.approx(1.05 * 0.98)
+    assert nav[2] == pytest.approx(1.05 * 0.98 * 1.03)
+
+
+def test_nav_series_flat_returns():
+    """_nav_series on a zero-return series stays constant at 1.0."""
+    import polars as pl
+
+    from jquantstats._stats._internals import _nav_series
+
+    nav = _nav_series(pl.Series([0.0, 0.0, 0.0]))
+    assert nav.to_list() == pytest.approx([1.0, 1.0, 1.0])
+
+
+def test_annualization_factor_sqrt():
+    """_annualization_factor(252) returns sqrt(252)."""
+    import math
+
+    from jquantstats._stats._internals import _annualization_factor
+
+    assert _annualization_factor(252) == pytest.approx(math.sqrt(252))
+
+
+def test_annualization_factor_linear():
+    """_annualization_factor(252, sqrt=False) returns 252.0."""
+    from jquantstats._stats._internals import _annualization_factor
+
+    assert _annualization_factor(252, sqrt=False) == pytest.approx(252.0)
+
+
+def test_annualization_factor_invalid():
+    """_annualization_factor raises ValueError for non-positive periods."""
+    from jquantstats._stats._internals import _annualization_factor
+
+    with pytest.raises(ValueError, match="positive finite number"):
+        _annualization_factor(0)
+    with pytest.raises(ValueError, match="positive finite number"):
+        _annualization_factor(-1)
+
+
+def test_downside_deviation_known_values():
+    """_downside_deviation matches manual computation."""
+    import math
+
+    import polars as pl
+
+    from jquantstats._stats._internals import _downside_deviation
+
+    s = pl.Series([0.05, -0.02, 0.03, -0.01, 0.0])
+    # Only -0.02 and -0.01 are negative; sum of squares = 0.0004 + 0.0001 = 0.0005
+    # n = 5 (total count); downside_dev = sqrt(0.0005 / 5) = sqrt(0.0001) = 0.01
+    expected = math.sqrt(0.0005 / 5)
+    assert _downside_deviation(s) == pytest.approx(expected)
+
+
+def test_downside_deviation_all_positive():
+    """_downside_deviation returns 0.0 when there are no negative returns."""
+    import polars as pl
+
+    from jquantstats._stats._internals import _downside_deviation
+
+    assert _downside_deviation(pl.Series([0.1, 0.2, 0.3])) == pytest.approx(0.0)
+
+
+def test_downside_deviation_empty():
+    """_downside_deviation returns 0.0 for an empty series."""
+    import polars as pl
+
+    from jquantstats._stats._internals import _downside_deviation
+
+    assert _downside_deviation(pl.Series([], dtype=pl.Float64)) == pytest.approx(0.0)
