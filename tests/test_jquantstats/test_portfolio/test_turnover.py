@@ -121,3 +121,24 @@ def test_turnover_summary_without_date_column(int_portfolio):
     """turnover_summary should work for integer-indexed portfolios."""
     summary = int_portfolio.turnover_summary()
     assert list(summary["metric"]) == ["mean_daily_turnover", "mean_weekly_turnover", "turnover_std"]
+
+
+# ─── Caching tests ────────────────────────────────────────────────────────────
+
+
+def test_turnover_cache_is_none_before_first_access(turnover_portfolio):
+    """_turnover_cache should be None before turnover is accessed."""
+    assert turnover_portfolio._turnover_cache is None
+
+
+def test_turnover_cache_is_set_after_first_access(turnover_portfolio):
+    """_turnover_cache should be populated after turnover is accessed."""
+    _ = turnover_portfolio.turnover
+    assert turnover_portfolio._turnover_cache is not None
+
+
+def test_turnover_returns_cached_object_on_second_access(turnover_portfolio):
+    """Repeated access to turnover should return the same cached DataFrame object."""
+    first = turnover_portfolio.turnover
+    second = turnover_portfolio.turnover
+    assert first is second

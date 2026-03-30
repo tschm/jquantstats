@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 from typing import TYPE_CHECKING
 
 import polars as pl
@@ -13,6 +14,7 @@ class PortfolioTurnoverMixin:
     if TYPE_CHECKING:
         cashposition: pl.DataFrame
         aum: float
+        _turnover_cache: pl.DataFrame | None
 
     @property
     def turnover(self) -> pl.DataFrame:
@@ -21,6 +23,14 @@ class PortfolioTurnoverMixin:
         Computes the sum of absolute position changes across all assets for
         each period, normalised by AUM.  The first row is always zero because
         there is no prior position to form a difference against.
+
+        The result is cached after first access so repeated calls are O(1).
+
+        Note:
+            Caching is not thread-safe.  Concurrent access from multiple
+            threads may trigger redundant computation, but will never produce
+            incorrect results because each thread stores the same deterministic
+            value.
 
         Returns:
             pl.DataFrame: Frame with an optional ``'date'`` column and a
@@ -37,6 +47,10 @@ class PortfolioTurnoverMixin:
             >>> pf.turnover["turnover"].to_list()
             [0.0, 0.002, 0.003]
         """
+        cache = getattr(self, "_turnover_cache", None)
+        if cache is not None:
+            return cache
+
         assets = [c for c in self.cashposition.columns if c != "date" and self.cashposition[c].dtype.is_numeric()]
         daily_abs_chg = (
             pl.sum_horizontal(pl.col(c).diff().abs().fill_null(0.0).fill_nan(0.0) for c in assets) / self.aum
@@ -45,7 +59,11 @@ class PortfolioTurnoverMixin:
         if "date" in self.cashposition.columns:
             cols.append("date")
         cols.append(daily_abs_chg)
-        return self.cashposition.select(cols)
+        result = self.cashposition.select(cols)
+
+        with contextlib.suppress(AttributeError, TypeError):
+            object.__setattr__(self, "_turnover_cache", result)
+        return result
 
     @property
     def turnover_weekly(self) -> pl.DataFrame:
