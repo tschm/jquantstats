@@ -365,7 +365,7 @@ class DataPlots:
             ...     "Asset": [0.01, -0.02, 0.03],
             ... }).with_columns(pl.col("Date").str.to_date())
             >>> data = Data.from_returns(returns=returns)
-            >>> fig = data.plots.plot_snapshot(title="My Portfolio Performance")
+            >>> fig = data.plots.snapshot(title="My Portfolio Performance")
             >>> # Optional: display the interactive figure
             >>> fig.show()  # doctest: +SKIP
 

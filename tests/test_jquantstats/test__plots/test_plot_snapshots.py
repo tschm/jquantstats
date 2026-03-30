@@ -35,7 +35,7 @@ def plots(data):
 
 
 def test_plot_snapshot_structure(plots, snapshot: SnapshotAssertion):
-    """plot_snapshot() structure should not change unexpectedly.
+    """snapshot() structure should not change unexpectedly.
 
     Captures the number of traces, their types and names, and key layout
     properties for the default (multi-ticker + benchmark) snapshot chart.
@@ -45,7 +45,7 @@ def test_plot_snapshot_structure(plots, snapshot: SnapshotAssertion):
 
 
 def test_plot_snapshot_log_scale_structure(plots, snapshot: SnapshotAssertion):
-    """plot_snapshot(log_scale=True) layout structure should not change unexpectedly.
+    """snapshot(log_scale=True) layout structure should not change unexpectedly.
 
     The log-scale variant should produce the same structural fingerprint as
     the default chart; only the y-axis scale type differs.

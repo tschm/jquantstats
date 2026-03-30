@@ -105,14 +105,14 @@ def cell_load_data():
 @app.cell
 def cell_dp_snapshot_header() -> None:
     """DataPlots — snapshot header."""
-    mo.md("### 1 · `plot_snapshot` — three-panel dashboard")
+    mo.md("### 1 · `snapshot` — three-panel dashboard")
     return
 
 
 @app.cell
 def cell_dp_snapshot(data):
-    """DataPlots.plot_snapshot — cumulative returns, drawdown, daily returns."""
-    fig_snapshot = data.plots.plot_snapshot(title="AAPL + META vs SPY")
+    """DataPlots.snapshot — cumulative returns, drawdown, daily returns."""
+    fig_snapshot = data.plots.snapshot(title="AAPL + META vs SPY")
     return (fig_snapshot,)
 
 
@@ -126,14 +126,14 @@ def cell_dp_snapshot_show(fig_snapshot) -> None:
 @app.cell
 def cell_dp_returns_header() -> None:
     """DataPlots — cumulative returns header."""
-    mo.md("### 2 · `plot_returns` — cumulative compounded returns")
+    mo.md("### 2 · `returns` — cumulative compounded returns")
     return
 
 
 @app.cell
 def cell_dp_returns(data):
-    """DataPlots.plot_returns."""
-    fig_returns = data.plots.plot_returns(title="Cumulative Returns")
+    """DataPlots.returns."""
+    fig_returns = data.plots.returns(title="Cumulative Returns")
     return (fig_returns,)
 
 
@@ -147,14 +147,14 @@ def cell_dp_returns_show(fig_returns) -> None:
 @app.cell
 def cell_dp_log_returns_header() -> None:
     """DataPlots — log returns header."""
-    mo.md("### 3 · `plot_log_returns` — cumulative log returns")
+    mo.md("### 3 · `log_returns` — cumulative log returns")
     return
 
 
 @app.cell
 def cell_dp_log_returns(data):
-    """DataPlots.plot_log_returns."""
-    fig_log_returns = data.plots.plot_log_returns(title="Log Returns")
+    """DataPlots.log_returns."""
+    fig_log_returns = data.plots.log_returns(title="Log Returns")
     return (fig_log_returns,)
 
 
@@ -168,14 +168,14 @@ def cell_dp_log_returns_show(fig_log_returns) -> None:
 @app.cell
 def cell_dp_daily_header() -> None:
     """DataPlots — daily returns header."""
-    mo.md("### 4 · `plot_daily_returns` — daily returns bar chart")
+    mo.md("### 4 · `daily_returns` — daily returns bar chart")
     return
 
 
 @app.cell
 def cell_dp_daily(data):
-    """DataPlots.plot_daily_returns."""
-    fig_daily = data.plots.plot_daily_returns(title="Daily Returns")
+    """DataPlots.daily_returns."""
+    fig_daily = data.plots.daily_returns(title="Daily Returns")
     return (fig_daily,)
 
 
@@ -189,14 +189,14 @@ def cell_dp_daily_show(fig_daily) -> None:
 @app.cell
 def cell_dp_yearly_header() -> None:
     """DataPlots — yearly returns header."""
-    mo.md("### 5 · `plot_yearly_returns` — annual returns bar chart")
+    mo.md("### 5 · `yearly_returns` — annual returns bar chart")
     return
 
 
 @app.cell
 def cell_dp_yearly(data):
-    """DataPlots.plot_yearly_returns."""
-    fig_yearly = data.plots.plot_yearly_returns(title="Yearly Returns")
+    """DataPlots.yearly_returns."""
+    fig_yearly = data.plots.yearly_returns(title="Yearly Returns")
     return (fig_yearly,)
 
 
@@ -210,14 +210,14 @@ def cell_dp_yearly_show(fig_yearly) -> None:
 @app.cell
 def cell_dp_monthly_header() -> None:
     """DataPlots — monthly returns header."""
-    mo.md("### 6 · `plot_monthly_returns` — monthly returns bar chart")
+    mo.md("### 6 · `monthly_returns` — monthly returns bar chart")
     return
 
 
 @app.cell
 def cell_dp_monthly(data):
-    """DataPlots.plot_monthly_returns."""
-    fig_monthly = data.plots.plot_monthly_returns(title="Monthly Returns")
+    """DataPlots.monthly_returns."""
+    fig_monthly = data.plots.monthly_returns(title="Monthly Returns")
     return (fig_monthly,)
 
 
@@ -231,14 +231,14 @@ def cell_dp_monthly_show(fig_monthly) -> None:
 @app.cell
 def cell_dp_heatmap_header() -> None:
     """DataPlots — monthly heatmap header."""
-    mo.md("### 7 · `plot_monthly_heatmap` — year × month heatmap")
+    mo.md("### 7 · `monthly_heatmap` — year × month heatmap")
     return
 
 
 @app.cell
 def cell_dp_heatmap(data):
-    """DataPlots.plot_monthly_heatmap (AAPL)."""
-    fig_heatmap = data.plots.plot_monthly_heatmap(title="Monthly Heatmap — AAPL", asset="AAPL")
+    """DataPlots.monthly_heatmap (AAPL)."""
+    fig_heatmap = data.plots.monthly_heatmap(title="Monthly Heatmap — AAPL", asset="AAPL")
     return (fig_heatmap,)
 
 
@@ -252,14 +252,14 @@ def cell_dp_heatmap_show(fig_heatmap) -> None:
 @app.cell
 def cell_dp_histogram_header() -> None:
     """DataPlots — histogram header."""
-    mo.md("### 8 · `plot_histogram` — return histogram with KDE overlay")
+    mo.md("### 8 · `histogram` — return histogram with KDE overlay")
     return
 
 
 @app.cell
 def cell_dp_histogram(data):
-    """DataPlots.plot_histogram."""
-    fig_histogram = data.plots.plot_histogram(title="Returns Distribution")
+    """DataPlots.histogram."""
+    fig_histogram = data.plots.histogram(title="Returns Distribution")
     return (fig_histogram,)
 
 
@@ -273,14 +273,14 @@ def cell_dp_histogram_show(fig_histogram) -> None:
 @app.cell
 def cell_dp_distribution_header() -> None:
     """DataPlots — distribution header."""
-    mo.md("### 9 · `plot_distribution` — returns across aggregation periods (box plot)")
+    mo.md("### 9 · `distribution` — returns across aggregation periods (box plot)")
     return
 
 
 @app.cell
 def cell_dp_distribution(data):
-    """DataPlots.plot_distribution."""
-    fig_distribution = data.plots.plot_distribution(title="Return Distribution by Period")
+    """DataPlots.distribution."""
+    fig_distribution = data.plots.distribution(title="Return Distribution by Period")
     return (fig_distribution,)
 
 
@@ -294,14 +294,14 @@ def cell_dp_distribution_show(fig_distribution) -> None:
 @app.cell
 def cell_dp_drawdown_header() -> None:
     """DataPlots — drawdown header."""
-    mo.md("### 10 · `plot_drawdown` — underwater equity curve")
+    mo.md("### 10 · `drawdown` — underwater equity curve")
     return
 
 
 @app.cell
 def cell_dp_drawdown(data):
-    """DataPlots.plot_drawdown."""
-    fig_drawdown = data.plots.plot_drawdown(title="Drawdowns")
+    """DataPlots.drawdown."""
+    fig_drawdown = data.plots.drawdown(title="Drawdowns")
     return (fig_drawdown,)
 
 
@@ -315,14 +315,14 @@ def cell_dp_drawdown_show(fig_drawdown) -> None:
 @app.cell
 def cell_dp_drawdown_periods_header() -> None:
     """DataPlots — drawdown periods header."""
-    mo.md("### 11 · `plot_drawdowns_periods` — top-5 drawdown shading (AAPL)")
+    mo.md("### 11 · `drawdowns_periods` — top-5 drawdown shading (AAPL)")
     return
 
 
 @app.cell
 def cell_dp_drawdown_periods(data):
-    """DataPlots.plot_drawdowns_periods."""
-    fig_dd_periods = data.plots.plot_drawdowns_periods(n=5, title="Top 5 Drawdown Periods — AAPL", asset="AAPL")
+    """DataPlots.drawdowns_periods."""
+    fig_dd_periods = data.plots.drawdowns_periods(n=5, title="Top 5 Drawdown Periods — AAPL", asset="AAPL")
     return (fig_dd_periods,)
 
 
@@ -336,14 +336,14 @@ def cell_dp_drawdown_periods_show(fig_dd_periods) -> None:
 @app.cell
 def cell_dp_earnings_header() -> None:
     """DataPlots — earnings header."""
-    mo.md("### 12 · `plot_earnings` — dollar equity curve")
+    mo.md("### 12 · `earnings` — dollar equity curve")
     return
 
 
 @app.cell
 def cell_dp_earnings(data):
-    """DataPlots.plot_earnings."""
-    fig_earnings = data.plots.plot_earnings(start_balance=100_000, title="Portfolio Earnings ($100k start)")
+    """DataPlots.earnings."""
+    fig_earnings = data.plots.earnings(start_balance=100_000, title="Portfolio Earnings ($100k start)")
     return (fig_earnings,)
 
 
@@ -357,14 +357,14 @@ def cell_dp_earnings_show(fig_earnings) -> None:
 @app.cell
 def cell_dp_rolling_sharpe_header() -> None:
     """DataPlots — rolling Sharpe header."""
-    mo.md("### 13 · `plot_rolling_sharpe` — 6-month rolling Sharpe ratio")
+    mo.md("### 13 · `rolling_sharpe` — 6-month rolling Sharpe ratio")
     return
 
 
 @app.cell
 def cell_dp_rolling_sharpe(data):
-    """DataPlots.plot_rolling_sharpe."""
-    fig_rolling_sharpe = data.plots.plot_rolling_sharpe(rolling_period=126, title="Rolling Sharpe (126-day)")
+    """DataPlots.rolling_sharpe."""
+    fig_rolling_sharpe = data.plots.rolling_sharpe(rolling_period=126, title="Rolling Sharpe (126-day)")
     return (fig_rolling_sharpe,)
 
 
@@ -378,14 +378,14 @@ def cell_dp_rolling_sharpe_show(fig_rolling_sharpe) -> None:
 @app.cell
 def cell_dp_rolling_sortino_header() -> None:
     """DataPlots — rolling Sortino header."""
-    mo.md("### 14 · `plot_rolling_sortino` — 6-month rolling Sortino ratio")
+    mo.md("### 14 · `rolling_sortino` — 6-month rolling Sortino ratio")
     return
 
 
 @app.cell
 def cell_dp_rolling_sortino(data):
-    """DataPlots.plot_rolling_sortino."""
-    fig_rolling_sortino = data.plots.plot_rolling_sortino(rolling_period=126, title="Rolling Sortino (126-day)")
+    """DataPlots.rolling_sortino."""
+    fig_rolling_sortino = data.plots.rolling_sortino(rolling_period=126, title="Rolling Sortino (126-day)")
     return (fig_rolling_sortino,)
 
 
@@ -399,14 +399,14 @@ def cell_dp_rolling_sortino_show(fig_rolling_sortino) -> None:
 @app.cell
 def cell_dp_rolling_vol_header() -> None:
     """DataPlots — rolling volatility header."""
-    mo.md("### 15 · `plot_rolling_volatility` — 6-month rolling annualised volatility")
+    mo.md("### 15 · `rolling_volatility` — 6-month rolling annualised volatility")
     return
 
 
 @app.cell
 def cell_dp_rolling_vol(data):
-    """DataPlots.plot_rolling_volatility."""
-    fig_rolling_vol = data.plots.plot_rolling_volatility(rolling_period=126, title="Rolling Volatility (126-day)")
+    """DataPlots.rolling_volatility."""
+    fig_rolling_vol = data.plots.rolling_volatility(rolling_period=126, title="Rolling Volatility (126-day)")
     return (fig_rolling_vol,)
 
 
@@ -420,14 +420,14 @@ def cell_dp_rolling_vol_show(fig_rolling_vol) -> None:
 @app.cell
 def cell_dp_rolling_beta_header() -> None:
     """DataPlots — rolling beta header."""
-    mo.md("### 16 · `plot_rolling_beta` — rolling beta versus benchmark")
+    mo.md("### 16 · `rolling_beta` — rolling beta versus benchmark")
     return
 
 
 @app.cell
 def cell_dp_rolling_beta(data):
-    """DataPlots.plot_rolling_beta."""
-    fig_rolling_beta = data.plots.plot_rolling_beta(rolling_period=126, title="Rolling Beta vs SPY (126-day)")
+    """DataPlots.rolling_beta."""
+    fig_rolling_beta = data.plots.rolling_beta(rolling_period=126, title="Rolling Beta vs SPY (126-day)")
     return (fig_rolling_beta,)
 
 
