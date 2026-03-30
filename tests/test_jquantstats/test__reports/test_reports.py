@@ -621,15 +621,15 @@ def test_full_skips_missing_plot_method(data):
     from jquantstats._reports._data import Reports
 
     class _PlotsProxy:
-        """Plots proxy that hides plot_histogram to exercise the fn-is-None branch."""
+        """Plots proxy that hides histogram to exercise the fn-is-None branch."""
 
         def __init__(self, real: object) -> None:
             """Wrap a real Plots object."""
             self._real = real
 
         def __getattr__(self, name: str) -> object:
-            """Delegate all methods except plot_histogram."""
-            if name == "plot_histogram":
+            """Delegate all methods except histogram."""
+            if name == "histogram":
                 raise AttributeError(name)
             return getattr(self._real, name)
 
@@ -656,7 +656,7 @@ def test_full_skips_missing_plot_method(data):
 
         @property
         def plots(self) -> _PlotsProxy:
-            """Return a Plots proxy with plot_histogram removed."""
+            """Return a Plots proxy with histogram removed."""
             return _PlotsProxy(self._real.plots)  # type: ignore[union-attr]
 
     reports_proxy = Reports(data=_DataProxy(data))  # type: ignore[arg-type]

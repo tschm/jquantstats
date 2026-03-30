@@ -40,7 +40,7 @@ def test_plot_snapshot_structure(plots, snapshot: SnapshotAssertion):
     Captures the number of traces, their types and names, and key layout
     properties for the default (multi-ticker + benchmark) snapshot chart.
     """
-    fig = plots.plot_snapshot()
+    fig = plots.snapshot()
     assert figure_structure(fig) == snapshot
 
 
@@ -50,7 +50,7 @@ def test_plot_snapshot_log_scale_structure(plots, snapshot: SnapshotAssertion):
     The log-scale variant should produce the same structural fingerprint as
     the default chart; only the y-axis scale type differs.
     """
-    fig = plots.plot_snapshot(log_scale=True)
+    fig = plots.snapshot(log_scale=True)
     assert figure_structure(fig) == snapshot
 
 
@@ -61,7 +61,7 @@ def test_plot_snapshot_single_symbol_structure(returns, snapshot: SnapshotAssert
     green/red bar colouring instead of per-ticker colours.  This test
     verifies the trace count and types remain stable.
     """
-    fig = Data.from_returns(returns=returns).plots.plot_snapshot()
+    fig = Data.from_returns(returns=returns).plots.snapshot()
     assert figure_structure(fig) == snapshot
 
 

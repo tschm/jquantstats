@@ -800,14 +800,14 @@ class Reports:
         chart_parts: list[str] = []
         if plots is not None:
             _chart_methods = [
-                ("plot_snapshot", {}),
-                ("plot_returns", {}),
-                ("plot_drawdown", {}),
-                ("plot_rolling_sharpe", {}),
-                ("plot_rolling_volatility", {}),
-                ("plot_monthly_heatmap", {}),
-                ("plot_yearly_returns", {}),
-                ("plot_histogram", {}),
+                ("snapshot", {}),
+                ("returns", {}),
+                ("drawdown", {}),
+                ("rolling_sharpe", {}),
+                ("rolling_volatility", {}),
+                ("monthly_heatmap", {}),
+                ("yearly_returns", {}),
+                ("histogram", {}),
             ]
             for i, (method, kwargs) in enumerate(_chart_methods):
                 fn = getattr(plots, method, None)

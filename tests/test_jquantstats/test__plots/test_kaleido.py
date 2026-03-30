@@ -20,7 +20,7 @@ _PNG_MAGIC = b"\x89PNG"
 @pytest.mark.kaleido
 def test_data_plot_snapshot_to_image_returns_png_bytes(data):
     """to_image() on plot_snapshot returns non-empty PNG bytes."""
-    fig = data.plots.plot_snapshot()
+    fig = data.plots.snapshot()
     img = fig.to_image(format="png")
     assert isinstance(img, bytes)
     assert len(img) > 0
@@ -31,7 +31,7 @@ def test_data_plot_snapshot_to_image_returns_png_bytes(data):
 def test_data_plot_snapshot_write_image(data, tmp_path):
     """write_image() writes a readable PNG file to disk."""
     out = tmp_path / "snapshot.png"
-    fig = data.plots.plot_snapshot()
+    fig = data.plots.snapshot()
     fig.write_image(str(out), format="png")
     assert out.exists()
     assert out.stat().st_size > 0

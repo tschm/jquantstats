@@ -250,7 +250,7 @@ data = Data.from_returns(returns=returns, benchmark=benchmark)
 
 sharpe   = data.stats.sharpe()        # {'Strategy': 4.24, 'Benchmark': 4.94}
 max_dd   = data.stats.max_drawdown()  # {'Strategy': 0.03, 'Benchmark': 0.01}
-fig      = data.plots.plot_snapshot(title="Strategy vs Benchmark")  # call fig.show() to display
+fig      = data.plots.snapshot(title="Strategy vs Benchmark")  # call fig.show() to display
 ```
 
 ### Risk metrics
