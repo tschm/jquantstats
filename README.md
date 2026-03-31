@@ -46,10 +46,18 @@ fills the next open, or the next close, or later. A return series hides this com
 A `Portfolio` exposes it.
 
 ```python
+import numpy as np
 import polars as pl
 from jquantstats import Portfolio
 
-prices = pl.read_csv("tests/test_jquantstats/resources/prices.csv", try_parse_dates=True)
+rng = np.random.default_rng(42)
+n = 252  # approximately one trading year
+
+prices = pl.DataFrame({
+    "date": pl.date_range(pl.date(2020, 1, 2), pl.date(2020, 12, 31), interval="1d", eager=True)[:n],
+    "AAPL": (100.0 * np.cumprod(1 + rng.normal(0.0005, 0.015, n))).tolist(),
+    "META": (150.0 * np.cumprod(1 + rng.normal(0.0003, 0.018, n))).tolist(),
+})
 
 # Allocate $500k to each asset as constant cash positions
 positions = prices.select("date").with_columns([
