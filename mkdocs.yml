@@ -48,6 +48,7 @@ markdown_extensions:
 
 nav:
   - Home: index.md
+  - Getting Started: getting_started.md
   - Marimo Notebooks: notebooks.md
   - Reports: reports.md
   - Cost Models: cost_models.md
