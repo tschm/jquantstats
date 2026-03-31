@@ -16,7 +16,7 @@ from __future__ import annotations
 import dataclasses
 import math
 from pathlib import Path
-from typing import TYPE_CHECKING, TypeGuard
+from typing import TYPE_CHECKING, Any, Callable, TypeGuard
 
 import plotly.graph_objects as go
 import plotly.io as pio
@@ -37,14 +37,14 @@ _env = Environment(
 # ── Formatting helpers ────────────────────────────────────────────────────────
 
 
-def _is_finite(v: object) -> TypeGuard[int | float]:
+def _is_finite(v: Any) -> TypeGuard[int | float]:
     """Return True when *v* is a real, finite number."""
     if not isinstance(v, (int, float)):
         return False
     return math.isfinite(float(v))
 
 
-def _fmt(value: object, fmt: str = ".4f", suffix: str = "") -> str:
+def _fmt(value: Any, fmt: str = ".4f", suffix: str = "") -> str:
     """Format *value* for display in an HTML table cell.
 
     Returns ``"N/A"`` for ``None``, ``NaN``, or non-finite values.
@@ -129,7 +129,7 @@ def _stats_table_html(summary: pl.DataFrame) -> str:
     assets = [c for c in summary.columns if c != "metric"]
 
     # Build a fast lookup: metric_name → {asset: value}
-    metric_data: dict[str, dict[str, object]] = {}
+    metric_data: dict[str, dict[str, Any]] = {}
     for row in summary.iter_rows(named=True):
         name = str(row["metric"])
         metric_data[name] = {a: row.get(a) for a in assets}
@@ -255,10 +255,10 @@ class Report:
             _first = False
             return _figure_div(fig, include)
 
-        def _try_div(build_fig: object) -> str:
+        def _try_div(build_fig: Callable[[], go.Figure]) -> str:
             """Call *build_fig()* and return the chart div; on error return a notice."""
             try:
-                fig = build_fig()  # type: ignore[operator]
+                fig = build_fig()
                 return _div(fig)
             except Exception as exc:
                 return f'<p class="chart-unavailable">Chart unavailable: {exc}</p>'

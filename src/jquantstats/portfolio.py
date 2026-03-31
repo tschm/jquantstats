@@ -25,6 +25,7 @@ Public API is unchanged:
 """
 
 import dataclasses
+from datetime import date, datetime
 from typing import TYPE_CHECKING, Self
 
 if TYPE_CHECKING:
@@ -150,6 +151,19 @@ class Portfolio(
     aum: float
     cost_per_unit: float = 0.0
     cost_bps: float = 0.0
+
+    # ── Internal cache fields ─────────────────────────────────────────────────
+    # All cache fields are initialised to ``None`` in ``__post_init__`` via
+    # ``object.__setattr__`` (required for frozen dataclasses) and populated
+    # lazily on first property access.
+    #
+    # Lifecycle:
+    #   - Initialised: ``__post_init__`` sets every field to ``None``.
+    #   - Populated: each property computes its value on the first call and
+    #     writes it back via ``object.__setattr__``.
+    #   - Invalidation: not required — ``Portfolio`` is a *frozen* dataclass,
+    #     so its inputs never change and all derived values remain valid for the
+    #     lifetime of the instance.
     _data_bridge: "Data | None" = dataclasses.field(init=False, repr=False, compare=False, hash=False)
     _stats_cache: "Stats | None" = dataclasses.field(init=False, repr=False, compare=False, hash=False)
     _plots_cache: "PortfolioPlots | None" = dataclasses.field(init=False, repr=False, compare=False, hash=False)
@@ -201,7 +215,7 @@ class Portfolio(
         object.__setattr__(self, "_tilt_cache", None)
         object.__setattr__(self, "_turnover_cache", None)
 
-    def _date_range(self) -> tuple[int, object, object]:
+    def _date_range(self) -> tuple[int, date | datetime | None, date | datetime | None]:
         """Return (rows, start, end) for the portfolio's returns series.
 
         ``start`` and ``end`` are ``None`` when there is no ``'date'`` column.
@@ -559,7 +573,7 @@ class Portfolio(
 
     # ── Portfolio transforms ───────────────────────────────────────────────────
 
-    def truncate(self, start: object = None, end: object = None) -> "Portfolio":
+    def truncate(self, start: date | datetime | str | int | None = None, end: date | datetime | str | int | None = None) -> "Portfolio":
         """Return a new Portfolio truncated to the inclusive [start, end] range.
 
         When a ``'date'`` column is present in both prices and cash positions,

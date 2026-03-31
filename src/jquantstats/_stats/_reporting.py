@@ -778,7 +778,7 @@ class _ReportingStatsMixin:
             "recovery_factor": _safe(self.recovery_factor),
         }
 
-        rows: list[dict[str, object]] = [
+        rows: list[dict[str, Any]] = [
             {"metric": name, **{asset: values.get(asset) for asset in assets}} for name, values in metrics.items()
         ]
         return pl.DataFrame(rows)

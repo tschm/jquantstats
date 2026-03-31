@@ -15,14 +15,14 @@ if TYPE_CHECKING:
 # ── Formatting helpers ────────────────────────────────────────────────────────
 
 
-def _is_finite(v: object) -> bool:
+def _is_finite(v: Any) -> bool:
     """Return True when *v* is a real, finite number."""
     if not isinstance(v, (int, float)):
         return False
     return math.isfinite(float(v))
 
 
-def _fmt(value: object, fmt: str = ".4f", suffix: str = "") -> str:
+def _fmt(value: Any, fmt: str = ".4f", suffix: str = "") -> str:
     """Format *value* for display; return ``"N/A"`` for non-finite values."""
     if not _is_finite(value):
         return "N/A"
@@ -485,7 +485,7 @@ def _metrics_table_html(df: pl.DataFrame) -> str:
 
     """
     assets = [c for c in df.columns if c != "Metric"]
-    rows_by_label: dict[str, dict[str, object]] = {
+    rows_by_label: dict[str, dict[str, Any]] = {
         str(row["Metric"]): {a: row.get(a) for a in assets} for row in df.iter_rows(named=True)
     }
 
