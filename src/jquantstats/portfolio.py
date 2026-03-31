@@ -26,7 +26,7 @@ Public API is unchanged:
 
 import dataclasses
 from datetime import date, datetime
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Self, cast
 
 if TYPE_CHECKING:
     from ._stats import Stats as Stats
@@ -223,7 +223,7 @@ class Portfolio(
         ret = self.returns
         rows = ret.height
         if "date" in ret.columns:
-            return rows, ret["date"].min(), ret["date"].max()
+            return rows, cast(date | None, ret["date"].min()), cast(date | None, ret["date"].max())
         return rows, None, None
 
     @property
@@ -573,7 +573,11 @@ class Portfolio(
 
     # ── Portfolio transforms ───────────────────────────────────────────────────
 
-    def truncate(self, start: date | datetime | str | int | None = None, end: date | datetime | str | int | None = None) -> "Portfolio":
+    def truncate(
+        self,
+        start: date | datetime | str | int | None = None,
+        end: date | datetime | str | int | None = None,
+    ) -> "Portfolio":
         """Return a new Portfolio truncated to the inclusive [start, end] range.
 
         When a ``'date'`` column is present in both prices and cash positions,

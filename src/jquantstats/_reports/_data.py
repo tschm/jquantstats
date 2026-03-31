@@ -26,7 +26,7 @@ def _fmt(value: Any, fmt: str = ".4f", suffix: str = "") -> str:
     """Format *value* for display; return ``"N/A"`` for non-finite values."""
     if not _is_finite(value):
         return "N/A"
-    return f"{float(value):{fmt}}{suffix}"  # type: ignore[arg-type]
+    return f"{float(value):{fmt}}{suffix}"
 
 
 def _safe(fn: Any, *args: Any, **kwargs: Any) -> dict[str, float]:

@@ -67,7 +67,7 @@ class PortfolioPlots:
         for n in lags:
             pf = self.portfolio if n == 0 else self.portfolio.lag(n)
             # Compute Sharpe on the portfolio's returns series
-            sharpe_val = pf.stats.sharpe().get("returns", float("nan"))  # type: ignore[union-attr]
+            sharpe_val = pf.stats.sharpe().get("returns", float("nan"))
             # Ensure a float (Stats returns mapping asset->value)
             y_vals.append(float(sharpe_val) if sharpe_val is not None else float("nan"))
             x_vals.append(n)
@@ -315,7 +315,7 @@ class PortfolioPlots:
         if not isinstance(window, int) or window <= 0:
             raise ValueError
 
-        rolling = self.portfolio.stats.rolling_sharpe(rolling_period=window)  # type: ignore[union-attr]
+        rolling = self.portfolio.stats.rolling_sharpe(rolling_period=window)
 
         fig = go.Figure()
         date_col = rolling["date"] if "date" in rolling.columns else None
@@ -376,7 +376,7 @@ class PortfolioPlots:
         if not isinstance(window, int) or window <= 0:
             raise ValueError
 
-        rolling = self.portfolio.stats.rolling_volatility(rolling_period=window)  # type: ignore[union-attr]
+        rolling = self.portfolio.stats.rolling_volatility(rolling_period=window)
 
         fig = go.Figure()
         date_col = rolling["date"] if "date" in rolling.columns else None
@@ -427,7 +427,7 @@ class PortfolioPlots:
         Returns:
             A Plotly Figure with one bar group per asset.
         """
-        breakdown = self.portfolio.stats.annual_breakdown()  # type: ignore[union-attr]
+        breakdown = self.portfolio.stats.annual_breakdown()
 
         # Extract the sharpe row for each year
         sharpe_rows = breakdown.filter(pl.col("metric") == "sharpe")

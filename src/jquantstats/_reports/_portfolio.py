@@ -15,8 +15,9 @@ from __future__ import annotations
 
 import dataclasses
 import math
+from collections.abc import Callable
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, TypeGuard
+from typing import TYPE_CHECKING, Any, TypeGuard
 
 import plotly.graph_objects as go
 import plotly.io as pio

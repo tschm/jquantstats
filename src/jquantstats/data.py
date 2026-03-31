@@ -593,7 +593,11 @@ class Data:
         benchmark_tail = self.benchmark.tail(n) if self.benchmark is not None else None
         return Data(returns=self.returns.tail(n), benchmark=benchmark_tail, index=self.index.tail(n))
 
-    def truncate(self, start: date | datetime | str | int | None = None, end: date | datetime | str | int | None = None) -> Data:
+    def truncate(
+        self,
+        start: date | datetime | str | int | None = None,
+        end: date | datetime | str | int | None = None,
+    ) -> Data:
         """Return a new Data object truncated to the inclusive [start, end] range.
 
         When the index is temporal (Date/Datetime), truncation is performed by
