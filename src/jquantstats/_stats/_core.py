@@ -51,7 +51,7 @@ def _drawdown_series(series: pl.Series) -> pl.Series:
     return ((hwm - nav) / hwm_safe).clip(lower_bound=0.0)
 
 
-def _to_float(value: object) -> float:
+def _to_float(value: Any) -> float:
     """Safely convert a Polars aggregation result to float.
 
     Examples:

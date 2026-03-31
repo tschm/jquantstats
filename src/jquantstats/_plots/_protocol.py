@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 import polars as pl
 
@@ -81,7 +81,7 @@ class PortfolioLike(Protocol):  # pragma: no cover
         ...
 
     @property
-    def stats(self) -> object:
+    def stats(self) -> Any:
         """Statistics facade (rolling_sharpe, rolling_volatility, annual_breakdown, sharpe)."""
         ...
 

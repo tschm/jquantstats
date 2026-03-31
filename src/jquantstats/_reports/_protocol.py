@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
 
+import plotly.graph_objects as go
 import polars as pl
 
 
@@ -243,35 +244,35 @@ class DataLike(Protocol):  # pragma: no cover
 class PlotsLike(Protocol):  # pragma: no cover
     """Structural interface for the portfolio plots facade used by :class:`~jquantstats._reports._portfolio.Report`."""
 
-    def snapshot(self) -> object:
+    def snapshot(self) -> go.Figure:
         """NAV + drawdown snapshot figure."""
         ...
 
-    def rolling_sharpe_plot(self) -> object:
+    def rolling_sharpe_plot(self) -> go.Figure:
         """Rolling Sharpe figure."""
         ...
 
-    def rolling_volatility_plot(self) -> object:
+    def rolling_volatility_plot(self) -> go.Figure:
         """Rolling volatility figure."""
         ...
 
-    def annual_sharpe_plot(self) -> object:
+    def annual_sharpe_plot(self) -> go.Figure:
         """Annual Sharpe figure."""
         ...
 
-    def monthly_returns_heatmap(self) -> object:
+    def monthly_returns_heatmap(self) -> go.Figure:
         """Monthly returns heatmap figure."""
         ...
 
-    def correlation_heatmap(self) -> object:
+    def correlation_heatmap(self) -> go.Figure:
         """Correlation heatmap figure."""
         ...
 
-    def lead_lag_ir_plot(self) -> object:
+    def lead_lag_ir_plot(self) -> go.Figure:
         """Lead/lag IR figure."""
         ...
 
-    def trading_cost_impact_plot(self) -> object:
+    def trading_cost_impact_plot(self) -> go.Figure:
         """Trading cost impact figure."""
         ...
 
