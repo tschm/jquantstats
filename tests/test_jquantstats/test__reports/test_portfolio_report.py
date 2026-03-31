@@ -15,6 +15,14 @@ from jquantstats._plots import PortfolioPlots
 from jquantstats._reports import Report
 from jquantstats._reports._portfolio import _fmt, _stats_table_html
 
+# 1 000 000 - standard retail-scale AUM; large enough to avoid integer-rounding
+# artefacts while keeping absolute cash values easy to reason about.
+_AUM_STANDARD: float = 1e6
+
+# ~3 years of daily rows: sufficient for annual and monthly breakdown sections
+# to be populated in the HTML report.
+_N_THREE_YEAR_DAYS: int = 756
+
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
 
@@ -24,7 +32,7 @@ def multi_year_portfolio() -> Portfolio:
 
     Long enough for annual and monthly breakdowns to be populated.
     """
-    n = 756  # ~3 years of trading days
+    n = _N_THREE_YEAR_DAYS
     start = date(2020, 1, 1)
     end = start + timedelta(days=n - 1)
     dates = pl.date_range(start=start, end=end, interval="1d", eager=True).cast(pl.Date)
@@ -37,7 +45,7 @@ def multi_year_portfolio() -> Portfolio:
     pos_b = pl.Series([500.0 + float(i % 5) for i in range(n)], dtype=pl.Float64)
     positions = pl.DataFrame({"date": dates, "A": pos_a, "B": pos_b})
 
-    return Portfolio.from_cash_position(prices=prices, cash_position=positions, aum=1e6)
+    return Portfolio.from_cash_position(prices=prices, cash_position=positions, aum=_AUM_STANDARD)
 
 
 # ── _fmt helper ───────────────────────────────────────────────────────────────
@@ -335,7 +343,7 @@ def dateless_portfolio() -> Portfolio:
             "B": pl.Series([500.0] * n, dtype=pl.Float64),
         }
     )
-    return Portfolio.from_cash_position(prices=prices, cash_position=positions, aum=1e6)
+    return Portfolio.from_cash_position(prices=prices, cash_position=positions, aum=_AUM_STANDARD)
 
 
 def test_to_html_dateless_portfolio_shows_period_count(dateless_portfolio):

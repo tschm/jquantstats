@@ -14,6 +14,20 @@ import pytest
 
 from jquantstats import Portfolio
 
+# ── AUM constants ─────────────────────────────────────────────────────────────
+# Round numbers chosen to avoid floating-point rounding artefacts in cash
+# calculations while remaining representative of realistic portfolio sizes.
+
+# 100 000 - small retail portfolio; used where exact numeric ratios are checked.
+_AUM_SMALL: float = 1e5
+
+# 10 000 - small enough that turnover percentages are easy to reason about
+# (e.g. a Δ-position of 150 gives exactly 1.5 % daily turnover).
+_AUM_MEDIUM: float = 10_000.0
+
+# 1 000 000 - typical retail-scale portfolio; used in most general-purpose fixtures.
+_AUM_STANDARD: float = 1e6
+
 
 @pytest.fixture
 def prices():
@@ -54,7 +68,7 @@ def positions():
 @pytest.fixture
 def portfolio(prices, positions):
     """Create Portfolio instance for testing (3-day, exact numeric values)."""
-    return Portfolio.from_cash_position(prices=prices, cash_position=positions, aum=1e5)
+    return Portfolio.from_cash_position(prices=prices, cash_position=positions, aum=_AUM_SMALL)
 
 
 @pytest.fixture
@@ -72,7 +86,7 @@ def monthly_portfolio():
     return Portfolio(
         prices=pl.DataFrame({"date": dates, "A": prices_arr}),
         cashposition=pl.DataFrame({"date": dates, "A": pl.Series([1000.0] * days, dtype=pl.Float64)}),
-        aum=10000,
+        aum=_AUM_MEDIUM,
     )
 
 
@@ -98,7 +112,7 @@ def truncate_portfolio():
                 "B": pl.Series([500.0] * n, dtype=pl.Float64),
             }
         ),
-        aum=1e6,
+        aum=_AUM_STANDARD,
     )
 
 
@@ -119,7 +133,7 @@ def int_portfolio():
                 "B": pl.Series([500.0] * n, dtype=pl.Float64),
             }
         ),
-        aum=1e6,
+        aum=_AUM_STANDARD,
     )
 
 
@@ -129,7 +143,8 @@ def turnover_portfolio():
 
     Asset A increases by 100 each day (position_t = 100 * t).
     Asset B decreases by 50 each day (position_t = 500 - 50 * t).
-    AUM = 10_000.
+    AUM = _AUM_MEDIUM (10 000): small enough that the 150-unit daily delta
+    gives exactly 1.5 % daily turnover, making expected values easy to verify.
     Daily turnover = (|ΔA| + |ΔB|) / AUM = (100 + 50) / 10_000 = 0.015 per day
     (except row 0 which is 0.0).
     """
@@ -146,5 +161,5 @@ def turnover_portfolio():
                 "B": pl.Series([500.0 - 50.0 * i for i in range(n)], dtype=pl.Float64),
             }
         ),
-        aum=10_000.0,
+        aum=_AUM_MEDIUM,
     )
