@@ -15,7 +15,7 @@ from jquantstats._plots import PortfolioPlots
 from jquantstats._reports import Report
 from jquantstats._reports._portfolio import _fmt, _stats_table_html
 
-# 1 000 000 – standard retail-scale AUM; large enough to avoid integer-rounding
+# 1 000 000 - standard retail-scale AUM; large enough to avoid integer-rounding
 # artefacts while keeping absolute cash values easy to reason about.
 _AUM_STANDARD: float = 1e6
 

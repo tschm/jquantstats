@@ -18,14 +18,14 @@ from jquantstats import Portfolio
 # Round numbers chosen to avoid floating-point rounding artefacts in cash
 # calculations while remaining representative of realistic portfolio sizes.
 
-# 100 000 – small retail portfolio; used where exact numeric ratios are checked.
+# 100 000 - small retail portfolio; used where exact numeric ratios are checked.
 _AUM_SMALL: float = 1e5
 
-# 10 000 – small enough that turnover percentages are easy to reason about
+# 10 000 - small enough that turnover percentages are easy to reason about
 # (e.g. a Δ-position of 150 gives exactly 1.5 % daily turnover).
 _AUM_MEDIUM: float = 10_000.0
 
-# 1 000 000 – typical retail-scale portfolio; used in most general-purpose fixtures.
+# 1 000 000 - typical retail-scale portfolio; used in most general-purpose fixtures.
 _AUM_STANDARD: float = 1e6
 
 

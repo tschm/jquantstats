@@ -12,7 +12,7 @@ import pytest
 
 from jquantstats import Portfolio
 
-# 1 000 000 – standard retail-scale AUM; large enough to avoid integer-rounding
+# 1 000 000 - standard retail-scale AUM; large enough to avoid integer-rounding
 # artefacts while keeping absolute cash values easy to reason about.
 _AUM_STANDARD: float = 1e6
 
