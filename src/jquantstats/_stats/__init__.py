@@ -1,6 +1,6 @@
 """Statistical analysis subpackage."""
 
-from .stats import Stats as Stats
+from ._stats import Stats as Stats
 
 __all__ = [
     "Stats",

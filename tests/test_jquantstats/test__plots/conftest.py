@@ -12,6 +12,10 @@ import pytest
 
 from jquantstats import Portfolio
 
+# 1 000 000 – standard retail-scale AUM; large enough to avoid integer-rounding
+# artefacts while keeping absolute cash values easy to reason about.
+_AUM_STANDARD: float = 1e6
+
 
 @pytest.fixture
 def pf() -> Portfolio:
@@ -29,4 +33,4 @@ def pf() -> Portfolio:
     pos_b = pl.Series([500.0 + (i % 3) for i in range(n)], dtype=pl.Float64)
     positions = pl.DataFrame({"date": dates, "A": pos_a, "B": pos_b})
 
-    return Portfolio.from_cash_position(prices=prices, cash_position=positions, aum=1e6)
+    return Portfolio.from_cash_position(prices=prices, cash_position=positions, aum=_AUM_STANDARD)
