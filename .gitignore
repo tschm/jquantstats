@@ -19,7 +19,6 @@ _mkdocs
 _benchmarks
 _jupyter
 _site
-docs/marimo/
 docs/marimo.md
 docs/reports/
 docs/reports.md
