@@ -70,10 +70,13 @@ def cell_load_prices():
     # yfinance returns a MultiIndex DataFrame; pull the Close level
     close = raw["Close"][TICKERS].dropna()
 
-    prices = pl.from_pandas(
-        close.reset_index().rename(columns={"Date": "date", "index": "date"}),
-        schema_overrides={"date": pl.Date},
-    ).rename({"date": "date"})
+    # Build Polars DataFrame without pyarrow by passing a plain dict
+    prices = pl.DataFrame(
+        {
+            "date": [d.date() for d in close.index.to_pydatetime()],
+            **{ticker: close[ticker].tolist() for ticker in TICKERS},
+        }
+    )
 
     mo.md(
         f"""
