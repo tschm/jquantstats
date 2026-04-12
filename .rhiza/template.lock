@@ -1,7 +1,7 @@
-sha: bbe56565ed221032435bff43b00598e3efa046ef
+sha: 71be501a48fe53b188b8c9d779c002a1b3f3cd25
 repo: jebel-quant/rhiza
 host: github
-ref: v0.8.16
+ref: v0.9.1
 include: []
 exclude: []
 templates:
@@ -9,6 +9,7 @@ templates:
 - legal
 - marimo
 - tests
+- renovate
 files:
 - .editorconfig
 - .github/DISCUSSION_TEMPLATE/q-and-a.yml
@@ -25,22 +26,12 @@ files:
 - .github/hooks/session-start.sh
 - .github/secret_scanning.yml
 - .github/workflows/copilot-setup-steps.yml
-- .github/workflows/renovate_rhiza_sync.yml
-- .github/workflows/rhiza_book.yml
 - .github/workflows/rhiza_ci.yml
 - .github/workflows/rhiza_codeql.yml
-- .github/workflows/rhiza_dep_compat_test.yml
-- .github/workflows/rhiza_deptry.yml
-- .github/workflows/rhiza_license.yml
 - .github/workflows/rhiza_marimo.yml
-- .github/workflows/rhiza_pip_audit.yml
-- .github/workflows/rhiza_pre-commit.yml
 - .github/workflows/rhiza_release.yml
-- .github/workflows/rhiza_security.yml
-- .github/workflows/rhiza_semgrep.yml
 - .github/workflows/rhiza_sync.yml
-- .github/workflows/rhiza_typecheck.yml
-- .github/workflows/rhiza_validate.yml
+- .github/workflows/rhiza_weekly.yml
 - .gitignore
 - .pre-commit-config.yaml
 - .python-version
@@ -48,6 +39,8 @@ files:
 - .rhiza/.env
 - .rhiza/.gitignore
 - .rhiza/.rhiza-version
+- .rhiza/CODE_OF_CONDUCT.md
+- .rhiza/CONTRIBUTING.md
 - .rhiza/assets/rhiza-logo.svg
 - .rhiza/docs/ASSETS.md
 - .rhiza/docs/CONFIG.md
@@ -58,7 +51,6 @@ files:
 - .rhiza/docs/WORKFLOWS.md
 - .rhiza/make.d/README.md
 - .rhiza/make.d/agentic.mk
-- .rhiza/make.d/book.mk
 - .rhiza/make.d/bootstrap.mk
 - .rhiza/make.d/custom-env.mk
 - .rhiza/make.d/custom-task.mk
@@ -75,7 +67,7 @@ files:
 - .rhiza/requirements/tests.txt
 - .rhiza/requirements/tools.txt
 - .rhiza/rhiza.mk
-- .rhiza/templates/minibook/custom.html.jinja2
+- .rhiza/semgrep.yml
 - .rhiza/tests/README.md
 - .rhiza/tests/api/conftest.py
 - .rhiza/tests/api/test_gh_aw_targets.py
@@ -85,8 +77,8 @@ files:
 - .rhiza/tests/conftest.py
 - .rhiza/tests/deps/test_dependency_health.py
 - .rhiza/tests/integration/test_book_targets.py
+- .rhiza/tests/integration/test_docs_targets.py
 - .rhiza/tests/integration/test_lfs.py
-- .rhiza/tests/integration/test_marimushka.py
 - .rhiza/tests/integration/test_sbom.py
 - .rhiza/tests/integration/test_test_mk.py
 - .rhiza/tests/integration/test_virtual_env_unexport.py
@@ -107,15 +99,10 @@ files:
 - .rhiza/tests/sync/test_rhiza_version.py
 - .rhiza/tests/test_utils.py
 - .rhiza/tests/utils/test_git_repo_fixture.py
-- .github/semgrep.yml
-- CODE_OF_CONDUCT.md
-- CONTRIBUTING.md
 - LICENSE
 - Makefile
 - SECURITY.md
-- book/marimo/notebooks/rhiza.py
 - docs/ARCHITECTURE.md
-- docs/BOOK.md
 - docs/CUSTOMIZATION.md
 - docs/DEMO.md
 - docs/GLOSSARY.md
@@ -124,6 +111,7 @@ files:
 - docs/SECURITY.md
 - docs/TESTS.md
 - pytest.ini
+- renovate.json
 - ruff.toml
-synced_at: '2026-03-22T05:58:24Z'
+synced_at: '2026-04-12T09:21:14Z'
 strategy: merge
