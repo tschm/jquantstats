@@ -3,13 +3,18 @@
 # It provides targets for building/serving MkDocs documentation sites.
 
 # Declare phony targets (they don't produce files)
-.PHONY: docs mkdocs mkdocs-serve mkdocs-build
+.PHONY: mkdocs mkdocs-serve mkdocs-build
 
 # Default output directory for MkDocs (HTML site)
 MKDOCS_OUTPUT ?= _mkdocs
 
 # MkDocs config file location
 MKDOCS_CONFIG ?= mkdocs.yml
+
+# Additional uvx --with packages to inject into mkdocs-build and mkdocs-serve.
+# Projects can extend the package list without editing this template, e.g.:
+#   MKDOCS_EXTRA_PACKAGES = --with "mkdocs-graphviz"
+MKDOCS_EXTRA_PACKAGES ?=
 
 ##@ Documentation
 
@@ -24,7 +29,7 @@ mkdocs-build:: install-uv ## build MkDocs documentation site
 	@if [ -f "$(MKDOCS_CONFIG)" ]; then \
 	  rm -rf "$(MKDOCS_OUTPUT)"; \
 	  MKDOCS_OUTPUT_ABS="$$(pwd)/$(MKDOCS_OUTPUT)"; \
-	  ${UVX_BIN} --with "mkdocs-material<10.0" --with "pymdown-extensions>=10.0" --with "pygments<2.19" --with "mkdocs<2.0" --with "mkdocstrings[python]" mkdocs build \
+	  ${UVX_BIN} --with "mkdocs-material<10.0" --with "pymdown-extensions>=10.0" --with "pygments<2.19" --with "mkdocs<2.0" --with "mkdocstrings[python]" $(MKDOCS_EXTRA_PACKAGES) mkdocs build \
 	    -f "$(MKDOCS_CONFIG)" \
 	    -d "$$MKDOCS_OUTPUT_ABS"; \
 	else \
@@ -35,7 +40,7 @@ mkdocs-build:: install-uv ## build MkDocs documentation site
 # Useful for local development and previewing changes.
 mkdocs-serve: install-uv ## serve MkDocs site with live reload
 	@if [ -f "$(MKDOCS_CONFIG)" ]; then \
-	  ${UVX_BIN} --with "mkdocs-material<10.0" --with "pymdown-extensions>=10.0" --with "pygments<2.19" --with "mkdocs<2.0" --with "mkdocstrings[python]" mkdocs serve \
+	  ${UVX_BIN} --with "mkdocs-material<10.0" --with "pymdown-extensions>=10.0" --with "pygments<2.19" --with "mkdocs<2.0" --with "mkdocstrings[python]" $(MKDOCS_EXTRA_PACKAGES) mkdocs serve \
 	    -f "$(MKDOCS_CONFIG)"; \
 	else \
 	  printf "${RED}[ERROR] $(MKDOCS_CONFIG) not found${RESET}\n"; \
