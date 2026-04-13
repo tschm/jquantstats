@@ -89,7 +89,6 @@ pre-install::
 | `book.mk` | Documentation book generation |
 | `bootstrap.mk` | Installation and environment setup |
 | `docker.mk` | Docker build and run targets |
-| `docs.mk` | Documentation generation (MkDocs) |
 | `github.mk` | GitHub CLI integrations |
 | `lfs.mk` | Git LFS management |
 | `marimo.mk` | Marimo notebook support |
@@ -112,8 +111,6 @@ Add your customizations to the root `Makefile` (before the `include .rhiza/rhiza
 
 **Section Headers**: Title Case with `##@`
 - `##@ Bootstrap`, `##@ GitHub Helpers`
-
-See [docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md#naming-conventions-and-organization-patterns) for comprehensive naming guidelines.
 
 ### Available Hooks
 Add these to your root `Makefile` using double-colon syntax (`::`):
