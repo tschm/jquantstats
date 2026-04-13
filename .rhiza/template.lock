@@ -1,7 +1,7 @@
-sha: c7eb12c533f64cf88ee818646578e2c6b17600f4
+sha: dccf929ce3bcbaf01ddf1240ac16354e0cf76bb1
 repo: jebel-quant/rhiza
 host: github
-ref: v0.9.4
+ref: v0.9.5
 include: []
 exclude: []
 templates:
@@ -14,7 +14,6 @@ files:
 - .editorconfig
 - .github/DISCUSSION_TEMPLATE/q-and-a.yml
 - .github/ISSUE_TEMPLATE/bug_report.yml
-- .github/ISSUE_TEMPLATE/config.yml
 - .github/ISSUE_TEMPLATE/feature_request.yml
 - .github/actions/configure-git-auth/README.md
 - .github/actions/configure-git-auth/action.yml
@@ -108,17 +107,10 @@ files:
 - docs/assets/rhiza-logo.svg
 - docs/development/MARIMO.md
 - docs/development/TESTS.md
-- docs/guides/EXTENDING_RHIZA.md
-- docs/guides/QUICK_REFERENCE.md
 - docs/index.md
 - docs/mkdocs-base.yml
-- docs/reference/ARCHITECTURE.md
-- docs/reference/DEPENDENCIES.md
-- docs/reference/GLOSSARY.md
-- docs/reference/SHELL_SCRIPTS.md
-- docs/reference/TOOLS_REFERENCE.md
 - pytest.ini
 - renovate.json
 - ruff.toml
-synced_at: '2026-04-13T11:02:20Z'
+synced_at: '2026-04-13T19:42:11Z'
 strategy: merge
