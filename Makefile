@@ -32,15 +32,8 @@ changelog: ## generate/update CHANGELOG.md from git history using git-cliff
 	@${UVX_BIN} git-cliff --config .github/cliff.toml --output CHANGELOG.md
 	@printf "${GREEN}[OK] CHANGELOG.md updated.${RESET}\n"
 
-# Override the rhiza template's security target to ignore CVE-2026-4539
-# (ReDoS in pygments AdlLexer). Fix requires pygments>=3.3, which is not
-# yet published on PyPI. Remove this override once pygments 3.3 is available.
-.PHONY: security
-security: install ## run security scans (pip-audit and bandit)
-	@printf "${BLUE}[INFO] Running pip-audit for dependency vulnerabilities...${RESET}\n"
-	@${UVX_BIN} pip-audit --ignore-vuln CVE-2026-4539
-	@printf "${BLUE}[INFO] Running bandit security scan...${RESET}\n"
-	@${UVX_BIN} bandit -r ${SOURCE_FOLDER} -ll -q -c pyproject.toml
+# Ignore CVE-2026-4539 (ReDoS in pygments AdlLexer) until pygments>=3.3 is on PyPI.
+PIP_AUDIT_ARGS = --ignore-vuln CVE-2026-4539
 
 .PHONY: semgrep
 semgrep: install ## run Semgrep static analysis (numpy rules)
@@ -51,10 +44,7 @@ semgrep: install ## run Semgrep static analysis (numpy rules)
 		printf "${YELLOW}[WARN] SOURCE_FOLDER '${SOURCE_FOLDER}' not found, skipping semgrep.${RESET}\n"; \
 	fi
 
-.PHONY: license
-license: install ## run license compliance scan (fail on GPL, LGPL, AGPL) and generate LICENSES.md
-	@printf "${BLUE}[INFO] Running license compliance scan...${RESET}\n"
-	@${UV_BIN} run --with pip-licenses pip-licenses --fail-on="${LICENSE_FAIL_ON}"
+post-license:: ## generate LICENSES.md dependency report
 	@printf "${BLUE}[INFO] Generating LICENSES.md dependency report...${RESET}\n"
 	@${UV_BIN} run --with pip-licenses pip-licenses --format=markdown --output-file=LICENSES.md
 	@printf "${GREEN}[OK] LICENSES.md generated.${RESET}\n"

@@ -46,6 +46,11 @@ suppression-audit: ## scan codebase for inline suppressions and report (grade, d
 	@printf "${BLUE}[INFO] Running suppression audit...${RESET}\n"
 	@${UV_BIN} run python .rhiza/utils/suppression_audit.py
 
+# Hook target: extend license behaviour without overriding the target.
+# Double-colon rules allow multiple definitions — add post-license:: in your Makefile.
+post-license:: ; @:
+
 license: install ## run license compliance scan (fail on GPL, LGPL, AGPL)
 	@printf "${BLUE}[INFO] Running license compliance scan...${RESET}\n"
 	@${UV_BIN} run --with pip-licenses pip-licenses --fail-on="${LICENSE_FAIL_ON}"
+	@$(MAKE) post-license
