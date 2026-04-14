@@ -35,15 +35,6 @@ changelog: ## generate/update CHANGELOG.md from git history using git-cliff
 # Ignore CVE-2026-4539 (ReDoS in pygments AdlLexer) until pygments>=3.3 is on PyPI.
 PIP_AUDIT_ARGS = --ignore-vuln CVE-2026-4539
 
-.PHONY: semgrep
-semgrep: install ## run Semgrep static analysis (numpy rules)
-	@printf "${BLUE}[INFO] Running Semgrep (numpy rules)...${RESET}\n"
-	@if [ -d ${SOURCE_FOLDER} ]; then \
-		${UVX_BIN} semgrep --config .github/semgrep.yml ${SOURCE_FOLDER}; \
-	else \
-		printf "${YELLOW}[WARN] SOURCE_FOLDER '${SOURCE_FOLDER}' not found, skipping semgrep.${RESET}\n"; \
-	fi
-
 post-license:: ## generate LICENSES.md dependency report
 	@printf "${BLUE}[INFO] Generating LICENSES.md dependency report...${RESET}\n"
 	@${UV_BIN} run --with pip-licenses pip-licenses --format=markdown --output-file=LICENSES.md
