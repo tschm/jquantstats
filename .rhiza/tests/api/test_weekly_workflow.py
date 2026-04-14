@@ -209,10 +209,8 @@ class TestWeeklyWorkflowMakeTargets:
     """Dry-run the Makefile targets that rhiza_weekly.yml invokes."""
 
     def test_semgrep_target_dry_run(self, logger):
-        """Make semgrep must plan without error, or skip if project-specific."""
-        result = run_make(logger, ["semgrep"], check=False)
-        if result.returncode != 0 and "No rule to make target" in result.stderr:
-            pytest.skip("semgrep is a project-specific target, not present in this Makefile")
+        """Make semgrep must parse and plan without error."""
+        result = run_make(logger, ["semgrep"])
         assert result.returncode == 0
 
     def test_test_target_dry_run(self, logger):
@@ -233,10 +231,8 @@ class TestWeeklyWorkflowMakeTargets:
         assert "--ignore-vuln TEST-0001" in result.stdout
 
     def test_semgrep_target_in_help(self, logger):
-        """Semgrep target must appear in help if defined, or skip if project-specific."""
+        """Semgrep target must appear in make help output."""
         result = run_make(logger, ["help"], dry_run=False)
-        if "semgrep" not in result.stdout:
-            pytest.skip("semgrep is a project-specific target, not present in this Makefile")
         assert "semgrep" in result.stdout
 
     def test_security_target_in_help(self, logger):
