@@ -60,7 +60,7 @@ repos:
     hooks:
       - id: interrogate
         args: [--config=pyproject.toml]
-        exclude: ^docs/marimo/
+        exclude: ^book/marimo
 
   - repo: https://github.com/Jebel-Quant/rhiza-hooks
     rev: v0.3.2  # Use the latest release
