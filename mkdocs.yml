@@ -1,21 +1,30 @@
 INHERIT: docs/mkdocs-base.yml
 
 site_name: jquantstats
-site_description: Quantitative financial analysis tools for Python
+site_description: Portfolio analytics for quants – built on Polars, powered by Plotly.
+site_author: Thomas Schmelzer
 site_url: https://jebel-quant.github.io/jquantstats/
 repo_url: https://github.com/jebel-quant/jquantstats
 repo_name: jebel-quant/jquantstats
-
-docs_dir: docs
+copyright: Copyright &copy; 2024–2026 Thomas Schmelzer
 
 nav:
   - Home: index.md
   - Getting Started: getting_started.md
-  - Marimo Notebooks: notebooks.md
-  - Reports: reports.md
-  - Cost Models: cost_models.md
+  - Guides:
+    - Cost Models: cost_models.md
+    - Migration from QuantStats: MIGRATION.md
   - API Reference: api.md
-  - Docs:
-    - Migration Guide: MIGRATION.md
+  - Reference:
     - API Stability: STABILITY.md
+  - Notebooks: notebooks.md
+  - Reports: reports.md
 
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/jebel-quant/jquantstats
+
+theme:
+  icon:
+    logo: lucide/chart-line
