@@ -12,9 +12,10 @@ stress:: ; @:
 hypothesis-test:: ; @:
 
 BOOK_OUTPUT ?= _book
+#MKDOCS_EXTRA_PACKAGES ?=
 
 # Detect build configs (zensical takes priority)
-_ZENSICAL_CFG := $(wildcard zensical.toml)
+# _ZENSICAL_CFG := $(wildcard zensical.toml)
 
 # uv run --with zensical keeps the project venv active so jquantstats
 # stays importable by mkdocstrings, without requiring zensical in pyproject.toml.
@@ -66,8 +67,20 @@ _book-notebooks:
 	  printf -- "---\nicon: lucide/book-open\n---\n\n# Marimo Notebooks\n\nNo notebooks found.\n" > docs/notebooks.md; \
 	fi
 
+#mkdocs-build: _book-reports _book-notebooks ## build docs with MkDocs (no zensical.toml)
+#	${UV_BIN} run --with mkdocs-material $(MKDOCS_EXTRA_PACKAGES) mkdocs build --site-dir "$(BOOK_OUTPUT)"
+#	touch "$(BOOK_OUTPUT)/.nojekyll"
+#	printf "${GREEN}[SUCCESS] Book built at $(BOOK_OUTPUT)/${RESET}\n"
+
+#mkdocs-serve: ## serve docs with MkDocs (no zensical.toml)
+#	${UV_BIN} run --with mkdocs-material $(MKDOCS_EXTRA_PACKAGES) mkdocs serve
+
+#ifeq ($(_ZENSICAL_CFG),)
+#book: mkdocs-build ## build documentation (MkDocs fallback)
+#else
 book: _book-reports _book-notebooks ## build documentation with Zensical
 	printf "${BLUE}[INFO] Building with Zensical...${RESET}\n"; \
-	$(_ZENSICAL) build; \
-    touch "$(BOOK_OUTPUT)/.nojekyll"; \
-	printf "${GREEN}[SUCCESS] Book built at $(BOOK_OUTPUT)/${RESET}\n"; \
+	$(_ZENSICAL) build -f mkdocs.yml; \
+	touch "$(BOOK_OUTPUT)/.nojekyll"; \
+	printf "${GREEN}[SUCCESS] Book built at $(BOOK_OUTPUT)/${RESET}\n"
+#endif

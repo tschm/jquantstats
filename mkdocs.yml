@@ -2,11 +2,11 @@ INHERIT: docs/mkdocs-base.yml
 
 site_name: jquantstats
 site_description: Portfolio analytics for quants – built on Polars, powered by Plotly.
-site_author: Thomas Schmelzer
+site_author: Jebel Quant Research
 site_url: https://jebel-quant.github.io/jquantstats/
 repo_url: https://github.com/jebel-quant/jquantstats
 repo_name: jebel-quant/jquantstats
-copyright: Copyright &copy; 2024–2026 Thomas Schmelzer
+copyright: Copyright &copy; 2024–2026 Jebel Quant Research
 
 nav:
   - Home: index.md
