@@ -71,19 +71,9 @@ jobs:
           path: _book/
           retention-days: 30
 
-      - name: Configure git for mike
-        run: |
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git config user.name "github-actions[bot]"
-
-      - name: Deploy dev docs with mike
+      - name: Deploy to GitHub Pages
         if: ${{ !github.event.repository.fork && (vars.PUBLISH_COMPANION_BOOK == 'true' || vars.PUBLISH_COMPANION_BOOK == '') }}
-        run: |
-          #uv tool install \
-          #    --with "mkdocs-material<10.0" \
-          #    --with "pymdown-extensions>=10.0" \
-          #    --with "mkdocs<2.0" \
-          #    --with "mkdocstrings[python]" \
-          #    mike
-          uv run mike deploy --push dev
-          uv run mike set-default --push dev
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GH_PAT || github.token }}
+          publish_dir: ./_book
