@@ -8,26 +8,6 @@ repo_name: jebel-quant/jquantstats
 
 docs_dir: docs
 
-extra:
-  version:
-    provider: mike
-
-plugins:
-  - search
-  - mkdocstrings:
-      handlers:
-        python:
-          paths:
-            - src
-          options:
-            docstring_style: google
-            show_source: false
-            show_root_heading: true
-            show_root_full_path: false
-            heading_level: 2
-            members_order: source
-            show_signature_annotations: true
-
 nav:
   - Home: index.md
   - Getting Started: getting_started.md

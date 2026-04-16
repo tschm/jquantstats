@@ -44,7 +44,19 @@ theme:
 
 plugins:
   - search
-
+  - mkdocstrings:
+      handlers:
+        python:
+          paths:
+            - src
+          options:
+            docstring_style: google
+            show_source: false
+            show_root_heading: true
+            show_root_full_path: false
+            heading_level: 2
+            members_order: source
+            show_signature_annotations: true
 
 markdown_extensions:
   - md_in_html
