@@ -183,7 +183,7 @@ pf_smooth = pf.smoothed_holding(n=5)
 | **Max drawdown** | `pf.stats.max_drawdown()` | `qs.stats.max_drawdown(returns)` |
 | **Python version** | 3.11+ | 3.7+ |
 | **Type annotations** | Full (`py.typed`) | Partial |
-| **Test coverage** | [![Coverage](https://raw.githubusercontent.com/jebel-quant/jquantstats/refs/heads/gh-pages/coverage-badge.svg)](https://jebel-quant.github.io/jquantstats/reports/coverage/) | — |
+| **Test coverage** | [![Coverage](https://raw.githubusercontent.com/jebel-quant/jquantstats/refs/heads/gh-pages/coverage-badge.svg)](https://jebel-quant.github.io/jquantstats/dev/reports/coverage/) | — |
 
 ## Dashboard Preview
 
