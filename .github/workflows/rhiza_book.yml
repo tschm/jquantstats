@@ -70,7 +70,7 @@ jobs:
           UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
         run: |
           make book
-          [ -f /tmp/coverage-badge.svg ] && cp /tmp/coverage-badge.svg _book/coverage-badge.svg || true
+          if [ -f /tmp/coverage-badge.svg ]; then cp /tmp/coverage-badge.svg _book/coverage-badge.svg; fi
 
       # Step 5a: Upload the book as a downloadable workflow artifact
       # This allows anyone to download the built documentation directly from
