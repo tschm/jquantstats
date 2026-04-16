@@ -8,9 +8,9 @@ repo_name: jebel-quant/jquantstats
 
 docs_dir: docs
 
-#extra:
-#  version:
-#    provider: mike
+extra:
+  version:
+    provider: mike
 
 plugins:
   - search

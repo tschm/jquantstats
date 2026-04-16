@@ -493,5 +493,4 @@ jobs:
               --with "mkdocstrings[python]" \
               --with "mike" \
               mike deploy --push --update-aliases "${{ needs.tag.outputs.tag }}" latest
-          uvx --with "mike" mike set-default --push latest
 

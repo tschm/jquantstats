@@ -85,3 +85,4 @@ jobs:
               --with "mkdocstrings[python]" \
               --with "mike" \
               mike deploy --push dev
+          uvx --with "mike" mike set-default --push dev
