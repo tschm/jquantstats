@@ -79,15 +79,11 @@ jobs:
       - name: Deploy dev docs with mike
         if: ${{ !github.event.repository.fork && (vars.PUBLISH_COMPANION_BOOK == 'true' || vars.PUBLISH_COMPANION_BOOK == '') }}
         run: |
-          uvx --with "mkdocs-material<10.0" \
+          uv tool install \
+              --with "mkdocs-material<10.0" \
               --with "pymdown-extensions>=10.0" \
               --with "mkdocs<2.0" \
               --with "mkdocstrings[python]" \
-              --with "mike" \
-              mike deploy --push dev
-          uvx --with "mkdocs-material<10.0" \
-              --with "pymdown-extensions>=10.0" \
-              --with "mkdocs<2.0" \
-              --with "mkdocstrings[python]" \
-              --with "mike" \
-              mike set-default --push dev
+              mike
+          mike deploy --push dev
+          mike set-default --push dev
