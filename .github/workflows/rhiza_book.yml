@@ -55,22 +55,16 @@ jobs:
           # will just use .python-version?
           uv sync --all-extras --all-groups --frozen
 
-      - name: "Run tests (generates coverage HTML for the book)"
-        env:
-          UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
-        run: |
-          make test
-
-      - name: "Generate coverage badge"
-        run: |
-          uvx "genbadge[coverage]" coverage -i _tests/coverage.xml -o /tmp/coverage-badge.svg
-
       - name: "Make the book"
         env:
           UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
         run: |
           make book
-          if [ -f /tmp/coverage-badge.svg ]; then cp /tmp/coverage-badge.svg _book/coverage-badge.svg; fi
+          if [ -d _tests/html-coverage ] && [ -n "$(ls -A _tests/html-coverage 2>/dev/null)" ]; then
+            mkdir -p _book/reports/coverage
+            cp -r _tests/html-coverage/. _book/reports/coverage/
+          fi
+          uvx "genbadge[coverage]" coverage -i _tests/coverage.xml -o _book/coverage-badge.svg 2>/dev/null || true
 
       # Step 5a: Upload the book as a downloadable workflow artifact
       # This allows anyone to download the built documentation directly from
