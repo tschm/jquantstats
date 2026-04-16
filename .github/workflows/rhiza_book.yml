@@ -61,11 +61,16 @@ jobs:
         run: |
           make test
 
+      - name: "Generate coverage badge"
+        run: |
+          uvx "genbadge[coverage]" coverage -i _tests/coverage.xml -o _tests/coverage-badge.svg
+
       - name: "Make the book"
         env:
           UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
         run: |
           make book
+          cp _tests/coverage-badge.svg _book/coverage-badge.svg
 
       # Step 5a: Upload the book as a downloadable workflow artifact
       # This allows anyone to download the built documentation directly from
