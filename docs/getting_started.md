@@ -1,13 +1,17 @@
+---
+icon: lucide/rocket
+---
+
 # Getting Started
 
-jQuantStats provides two entry points depending on what data you have available:
+jQuantStats provides two entry points depending on what data you have:
 
-| You have… | Use… |
-|-----------|------|
-| Prices **and** positions | `Portfolio` |
-| Returns (or prices only) | `Data` |
+| You have… | Use… | Why |
+|-----------|------|-----|
+| Prices **and** positions | [`Portfolio`](#route-a-portfolio) | Unlocks execution-delay analysis, turnover analytics, and cost modelling |
+| Returns (or prices only) | [`Data`](#route-b-data) | Lighter-weight path; easiest migration from QuantStats |
 
-Both give access to the same stats, plots, and report API.
+Both routes expose the same stats, plots, and report API.
 
 ---
 
@@ -17,10 +21,13 @@ Both give access to the same stats, plots, and report API.
 pip install jquantstats
 ```
 
-Python 3.11+ is required. Optional extras:
+!!! info "Python version"
+    Python **3.11+** is required.
+
+Optional extras:
 
 ```bash
-pip install jquantstats[plot]   # static chart export (kaleido)
+pip install jquantstats[plot]   # static chart export via kaleido
 pip install jquantstats[web]    # FastAPI web server
 ```
 
@@ -34,57 +41,82 @@ that are impossible from returns alone.
 
 ### Build a Portfolio
 
-```python
-from datetime import date
-import polars as pl
-from jquantstats import Portfolio
+=== "Cash positions"
 
-prices = pl.DataFrame({
-    "date": [date(2020, 1, 2), date(2020, 1, 3), date(2020, 1, 6)],
-    "AAPL": [75.09, 74.36, 75.80],
-    "MSFT": [160.62, 158.96, 159.03],
-})
+    ```python
+    from datetime import date
+    import polars as pl
+    from jquantstats import Portfolio
 
-# Cash positions: dollar amount held per asset each day
-positions = pl.DataFrame({
-    "date": [date(2020, 1, 2), date(2020, 1, 3), date(2020, 1, 6)],
-    "AAPL": [500_000.0, 500_000.0, 600_000.0],
-    "MSFT": [300_000.0, 300_000.0, 300_000.0],
-})
+    prices = pl.DataFrame({
+        "date": [date(2020, 1, 2), date(2020, 1, 3), date(2020, 1, 6)],
+        "AAPL": [75.09, 74.36, 75.80],
+        "MSFT": [160.62, 158.96, 159.03],
+    })
 
-pf = Portfolio.from_cash_position(
-    prices=prices,
-    cash_position=positions,
-    aum=1_000_000,
-)
-```
+    # Dollar amount held per asset each day
+    positions = pl.DataFrame({
+        "date": [date(2020, 1, 2), date(2020, 1, 3), date(2020, 1, 6)],
+        "AAPL": [500_000.0, 500_000.0, 600_000.0],
+        "MSFT": [300_000.0, 300_000.0, 300_000.0],
+    })
 
-If you track **share counts** rather than dollar amounts, use
-`Portfolio.from_position` instead — it multiplies units by prices internally.
+    pf = Portfolio.from_cash_position(
+        prices=prices,
+        cash_position=positions,
+        aum=1_000_000,
+    )
+    ```
+
+=== "Share counts"
+
+    ```python
+    # If you track shares rather than dollar amounts
+    pf = Portfolio.from_position(
+        prices=prices,
+        position=shares_df,   # units held per asset
+        aum=1_000_000,
+    )
+    ```
+
+=== "Risk-scaled positions"
+
+    ```python
+    # Positions expressed as a fraction of volatility budget
+    pf = Portfolio.from_risk_position(
+        prices=prices,
+        risk_position=risk_df,
+        aum=1_000_000,
+        vola=vola_df,
+    )
+    ```
 
 ### Core series
 
 ```python
-pf.returns          # daily portfolio returns (pl.Series)
-pf.nav_compounded   # compounded NAV curve (pl.Series)
-pf.drawdown         # drawdown from high-water mark (pl.Series)
+pf.returns          # daily portfolio returns  →  pl.Series
+pf.nav_compounded   # compounded NAV curve     →  pl.Series
+pf.drawdown         # drawdown from HWM        →  pl.Series
 ```
 
 ### Stats
 
 ```python
-pf.stats.sharpe()        # {'AAPL': ..., 'MSFT': ..., 'portfolio': ...}
+pf.stats.sharpe()        # (1)
 pf.stats.max_drawdown()
 pf.stats.volatility()
-pf.stats.summary()       # full metrics table as pl.DataFrame
+pf.stats.summary()       # full metrics table  →  pl.DataFrame
 ```
+
+1. Returns a `dict` keyed by column name, e.g.
+   `{'AAPL': 1.34, 'MSFT': 0.91, 'portfolio': 1.21}`
 
 ### Plots
 
 ```python
-fig = pf.plots.snapshot()           # NAV + drawdown dashboard
+fig = pf.plots.snapshot()              # NAV + drawdown dashboard
 fig = pf.plots.rolling_sharpe(window=60)
-fig.show()                          # opens in browser / notebook
+fig.show()                             # opens in browser / notebook
 ```
 
 ### Report
@@ -103,29 +135,46 @@ with open("report.html", "w") as f:
 Use `Data` when you already have a **return series** (or just prices without
 positions). This is the lighter-weight path and accepts pandas DataFrames too.
 
-```python
-from datetime import date
-import polars as pl
-from jquantstats import Data
+=== "From returns"
 
-returns = pl.DataFrame({
-    "Date": [date(2020, 1, 2), date(2020, 1, 3), date(2020, 1, 6)],
-    "Strategy": [0.012, -0.009, 0.005],
-    "Benchmark": [0.004, -0.003, 0.002],
-})
+    ```python
+    from datetime import date
+    import polars as pl
+    from jquantstats import Data
 
-data = Data.from_returns(
-    returns=returns,
-    benchmark="Benchmark",  # column name to use as benchmark
-    rf=0.0,                 # risk-free rate (float or time-varying DataFrame)
-)
-```
+    returns = pl.DataFrame({
+        "Date":      [date(2020, 1, 2), date(2020, 1, 3), date(2020, 1, 6)],
+        "Strategy":  [0.012, -0.009,  0.005],
+        "Benchmark": [0.004, -0.003,  0.002],
+    })
 
-To start from **prices** instead:
+    data = Data.from_returns(
+        returns=returns,
+        benchmark="Benchmark",  # column name to use as benchmark
+        rf=0.0,                 # risk-free rate (float or time-varying DataFrame)
+    )
+    ```
 
-```python
-data = Data.from_prices(prices=prices_df)
-```
+=== "From prices"
+
+    ```python
+    data = Data.from_prices(
+        prices=prices_df,   # pl.DataFrame: date + asset columns
+    )
+    ```
+
+=== "From pandas"
+
+    ```python
+    import pandas as pd
+    import polars as pl
+
+    # Convert pd.Series with DatetimeIndex to pl.DataFrame
+    returns_pl = pl.from_pandas(
+        returns_pd.rename("Strategy").reset_index()
+    )
+    data = Data.from_returns(returns=returns_pl)
+    ```
 
 ### Stats
 
@@ -155,47 +204,83 @@ html = data.reports.to_html()
 
 ## Execution-Delay Analysis
 
+!!! tip "Portfolio route only"
+    Execution-delay analysis requires the `Portfolio` entry point.
+    A return series does not carry enough information to reconstruct
+    what happens under different execution assumptions.
+
 Simulate what happens if signals are executed one or more days late:
 
 ```python
 pf_t0 = pf           # ideal T+0
-pf_t1 = pf.lag(1)    # T+1 fill (signal available today, fills tomorrow)
+pf_t1 = pf.lag(1)    # T+1 fill — signal today, fills tomorrow
 pf_t2 = pf.lag(2)    # T+2 fill
 
-print(pf_t0.stats.sharpe())
-print(pf_t1.stats.sharpe())
-print(pf_t2.stats.sharpe())
+print(pf_t0.stats.sharpe())   # {"portfolio": 1.34}
+print(pf_t1.stats.sharpe())   # {"portfolio": 1.28}
+print(pf_t2.stats.sharpe())   # {"portfolio": 1.19}
 
-# Or view the full sweep as a chart
+# Visualise the full lead/lag sweep as a single chart
 fig = pf.plots.lead_lag_ir_plot(start=-5, end=10)
 fig.show()
 ```
+
+`pf.lag(n)` returns a new `Portfolio` with positions shifted by `n` periods.
+All downstream accessors — `.stats`, `.plots`, `.report` — recompute on the
+shifted positions, so a single call gives you the full analytics picture
+under a different execution assumption.
 
 ---
 
 ## Transaction Costs
 
-See [Cost Models](cost_models.md) for full details. Quick example:
+!!! tip "Portfolio route only"
+    Cost modelling requires the `Portfolio` entry point.
+
+See [Cost Models](cost_models.md) for the full reference. Quick example:
 
 ```python
 from jquantstats import CostModel, Portfolio
 
-# 5 bps one-way cost on AUM turnover
 pf = Portfolio.from_cash_position(
     prices=prices,
     cash_position=positions,
     aum=1_000_000,
-    cost_model=CostModel.turnover_bps(5.0),
+    cost_model=CostModel.turnover_bps(5.0),  # 5 bps one-way cost on AUM turnover
 )
 
-# Sweep Sharpe across 0–20 bps
+# Sweep Sharpe ratio across 0 → 20 bps — how robust is the strategy?
 impact = pf.trading_cost_impact(max_bps=20)
+print(impact)
 ```
 
 ---
 
-## Next Steps
+## NaN / null handling
+
+!!! warning "Polars vs pandas null semantics"
+    Unlike pandas, Polars propagates `null` by default — if any value in a column
+    is `null`, most statistics return `null` instead of a numeric result.
+
+Use the `null_strategy` parameter to control this behaviour:
+
+```python
+# Mirrors pandas / QuantStats — silently drop rows with nulls
+data = Data.from_returns(returns=returns_pl, null_strategy="drop")
+
+# Forward-fill nulls before computing statistics
+data = Data.from_returns(returns=returns_pl, null_strategy="forward_fill")
+
+# Raise an error if any null is found (useful during development)
+data = Data.from_returns(returns=returns_pl, null_strategy="raise")
+```
+
+The default (`null_strategy=None`) passes nulls through unchanged.
+
+---
+
+## Next steps
 
 - [Cost Models](cost_models.md) — model transaction costs
+- [Migration from QuantStats](MIGRATION.md) — complete API mapping
 - [API Reference](api.md) — full method signatures
-- [Marimo Notebooks](notebooks.md) — interactive worked examples

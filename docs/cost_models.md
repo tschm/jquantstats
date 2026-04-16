@@ -1,3 +1,7 @@
+---
+icon: lucide/coins
+---
+
 # Cost Models
 
 `CostModel` is the public API for specifying transaction costs in jQuantStats.
@@ -7,16 +11,18 @@ Import it directly from the top-level package:
 from jquantstats import CostModel, Portfolio
 ```
 
+!!! info "Portfolio route only"
+    Cost modelling requires the `Portfolio` entry point — it needs position
+    data to compute turnover and per-unit costs.
+
 ---
 
 ## Overview
 
-Every portfolio strategy incurs transaction costs.  jQuantStats models these
+Every portfolio strategy incurs transaction costs. jQuantStats models these
 costs through `CostModel`, a frozen dataclass that encapsulates **exactly one**
 cost model at a time and enforces that the two models are never accidentally
 combined.
-
-Two models are supported:
 
 | Model | Constructor | Scales with |
 |-------|-------------|-------------|
@@ -51,11 +57,10 @@ print(pf.net_cost_nav)
 print(pf.position_delta_costs)
 ```
 
-**When to use:**
-
-- Equity portfolios where commissions are quoted per share.
-- Futures portfolios where tick-size friction dominates.
-- Any strategy where absolute position changes (not AUM fraction) drive costs.
+??? tip "When to use `per_unit`"
+    - Equity portfolios where commissions are quoted per share.
+    - Futures portfolios where tick-size friction dominates.
+    - Any strategy where absolute position changes (not AUM fraction) drive costs.
 
 ---
 
@@ -82,13 +87,10 @@ impact = pf.trading_cost_impact(max_bps=20)
 print(impact)
 ```
 
-**When to use:**
-
-- Macro or fund-of-funds portfolios where trades are expressed as a fraction
-  of AUM.
-- Strategies where the bid/ask spread (in bps) is the dominant cost driver.
-- Any scenario where you want to sweep cost assumptions and see impact on
-  risk-adjusted returns.
+??? tip "When to use `turnover_bps`"
+    - Macro or fund-of-funds portfolios where trades are expressed as a fraction of AUM.
+    - Strategies where the bid/ask spread (in bps) is the dominant cost driver.
+    - Any scenario where you want to sweep cost assumptions and see impact on risk-adjusted returns.
 
 ---
 
@@ -105,7 +107,7 @@ cost = CostModel.zero()
 
 ## Combining models is an error
 
-`CostModel` enforces mutual exclusivity.  Passing both a non-zero `per_unit`
+`CostModel` enforces mutual exclusivity. Passing both a non-zero `per_unit`
 and a non-zero `cost_bps` raises a `ValueError`:
 
 ```python
@@ -115,8 +117,10 @@ from jquantstats import CostModel
 CostModel(cost_per_unit=0.01, cost_bps=5.0)
 ```
 
-Use the named constructors (`per_unit`, `turnover_bps`, `zero`) to make your
-intent explicit and avoid this error.
+!!! warning
+    Always use the named constructors — `per_unit`, `turnover_bps`, `zero` —
+    rather than the dataclass constructor directly. They make your intent
+    explicit and guarantee mutual exclusivity.
 
 ---
 

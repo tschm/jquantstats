@@ -1,3 +1,7 @@
+---
+icon: lucide/arrow-right-left
+---
+
 # Migrating from QuantStats to jquantstats
 
 **A heartfelt thank you to [Ran Aroussi](https://github.com/ranaroussi) for creating

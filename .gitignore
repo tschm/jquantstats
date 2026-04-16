@@ -19,6 +19,7 @@ _mkdocs
 _benchmarks
 _jupyter
 _site
+site/
 docs/marimo.md
 docs/notebooks/*.html
 docs/notebooks.md
