@@ -55,6 +55,12 @@ jobs:
           # will just use .python-version?
           uv sync --all-extras --all-groups --frozen
 
+      - name: "Run tests (generates coverage HTML for the book)"
+        env:
+          UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
+        run: |
+          make test
+
       - name: "Make the book"
         env:
           UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
