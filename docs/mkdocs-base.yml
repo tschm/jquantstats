@@ -45,6 +45,7 @@ theme:
 plugins:
   - search
 
+
 markdown_extensions:
   - md_in_html
   - pymdownx.highlight
@@ -62,6 +63,10 @@ markdown_extensions:
 
 extra_javascript:
   - https://unpkg.com/mermaid@11.4.0/dist/mermaid.esm.min.mjs
+
+extra:
+  version:
+    provider: mike
 
 # nav is overwritten completely in mkdocs.yml
 nav:
