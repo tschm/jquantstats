@@ -85,4 +85,9 @@ jobs:
               --with "mkdocstrings[python]" \
               --with "mike" \
               mike deploy --push dev
-          uvx --with "mike" mike set-default --push dev
+          uvx --with "mkdocs-material<10.0" \
+              --with "pymdown-extensions>=10.0" \
+              --with "mkdocs<2.0" \
+              --with "mkdocstrings[python]" \
+              --with "mike" \
+              mike set-default --push dev
