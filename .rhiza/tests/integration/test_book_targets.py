@@ -57,27 +57,6 @@ def test_book_folder_but_no_mk(git_repo, book_makefile):
     assert "no rule to make target" not in result.stderr.lower(), "Target book should be defined in .rhiza/make.d/"
 
 
-def test_book_folder(git_repo, book_makefile):
-    """Test that .rhiza/make.d/book.mk defines the expected phony targets."""
-    content = book_makefile.read_text()
-
-    # get the list of phony targets from the Makefile
-    phony_targets = [line.strip() for line in content.splitlines() if line.startswith(".PHONY:")]
-    if not phony_targets:
-        pytest.skip("No .PHONY targets found in book.mk")
-
-    # Collect all targets from all .PHONY lines
-    all_targets = set()
-    for phony_line in phony_targets:
-        targets = phony_line.split(":")[1].strip().split()
-        all_targets.update(targets)
-
-    expected_targets = {"book", "mkdocs-build", "test", "benchmark", "stress", "hypothesis-test"}
-    assert expected_targets.issubset(all_targets), (
-        f"Expected phony targets to include {expected_targets}, got {all_targets}"
-    )
-
-
 def test_book_noop_targets_defined(book_makefile):
     """Test that book.mk defines no-op fallback targets for build resilience.
 

@@ -1,6 +1,7 @@
 # Documentation dependencies for rhiza
 interrogate>=1.7.0
 mike>=2.0.0
-mkdocs>=1.6.0
-mkdocs-material>=9.5.0
+mkdocs<2.0
+mkdocs-material<10.0
 mkdocstrings[python]>=0.25.0
+pymdown-extensions>=10.0

@@ -1,3 +1,7 @@
+---
+icon: lucide/shield-check
+---
+
 # API Stability
 
 This document defines the public API surface of **jquantstats** and the
