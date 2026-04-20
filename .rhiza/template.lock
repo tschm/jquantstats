@@ -3,7 +3,14 @@ repo: jebel-quant/rhiza
 host: github
 ref: v0.9.5
 include: []
-exclude: []
+exclude:
+- .rhiza/docs
+- .rhiza/make.d/agentic.mk
+- .rhiza/make.d/custom-env.mk
+- .rhiza/make.d/custom-task.mk
+- .rhiza/make.d/gh-aw.mk
+- .rhiza/make.d/README.md
+- .rhiza/tests/api/test_gh_aw_targets.py
 templates:
 - github
 - legal
@@ -44,20 +51,8 @@ files:
 - .rhiza/CODE_OF_CONDUCT.md
 - .rhiza/CONTRIBUTING.md
 - .rhiza/assets/rhiza-logo.svg
-- .rhiza/docs/ASSETS.md
-- .rhiza/docs/CONFIG.md
-- .rhiza/docs/LFS.md
-- .rhiza/docs/PRIVATE_PACKAGES.md
-- .rhiza/docs/RELEASING.md
-- .rhiza/docs/TOKEN_SETUP.md
-- .rhiza/docs/WORKFLOWS.md
-- .rhiza/make.d/README.md
-- .rhiza/make.d/agentic.mk
 - .rhiza/make.d/book.mk
 - .rhiza/make.d/bootstrap.mk
-- .rhiza/make.d/custom-env.mk
-- .rhiza/make.d/custom-task.mk
-- .rhiza/make.d/gh-aw.mk
 - .rhiza/make.d/github.mk
 - .rhiza/make.d/marimo.mk
 - .rhiza/make.d/quality.mk
@@ -71,7 +66,6 @@ files:
 - .rhiza/rhiza.mk
 - .rhiza/tests/README.md
 - .rhiza/tests/api/conftest.py
-- .rhiza/tests/api/test_gh_aw_targets.py
 - .rhiza/tests/api/test_github_targets.py
 - .rhiza/tests/api/test_makefile_api.py
 - .rhiza/tests/api/test_makefile_targets.py
@@ -112,5 +106,5 @@ files:
 - pytest.ini
 - renovate.json
 - ruff.toml
-synced_at: '2026-04-13T19:42:11Z'
+synced_at: '2026-04-20T01:14:38Z'
 strategy: merge
