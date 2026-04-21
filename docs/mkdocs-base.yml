@@ -5,6 +5,7 @@ site_dir: _book
 # Theme
 # ----------------------------------------------------------------------------
 theme:
+  name: material
   language: en
   features:
     - announce.dismiss
