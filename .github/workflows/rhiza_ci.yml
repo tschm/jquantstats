@@ -204,7 +204,8 @@ jobs:
         env:
           UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
         run: |
-          make test-kaleido
+          make install
+          uv run pytest -m kaleido
 
   validation:
     runs-on: ubuntu-latest
