@@ -70,6 +70,10 @@ book:: _book-reports _book-notebooks ## compile the companion book via MkDocs
 	fi
 	@mkdir -p "$(BOOK_OUTPUT)"
 	@touch "$(BOOK_OUTPUT)/.nojekyll"
+	@if [ -f _tests/coverage.json ]; then \
+	  printf "${BLUE}[INFO] Generating coverage badge...${RESET}\n"; \
+	  ${UVX_BIN} genbadge coverage -i _tests/coverage.json -o "$(BOOK_OUTPUT)/coverage-badge.svg" 2>/dev/null || true; \
+	fi
 	@printf "${GREEN}[SUCCESS] Book built at $(BOOK_OUTPUT)/${RESET}\n"
 	@tree $(BOOK_OUTPUT)
 
