@@ -63,6 +63,11 @@ jobs:
           UV_EXTRA_INDEX_URL: ${{ secrets.UV_EXTRA_INDEX_URL }}
         run: |
           make book
+          if [ -d _tests/html-coverage ] && [ -n "$(ls -A _tests/html-coverage 2>/dev/null)" ]; then
+            mkdir -p _book/reports/coverage
+            cp -r _tests/html-coverage/. _book/reports/coverage/
+          fi
+          uvx "genbadge[coverage]" coverage -i _tests/coverage.xml -o _book/coverage-badge.svg 2>/dev/null || true
 
       # Step 5a: Upload the book as a downloadable workflow artifact
       # This allows anyone to download the built documentation directly from
