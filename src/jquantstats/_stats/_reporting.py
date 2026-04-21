@@ -20,7 +20,7 @@ class _ReportingStatsMixin:
     ratios, annual breakdown, and summary statistics table.
 
     Attributes (provided by the concrete subclass):
-        data: The :class:`~jquantstats._data.Data` object.
+        data: The `Data` object.
         all: Combined DataFrame for efficient column selection.
     """
 
@@ -667,7 +667,7 @@ class _ReportingStatsMixin:
         """Summary statistics broken down by calendar year.
 
         Groups the data by calendar year using the date index, computes a
-        full :py:meth:`summary` for each year, and stacks the results with an
+        full `summary` for each year, and stacks the results with an
         additional ``year`` column.
 
         Returns:

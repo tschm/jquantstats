@@ -88,7 +88,7 @@ def _cutoff_months(today: Any, n: int) -> Any:
         n: Number of calendar months to subtract.
 
     Returns:
-        A :class:`datetime.date` exactly *n* months before *today*.
+        A `datetime.date` exactly *n* months before *today*.
 
     """
     import calendar
@@ -299,7 +299,7 @@ def _add_full_mode_rows(
 
 
 def _build_metrics_df(rows: list[tuple[str, dict[str, Any]]]) -> pl.DataFrame:
-    """Build a metrics :class:`~polars.DataFrame` from accumulated row data.
+    """Build a metrics `pl.DataFrame` from accumulated row data.
 
     Args:
         rows: List of ``(label, values)`` tuples where *values* maps asset
@@ -769,7 +769,7 @@ class Reports:
         Args:
             title: Page ``<h1>`` title. Defaults to ``"Performance Report"``.
             periods_per_year: Annualisation factor passed to
-                :py:meth:`metrics`. Defaults to 252.
+                `metrics`. Defaults to 252.
             rf: Annualised risk-free rate. Defaults to 0.0.
 
         Returns:

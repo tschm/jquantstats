@@ -16,14 +16,14 @@ __all__ = ["PortfolioUtils"]
 class PortfolioUtils:
     """Utility transforms and conversions for Portfolio objects.
 
-    Exposes the same API as :class:`~jquantstats._utils._data.DataUtils`
-    but is initialised from a :class:`~jquantstats.portfolio.Portfolio`
+    Exposes the same API as `DataUtils`
+    but is initialised from a `Portfolio`
     and routes all calls through ``portfolio.data``.
 
     Attributes:
         portfolio: Any object satisfying the
-            :class:`~jquantstats._utils._protocol.PortfolioLike` protocol —
-            typically a :class:`~jquantstats.portfolio.Portfolio` instance.
+            `PortfolioLike` protocol —
+            typically a `Portfolio` instance.
 
     """
 
@@ -42,7 +42,7 @@ class PortfolioUtils:
     def to_prices(self, base: float = 1e5) -> pl.DataFrame:
         """Convert portfolio returns to a cumulative price series.
 
-        See :meth:`~jquantstats._utils._data.DataUtils.to_prices` for full
+        See `to_prices` for full
         documentation.
 
         Args:
@@ -57,7 +57,7 @@ class PortfolioUtils:
     def to_log_returns(self) -> pl.DataFrame:
         """Convert portfolio returns to log returns: ``ln(1 + r)``.
 
-        See :meth:`~jquantstats._utils._data.DataUtils.to_log_returns` for
+        See `to_log_returns` for
         full documentation.
 
         Returns:
@@ -67,7 +67,7 @@ class PortfolioUtils:
         return self._du().to_log_returns()
 
     def log_returns(self) -> pl.DataFrame:
-        """Alias for :meth:`to_log_returns`.
+        """Alias for `to_log_returns`.
 
         Returns:
             DataFrame of log returns.
@@ -78,7 +78,7 @@ class PortfolioUtils:
     def rebase(self, base: float = 100.0) -> pl.DataFrame:
         """Normalise the portfolio's returns as a price series starting at *base*.
 
-        See :meth:`~jquantstats._utils._data.DataUtils.rebase` for full
+        See `rebase` for full
         documentation.
 
         Args:
@@ -93,7 +93,7 @@ class PortfolioUtils:
     def group_returns(self, period: str = "1mo", compounded: bool = True) -> pl.DataFrame:
         """Aggregate portfolio returns by a calendar period.
 
-        See :meth:`~jquantstats._utils._data.DataUtils.group_returns` for
+        See `group_returns` for
         full documentation.
 
         Args:
@@ -107,7 +107,7 @@ class PortfolioUtils:
         return self._du().group_returns(period=period, compounded=compounded)
 
     def aggregate_returns(self, period: str = "1mo", compounded: bool = True) -> pl.DataFrame:
-        """Alias for :meth:`group_returns`.
+        """Alias for `group_returns`.
 
         Args:
             period: Aggregation period.  Defaults to ``"1mo"`` (monthly).
@@ -122,7 +122,7 @@ class PortfolioUtils:
     def to_excess_returns(self, rf: float = 0.0, nperiods: int | None = None) -> pl.DataFrame:
         """Subtract a risk-free rate from portfolio returns.
 
-        See :meth:`~jquantstats._utils._data.DataUtils.to_excess_returns`
+        See `to_excess_returns`
         for full documentation.
 
         Args:
@@ -138,7 +138,7 @@ class PortfolioUtils:
     def exponential_stdev(self, window: int = 30, is_halflife: bool = False) -> pl.DataFrame:
         """Compute exponentially weighted standard deviation of portfolio returns.
 
-        See :meth:`~jquantstats._utils._data.DataUtils.exponential_stdev`
+        See `exponential_stdev`
         for full documentation.
 
         Args:

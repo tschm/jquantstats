@@ -3,7 +3,7 @@
 This module defines a hierarchy of exceptions that provide meaningful context
 when data-validation errors occur within the package.
 
-All exceptions inherit from :class:`JQuantStatsError` so callers can catch the
+All exceptions inherit from `JQuantStatsError` so callers can catch the
 entire family with a single ``except JQuantStatsError`` clause if they prefer.
 
 Examples:
@@ -40,7 +40,7 @@ class MissingDateColumnError(JQuantStatsError, ValueError):
 
 
 class InvalidCashPositionTypeError(JQuantStatsError, TypeError):
-    """Raised when ``cashposition`` is not a :class:`polars.DataFrame`.
+    """Raised when ``cashposition`` is not a `polars.DataFrame`.
 
     Args:
         actual_type: The ``type.__name__`` of the value that was supplied.
@@ -59,7 +59,7 @@ class InvalidCashPositionTypeError(JQuantStatsError, TypeError):
 
 
 class InvalidPricesTypeError(JQuantStatsError, TypeError):
-    """Raised when ``prices`` is not a :class:`polars.DataFrame`.
+    """Raised when ``prices`` is not a `polars.DataFrame`.
 
     Args:
         actual_type: The ``type.__name__`` of the value that was supplied.
@@ -148,8 +148,8 @@ class NullsInReturnsError(JQuantStatsError, ValueError):
     drops ``NaN``.  Leaving nulls in place will cause most statistics to
     return ``null`` instead of a numeric result.
 
-    Use the ``null_strategy`` parameter on :meth:`~jquantstats.data.Data.from_returns`
-    or :meth:`~jquantstats.data.Data.from_prices` to handle nulls automatically, or
+    Use the ``null_strategy`` parameter on `from_returns`
+    or `from_prices` to handle nulls automatically, or
     clean the data before construction.
 
     Args:

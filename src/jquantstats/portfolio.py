@@ -1,15 +1,15 @@
 """Portfolio analytics class for quant finance.
 
-This module provides :class:`Portfolio`, a frozen dataclass that stores the
+This module provides `Portfolio`, a frozen dataclass that stores the
 raw portfolio inputs (prices, cash positions, AUM) and exposes both the
 derived data series and the full analytics / visualisation suite.
 
 The class is composed from four focused mixin modules:
 
-- :class:`~jquantstats._portfolio_nav.PortfolioNavMixin` — NAV & returns chain
-- :class:`~jquantstats._portfolio_attribution.PortfolioAttributionMixin` — tilt/timing attribution
-- :class:`~jquantstats._portfolio_turnover.PortfolioTurnoverMixin` — turnover analytics
-- :class:`~jquantstats._portfolio_cost.PortfolioCostMixin` — cost analysis
+- `PortfolioNavMixin` — NAV & returns chain
+- `PortfolioAttributionMixin` — tilt/timing attribution
+- `PortfolioTurnoverMixin` — turnover analytics
+- `PortfolioCostMixin` — cost analysis
 
 Public API is unchanged:
 
@@ -176,7 +176,7 @@ class Portfolio(
 
     @staticmethod
     def _build_data_bridge(ret: pl.DataFrame) -> "Data":
-        """Build a :class:`~jquantstats._data.Data` bridge from a returns frame.
+        """Build a `Data` bridge from a returns frame.
 
         Splits out the ``'date'`` column (if present) into an index and passes
         the remaining numeric columns as returns.  Used internally to populate
@@ -186,7 +186,7 @@ class Portfolio(
             ret: Returns DataFrame, optionally with a leading ``'date'`` column.
 
         Returns:
-            A :class:`~jquantstats._data.Data` instance backed by *ret*.
+            A `Data` instance backed by *ret*.
         """
         from .data import Data
 
@@ -228,10 +228,10 @@ class Portfolio(
 
     @property
     def cost_model(self) -> CostModel:
-        """Return the active cost model as a :class:`~jquantstats.CostModel` instance.
+        """Return the active cost model as a `CostModel` instance.
 
         Returns:
-            A :class:`CostModel` whose ``cost_per_unit`` and ``cost_bps`` fields
+            A `CostModel` whose ``cost_per_unit`` and ``cost_bps`` fields
             reflect the values stored on this portfolio.
         """
         return CostModel(cost_per_unit=self.cost_per_unit, cost_bps=self.cost_bps)
@@ -311,7 +311,7 @@ class Portfolio(
                 Defaults to 0.0 (no cost).  Ignored when *cost_model* is given.
             cost_bps: One-way trading cost in basis points of AUM turnover.
                 Defaults to 0.0 (no cost).  Ignored when *cost_model* is given.
-            cost_model: Optional :class:`~jquantstats.CostModel`
+            cost_model: Optional `CostModel`
                 instance.  When supplied, its ``cost_per_unit`` and
                 ``cost_bps`` values take precedence over the individual
                 parameters above.
@@ -390,7 +390,7 @@ class Portfolio(
                 Defaults to 0.0 (no cost).  Ignored when *cost_model* is given.
             cost_bps: One-way trading cost in basis points of AUM turnover.
                 Defaults to 0.0 (no cost).  Ignored when *cost_model* is given.
-            cost_model: Optional :class:`~jquantstats.CostModel` instance.
+            cost_model: Optional `CostModel` instance.
                 When supplied, its ``cost_per_unit`` and ``cost_bps`` values
                 take precedence over the individual parameters above.
 
@@ -436,7 +436,7 @@ class Portfolio(
                 Defaults to 0.0 (no cost).  Ignored when *cost_model* is given.
             cost_bps: One-way trading cost in basis points of AUM turnover.
                 Defaults to 0.0 (no cost).  Ignored when *cost_model* is given.
-            cost_model: Optional :class:`~jquantstats.CostModel`
+            cost_model: Optional `CostModel`
                 instance.  When supplied, its ``cost_per_unit`` and
                 ``cost_bps`` values take precedence over the individual
                 parameters above.
@@ -475,15 +475,15 @@ class Portfolio(
 
     @property
     def data(self) -> "Data":
-        """Build a legacy :class:`~jquantstats._data.Data` object from this portfolio's returns.
+        """Build a legacy `Data` object from this portfolio's returns.
 
         This bridges the two entry points: ``Portfolio`` compiles the NAV curve from
-        prices and positions; the returned :class:`~jquantstats._data.Data` object
+        prices and positions; the returned `Data` object
         gives access to the full legacy analytics pipeline (``data.stats``,
         ``data.plots``, ``data.reports``).
 
         Returns:
-            :class:`~jquantstats._data.Data`: A Data object whose ``returns`` column
+            `Data`: A Data object whose ``returns`` column
             is the portfolio's daily return series and whose ``index`` holds the date
             column (or a synthetic integer index for date-free portfolios).
 
@@ -507,7 +507,7 @@ class Portfolio(
     def stats(self) -> "Stats":
         """Return a Stats object built from the portfolio's daily returns.
 
-        Delegates to the legacy :class:`~jquantstats._stats.Stats` pipeline via
+        Delegates to the legacy `Stats` pipeline via
         `data`, so all analytics (Sharpe, drawdown, summary, etc.) are
         available through the shared implementation.
 
@@ -525,7 +525,7 @@ class Portfolio(
         performance curves, and lead/lag IR charts.
 
         Returns:
-            :class:`~jquantstats._plots.PortfolioPlots`: Helper object with
+            `PortfolioPlots`: Helper object with
             plotting methods.
 
         The result is cached after first access so repeated calls are O(1).
@@ -542,7 +542,7 @@ class Portfolio(
         containing statistics tables and interactive charts.
 
         Returns:
-            :class:`~jquantstats._reports.Report`: Helper object with
+            `Report`: Helper object with
             report methods.
 
         The result is cached after first access so repeated calls are O(1).
@@ -560,7 +560,7 @@ class Portfolio(
         computing exponential standard deviation.
 
         Returns:
-            :class:`~jquantstats._utils.PortfolioUtils`: Helper object with
+            `PortfolioUtils`: Helper object with
             utility transform methods.
 
         The result is cached after first access so repeated calls are O(1).
@@ -588,7 +588,7 @@ class Portfolio(
         When the ``'date'`` column is absent, integer-based row slicing is
         used instead.  In this case ``start`` and ``end`` must be non-negative
         integers representing 0-based row indices.  Passing non-integer bounds
-        to an integer-indexed portfolio raises :exc:`TypeError`.
+        to an integer-indexed portfolio raises `TypeError`.
 
         In all cases the ``aum`` value is preserved.
 

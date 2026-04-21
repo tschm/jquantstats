@@ -121,7 +121,7 @@ def _stats_table_html(summary: pl.DataFrame) -> str:
     """Render a stats summary DataFrame as a styled HTML table.
 
     Args:
-        summary: Output of :py:meth:`Stats.summary` — one row per metric,
+        summary: Output of `Stats.summary` — one row per metric,
             one column per asset plus a ``metric`` column.
 
     Returns:
@@ -184,7 +184,7 @@ def _figure_div(fig: go.Figure, include_plotlyjs: bool | str) -> str:
 
     Args:
         fig: Plotly figure to serialise.
-        include_plotlyjs: Passed directly to :func:`plotly.io.to_html`.
+        include_plotlyjs: Passed directly to `plotly.io.to_html`.
             Pass ``"cdn"`` for the first figure so the CDN script tag is
             injected; pass ``False`` for all subsequent figures.
 
@@ -202,7 +202,7 @@ def _figure_div(fig: go.Figure, include_plotlyjs: bool | str) -> str:
 class Report:
     """Facade for generating HTML reports from a Portfolio.
 
-    Provides a :py:meth:`to_html` method that assembles a self-contained,
+    Provides a `to_html` method that assembles a self-contained,
     dark-themed HTML document with a performance-statistics table and
     multiple interactive Plotly charts.
 
@@ -226,7 +226,7 @@ class Report:
             title: HTML ``<title>`` text and visible page heading.
 
         Returns:
-            A complete HTML document as a :class:`str`.
+            A complete HTML document as a `str`.
         """
         pf = self.portfolio
 
@@ -329,7 +329,7 @@ class Report:
             title: HTML ``<title>`` text and visible page heading.
 
         Returns:
-            The resolved :class:`pathlib.Path` of the written file.
+            The resolved `pathlib.Path` of the written file.
         """
         p = Path(path)
         if not p.suffix:

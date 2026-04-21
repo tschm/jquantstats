@@ -19,11 +19,11 @@ class _RollingStatsMixin:
     """Mixin class providing rolling-window financial statistics methods.
 
     Separates rolling-window computations from the core point-in-time metrics
-    in :mod:`~jquantstats._stats._core`.  The concrete
-    :class:`~jquantstats._stats.Stats` dataclass inherits from both.
+    in `_core`.  The concrete
+    `Stats` dataclass inherits from both.
 
     Attributes (provided by the concrete subclass):
-        data: The :class:`~jquantstats._data.Data` object.
+        data: The `Data` object.
         all: Combined DataFrame for efficient column selection.
     """
 

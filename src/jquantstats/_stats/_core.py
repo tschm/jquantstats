@@ -2,14 +2,14 @@
 
 Provides:
 
-- :func:`_drawdown_series` — drawdown series from a returns series.
-- :func:`_to_float` — safe Polars aggregation result → Python float.
-- :func:`columnwise_stat` — decorator: apply a metric to every asset column.
-- :func:`to_frame` — decorator: build a per-column Polars DataFrame result.
+- `_drawdown_series` — drawdown series from a returns series.
+- `_to_float` — safe Polars aggregation result → Python float.
+- `columnwise_stat` — decorator: apply a metric to every asset column.
+- `to_frame` — decorator: build a per-column Polars DataFrame result.
 
 These building blocks are shared across the stats mixin modules
-(:mod:`~jquantstats._stats._basic`, :mod:`~jquantstats._stats._performance`,
-:mod:`~jquantstats._stats._reporting`, :mod:`~jquantstats._stats._rolling`).
+(`_basic`, `_performance`,
+`_reporting`, `_rolling`).
 """
 
 from __future__ import annotations

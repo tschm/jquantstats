@@ -9,10 +9,10 @@ import polars as pl
 
 @runtime_checkable
 class DataLike(Protocol):  # pragma: no cover
-    """Structural interface required by :class:`~jquantstats._utils._data.DataUtils`.
+    """Structural interface required by `DataUtils`.
 
     Any object satisfying this protocol can be passed as ``data`` without a
-    concrete dependency on :class:`~jquantstats.data.Data`.
+    concrete dependency on `Data`.
     """
 
     returns: pl.DataFrame
@@ -26,10 +26,10 @@ class DataLike(Protocol):  # pragma: no cover
 
 @runtime_checkable
 class PortfolioLike(Protocol):  # pragma: no cover
-    """Structural interface required by :class:`~jquantstats._utils._portfolio.PortfolioUtils`.
+    """Structural interface required by `PortfolioUtils`.
 
     Any object satisfying this protocol can be passed as ``portfolio`` without a
-    concrete dependency on :class:`~jquantstats.portfolio.Portfolio`.
+    concrete dependency on `Portfolio`.
     """
 
     @property

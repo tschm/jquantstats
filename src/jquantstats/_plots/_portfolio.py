@@ -225,8 +225,8 @@ class PortfolioPlots:
 
         Configures the plot background, legend, hover mode, x-axis date range
         selector, y-axis label, grid lines, and optional logarithmic y-scale.
-        Shared by :meth:`lagged_performance_plot` and
-        :meth:`smoothed_holdings_performance_plot`.
+        Shared by `lagged_performance_plot` and
+        `smoothed_holdings_performance_plot`.
 
         Args:
             fig: The Plotly Figure to configure.

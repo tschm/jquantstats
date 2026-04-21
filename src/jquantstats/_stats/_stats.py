@@ -1,20 +1,20 @@
 """Statistical analysis tools for financial returns data.
 
-This module provides the :class:`Stats` dataclass, which is the public-facing
+This module provides the `Stats` dataclass, which is the public-facing
 class that combines four mixin classes:
 
-- :class:`~jquantstats._stats._basic._BasicStatsMixin` — basic statistics,
+- `_BasicStatsMixin` — basic statistics,
   volatility, win/loss metrics, and risk metrics (VaR, Sharpe inputs, Kelly).
-- :class:`~jquantstats._stats._performance._PerformanceStatsMixin` — Sharpe,
+- `_PerformanceStatsMixin` — Sharpe,
   Sortino, drawdown, benchmark/factor analytics (R², alpha, beta).
-- :class:`~jquantstats._stats._reporting._ReportingStatsMixin` — temporal
+- `_ReportingStatsMixin` — temporal
   reporting, Calmar, recovery factor, capture ratios, annual breakdown, and
   summary.
-- :class:`~jquantstats._stats._rolling._RollingStatsMixin` — rolling-window
+- `_RollingStatsMixin` — rolling-window
   time-series metrics (rolling Sharpe, Sortino, and volatility).
 
 Module-level helpers and the ``columnwise_stat`` / ``to_frame`` decorators are
-defined in :mod:`jquantstats._stats._core` and re-exported here for backwards
+defined in `jquantstats._stats._core` and re-exported here for backwards
 compatibility.
 """
 
@@ -74,13 +74,13 @@ class Stats(_BasicStatsMixin, _PerformanceStatsMixin, _ReportingStatsMixin, _Rol
 
     Metrics are organised into focused modules:
 
-    - :class:`~jquantstats._stats._basic._BasicStatsMixin`
-    - :class:`~jquantstats._stats._performance._PerformanceStatsMixin`
-    - :class:`~jquantstats._stats._reporting._ReportingStatsMixin`
-    - :class:`~jquantstats._stats._rolling._RollingStatsMixin`
+    - `_BasicStatsMixin`
+    - `_PerformanceStatsMixin`
+    - `_ReportingStatsMixin`
+    - `_RollingStatsMixin`
 
     Attributes:
-        data: The :class:`~jquantstats._data.Data` object containing returns
+        data: The `Data` object containing returns
             and benchmark data.
         all: A DataFrame combining all data (index, returns, benchmark) for
             easy column selection.

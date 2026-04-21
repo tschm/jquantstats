@@ -1,23 +1,23 @@
 """Shared computational helpers for statistics mixin modules.
 
 Contains pure, reusable sub-computations that are used by two or more of
-the stats mixin modules (:mod:`~jquantstats._stats._basic`,
-:mod:`~jquantstats._stats._performance`,
-:mod:`~jquantstats._stats._reporting`,
-:mod:`~jquantstats._stats._rolling`).
+the stats mixin modules (`_basic`,
+`_performance`,
+`_reporting`,
+`_rolling`).
 
 Helpers
 -------
-:func:`_comp_return`
+`_comp_return`
     Total compounded return: ``∏(1 + rᵢ) - 1``.
-:func:`_nav_series`
+`_nav_series`
     Cumulative NAV (price) series: ``cum_prod(1 + rᵢ)``.
-:func:`_annualization_factor`
+`_annualization_factor`
     ``sqrt(periods)`` or ``periods`` for annualizing rates and ratios.
-:func:`_downside_deviation`
+`_downside_deviation`
     Downside semi-deviation used by the Sortino ratio family.
 
-All functions operate on a :class:`polars.Series` of returns and are
+All functions operate on a `polars.Series` of returns and are
 intentionally free of side-effects so that they are easy to test and
 compose.
 """

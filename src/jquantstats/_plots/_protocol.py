@@ -11,10 +11,10 @@ from jquantstats._cost_model import CostModel
 
 @runtime_checkable
 class DataLike(Protocol):  # pragma: no cover
-    """Structural interface required by the :class:`~jquantstats._plots._data.DataPlots` class.
+    """Structural interface required by the `DataPlots` class.
 
     Any object satisfying this protocol can be passed as ``data`` without a
-    concrete dependency on :class:`~jquantstats._data.Data`.
+    concrete dependency on `Data`.
     """
 
     @property
@@ -30,10 +30,10 @@ class DataLike(Protocol):  # pragma: no cover
 
 @runtime_checkable
 class PortfolioLike(Protocol):  # pragma: no cover
-    """Structural interface required by the :class:`~jquantstats._plots._portfolio.PortfolioPlots` class.
+    """Structural interface required by the `PortfolioPlots` class.
 
     Any object satisfying this protocol can be passed as ``portfolio`` without a
-    concrete dependency on :class:`~jquantstats.portfolio.Portfolio`.
+    concrete dependency on `Portfolio`.
     """
 
     prices: pl.DataFrame

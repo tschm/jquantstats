@@ -13,7 +13,7 @@ class DataLike(Protocol):  # pragma: no cover
     """Structural interface required by the Stats mixin classes.
 
     Any object satisfying this protocol can be passed as ``data`` to the
-    mixin methods without a concrete dependency on :class:`~jquantstats._data.Data`.
+    mixin methods without a concrete dependency on `Data`.
     """
 
     returns: pl.DataFrame

@@ -4,7 +4,7 @@ Two entry points
 ----------------
 **Entry point 1 — prices + positions (recommended for active portfolios):**
 
-Use :class:`~jquantstats.portfolio.Portfolio` when you have price series and
+Use `Portfolio` when you have price series and
 position sizes.  Portfolio compiles the NAV curve from raw inputs and exposes
 the full analytics suite via ``.stats``, ``.plots``, and ``.report``.
 
@@ -23,7 +23,7 @@ pf.plots.snapshot()
 
 **Entry point 2 — returns series (for arbitrary return streams):**
 
-Use :class:`~jquantstats.data.Data` when you already have a returns series
+Use `Data` when you already have a returns series
 (e.g. downloaded from a data vendor) and want benchmark comparison or
 factor analytics.
 
@@ -36,7 +36,7 @@ data.stats.sharpe()
 data.plots.snapshot(title="Performance")
 ```
 
-The two APIs are layered: ``portfolio.data`` returns a :class:`~jquantstats.data.Data`
+The two APIs are layered: ``portfolio.data`` returns a `Data`
 object so you can always drop into the returns-series API from a Portfolio.
 
 For more information, visit the `jQuantStats Documentation <https://jebel-quant.github.io/jquantstats/book>`_.

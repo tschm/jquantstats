@@ -24,7 +24,7 @@ class _BasicStatsMixin:
     win rate, kelly criterion, best/worst, exposure).
 
     Attributes (provided by the concrete subclass):
-        data: The :class:`~jquantstats._data.Data` object.
+        data: The `Data` object.
         all: Combined DataFrame for efficient column selection.
     """
 
@@ -314,7 +314,7 @@ class _BasicStatsMixin:
                 (the default).
             **kwargs: Legacy keyword arguments.  Passing ``confidence`` (e.g.
                 ``confidence=0.95``) is accepted for backwards compatibility with
-                QuantStats but emits a :class:`DeprecationWarning`.  Use
+                QuantStats but emits a `DeprecationWarning`.  Use
                 ``alpha = 1 - confidence`` instead.
 
         Returns:

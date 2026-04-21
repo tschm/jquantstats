@@ -1,7 +1,7 @@
 """Unified cost model for Portfolio analytics.
 
-This module provides :class:`CostModel`, a single abstraction that covers both
-cost models available in :class:`~jquantstats.portfolio.Portfolio`:
+This module provides `CostModel`, a single abstraction that covers both
+cost models available in `Portfolio`:
 
 **Model A — position-delta** (``cost_per_unit``)
     One-way cost per unit of traded notional (e.g. £0.01 per share).  Best for
@@ -30,7 +30,7 @@ class CostModel:
 
     Eliminates the implicit "pick one" contract between the two independent
     cost parameters (``cost_per_unit`` and ``cost_bps``) on
-    :class:`~jquantstats.portfolio.Portfolio`.  A ``CostModel``
+    `Portfolio`.  A ``CostModel``
     instance encapsulates one model at a time and can be passed to any
     Portfolio factory method instead of specifying the raw float parameters.
 
@@ -79,7 +79,7 @@ class CostModel:
                 non-negative.
 
         Returns:
-            A :class:`CostModel` with ``cost_per_unit=cost`` and
+            A `CostModel` with ``cost_per_unit=cost`` and
             ``cost_bps=0.0``.
 
         Examples:
@@ -97,7 +97,7 @@ class CostModel:
                 non-negative.
 
         Returns:
-            A :class:`CostModel` with ``cost_per_unit=0.0`` and
+            A `CostModel` with ``cost_per_unit=0.0`` and
             ``cost_bps=bps``.
 
         Examples:
@@ -111,7 +111,7 @@ class CostModel:
         """Create a zero-cost model (no transaction costs).
 
         Returns:
-            A :class:`CostModel` with both parameters set to 0.0.
+            A `CostModel` with both parameters set to 0.0.
 
         Examples:
             >>> CostModel.zero()

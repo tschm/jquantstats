@@ -28,12 +28,12 @@ class DataUtils:
     """Utility transforms and conversions for financial returns data.
 
     Mirrors the public API of ``quantstats.utils`` but operates on Polars
-    DataFrames and integrates with :class:`~jquantstats.data.Data` via the
+    DataFrames and integrates with `Data` via the
     ``data.utils`` property.
 
     Attributes:
-        data: Any object satisfying the :class:`~jquantstats._utils._protocol.DataLike`
-            protocol — typically a :class:`~jquantstats.data.Data` instance.
+        data: Any object satisfying the `DataLike`
+            protocol — typically a `Data` instance.
 
     """
 
@@ -100,7 +100,7 @@ class DataUtils:
         )
 
     def log_returns(self) -> pl.DataFrame:
-        """Alias for :meth:`to_log_returns`.
+        """Alias for `to_log_returns`.
 
         Matches ``quantstats.utils.log_returns``.
 
@@ -113,7 +113,7 @@ class DataUtils:
     def rebase(self, base: float = 100.0) -> pl.DataFrame:
         """Normalise the returns as a price series that starts at *base*.
 
-        Converts returns to prices via :meth:`to_prices` and then rescales
+        Converts returns to prices via `to_prices` and then rescales
         each column so its first observation equals *base* exactly, matching
         the behaviour of ``quantstats.utils.rebase``.
 
@@ -132,7 +132,7 @@ class DataUtils:
         """Aggregate returns by a calendar period.
 
         Requires a temporal (Date/Datetime) index; raises
-        :exc:`~jquantstats.exceptions.MissingDateColumnError` for integer-indexed data.
+        `MissingDateColumnError` for integer-indexed data.
 
         Human-readable aliases are accepted alongside native Polars interval
         strings (``"1mo"``, ``"1q"``, ``"1y"``, ``"1w"``, ``"1d"``):
@@ -167,12 +167,12 @@ class DataUtils:
         )
 
     def aggregate_returns(self, period: str = "1mo", compounded: bool = True) -> pl.DataFrame:
-        """Alias for :meth:`group_returns`.
+        """Alias for `group_returns`.
 
         Matches ``quantstats.utils.aggregate_returns``.
 
         Args:
-            period: Aggregation period.  See :meth:`group_returns` for accepted values.
+            period: Aggregation period.  See `group_returns` for accepted values.
             compounded: Whether to compound returns.  Defaults to ``True``.
 
         Returns:
