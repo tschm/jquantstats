@@ -1,5 +1,5 @@
 ---
-icon: lucide/shield-check
+icon: material/shield-check
 ---
 
 # API Stability
