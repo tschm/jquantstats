@@ -2,7 +2,7 @@
 # Keep this file small. It can be edited without breaking template sync.
 
 LOGO_FILE=.rhiza/assets/rhiza-logo.svg
-MKDOCS_EXTRA_PACKAGES = --with "mkdocstrings[python]"
+MKDOCS_EXTRA_PACKAGES = --with "mkdocstrings[python]" --with-editable .
 
 # Always include the Rhiza API (template-managed)
 include .rhiza/rhiza.mk

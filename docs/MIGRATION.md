@@ -430,8 +430,5 @@ pf.trading_cost_impact(max_bps=20)          # sweep cost sensitivity 0 → 20 bp
 
 ## Further reading
 
-- [API Reference](docs/api.md) — complete method signatures
-- [Architecture](docs/ARCHITECTURE.md) — how the library is structured
-- [Changelog](CHANGELOG.md) — version history and new features
-- [API Stability](docs/stability.md) — versioning and deprecation policy
-- [Quick Reference](docs/QUICK_REFERENCE.md) — one-page lookup table
+- [API Reference](api.md) — complete method signatures
+- [API Stability](STABILITY.md) — versioning and deprecation policy
