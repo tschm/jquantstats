@@ -1,5 +1,5 @@
 ---
-icon: lucide/coins
+icon: material/cash-multiple
 ---
 
 # Cost Models
