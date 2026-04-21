@@ -13,15 +13,15 @@ The class is composed from four focused mixin modules:
 
 Public API is unchanged:
 
-- Derived data series — :attr:`profits`, :attr:`profit`, :attr:`nav_accumulated`,
-  :attr:`returns`, :attr:`monthly`, :attr:`nav_compounded`, :attr:`highwater`,
-  :attr:`drawdown`, :attr:`all`
-- Lazy composition accessors — :attr:`stats`, :attr:`plots`, :attr:`report`
-- Portfolio transforms — :meth:`truncate`, :meth:`lag`, :meth:`smoothed_holding`
-- Attribution — :attr:`tilt`, :attr:`timing`, :attr:`tilt_timing_decomp`
-- Turnover analysis — :attr:`turnover`, :attr:`turnover_weekly`, :meth:`turnover_summary`
-- Cost analysis — :meth:`cost_adjusted_returns`, :meth:`trading_cost_impact`
-- Utility — :meth:`correlation`
+- Derived data series — `profits`, `profit`, `nav_accumulated`,
+  `returns`, `monthly`, `nav_compounded`, `highwater`,
+  `drawdown`, `all`
+- Lazy composition accessors — `stats`, `plots`, `report`
+- Portfolio transforms — `truncate`, `lag`, `smoothed_holding`
+- Attribution — `tilt`, `timing`, `tilt_timing_decomp`
+- Turnover analysis — `turnover`, `turnover_weekly`, `turnover_summary`
+- Cost analysis — `cost_adjusted_returns`, `trading_cost_impact`
+- Utility — `correlation`
 """
 
 import dataclasses
@@ -67,25 +67,25 @@ class Portfolio(
 
     Derived data series:
 
-    - :attr:`profits` — per-asset daily cash P&L
-    - :attr:`profit` — aggregate daily portfolio profit
-    - :attr:`nav_accumulated` — cumulative additive NAV
-    - :attr:`nav_compounded` — compounded NAV
-    - :attr:`returns` — daily returns (profit / AUM)
-    - :attr:`monthly` — monthly compounded returns
-    - :attr:`highwater` — running high-water mark
-    - :attr:`drawdown` — drawdown from high-water mark
-    - :attr:`all` — merged view of all derived series
+    - `profits` — per-asset daily cash P&L
+    - `profit` — aggregate daily portfolio profit
+    - `nav_accumulated` — cumulative additive NAV
+    - `nav_compounded` — compounded NAV
+    - `returns` — daily returns (profit / AUM)
+    - `monthly` — monthly compounded returns
+    - `highwater` — running high-water mark
+    - `drawdown` — drawdown from high-water mark
+    - `all` — merged view of all derived series
 
-    - Lazy composition accessors: :attr:`stats`, :attr:`plots`, :attr:`report`
-    - Portfolio transforms: :meth:`truncate`, :meth:`lag`,
-      :meth:`smoothed_holding`
-    - Attribution: :attr:`tilt`, :attr:`timing`, :attr:`tilt_timing_decomp`
-    - Turnover: :attr:`turnover`, :attr:`turnover_weekly`,
-      :meth:`turnover_summary`
-    - Cost analysis: :meth:`cost_adjusted_returns`,
-      :meth:`trading_cost_impact`
-    - Utility: :meth:`correlation`
+    - Lazy composition accessors: `stats`, `plots`, `report`
+    - Portfolio transforms: `truncate`, `lag`,
+      `smoothed_holding`
+    - Attribution: `tilt`, `timing`, `tilt_timing_decomp`
+    - Turnover: `turnover`, `turnover_weekly`,
+      `turnover_summary`
+    - Cost analysis: `cost_adjusted_returns`,
+      `trading_cost_impact`
+    - Utility: `correlation`
 
     Attributes:
         cashposition: Polars DataFrame of positions per asset over time
@@ -378,7 +378,7 @@ class Portfolio(
 
         Converts *position* (number of units held per asset) to cash exposure
         by multiplying element-wise with *prices*, then delegates to
-        :py:meth:`from_cash_position`.
+        :py`from_cash_position`.
 
         Args:
             prices: Price levels per asset over time (may include a date column).
@@ -508,7 +508,7 @@ class Portfolio(
         """Return a Stats object built from the portfolio's daily returns.
 
         Delegates to the legacy :class:`~jquantstats._stats.Stats` pipeline via
-        :attr:`data`, so all analytics (Sharpe, drawdown, summary, etc.) are
+        `data`, so all analytics (Sharpe, drawdown, summary, etc.) are
         available through the shared implementation.
 
         The result is cached after first access so repeated calls are O(1).

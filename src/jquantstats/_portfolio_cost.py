@@ -64,12 +64,12 @@ class PortfolioCostMixin:
     def net_cost_nav(self) -> pl.DataFrame:
         """Net-of-cost cumulative additive NAV using the position-delta cost model.
 
-        Deducts :attr:`position_delta_costs` from daily portfolio profit and
+        Deducts `position_delta_costs` from daily portfolio profit and
         computes the running cumulative sum offset by AUM.  The result
         represents the realised NAV path a strategy would achieve after paying
         ``cost_per_unit`` on every unit of position change.
 
-        When ``cost_per_unit`` is zero the result equals :attr:`nav_accumulated`.
+        When ``cost_per_unit`` is zero the result equals `nav_accumulated`.
 
         Returns:
             pl.DataFrame: Frame with an optional ``'date'`` column,
@@ -106,8 +106,8 @@ class PortfolioCostMixin:
             daily_cost = turnover * (cost_bps / 10_000)
 
         where ``turnover`` is the fraction-of-AUM one-way turnover already
-        computed by :attr:`turnover`.  The deduction is applied to the
-        ``returns`` column of :attr:`returns`, leaving all other columns
+        computed by `turnover`.  The deduction is applied to the
+        ``returns`` column of `returns`, leaving all other columns
         (including ``date``) untouched.
 
         Args:
@@ -116,7 +116,7 @@ class PortfolioCostMixin:
                 set at construction time.
 
         Returns:
-            pl.DataFrame: Same schema as :attr:`returns` but with the
+            pl.DataFrame: Same schema as `returns` but with the
             ``returns`` column reduced by the per-period trading cost.
 
         Raises:
