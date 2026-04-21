@@ -80,6 +80,3 @@ markdown_extensions:
 # ----------------------------------------------------------------------------
 plugins:
   - search
-
-            members_order: source
-            show_signature_annotations: true
