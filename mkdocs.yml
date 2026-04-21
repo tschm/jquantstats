@@ -23,7 +23,7 @@ nav:
   - Reports:
     - Test Report: reports/test-report/report.html
     - Hypothesis Report: reports/hypothesis/report.html
-    - Coverage Report: reports/coverage/index.html
+    - Coverage Report: reports/html-coverage/index.html
 
 extra:
   social:
