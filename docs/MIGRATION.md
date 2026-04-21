@@ -1,5 +1,5 @@
 ---
-icon: lucide/arrow-right-left
+icon: material/swap-horizontal
 ---
 
 # Migrating from QuantStats to jquantstats

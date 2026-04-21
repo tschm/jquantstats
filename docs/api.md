@@ -1,5 +1,5 @@
 ---
-icon: lucide/code-2
+icon: material/code-tags
 ---
 
 # API Reference

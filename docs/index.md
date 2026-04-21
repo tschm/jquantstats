@@ -1,5 +1,5 @@
 ---
-icon: lucide/chart-line
+icon: material/chart-line
 hide:
   - toc
 ---
