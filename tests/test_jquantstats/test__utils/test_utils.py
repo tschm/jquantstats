@@ -258,9 +258,7 @@ def long_data() -> Data:
         interval="1d",
         eager=True,
     )
-    returns = pl.DataFrame(
-        {"Date": dates, "A": pl.Series([0.01 * ((-1) ** i) for i in range(n)], dtype=pl.Float64)}
-    )
+    returns = pl.DataFrame({"Date": dates, "A": pl.Series([0.01 * ((-1) ** i) for i in range(n)], dtype=pl.Float64)})
     return Data.from_returns(returns=returns)
 
 
@@ -300,7 +298,7 @@ def test_volatility_adjusted_returns_early_nulls(long_data):
     """First window-1 rows must be null."""
     window = 10
     result = long_data.utils.to_volatility_adjusted_returns(window=window)
-    early = result["A"][:window - 1].to_list()
+    early = result["A"][: window - 1].to_list()
     assert all(v is None for v in early)
     # Row at index `window - 1` should have a value
     assert result["A"][window - 1] is not None
@@ -318,8 +316,11 @@ def test_volatility_adjusted_returns_multi_asset(long_multi_asset_data):
 
 def test_volatility_adjusted_returns_custom_estimator(long_data):
     """A custom vol_estimator callable must be used instead of rolling_std."""
+
     # Use rolling_mean of absolute returns as an alternative vol proxy
-    custom = lambda expr: expr.abs().rolling_mean(5)
+    def custom(expr):
+        return expr.abs().rolling_mean(5)
+
     result = long_data.utils.to_volatility_adjusted_returns(vol_estimator=custom)
     # Should differ from the default rolling_std result
     default = long_data.utils.to_volatility_adjusted_returns(window=5)

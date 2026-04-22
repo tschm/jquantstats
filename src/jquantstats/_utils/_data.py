@@ -99,6 +99,7 @@ class DataUtils:
         return self._combined().with_columns(
             [(pl.col(c).fill_null(0.0) + 1.0).log(base=math.e).alias(c) for c in asset_cols]
         )
+
     def to_volatility_adjusted_returns(
         self,
         window: int = 60,
@@ -130,12 +131,13 @@ class DataUtils:
 
         """
         if vol_estimator is None:
-            vol_estimator = lambda expr: expr.rolling_std(window)
-        asset_cols = self._asset_cols()
-        return self._combined().with_columns(
-            [pl.col(c) / vol_estimator(pl.col(c)) for c in asset_cols]
-        )
 
+            def vol_estimator(expr: pl.Expr) -> pl.Expr:
+                """Return rolling standard deviation over *window*."""
+                return expr.rolling_std(window)
+
+        asset_cols = self._asset_cols()
+        return self._combined().with_columns([pl.col(c) / vol_estimator(pl.col(c)) for c in asset_cols])
 
     def log_returns(self) -> pl.DataFrame:
         """Alias for `to_log_returns`.
