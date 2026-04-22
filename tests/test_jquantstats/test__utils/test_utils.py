@@ -295,13 +295,13 @@ def test_volatility_adjusted_returns_row_count(long_data):
 
 
 def test_volatility_adjusted_returns_early_nulls(long_data):
-    """First window-1 rows must be null."""
+    """First *window* rows must be null (shift avoids look-ahead bias)."""
     window = 10
     result = long_data.utils.to_volatility_adjusted_returns(window=window)
-    early = result["A"][: window - 1].to_list()
+    early = result["A"][:window].to_list()
     assert all(v is None for v in early)
-    # Row at index `window - 1` should have a value
-    assert result["A"][window - 1] is not None
+    # Row at index `window` should have a value
+    assert result["A"][window] is not None
 
 
 def test_volatility_adjusted_returns_multi_asset(long_multi_asset_data):

@@ -107,8 +107,8 @@ class DataUtils:
     ) -> pl.DataFrame:
         """Convert simple returns to volatility adjusted returns.
 
-        Divides each return by a volatility estimate:
-        ``vol_adjusted_r_t = r_t / vol(r_t)``.
+        Divides each return by a lagged volatility estimate to avoid
+        look-ahead bias: ``vol_adjusted_r_t = r_t / vol(r_{t-1})``.
 
         By default the volatility estimate is
         ``pl.Expr.rolling_std(window)``.  Pass *vol_estimator* to
@@ -137,7 +137,7 @@ class DataUtils:
                 return expr.rolling_std(window)
 
         asset_cols = self._asset_cols()
-        return self._combined().with_columns([pl.col(c) / vol_estimator(pl.col(c)) for c in asset_cols])
+        return self._combined().with_columns([pl.col(c) / vol_estimator(pl.col(c)).shift(1) for c in asset_cols])
 
     def log_returns(self) -> pl.DataFrame:
         """Alias for `to_log_returns`.
