@@ -22,7 +22,6 @@ _site
 site/
 docs/marimo.md
 docs/notebooks/*.html
-docs/notebooks.md
 docs/reports/
 docs/reports.md
 
