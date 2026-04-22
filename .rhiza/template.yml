@@ -1,14 +1,5 @@
 repository: "jebel-quant/rhiza"
-ref: "v0.10.1"
-
-exclude:
-  - .rhiza/docs
-  - .rhiza/make.d/agentic.mk
-  - .rhiza/make.d/custom-env.mk
-  - .rhiza/make.d/custom-task.mk
-  - .rhiza/make.d/gh-aw.mk
-  - .rhiza/make.d/README.md
-  - .rhiza/tests/api/test_gh_aw_targets.py
+ref: "v0.10.2"
 
 templates:
   - github
