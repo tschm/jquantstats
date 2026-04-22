@@ -80,7 +80,7 @@ def csv_files() -> dict[str, bytes]:
     weights = {a: AUM / len(ASSETS) for a in ASSETS}
     for i in range(N_DAYS):
         if i % 63 == 0 and i > 0:
-            noise = {a: random.uniform(-0.05, 0.05) for a in ASSETS}  # noqa: S311
+            noise = {a: random.uniform(-0.05, 0.05) for a in ASSETS}  # noqa: S311  # nosec B311
             total = sum(1 + noise[a] for a in ASSETS)
             weights = {a: AUM * (1 + noise[a]) / total for a in ASSETS}
         for a in ASSETS:
