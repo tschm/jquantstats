@@ -470,40 +470,6 @@ def test_portfolio_utils_aggregate_returns_alias(portfolio_pf):
 # ─── Winsorise ────────────────────────────────────────────────────────────────
 
 
-@pytest.fixture
-def long_data() -> Data:
-    """100-day single-asset Data for rolling-window tests."""
-    n = 100
-    dates = pl.date_range(
-        start=date(2020, 1, 1),
-        end=date(2020, 1, 1) + timedelta(days=n - 1),
-        interval="1d",
-        eager=True,
-    )
-    returns = pl.DataFrame({"Date": dates, "A": pl.Series([0.01 * ((-1) ** i) for i in range(n)], dtype=pl.Float64)})
-    return Data.from_returns(returns=returns)
-
-
-@pytest.fixture
-def long_multi_asset_data() -> Data:
-    """100-day two-asset Data for rolling-window tests."""
-    n = 100
-    dates = pl.date_range(
-        start=date(2020, 1, 1),
-        end=date(2020, 1, 1) + timedelta(days=n - 1),
-        interval="1d",
-        eager=True,
-    )
-    returns = pl.DataFrame(
-        {
-            "Date": dates,
-            "A": pl.Series([0.01 * ((-1) ** i) for i in range(n)], dtype=pl.Float64),
-            "B": pl.Series([0.005 * ((-1) ** i) for i in range(n)], dtype=pl.Float64),
-        }
-    )
-    return Data.from_returns(returns=returns)
-
-
 def test_winsorise_preserves_columns(long_data):
     """Winsorise must preserve asset columns."""
     result = long_data.utils.winsorise(window=7, n_sigma=3.0)
