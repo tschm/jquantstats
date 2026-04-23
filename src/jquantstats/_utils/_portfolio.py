@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+from collections.abc import Callable
 
 import polars as pl
 
@@ -134,6 +135,27 @@ class PortfolioUtils:
 
         """
         return self._du().to_excess_returns(rf=rf, nperiods=nperiods)
+
+    def to_volatility_adjusted_returns(
+        self,
+        window: int = 60,
+        vol_estimator: Callable[[pl.Expr], pl.Expr] | None = None,
+    ) -> pl.DataFrame:
+        """Convert portfolio returns to volatility-adjusted returns.
+
+        See `to_volatility_adjusted_returns` for full documentation.
+
+        Args:
+            window: Rolling lookback for volatility.  Defaults to ``60``.
+            vol_estimator: A callable ``(pl.Expr) -> pl.Expr`` that
+                produces a volatility series.  Defaults to ``None``
+                (uses ``rolling_std(window)``).
+
+        Returns:
+            DataFrame of volatility-adjusted returns.
+
+        """
+        return self._du().to_volatility_adjusted_returns(window=window, vol_estimator=vol_estimator)
 
     def exponential_stdev(self, window: int = 30, is_halflife: bool = False) -> pl.DataFrame:
         """Compute exponentially weighted standard deviation of portfolio returns.

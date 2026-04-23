@@ -245,6 +245,89 @@ def test_group_returns_human_readable_period():
     assert a["A"].to_list() == pytest.approx(b["A"].to_list())
 
 
+# ─── to_volatility_adjusted_returns ───────────────────────────────────────────
+
+
+@pytest.fixture
+def long_data() -> Data:
+    """100-day single-asset Data for rolling-window tests."""
+    n = 100
+    dates = pl.date_range(
+        start=date(2020, 1, 1),
+        end=date(2020, 1, 1) + timedelta(days=n - 1),
+        interval="1d",
+        eager=True,
+    )
+    returns = pl.DataFrame({"Date": dates, "A": pl.Series([0.01 * ((-1) ** i) for i in range(n)], dtype=pl.Float64)})
+    return Data.from_returns(returns=returns)
+
+
+@pytest.fixture
+def long_multi_asset_data() -> Data:
+    """100-day two-asset Data for rolling-window tests."""
+    n = 100
+    dates = pl.date_range(
+        start=date(2020, 1, 1),
+        end=date(2020, 1, 1) + timedelta(days=n - 1),
+        interval="1d",
+        eager=True,
+    )
+    returns = pl.DataFrame(
+        {
+            "Date": dates,
+            "A": pl.Series([0.01 * ((-1) ** i) for i in range(n)], dtype=pl.Float64),
+            "B": pl.Series([0.005 * ((-1) ** i) for i in range(n)], dtype=pl.Float64),
+        }
+    )
+    return Data.from_returns(returns=returns)
+
+
+def test_volatility_adjusted_returns_columns(long_data):
+    """to_volatility_adjusted_returns must preserve asset columns."""
+    result = long_data.utils.to_volatility_adjusted_returns(window=10)
+    assert "A" in result.columns
+
+
+def test_volatility_adjusted_returns_row_count(long_data):
+    """to_volatility_adjusted_returns must preserve the row count."""
+    result = long_data.utils.to_volatility_adjusted_returns(window=10)
+    assert result.height == long_data.returns.height
+
+
+def test_volatility_adjusted_returns_early_nulls(long_data):
+    """First *window* rows must be null (shift avoids look-ahead bias)."""
+    window = 10
+    result = long_data.utils.to_volatility_adjusted_returns(window=window)
+    early = result["A"][:window].to_list()
+    assert all(v is None for v in early)
+    # Row at index `window` should have a value
+    assert result["A"][window] is not None
+
+
+def test_volatility_adjusted_returns_multi_asset(long_multi_asset_data):
+    """to_volatility_adjusted_returns must work for multiple asset columns."""
+    result = long_multi_asset_data.utils.to_volatility_adjusted_returns(window=10)
+    assert "A" in result.columns
+    assert "B" in result.columns
+    # Both columns should have valid (non-null) values after the window
+    assert result["A"][15] is not None
+    assert result["B"][15] is not None
+
+
+def test_volatility_adjusted_returns_custom_estimator(long_data):
+    """A custom vol_estimator callable must be used instead of rolling_std."""
+
+    # Use rolling_mean of absolute returns as an alternative vol proxy
+    def custom(expr):
+        return expr.abs().rolling_mean(5)
+
+    result = long_data.utils.to_volatility_adjusted_returns(vol_estimator=custom)
+    # Should differ from the default rolling_std result
+    default = long_data.utils.to_volatility_adjusted_returns(window=5)
+    # Compare a non-null row — they should not be equal
+    assert result["A"][10] != pytest.approx(default["A"][10])
+
+
 # ─── to_excess_returns ────────────────────────────────────────────────────────
 
 

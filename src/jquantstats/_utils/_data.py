@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import dataclasses
 import math
+from collections.abc import Callable
 
 import polars as pl
 
@@ -98,6 +99,45 @@ class DataUtils:
         return self._combined().with_columns(
             [(pl.col(c).fill_null(0.0) + 1.0).log(base=math.e).alias(c) for c in asset_cols]
         )
+
+    def to_volatility_adjusted_returns(
+        self,
+        window: int = 60,
+        vol_estimator: Callable[[pl.Expr], pl.Expr] | None = None,
+    ) -> pl.DataFrame:
+        """Convert simple returns to volatility adjusted returns.
+
+        Divides each return by a lagged volatility estimate to avoid
+        look-ahead bias: ``vol_adjusted_r_t = r_t / vol(r_{t-1})``.
+
+        By default the volatility estimate is
+        ``pl.Expr.rolling_std(window)``.  Pass *vol_estimator* to
+        override with any function that maps a ``pl.Expr`` to a
+        ``pl.Expr`` (e.g. an EWMA standard deviation).
+
+        Matches ``quantstats.utils.to_volatility_adjusted_returns``.
+
+        Args:
+            window: Rolling lookback for the default volatility
+                estimator.  Ignored when *vol_estimator* is provided.
+                Defaults to ``60``.
+            vol_estimator: A callable ``(pl.Expr) -> pl.Expr`` that
+                produces a volatility series from a returns expression.
+                Defaults to ``None`` (uses ``rolling_std(window)``).
+
+        Returns:
+            DataFrame with the same columns as the input returns, values
+            replaced by their volatility adjusted equivalents.
+
+        """
+        if vol_estimator is None:
+
+            def vol_estimator(expr: pl.Expr) -> pl.Expr:
+                """Return rolling standard deviation over *window*."""
+                return expr.rolling_std(window)
+
+        asset_cols = self._asset_cols()
+        return self._combined().with_columns([pl.col(c) / vol_estimator(pl.col(c)).shift(1) for c in asset_cols])
 
     def log_returns(self) -> pl.DataFrame:
         """Alias for `to_log_returns`.
