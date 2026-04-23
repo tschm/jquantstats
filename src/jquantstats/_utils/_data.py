@@ -128,6 +128,35 @@ class DataUtils:
         asset_cols = self._asset_cols()
         return prices_df.with_columns([(pl.col(c) / pl.col(c).first() * base).alias(c) for c in asset_cols])
 
+    def winsorise(self, window: int = 7, n_sigma: float = 3.0) -> pl.DataFrame:
+        """Winsorise returns by clipping to within *n_sigma* rolling standard deviations.
+
+        For each asset column, values outside
+        ``rolling_mean ± n_sigma * rolling_std`` (computed over *window*)
+        are clipped to the respective bound.
+
+        Args:
+            window: Rolling lookback for mean and standard deviation.
+                Defaults to ``7``.
+            n_sigma: Number of standard deviations for the clip bounds.
+                Defaults to ``3.0``.
+
+        Returns:
+            DataFrame with the same columns as the input returns, extreme
+            values clipped.
+        """
+        asset_cols = self._asset_cols()
+        df = self._combined()
+        exprs = []
+        for c in asset_cols:
+            col = pl.col(c)
+            r_mean = col.rolling_mean(window).shift(1)
+            r_std = col.rolling_std(window).shift(1)
+            lower = r_mean - n_sigma * r_std
+            upper = r_mean + n_sigma * r_std
+            exprs.append(col.clip(lower_bound=lower, upper_bound=upper).alias(c))
+        return df.with_columns(exprs)
+
     def group_returns(self, period: str = "1mo", compounded: bool = True) -> pl.DataFrame:
         """Aggregate returns by a calendar period.
 
