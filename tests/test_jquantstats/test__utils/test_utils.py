@@ -465,3 +465,140 @@ def test_portfolio_utils_aggregate_returns_alias(portfolio_pf):
     a = portfolio_pf.utils.group_returns(period="1w")
     b = portfolio_pf.utils.aggregate_returns(period="1w")
     assert a["returns"].to_list() == pytest.approx(b["returns"].to_list())
+
+
+# ─── Winsorise ────────────────────────────────────────────────────────────────
+
+
+@pytest.fixture
+def long_data() -> Data:
+    """100-day single-asset Data for rolling-window tests."""
+    n = 100
+    dates = pl.date_range(
+        start=date(2020, 1, 1),
+        end=date(2020, 1, 1) + timedelta(days=n - 1),
+        interval="1d",
+        eager=True,
+    )
+    returns = pl.DataFrame({"Date": dates, "A": pl.Series([0.01 * ((-1) ** i) for i in range(n)], dtype=pl.Float64)})
+    return Data.from_returns(returns=returns)
+
+
+@pytest.fixture
+def long_multi_asset_data() -> Data:
+    """100-day two-asset Data for rolling-window tests."""
+    n = 100
+    dates = pl.date_range(
+        start=date(2020, 1, 1),
+        end=date(2020, 1, 1) + timedelta(days=n - 1),
+        interval="1d",
+        eager=True,
+    )
+    returns = pl.DataFrame(
+        {
+            "Date": dates,
+            "A": pl.Series([0.01 * ((-1) ** i) for i in range(n)], dtype=pl.Float64),
+            "B": pl.Series([0.005 * ((-1) ** i) for i in range(n)], dtype=pl.Float64),
+        }
+    )
+    return Data.from_returns(returns=returns)
+
+
+def test_winsorise_preserves_columns(long_data):
+    """Winsorise must preserve asset columns."""
+    result = long_data.utils.winsorise(window=7, n_sigma=3.0)
+    assert "A" in result.columns
+
+
+def test_winsorise_preserves_row_count(long_data):
+    """Winsorise must preserve the row count."""
+    result = long_data.utils.winsorise(window=7, n_sigma=3.0)
+    assert result.height == long_data.returns.height
+
+
+def test_winsorise_no_change_for_normal_data(long_data):
+    """Alternating ±0.01 data should be unchanged with 3-sigma clipping."""
+    result = long_data.utils.winsorise(window=7, n_sigma=3.0)
+    original = long_data.returns["A"].to_list()
+    clipped = result["A"].to_list()
+    # After the warm-up period, values should be identical
+    for i in range(10, len(original)):
+        if clipped[i] is not None:
+            assert clipped[i] == pytest.approx(original[i])
+
+
+def test_winsorise_clips_outlier():
+    """A large outlier should be clipped by tight n_sigma bounds."""
+    n = 30
+    dates = pl.date_range(
+        start=date(2020, 1, 1),
+        end=date(2020, 1, 1) + timedelta(days=n - 1),
+        interval="1d",
+        eager=True,
+    )
+    vals = [0.01] * n
+    vals[20] = 0.50  # huge outlier
+    data = Data.from_returns(returns=pl.DataFrame({"Date": dates, "A": pl.Series(vals, dtype=pl.Float64)}))
+    result = data.utils.winsorise(window=7, n_sigma=1.0)
+    # The outlier at index 20 should have been clipped down
+    assert result["A"][20] < 0.50
+
+
+def test_winsorise_multi_asset(long_multi_asset_data):
+    """Winsorise must work for multiple asset columns."""
+    result = long_multi_asset_data.utils.winsorise(window=7, n_sigma=3.0)
+    assert "A" in result.columns
+    assert "B" in result.columns
+
+
+def test_winsorise_early_nulls_passthrough(long_data):
+    """First rows (before window + shift fill) should pass through unchanged."""
+    window = 7
+    result = long_data.utils.winsorise(window=window, n_sigma=3.0)
+    original = long_data.returns["A"].to_list()
+    clipped = result["A"].to_list()
+    # The first `window` rows have null rolling stats due to shift, so clip
+    # becomes clip(null, null) which passes through unchanged.
+    for i in range(window):
+        assert clipped[i] == pytest.approx(original[i])
+
+
+def test_winsorise_default_parameters(long_data):
+    """Calling winsorise with no args should work without error."""
+    result = long_data.utils.winsorise()
+    assert result.height == long_data.returns.height
+
+
+def test_winsorise_shift_prevents_self_normalisation():
+    """With shift(1), an outlier should be clipped more aggressively.
+
+    Without the shift, the outlier inflates rolling_std and partly
+    normalises itself, resulting in a less aggressive clip.
+    """
+    n = 30
+    dates = pl.date_range(
+        start=date(2020, 1, 1),
+        end=date(2020, 1, 1) + timedelta(days=n - 1),
+        interval="1d",
+        eager=True,
+    )
+    vals = [0.01] * n
+    vals[20] = 1.0  # extreme outlier
+    df = pl.DataFrame({"Date": dates, "A": pl.Series(vals, dtype=pl.Float64)})
+
+    # With shift (current implementation) — bounds at t=20 use data up to t=19
+    data = Data.from_returns(returns=df)
+    shifted = data.utils.winsorise(window=7, n_sigma=2.0)
+    clipped_shifted = shifted["A"][20]
+
+    # Without shift — manually compute what clip would do
+    col_vals = df["A"]
+    r_mean_no_shift = col_vals.rolling_mean(7)
+    r_std_no_shift = col_vals.rolling_std(7)
+    lower_no_shift = r_mean_no_shift[20] - 2.0 * r_std_no_shift[20]
+    upper_no_shift = r_mean_no_shift[20] + 2.0 * r_std_no_shift[20]
+    clipped_no_shift = max(lower_no_shift, min(1.0, upper_no_shift))
+
+    # The shifted version clips more aggressively (lower value) because the
+    # outlier didn't inflate the std used for bounds
+    assert clipped_shifted < clipped_no_shift
