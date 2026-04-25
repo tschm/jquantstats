@@ -81,22 +81,6 @@ def _apply_null_strategy(
     return dframe.with_columns([pl.col(c).forward_fill() for c in value_cols])
 
 
-_NUMERIC_TYPES: frozenset[type[pl.DataType]] = frozenset(
-    {
-        pl.Int8,
-        pl.Int16,
-        pl.Int32,
-        pl.Int64,
-        pl.UInt8,
-        pl.UInt16,
-        pl.UInt32,
-        pl.UInt64,
-        pl.Float32,
-        pl.Float64,
-    }
-)
-
-
 def interpolate(df: pl.DataFrame) -> pl.DataFrame:
     """Forward-fill numeric columns only between first and last non-null values.
 
@@ -124,28 +108,31 @@ def interpolate(df: pl.DataFrame) -> pl.DataFrame:
         ```
 
     """
+    # Choose a temp column name guaranteed not to collide with any user column.
+    tmp_col = "__row_idx__"
+    while tmp_col in df.columns:
+        tmp_col = f"_{tmp_col}_"
+
     out = []
 
     for col in df.columns:
         s = df[col]
-        if s.dtype in _NUMERIC_TYPES:
-            non_null_indices = s.is_not_null().arg_true()
-            if len(non_null_indices) > 0:
-                first_valid_idx = non_null_indices[0]
-                last_valid_idx = non_null_indices[-1]
+        if s.dtype.is_numeric():
+            non_null_mask = s.is_not_null()
+            if non_null_mask.any():
+                first_valid_idx = non_null_mask.arg_max()
+                last_valid_idx = len(s) - 1 - non_null_mask.reverse().arg_max()
             else:
                 out.append(pl.col(col))
                 continue
 
-            mask = (pl.col("__row_idx__") >= pl.lit(first_valid_idx)) & (
-                pl.col("__row_idx__") <= pl.lit(last_valid_idx)
-            )
+            mask = (pl.col(tmp_col) >= pl.lit(first_valid_idx)) & (pl.col(tmp_col) <= pl.lit(last_valid_idx))
             filled_col = pl.when(mask).then(pl.col(col).fill_null(strategy="forward")).otherwise(pl.col(col)).alias(col)
             out.append(filled_col)
         else:
             out.append(pl.col(col))
 
-    return df.with_columns(pl.int_range(0, df.height).alias("__row_idx__")).select(out)
+    return df.with_columns(pl.int_range(0, df.height).alias(tmp_col)).select(out)
 
 
 def _subtract_risk_free(dframe: pl.DataFrame, rf: float | pl.DataFrame, date_col: str) -> pl.DataFrame:
