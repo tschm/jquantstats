@@ -129,10 +129,10 @@ def interpolate(df: pl.DataFrame) -> pl.DataFrame:
     for col in df.columns:
         s = df[col]
         if s.dtype in _NUMERIC_TYPES:
-            non_null_indices = s.is_not_null().arg_true()
-            if len(non_null_indices) > 0:
-                first_valid_idx = non_null_indices[0]
-                last_valid_idx = non_null_indices[-1]
+            non_null_mask = s.is_not_null()
+            if non_null_mask.any():
+                first_valid_idx = non_null_mask.arg_max()
+                last_valid_idx = len(s) - 1 - non_null_mask.reverse().arg_max()
             else:
                 out.append(pl.col(col))
                 continue
