@@ -161,3 +161,16 @@ def test_from_returns_with_rf(returns):
     rf = 0.001
     d = Data.from_returns(returns=returns, rf=rf)
     assert_series_equal(d.returns["Meta"], returns["Meta"] - rf)
+
+
+def test_from_returns_rf_dataframe_nonstandard_column_warns(returns):
+    """Data.from_returns warns when rf DataFrame column is not named 'rf'."""
+    import warnings
+
+    rf_scalar = 0.001
+    rf_df = returns.select([pl.col("Date"), pl.lit(rf_scalar).alias("risk_free")])
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        d = Data.from_returns(returns=returns, rf=rf_df)
+    assert any("risk_free" in str(w.message) and "rf" in str(w.message) for w in caught)
+    assert_series_equal(d.returns["Meta"], returns["Meta"] - rf_scalar)

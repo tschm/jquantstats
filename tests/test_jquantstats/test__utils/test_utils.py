@@ -467,6 +467,13 @@ def test_portfolio_utils_aggregate_returns_alias(portfolio_pf):
     assert a["returns"].to_list() == pytest.approx(b["returns"].to_list())
 
 
+def test_portfolio_utils_to_volatility_adjusted_returns(portfolio_pf):
+    """portfolio.utils.to_volatility_adjusted_returns must preserve row count and columns."""
+    result = portfolio_pf.utils.to_volatility_adjusted_returns(window=5)
+    assert "returns" in result.columns
+    assert result.height == portfolio_pf.returns.height
+
+
 # ─── Winsorise ────────────────────────────────────────────────────────────────
 
 
