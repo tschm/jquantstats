@@ -50,6 +50,7 @@ from ._types import NativeFrameOrScalar as NativeFrameOrScalar
 from .data import Data as Data
 from .data import interpolate as interpolate
 from .portfolio import Portfolio as Portfolio
+from .result import Result as Result
 
 __version__ = importlib.metadata.version("jquantstats")
 
@@ -60,4 +61,5 @@ __all__ = [
     "NativeFrameOrScalar",
     "Portfolio",
     "interpolate",
+    "Result",
 ]
