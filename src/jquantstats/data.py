@@ -140,12 +140,7 @@ def interpolate(df: pl.DataFrame) -> pl.DataFrame:
             mask = (pl.col("__row_idx__") >= pl.lit(first_valid_idx)) & (
                 pl.col("__row_idx__") <= pl.lit(last_valid_idx)
             )
-            filled_col = (
-                pl.when(mask)
-                .then(pl.col(col).fill_null(strategy="forward"))
-                .otherwise(pl.col(col))
-                .alias(col)
-            )
+            filled_col = pl.when(mask).then(pl.col(col).fill_null(strategy="forward")).otherwise(pl.col(col)).alias(col)
             out.append(filled_col)
         else:
             out.append(pl.col(col))

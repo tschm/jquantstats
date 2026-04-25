@@ -528,4 +528,3 @@ class TestInterpolate:
         df = pl.DataFrame({"a": [1.0, None, 3.0]})
         result = interpolate(df)
         assert "__row_idx__" not in result.columns
-

@@ -60,6 +60,6 @@ __all__ = [
     "NativeFrame",
     "NativeFrameOrScalar",
     "Portfolio",
-    "interpolate",
     "Result",
+    "interpolate",
 ]
