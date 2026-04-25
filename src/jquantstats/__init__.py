@@ -48,6 +48,7 @@ from ._cost_model import CostModel as CostModel
 from ._types import NativeFrame as NativeFrame
 from ._types import NativeFrameOrScalar as NativeFrameOrScalar
 from .data import Data as Data
+from .data import interpolate as interpolate
 from .portfolio import Portfolio as Portfolio
 from .result import Result as Result
 
@@ -60,4 +61,5 @@ __all__ = [
     "NativeFrameOrScalar",
     "Portfolio",
     "Result",
+    "interpolate",
 ]

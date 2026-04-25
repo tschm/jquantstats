@@ -81,6 +81,65 @@ def _apply_null_strategy(
     return dframe.with_columns([pl.col(c).forward_fill() for c in value_cols])
 
 
+def interpolate(df: pl.DataFrame) -> pl.DataFrame:
+    """Forward-fill numeric columns only between first and last non-null values.
+
+    For each numeric column, forward-fill is applied strictly within the span
+    bounded by its first and last non-null samples. Values outside this span
+    are left as-is (including leading/trailing nulls). Non-numeric columns are
+    returned unchanged.
+
+    Args:
+        df: Input frame possibly containing nulls.
+
+    Returns:
+        pl.DataFrame: Frame where numeric columns have been interior-forward-
+        filled; schema and dtypes of the original columns are preserved.
+
+    Examples:
+        ```python
+        import polars as pl
+        from jquantstats import interpolate
+
+        df = pl.DataFrame({"a": [None, 1.0, None, 3.0, None], "b": ["x", "y", "z", "w", "v"]})
+        result = interpolate(df)
+        # a: [None, 1.0, 1.0, 3.0, None]  (leading/trailing nulls untouched)
+        # b: ["x", "y", "z", "w", "v"]    (non-numeric unchanged)
+        ```
+
+    """
+    # Choose a temp column name guaranteed not to collide with any user column.
+    tmp_col = "__row_idx__"
+    while tmp_col in df.columns:
+        tmp_col = f"_{tmp_col}_"
+
+    out = []
+
+    for col in df.columns:
+        s = df[col]
+        if s.dtype.is_numeric():
+            non_null_mask = s.is_not_null()
+            if non_null_mask.any():
+                _fwd = non_null_mask.arg_max()
+                _rev = non_null_mask.reverse().arg_max()
+                if _fwd is None or _rev is None:  # pragma: no cover
+                    out.append(pl.col(col))
+                    continue
+                first_valid_idx = _fwd
+                last_valid_idx = len(s) - 1 - _rev
+            else:
+                out.append(pl.col(col))
+                continue
+
+            mask = (pl.col(tmp_col) >= pl.lit(first_valid_idx)) & (pl.col(tmp_col) <= pl.lit(last_valid_idx))
+            filled_col = pl.when(mask).then(pl.col(col).fill_null(strategy="forward")).otherwise(pl.col(col)).alias(col)
+            out.append(filled_col)
+        else:
+            out.append(pl.col(col))
+
+    return df.with_columns(pl.int_range(0, df.height).alias(tmp_col)).select(out)
+
+
 def _subtract_risk_free(dframe: pl.DataFrame, rf: float | pl.DataFrame, date_col: str) -> pl.DataFrame:
     """Subtract the risk-free rate from all numeric columns in the DataFrame.
 

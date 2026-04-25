@@ -438,3 +438,103 @@ def test_repr(data):
     assert "end=" in r
     for asset in data.assets:
         assert asset in r
+
+
+class TestInterpolate:
+    """Tests for the standalone interpolate() function."""
+
+    def test_interior_nulls_are_filled(self):
+        """Nulls between the first and last non-null are forward-filled."""
+        from jquantstats import interpolate
+
+        df = pl.DataFrame({"a": [1.0, None, None, 4.0]})
+        result = interpolate(df)
+        assert result["a"].to_list() == [1.0, 1.0, 1.0, 4.0]
+
+    def test_leading_nulls_are_not_filled(self):
+        """Nulls before the first non-null value are left unchanged."""
+        from jquantstats import interpolate
+
+        df = pl.DataFrame({"a": [None, None, 3.0, None, 5.0]})
+        result = interpolate(df)
+        assert result["a"][0] is None
+        assert result["a"][1] is None
+        assert result["a"][2] == pytest.approx(3.0)
+        assert result["a"][3] == pytest.approx(3.0)
+        assert result["a"][4] == pytest.approx(5.0)
+
+    def test_trailing_nulls_are_not_filled(self):
+        """Nulls after the last non-null value are left unchanged."""
+        from jquantstats import interpolate
+
+        df = pl.DataFrame({"a": [1.0, None, 3.0, None, None]})
+        result = interpolate(df)
+        assert result["a"][3] is None
+        assert result["a"][4] is None
+
+    def test_all_null_column_unchanged(self):
+        """A column with no non-null values is passed through unchanged."""
+        from jquantstats import interpolate
+
+        df = pl.DataFrame({"a": pl.Series([None, None, None], dtype=pl.Float64)})
+        result = interpolate(df)
+        assert result["a"].null_count() == 3
+
+    def test_non_numeric_column_unchanged(self):
+        """Non-numeric columns are returned without modification."""
+        from jquantstats import interpolate
+
+        df = pl.DataFrame({"a": [1.0, None, 3.0], "b": ["x", "y", "z"]})
+        result = interpolate(df)
+        assert result["b"].to_list() == ["x", "y", "z"]
+
+    def test_mixed_columns(self):
+        """Numeric and non-numeric columns coexist correctly."""
+        from jquantstats import interpolate
+
+        df = pl.DataFrame({"num": [None, 2.0, None, 4.0, None], "label": ["a", "b", "c", "d", "e"]})
+        result = interpolate(df)
+        assert result["num"].to_list() == [None, 2.0, 2.0, 4.0, None]
+        assert result["label"].to_list() == ["a", "b", "c", "d", "e"]
+
+    def test_schema_preserved(self):
+        """Output schema matches input schema exactly."""
+        from jquantstats import interpolate
+
+        df = pl.DataFrame({"a": pl.Series([1.0, None, 3.0], dtype=pl.Float32), "b": [1, 2, 3]})
+        result = interpolate(df)
+        assert result.schema == df.schema
+
+    def test_no_nulls_unchanged(self):
+        """A DataFrame without nulls is returned identically."""
+        from jquantstats import interpolate
+
+        df = pl.DataFrame({"a": [1.0, 2.0, 3.0]})
+        result = interpolate(df)
+        assert_frame_equal(result, df)
+
+    def test_integer_column_filled(self):
+        """Integer columns are also forward-filled in the interior."""
+        from jquantstats import interpolate
+
+        df = pl.DataFrame({"a": pl.Series([1, None, None, 4], dtype=pl.Int64)})
+        result = interpolate(df)
+        assert result["a"].to_list() == [1, 1, 1, 4]
+
+    def test_no_temporary_column_in_output(self):
+        """The temporary __row_idx__ column must not appear in the output."""
+        from jquantstats import interpolate
+
+        df = pl.DataFrame({"a": [1.0, None, 3.0]})
+        result = interpolate(df)
+        assert "__row_idx__" not in result.columns
+
+    def test_existing_row_idx_column_is_preserved(self):
+        """A user-provided __row_idx__ column must not be overwritten or dropped."""
+        from jquantstats import interpolate
+
+        df = pl.DataFrame({"a": [1.0, None, 3.0], "__row_idx__": [10, 20, 30]})
+        result = interpolate(df)
+        assert result.columns == df.columns
+        assert result["a"].to_list() == [1.0, 1.0, 3.0]
+        assert result["__row_idx__"].to_list() == [10, 20, 30]
