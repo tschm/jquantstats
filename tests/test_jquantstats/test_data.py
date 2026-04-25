@@ -528,3 +528,14 @@ class TestInterpolate:
         df = pl.DataFrame({"a": [1.0, None, 3.0]})
         result = interpolate(df)
         assert "__row_idx__" not in result.columns
+
+    def test_existing_row_idx_column_is_preserved(self):
+        """A user-provided __row_idx__ column must not be overwritten or dropped."""
+        from jquantstats import interpolate
+
+        df = pl.DataFrame({"a": [1.0, None, 3.0], "__row_idx__": [10, 20, 30]})
+        result = interpolate(df)
+
+        assert result.columns == df.columns
+        assert result["a"].to_list() == [1.0, 1.0, 3.0]
+        assert result["__row_idx__"].to_list() == [10, 20, 30]
