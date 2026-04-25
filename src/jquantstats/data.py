@@ -120,8 +120,13 @@ def interpolate(df: pl.DataFrame) -> pl.DataFrame:
         if s.dtype.is_numeric():
             non_null_mask = s.is_not_null()
             if non_null_mask.any():
-                first_valid_idx = non_null_mask.arg_max()
-                last_valid_idx = len(s) - 1 - non_null_mask.reverse().arg_max()
+                _fwd = non_null_mask.arg_max()
+                _rev = non_null_mask.reverse().arg_max()
+                if _fwd is None or _rev is None:  # pragma: no cover
+                    out.append(pl.col(col))
+                    continue
+                first_valid_idx = _fwd
+                last_valid_idx = len(s) - 1 - _rev
             else:
                 out.append(pl.col(col))
                 continue
