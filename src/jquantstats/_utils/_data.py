@@ -332,9 +332,9 @@ class DataUtils:
 
         """
         if isinstance(warmup, bool) or not isinstance(warmup, int):
-            raise ValueError("warmup must be a non-negative integer")
+            raise TypeError
         if warmup < 0:
-            raise ValueError("warmup must be a non-negative integer")
+            raise ValueError
 
         asset_cols = self._asset_cols()
         n = len(asset_cols)
