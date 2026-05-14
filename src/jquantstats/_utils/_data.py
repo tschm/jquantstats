@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import dataclasses
 import math
-from collections.abc import Callable
-from typing import Any
+from collections.abc import Callable, Hashable
 
 import numpy as np
 import polars as pl
@@ -298,7 +297,9 @@ class DataUtils:
             exprs = [pl.col(c).ewm_std(span=window, min_samples=1).alias(c) for c in asset_cols]
         return self._combined().with_columns(exprs)
 
-    def exponential_cov(self, window: int = 30, is_halflife: bool = False, warmup: int = 0) -> dict[Any, np.ndarray]:
+    def exponential_cov(
+        self, window: int = 30, is_halflife: bool = False, warmup: int = 0
+    ) -> dict[Hashable, np.ndarray]:
         """Compute the exponentially weighted covariance matrix of returns.
 
         EWM covariance uses the identity
