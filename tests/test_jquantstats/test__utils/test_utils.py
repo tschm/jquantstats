@@ -396,6 +396,24 @@ def test_exponential_stdev_preserves_row_count(simple_data):
 # ─── exponential_cov ─────────────────────────────────────────────────────────
 
 
+def test_exponential_cov_warmup_type_error(simple_data):
+    """Non-integer warmup must raise TypeError."""
+    with pytest.raises(TypeError):
+        simple_data.utils.exponential_cov(warmup=1.5)
+
+
+def test_exponential_cov_warmup_bool_type_error(simple_data):
+    """Bool warmup must raise TypeError (bool is a subclass of int but invalid here)."""
+    with pytest.raises(TypeError):
+        simple_data.utils.exponential_cov(warmup=True)
+
+
+def test_exponential_cov_warmup_negative_value_error(simple_data):
+    """Negative warmup must raise ValueError."""
+    with pytest.raises(ValueError):  # noqa: PT011 — bare raise has no message to match
+        simple_data.utils.exponential_cov(warmup=-1)
+
+
 def test_exponential_cov_returns_dict(simple_data):
     """exponential_cov must return a dict keyed by index values."""
     cov = simple_data.utils.exponential_cov()
