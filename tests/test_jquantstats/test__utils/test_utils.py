@@ -468,10 +468,11 @@ def test_exponential_cov_warmup_excludes_early_rows(multi_asset_data):
     assert len(cov) == len(full) - (warmup - 1)
 
 
-def test_exponential_cov_late_start_asset_excluded(multi_asset_data):
-    """Rows where any asset has not yet started must be absent from the result."""
+def test_exponential_cov_late_start_asset_partial(multi_asset_data):
+    """Dates where a late-starting asset has no data must still appear with NaN cells."""
     from datetime import date, timedelta
 
+    import numpy as np
     import polars as pl
 
     from jquantstats import Data
@@ -493,14 +494,26 @@ def test_exponential_cov_late_start_asset_excluded(multi_asset_data):
     )
     data = Data.from_returns(returns=returns)
     cov = data.utils.exponential_cov()
-    # First two dates (B is null) must not appear in the result
-    assert date(2020, 1, 1) not in cov
-    assert date(2020, 1, 2) not in cov
-    assert len(cov) == 4
+    # All 6 dates present — B being null does not drop the date
+    assert len(cov) == 6
+    # First two dates: A variance is valid, B-related cells are NaN
+    for d in (date(2020, 1, 1), date(2020, 1, 2)):
+        assert d in cov
+        assert not np.isnan(cov[d][0, 0])  # var(A)
+        assert np.isnan(cov[d][0, 1])  # cov(A, B)
+        assert np.isnan(cov[d][1, 1])  # var(B)
+    # From row 2 onwards B has data — B-related cells become valid
+    assert not np.isnan(cov[date(2020, 1, 3)][1, 1])
 
 
 def test_exponential_cov_matches_pandas_stock_prices():
-    """exponential_cov must match pandas ewm(span).cov(bias=True) on real stock data."""
+    """exponential_cov must match pandas ewm(span).cov(bias=True) on real stock data.
+
+    The first 40 rows of the first 3 assets are set to None to exercise
+    the late-start handling alongside the warmup filter.
+    """
+    import pandas as pd
+
     window = 30
 
     prices = pl.read_csv(_RESOURCE_DIR / "stock_prices.csv", try_parse_dates=True)
@@ -509,23 +522,34 @@ def test_exponential_cov_matches_pandas_stock_prices():
     # pct_change: (p_t / p_{t-1}) - 1, drop the first null row
     returns_pl = prices.with_columns([(pl.col(c) / pl.col(c).shift(1) - 1).alias(c) for c in asset_cols]).drop_nulls()
 
+    # First 40 rows of first 3 assets are late-starting
+    late_cols = asset_cols[:3]
+    returns_pl = returns_pl.with_columns(
+        [pl.when(pl.int_range(pl.len()) < 40).then(None).otherwise(pl.col(c)).alias(c) for c in late_cols]
+    )
+
     data = Data.from_returns(returns=returns_pl.rename({"date": "Date"}))
     cov = data.utils.exponential_cov(window=window, warmup=window)
 
-    pdf = returns_pl.drop("date").to_pandas()
+    # Build pandas DataFrame with the same nulls applied; use date as index
+    # so the MultiIndex level 0 is Timestamps, enabling date-keyed lookup
+    pdf = returns_pl.to_pandas().set_index("date")
     pd_cov = pdf.ewm(span=window, min_periods=window).cov(bias=True)
-    # drop rows where pandas produced NaN (first warmup-1 rows)
-    valid_dates = pd_cov.dropna().index.get_level_values(0).unique()
 
-    assert len(cov) == len(valid_dates)
+    import numpy as np
 
-    for t, (key, mat) in enumerate(cov.items()):
+    # Compare by date key; skip NaN cells (late-starting assets not yet available)
+    for key, mat in cov.items():
+        pd_ts = pd.Timestamp(key)
         for i, a in enumerate(asset_cols):
             for j, b in enumerate(asset_cols):
-                expected = pd_cov.xs(a, level=1)[b].dropna().iloc[t]
-                assert mat[i, j] == pytest.approx(expected, abs=1e-10), (
-                    f"mismatch at date={key}, ({a}, {b}): got {mat[i, j]}, expected {expected}"
-                )
+                expected = float(pd_cov.loc[(pd_ts, a), b])
+                if np.isnan(mat[i, j]):
+                    assert pd.isna(expected), f"our NaN but pandas has {expected} at {key}, ({a},{b})"
+                else:
+                    assert mat[i, j] == pytest.approx(expected, abs=1e-10), (
+                        f"mismatch at date={key}, ({a}, {b}): got {mat[i, j]}, expected {expected}"
+                    )
 
 
 # ─── PortfolioUtils ───────────────────────────────────────────────────────────
