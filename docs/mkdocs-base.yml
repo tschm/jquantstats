@@ -5,6 +5,7 @@ site_dir: _book
 # Theme
 # ----------------------------------------------------------------------------
 theme:
+  name: material
   language: en
   features:
     - announce.dismiss
@@ -19,18 +20,17 @@ theme:
     - navigation.instant
     - navigation.instant.prefetch
     - navigation.path
-    - navigation.sections
     - navigation.top
     - navigation.tracking
     - search.highlight
   palette:
     - scheme: default
       toggle:
-        icon: lucide/sun
+        icon: material/weather-sunny
         name: Switch to dark mode
     - scheme: slate
       toggle:
-        icon: lucide/moon
+        icon: material/weather-night
         name: Switch to light mode
 
 # ----------------------------------------------------------------------------
@@ -82,12 +82,9 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          paths: [src]
           options:
             docstring_style: google
-            show_source: false
+            show_source: true
             show_root_heading: true
-            show_root_full_path: false
-            heading_level: 2
-            members_order: source
-            show_signature_annotations: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
