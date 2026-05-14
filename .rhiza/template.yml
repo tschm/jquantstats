@@ -12,6 +12,9 @@ exclude:
 
 templates:
   - github
+  - github-tests
+  - github-marimo
+  - github-book
   - legal
   - marimo
   - tests
