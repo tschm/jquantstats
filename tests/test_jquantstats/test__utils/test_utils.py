@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import math
 from datetime import date, timedelta
+from pathlib import Path
 
 import polars as pl
 import pytest
@@ -15,6 +16,8 @@ import pytest
 from jquantstats import Data, Portfolio
 from jquantstats._utils import DataUtils, PortfolioUtils
 from jquantstats.exceptions import MissingDateColumnError
+
+_RESOURCE_DIR = Path(__file__).parent.parent / "resources"
 
 # ─── Fixtures ────────────────────────────────────────────────────────────────
 
@@ -388,6 +391,183 @@ def test_exponential_stdev_preserves_row_count(simple_data):
     """exponential_stdev must preserve the row count."""
     ewm = simple_data.utils.exponential_stdev(window=3)
     assert ewm.height == simple_data.returns.height
+
+
+# ─── exponential_cov ─────────────────────────────────────────────────────────
+
+
+def test_exponential_cov_warmup_type_error(simple_data):
+    """Non-integer warmup must raise TypeError."""
+    with pytest.raises(TypeError):
+        simple_data.utils.exponential_cov(warmup=1.5)
+
+
+def test_exponential_cov_warmup_bool_type_error(simple_data):
+    """Bool warmup must raise TypeError (bool is a subclass of int but invalid here)."""
+    with pytest.raises(TypeError):
+        simple_data.utils.exponential_cov(warmup=True)
+
+
+def test_exponential_cov_warmup_negative_value_error(simple_data):
+    """Negative warmup must raise ValueError."""
+    with pytest.raises(ValueError):  # noqa: PT011 — bare raise has no message to match
+        simple_data.utils.exponential_cov(warmup=-1)
+
+
+def test_exponential_cov_returns_dict(simple_data):
+    """exponential_cov must return a dict keyed by index values."""
+    cov = simple_data.utils.exponential_cov()
+    assert isinstance(cov, dict)
+    assert len(cov) == simple_data.returns.height
+
+
+def test_exponential_cov_square_matrix_shape(multi_asset_data):
+    """Each value must be a 2×2 ndarray for two-asset data."""
+    import numpy as np
+
+    cov = multi_asset_data.utils.exponential_cov()
+    for mat in cov.values():
+        assert isinstance(mat, np.ndarray)
+        assert mat.shape == (2, 2)
+
+
+def test_exponential_cov_matrix_is_symmetric(multi_asset_data):
+    """Each covariance matrix must be symmetric."""
+    import numpy as np
+
+    cov = multi_asset_data.utils.exponential_cov(window=3)
+    for mat in cov.values():
+        assert np.allclose(mat, mat.T)
+
+
+def test_exponential_cov_diagonal_nonnegative(multi_asset_data):
+    """Diagonal entries (variances) must be non-negative."""
+    cov = multi_asset_data.utils.exponential_cov(window=3)
+    for mat in cov.values():
+        assert (mat.diagonal() >= 0).all()
+
+
+def test_exponential_cov_halflife_differs_from_span(multi_asset_data):
+    """is_halflife=True must produce different results than span mode."""
+    span_result = multi_asset_data.utils.exponential_cov(window=5, is_halflife=False)
+    hl_result = multi_asset_data.utils.exponential_cov(window=5, is_halflife=True)
+    keys = list(span_result.keys())
+    assert not all((span_result[k] == hl_result[k]).all() for k in keys)
+
+
+def test_exponential_cov_constant_returns_zero_variance(simple_data):
+    """Constant single-asset returns must yield zero variance everywhere."""
+    cov = simple_data.utils.exponential_cov()
+    for mat in cov.values():
+        assert abs(mat[0, 0]) < 1e-12
+
+
+def test_exponential_cov_matches_pandas(multi_asset_data):
+    """exponential_cov must match pandas ewm(span).cov(bias=True) for all pairs."""
+    window = 3
+    assets = ["A", "B"]
+    cov = multi_asset_data.utils.exponential_cov(window=window)
+
+    pdf = multi_asset_data.returns.to_pandas()
+    pd_cov = pdf.ewm(span=window, min_periods=1).cov(bias=True)
+
+    for t, (_key, mat) in enumerate(cov.items()):
+        for i, a in enumerate(assets):
+            for j, b in enumerate(assets):
+                expected = pd_cov.xs(a, level=1)[b].iloc[t]
+                assert mat[i, j] == pytest.approx(expected, abs=1e-12)
+
+
+def test_exponential_cov_warmup_excludes_early_rows(multi_asset_data):
+    """warmup=N must exclude the first N-1 rows from the result."""
+    warmup = 3
+    cov = multi_asset_data.utils.exponential_cov(window=3, warmup=warmup)
+    full = multi_asset_data.utils.exponential_cov(window=3, warmup=0)
+    assert len(cov) == len(full) - (warmup - 1)
+
+
+def test_exponential_cov_late_start_asset_partial(multi_asset_data):
+    """Dates where a late-starting asset has no data must still appear with NaN cells."""
+    from datetime import date, timedelta
+
+    import numpy as np
+    import polars as pl
+
+    from jquantstats import Data
+
+    n = 6
+    dates = pl.date_range(
+        start=date(2020, 1, 1),
+        end=date(2020, 1, 1) + timedelta(days=n - 1),
+        interval="1d",
+        eager=True,
+    )
+    # B starts 2 rows later
+    returns = pl.DataFrame(
+        {
+            "Date": dates,
+            "A": pl.Series([0.01, -0.01, 0.02, -0.02, 0.01, 0.00], dtype=pl.Float64),
+            "B": pl.Series([None, None, 0.005, -0.005, 0.010, 0.015], dtype=pl.Float64),
+        }
+    )
+    data = Data.from_returns(returns=returns)
+    cov = data.utils.exponential_cov()
+    # All 6 dates present — B being null does not drop the date
+    assert len(cov) == 6
+    # First two dates: A variance is valid, B-related cells are NaN
+    for d in (date(2020, 1, 1), date(2020, 1, 2)):
+        assert d in cov
+        assert not np.isnan(cov[d][0, 0])  # var(A)
+        assert np.isnan(cov[d][0, 1])  # cov(A, B)
+        assert np.isnan(cov[d][1, 1])  # var(B)
+    # From row 2 onwards B has data — B-related cells become valid
+    assert not np.isnan(cov[date(2020, 1, 3)][1, 1])
+
+
+def test_exponential_cov_matches_pandas_stock_prices():
+    """exponential_cov must match pandas ewm(span).cov(bias=True) on real stock data.
+
+    The first 40 rows of the first 3 assets are set to None to exercise
+    the late-start handling alongside the warmup filter.
+    """
+    import pandas as pd
+
+    window = 30
+
+    prices = pl.read_csv(_RESOURCE_DIR / "stock_prices.csv", try_parse_dates=True)
+    asset_cols = [c for c in prices.columns if c != "date"]
+
+    # pct_change: (p_t / p_{t-1}) - 1, drop the first null row
+    returns_pl = prices.with_columns([(pl.col(c) / pl.col(c).shift(1) - 1).alias(c) for c in asset_cols]).drop_nulls()
+
+    # First 40 rows of first 3 assets are late-starting
+    late_cols = asset_cols[:3]
+    returns_pl = returns_pl.with_columns(
+        [pl.when(pl.int_range(pl.len()) < 40).then(None).otherwise(pl.col(c)).alias(c) for c in late_cols]
+    )
+
+    data = Data.from_returns(returns=returns_pl.rename({"date": "Date"}))
+    cov = data.utils.exponential_cov(window=window, warmup=window)
+
+    # Build pandas DataFrame with the same nulls applied; use date as index
+    # so the MultiIndex level 0 is Timestamps, enabling date-keyed lookup
+    pdf = returns_pl.to_pandas().set_index("date")
+    pd_cov = pdf.ewm(span=window, min_periods=window).cov(bias=True)
+
+    import numpy as np
+
+    # Compare by date key; skip NaN cells (late-starting assets not yet available)
+    for key, mat in cov.items():
+        pd_ts = pd.Timestamp(key)
+        for i, a in enumerate(asset_cols):
+            for j, b in enumerate(asset_cols):
+                expected = float(pd_cov.loc[(pd_ts, a), b])
+                if np.isnan(mat[i, j]):
+                    assert pd.isna(expected), f"our NaN but pandas has {expected} at {key}, ({a},{b})"
+                else:
+                    assert mat[i, j] == pytest.approx(expected, abs=1e-10), (
+                        f"mismatch at date={key}, ({a}, {b}): got {mat[i, j]}, expected {expected}"
+                    )
 
 
 # ─── PortfolioUtils ───────────────────────────────────────────────────────────
