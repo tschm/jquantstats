@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import math
 from datetime import date, timedelta
+from pathlib import Path
 
 import polars as pl
 import pytest
@@ -15,6 +16,8 @@ import pytest
 from jquantstats import Data, Portfolio
 from jquantstats._utils import DataUtils, PortfolioUtils
 from jquantstats.exceptions import MissingDateColumnError
+
+_RESOURCE_DIR = Path(__file__).parent.parent / "resources"
 
 # ─── Fixtures ────────────────────────────────────────────────────────────────
 
@@ -494,6 +497,35 @@ def test_exponential_cov_late_start_asset_excluded(multi_asset_data):
     assert date(2020, 1, 1) not in cov
     assert date(2020, 1, 2) not in cov
     assert len(cov) == 4
+
+
+def test_exponential_cov_matches_pandas_stock_prices():
+    """exponential_cov must match pandas ewm(span).cov(bias=True) on real stock data."""
+    window = 30
+
+    prices = pl.read_csv(_RESOURCE_DIR / "stock_prices.csv", try_parse_dates=True)
+    asset_cols = [c for c in prices.columns if c != "date"]
+
+    # pct_change: (p_t / p_{t-1}) - 1, drop the first null row
+    returns_pl = prices.with_columns([(pl.col(c) / pl.col(c).shift(1) - 1).alias(c) for c in asset_cols]).drop_nulls()
+
+    data = Data.from_returns(returns=returns_pl.rename({"date": "Date"}))
+    cov = data.utils.exponential_cov(window=window, warmup=window)
+
+    pdf = returns_pl.drop("date").to_pandas()
+    pd_cov = pdf.ewm(span=window, min_periods=window).cov(bias=True)
+    # drop rows where pandas produced NaN (first warmup-1 rows)
+    valid_dates = pd_cov.dropna().index.get_level_values(0).unique()
+
+    assert len(cov) == len(valid_dates)
+
+    for t, (key, mat) in enumerate(cov.items()):
+        for i, a in enumerate(asset_cols):
+            for j, b in enumerate(asset_cols):
+                expected = pd_cov.xs(a, level=1)[b].dropna().iloc[t]
+                assert mat[i, j] == pytest.approx(expected, abs=1e-10), (
+                    f"mismatch at date={key}, ({a}, {b}): got {mat[i, j]}, expected {expected}"
+                )
 
 
 # ─── PortfolioUtils ───────────────────────────────────────────────────────────
