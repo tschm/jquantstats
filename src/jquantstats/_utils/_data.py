@@ -348,20 +348,14 @@ class DataUtils:
             for b in asset_cols[i:]
         ]
 
-        pair_df = self.data.returns.with_columns(cov_exprs).drop(asset_cols)
         index_col = self.data.index.columns[0]
-        keys = self.data.index[index_col].to_list()
+        pair_df = self._combined().with_columns(cov_exprs).drop(asset_cols).drop_nulls()
+        valid_keys = pair_df[index_col].to_list()
+        pair_arr = pair_df.drop(index_col).to_numpy()
 
-        result: dict[Any, np.ndarray] = {}
-        for key, row in zip(keys, pair_df.iter_rows(), strict=False):
-            if any(v is None for v in row):
-                continue
-            mat = np.zeros((n, n))
-            idx = 0
-            for i in range(n):
-                for j in range(i, n):
-                    mat[i, j] = row[idx]
-                    mat[j, i] = row[idx]
-                    idx += 1
-            result[key] = mat
-        return result
+        ii, jj = np.triu_indices(n)
+        cube = np.zeros((len(valid_keys), n, n))
+        cube[:, ii, jj] = pair_arr
+        cube[:, jj, ii] = pair_arr
+
+        return dict(zip(valid_keys, cube, strict=False))
