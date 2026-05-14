@@ -330,9 +330,14 @@ class DataUtils:
             matches ``data.assets``.  Unavailable cells are ``NaN``.
 
         """
+        if isinstance(warmup, bool) or not isinstance(warmup, int):
+            raise ValueError("warmup must be a non-negative integer")
+        if warmup < 0:
+            raise ValueError("warmup must be a non-negative integer")
+
         asset_cols = self._asset_cols()
         n = len(asset_cols)
-        min_samples = max(1, warmup)
+        min_samples = 1 if warmup == 0 else warmup
 
         def _ewm(expr: pl.Expr) -> pl.Expr:
             """Apply EWM mean with the configured span or half-life."""
