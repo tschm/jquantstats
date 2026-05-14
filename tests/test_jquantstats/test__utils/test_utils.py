@@ -390,6 +390,112 @@ def test_exponential_stdev_preserves_row_count(simple_data):
     assert ewm.height == simple_data.returns.height
 
 
+# ─── exponential_cov ─────────────────────────────────────────────────────────
+
+
+def test_exponential_cov_returns_dict(simple_data):
+    """exponential_cov must return a dict keyed by index values."""
+    cov = simple_data.utils.exponential_cov()
+    assert isinstance(cov, dict)
+    assert len(cov) == simple_data.returns.height
+
+
+def test_exponential_cov_square_matrix_shape(multi_asset_data):
+    """Each value must be a 2×2 ndarray for two-asset data."""
+    import numpy as np
+
+    cov = multi_asset_data.utils.exponential_cov()
+    for mat in cov.values():
+        assert isinstance(mat, np.ndarray)
+        assert mat.shape == (2, 2)
+
+
+def test_exponential_cov_matrix_is_symmetric(multi_asset_data):
+    """Each covariance matrix must be symmetric."""
+    import numpy as np
+
+    cov = multi_asset_data.utils.exponential_cov(window=3)
+    for mat in cov.values():
+        assert np.allclose(mat, mat.T)
+
+
+def test_exponential_cov_diagonal_nonnegative(multi_asset_data):
+    """Diagonal entries (variances) must be non-negative."""
+    cov = multi_asset_data.utils.exponential_cov(window=3)
+    for mat in cov.values():
+        assert (mat.diagonal() >= 0).all()
+
+
+def test_exponential_cov_halflife_differs_from_span(multi_asset_data):
+    """is_halflife=True must produce different results than span mode."""
+    span_result = multi_asset_data.utils.exponential_cov(window=5, is_halflife=False)
+    hl_result = multi_asset_data.utils.exponential_cov(window=5, is_halflife=True)
+    keys = list(span_result.keys())
+    assert not all((span_result[k] == hl_result[k]).all() for k in keys)
+
+
+def test_exponential_cov_constant_returns_zero_variance(simple_data):
+    """Constant single-asset returns must yield zero variance everywhere."""
+    cov = simple_data.utils.exponential_cov()
+    for mat in cov.values():
+        assert abs(mat[0, 0]) < 1e-12
+
+
+def test_exponential_cov_matches_pandas(multi_asset_data):
+    """exponential_cov must match pandas ewm(span).cov(bias=True) for all pairs."""
+    window = 3
+    assets = ["A", "B"]
+    cov = multi_asset_data.utils.exponential_cov(window=window)
+
+    pdf = multi_asset_data.returns.to_pandas()
+    pd_cov = pdf.ewm(span=window, min_periods=1).cov(bias=True)
+
+    for t, (_key, mat) in enumerate(cov.items()):
+        for i, a in enumerate(assets):
+            for j, b in enumerate(assets):
+                expected = pd_cov.xs(a, level=1)[b].iloc[t]
+                assert mat[i, j] == pytest.approx(expected, abs=1e-12)
+
+
+def test_exponential_cov_warmup_excludes_early_rows(multi_asset_data):
+    """warmup=N must exclude the first N-1 rows from the result."""
+    warmup = 3
+    cov = multi_asset_data.utils.exponential_cov(window=3, warmup=warmup)
+    full = multi_asset_data.utils.exponential_cov(window=3, warmup=0)
+    assert len(cov) == len(full) - (warmup - 1)
+
+
+def test_exponential_cov_late_start_asset_excluded(multi_asset_data):
+    """Rows where any asset has not yet started must be absent from the result."""
+    from datetime import date, timedelta
+
+    import polars as pl
+
+    from jquantstats import Data
+
+    n = 6
+    dates = pl.date_range(
+        start=date(2020, 1, 1),
+        end=date(2020, 1, 1) + timedelta(days=n - 1),
+        interval="1d",
+        eager=True,
+    )
+    # B starts 2 rows later
+    returns = pl.DataFrame(
+        {
+            "Date": dates,
+            "A": pl.Series([0.01, -0.01, 0.02, -0.02, 0.01, 0.00], dtype=pl.Float64),
+            "B": pl.Series([None, None, 0.005, -0.005, 0.010, 0.015], dtype=pl.Float64),
+        }
+    )
+    data = Data.from_returns(returns=returns)
+    cov = data.utils.exponential_cov()
+    # First two dates (B is null) must not appear in the result
+    assert date(2020, 1, 1) not in cov
+    assert date(2020, 1, 2) not in cov
+    assert len(cov) == 4
+
+
 # ─── PortfolioUtils ───────────────────────────────────────────────────────────
 
 

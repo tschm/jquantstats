@@ -5,7 +5,9 @@ from __future__ import annotations
 import dataclasses
 import math
 from collections.abc import Callable
+from typing import Any
 
+import numpy as np
 import polars as pl
 
 from ..exceptions import MissingDateColumnError
@@ -295,3 +297,71 @@ class DataUtils:
         else:
             exprs = [pl.col(c).ewm_std(span=window, min_samples=1).alias(c) for c in asset_cols]
         return self._combined().with_columns(exprs)
+
+    def exponential_cov(self, window: int = 30, is_halflife: bool = False, warmup: int = 0) -> dict[Any, np.ndarray]:
+        """Compute the exponentially weighted covariance matrix of returns.
+
+        EWM covariance is computed via the identity
+        ``Cov(X, Y) = EWM(X*Y) - EWM(X)*EWM(Y)``, which is exact for
+        the bias-adjusted EWMA (equivalent to
+        ``pandas.DataFrame.ewm(span).cov(bias=True)``).
+
+        Rows are omitted from the result when any covariance entry is
+        null.  This naturally handles two cases: assets whose history
+        starts later than others (cross-covariance is undefined until
+        both series have at least one observation), and the warmup period
+        (``min_samples=warmup`` produces nulls for the first
+        ``warmup - 1`` rows).
+
+        Args:
+            window: Span (default) or half-life (when *is_halflife* is
+                ``True``) of the exponential decay.  Defaults to ``30``.
+            is_halflife: When ``True`` *window* is interpreted as the
+                half-life; otherwise it is the EWMA span.  Defaults to
+                ``False``.
+            warmup: Minimum number of observations required before a row
+                is included in the result.  Defaults to ``0`` (include
+                from the first row where all entries are non-null).
+
+        Returns:
+            Dictionary keyed by index value (date or integer) mapping to
+            a square symmetric ``numpy.ndarray`` of shape ``(n, n)``
+            where ``n`` is the number of assets.  Row/column order
+            matches ``data.assets``.
+
+        """
+        asset_cols = self._asset_cols()
+        n = len(asset_cols)
+        min_samples = max(1, warmup)
+
+        def _ewm(expr: pl.Expr) -> pl.Expr:
+            """Apply EWM mean with the configured span or half-life."""
+            if is_halflife:
+                return expr.ewm_mean(half_life=window, min_samples=min_samples)
+            return expr.ewm_mean(span=window, min_samples=min_samples)
+
+        ewm_means = {c: _ewm(pl.col(c)) for c in asset_cols}
+
+        cov_exprs = [
+            (_ewm(pl.col(a) * pl.col(b)) - ewm_means[a] * ewm_means[b]).alias(f"{a}_{b}")
+            for i, a in enumerate(asset_cols)
+            for b in asset_cols[i:]
+        ]
+
+        pair_df = self.data.returns.with_columns(cov_exprs).drop(asset_cols)
+        index_col = self.data.index.columns[0]
+        keys = self.data.index[index_col].to_list()
+
+        result: dict[Any, np.ndarray] = {}
+        for key, row in zip(keys, pair_df.iter_rows(), strict=False):
+            if any(v is None for v in row):
+                continue
+            mat = np.zeros((n, n))
+            idx = 0
+            for i in range(n):
+                for j in range(i, n):
+                    mat[i, j] = row[idx]
+                    mat[j, i] = row[idx]
+                    idx += 1
+            result[key] = mat
+        return result
