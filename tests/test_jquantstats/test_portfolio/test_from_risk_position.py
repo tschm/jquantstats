@@ -179,3 +179,16 @@ def test_from_risk_position_with_cost_model():
     assert isinstance(pf, Portfolio)
     assert pf.cost_per_unit == pytest.approx(0.05)
     assert pf.cost_bps == pytest.approx(0.0)
+
+
+def test_from_risk_position_accepts_expr():
+    """from_risk_position evaluates a pl.Expr against prices in place of a DataFrame."""
+    prices, risk = _make_prices_risk(60)
+    pf_df = Portfolio.from_risk_position(prices=prices, risk_position=risk, aum=1e6, vola=8)
+    pf_expr = Portfolio.from_risk_position(
+        prices=prices, risk_position=pl.all().exclude("date") * 0.0 + 1.0, aum=1e6, vola=8
+    )
+    assert np.allclose(
+        pf_df.cashposition["A"].drop_nulls().to_numpy(),
+        pf_expr.cashposition["A"].drop_nulls().to_numpy(),
+    )

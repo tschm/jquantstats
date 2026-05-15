@@ -1,7 +1,7 @@
-sha: 3bd82a03c3c94be644aa9ce81c6d1a1838731136
+sha: 1c6bd1d29660d0d45e2e219bab6448f13f46c740
 repo: jebel-quant/rhiza
 host: github
-ref: v0.10.3
+ref: v0.10.5
 include: []
 exclude: []
 templates:
@@ -9,7 +9,6 @@ templates:
 - legal
 - marimo
 - tests
-- renovate
 files:
 - .bandit
 - .editorconfig
@@ -20,7 +19,6 @@ files:
 - .github/actions/configure-git-auth/action.yml
 - .github/dependabot.yml
 - .github/secret_scanning.yml
-- .github/semgrep.yml
 - .github/workflows/rhiza_book.yml
 - .github/workflows/rhiza_ci.yml
 - .github/workflows/rhiza_codeql.yml
@@ -52,6 +50,7 @@ files:
 - .rhiza/requirements/tests.txt
 - .rhiza/requirements/tools.txt
 - .rhiza/rhiza.mk
+- .rhiza/semgrep.yml
 - .rhiza/tests/README.md
 - .rhiza/tests/api/conftest.py
 - .rhiza/tests/api/test_gh_aw_targets.py
@@ -95,7 +94,6 @@ files:
 - docs/index.md
 - docs/mkdocs-base.yml
 - pytest.ini
-- renovate.json
 - ruff.toml
-synced_at: '2026-04-25T03:24:33Z'
+synced_at: '2026-05-15T13:36:15Z'
 strategy: merge

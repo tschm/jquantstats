@@ -167,3 +167,13 @@ def test_profit_raises_when_no_numeric_asset_columns():
 
     with pytest.raises(ValueError, match=r".*"):
         _ = pf.profit
+
+
+def test_from_cash_position_accepts_expr(prices):
+    """from_cash_position evaluates a pl.Expr against prices in place of a DataFrame."""
+    expr = pl.all().exclude("date") * 10.0
+    pf_expr = Portfolio.from_cash_position(prices=prices, cash_position=expr, aum=1e5)
+    pf_df = Portfolio.from_cash_position(prices=prices, cash_position=prices.with_columns(expr), aum=1e5)
+
+    for col in ["A", "B"]:
+        assert np.allclose(pf_expr.profits[col].to_numpy(), pf_df.profits[col].to_numpy())
