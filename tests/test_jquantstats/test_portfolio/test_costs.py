@@ -407,6 +407,15 @@ def test_from_position_forwards_cost_model():
     assert pf.cost_per_unit == pytest.approx(0.01)
 
 
+def test_from_position_accepts_expr():
+    """from_position evaluates a pl.Expr against prices in place of a DataFrame."""
+    prices = pl.DataFrame({"A": [100.0, 110.0, 105.0], "B": [50.0, 55.0, 52.0]})
+    # Expression sets both A and B to 10 units; cashposition = 10 * price
+    pf_expr = Portfolio.from_position(prices=prices, position=pl.all() * 0.0 + 10.0, aum=1e6)
+    assert pf_expr.cashposition["A"].to_list() == pytest.approx([1000.0, 1100.0, 1050.0])
+    assert pf_expr.cashposition["B"].to_list() == pytest.approx([500.0, 550.0, 520.0])
+
+
 def test_net_cost_nav_integer_indexed(int_portfolio):
     """net_cost_nav on an integer-indexed portfolio uses hstack (no 'date' join)."""
     result = int_portfolio.net_cost_nav
