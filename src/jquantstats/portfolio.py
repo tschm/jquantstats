@@ -420,7 +420,7 @@ class Portfolio(
     def from_cash_position(
         cls,
         prices: pl.DataFrame,
-        cash_position: pl.DataFrame,
+        cash_position: pl.DataFrame | pl.Expr,
         aum: float,
         cost_per_unit: float = 0.0,
         cost_bps: float = 0.0,
@@ -430,7 +430,8 @@ class Portfolio(
 
         Args:
             prices: Price levels per asset over time (may include a date column).
-            cash_position: Cash exposure per asset over time.
+            cash_position: Cash exposure per asset over time, either as a
+                DataFrame or as a Polars expression evaluated against *prices*.
             aum: Assets under management used as the base NAV offset.
             cost_per_unit: One-way trading cost per unit of position change.
                 Defaults to 0.0 (no cost).  Ignored when *cost_model* is given.
@@ -444,6 +445,8 @@ class Portfolio(
         Returns:
             A Portfolio instance with the provided cash positions.
         """
+        if isinstance(cash_position, pl.Expr):
+            cash_position = prices.with_columns(cash_position)
         if cost_model is not None:
             cost_per_unit = cost_model.cost_per_unit
             cost_bps = cost_model.cost_bps
