@@ -66,6 +66,23 @@ class TestSecurityConfiguration:
         # Check that "S" is in either select or extend-select
         assert '"S"' in content or "'S'" in content, "Ruff security checks (S) should be enabled in ruff.toml"
 
+    def test_no_python_cache_files_hook_configured(self) -> None:
+        """Verify that the no-python-cache-files hook is configured in pre-commit.
+
+        This ensures Python cache files (__pycache__, .pyc, .pyo, .pyd) cannot
+        be accidentally committed to the repository.
+        """
+        repo_root = pathlib.Path(__file__).parent.parent.parent.parent
+        precommit_config = repo_root / ".pre-commit-config.yaml"
+
+        assert precommit_config.exists(), ".pre-commit-config.yaml not found"
+
+        content = precommit_config.read_text()
+        assert "no-python-cache-files" in content, (
+            "no-python-cache-files hook should be configured in .pre-commit-config.yaml "
+            "to prevent committing Python cache files"
+        )
+
     def test_bandit_configured_in_precommit(self) -> None:
         """Verify that Bandit is configured in pre-commit hooks.
 
