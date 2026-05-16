@@ -833,13 +833,15 @@ class DataPlots:
 
         fig = go.Figure()
         for ticker in tickers:
-            hist_returns = df[ticker].drop_nulls().cast(pl.Float64).to_numpy()
-            if hist_returns.size == 0:
-                continue
+            trailing_returns = (
+                df[ticker].tail(sample_len - 1).fill_null(0.0).cast(pl.Float64).to_numpy()
+                if sample_len > 1
+                else np.array([], dtype=np.float64)
+            )
 
             for i in range(n):
                 draws = (
-                    rng.choice(hist_returns, size=sample_len - 1, replace=True)
+                    rng.choice(trailing_returns, size=sample_len - 1, replace=True)
                     if sample_len > 1
                     else np.array([], dtype=np.float64)
                 )
@@ -857,8 +859,7 @@ class DataPlots:
                     )
                 )
 
-            observed_returns = df[ticker].tail(sample_len).fill_null(0.0).cast(pl.Float64).to_numpy()
-            observed_path = np.cumprod(1.0 + observed_returns)
+            observed_path = np.cumprod(np.concatenate(([1.0], 1.0 + trailing_returns)))
             fig.add_trace(
                 go.Scatter(
                     x=dates,
@@ -916,18 +917,19 @@ class DataPlots:
         metric_key = metric.strip().lower()
         if metric_key not in {"sharpe", "drawdown", "cagr"}:
             raise ValueError("metric must be one of: sharpe, drawdown, cagr")
+        periods_per_year = 252.0
 
         def _metric_value(returns: np.ndarray) -> float:
             if metric_key == "sharpe":
                 std = returns.std(ddof=1)
-                return float(math.sqrt(252.0) * returns.mean() / std) if std > 0 else 0.0
+                return float(math.sqrt(periods_per_year) * returns.mean() / std) if std > 0 else 0.0
             if metric_key == "drawdown":
                 path = np.cumprod(1.0 + returns)
                 hwm = np.maximum.accumulate(path)
                 dd = (path - hwm) / hwm
                 return float(dd.min()) if dd.size else 0.0
             total_return = float(np.prod(1.0 + returns))
-            return float(total_return ** (252.0 / len(returns)) - 1.0) if len(returns) > 0 else 0.0
+            return float(total_return ** (periods_per_year / len(returns)) - 1.0) if len(returns) > 0 else 0.0
 
         df = self._data.all
         date_col = df.columns[0]
@@ -938,15 +940,14 @@ class DataPlots:
 
         fig = go.Figure()
         for ticker in tickers:
-            hist_returns = df[ticker].drop_nulls().cast(pl.Float64).to_numpy()
+            hist_returns = df[ticker].tail(sample_len).fill_null(0.0).cast(pl.Float64).to_numpy()
             if hist_returns.size == 0:
                 continue
 
             simulated_metrics = [
                 _metric_value(rng.choice(hist_returns, size=sample_len, replace=True)) for _ in range(n)
             ]
-            observed_returns = df[ticker].tail(sample_len).fill_null(0.0).cast(pl.Float64).to_numpy()
-            observed_metric = _metric_value(observed_returns)
+            observed_metric = _metric_value(hist_returns)
 
             fig.add_trace(
                 go.Histogram(
