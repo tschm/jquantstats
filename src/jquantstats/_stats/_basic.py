@@ -37,14 +37,24 @@ class _BasicStatsMixin:
         all: pl.DataFrame | None
 
     @staticmethod
+    def _positive(series: pl.Series) -> pl.Series:
+        """Return only the positive values in *series*."""
+        return series.filter(series > 0)
+
+    @staticmethod
+    def _negative(series: pl.Series) -> pl.Series:
+        """Return only the negative values in *series*."""
+        return series.filter(series < 0)
+
+    @staticmethod
     def _mean_positive_expr(series: pl.Series) -> float:
         """Return the mean of all positive values in *series*, or NaN if none exist."""
-        return cast(float, series.filter(series > 0).mean())
+        return cast(float, _BasicStatsMixin._positive(series).mean())
 
     @staticmethod
     def _mean_negative_expr(series: pl.Series) -> float:
         """Return the mean of all negative values in *series*, or NaN if none exist."""
-        return cast(float, series.filter(series < 0).mean())
+        return cast(float, _BasicStatsMixin._negative(series).mean())
 
     # ── Basic statistics ──────────────────────────────────────────────────────
 
@@ -199,8 +209,8 @@ class _BasicStatsMixin:
             float: The payoff ratio value.
 
         """
-        avg_win = cast(float, series.filter(series > 0).mean())
-        avg_loss = float(np.abs(cast(float, series.filter(series < 0).mean())))
+        avg_win = self._mean_positive_expr(series)
+        avg_loss = float(np.abs(self._mean_negative_expr(series)))
         return avg_win / avg_loss
 
     def win_loss_ratio(self) -> dict[str, float]:
@@ -226,7 +236,7 @@ class _BasicStatsMixin:
 
         """
         wins = series.filter(series >= 0)
-        losses = series.filter(series < 0)
+        losses = self._negative(series)
 
         try:
             win_mean = cast(float, wins.mean())
@@ -252,8 +262,8 @@ class _BasicStatsMixin:
             float: The profit factor value.
 
         """
-        wins = series.filter(series > 0)
-        losses = series.filter(series < 0)
+        wins = self._positive(series)
+        losses = self._negative(series)
         wins_sum = wins.sum()
         losses_sum = losses.sum()
 
@@ -427,7 +437,7 @@ class _BasicStatsMixin:
             float: The win rate value.
 
         """
-        num_pos = series.filter(series > 0).count()
+        num_pos = self._positive(series).count()
         num_nonzero = series.filter(series != 0).count()
         return float(num_pos / num_nonzero)
 
@@ -512,7 +522,7 @@ class _BasicStatsMixin:
             float: The risk of ruin probability.
 
         """
-        num_pos = series.filter(series > 0).count()
+        num_pos = self._positive(series).count()
         num_nonzero = series.filter(series != 0).count()
         wins = float(num_pos / num_nonzero)
         n = series.len()
@@ -632,7 +642,7 @@ class _BasicStatsMixin:
             float: Outlier loss ratio.
 
         """
-        negative_mean = cast(float, series.filter(series < 0).mean())
+        negative_mean = self._mean_negative_expr(series)
         if negative_mean is None or negative_mean == 0:
             return float(np.nan)
         quantile_val = cast(float, series.quantile(quantile, interpolation="linear"))
@@ -652,7 +662,7 @@ class _BasicStatsMixin:
 
         """
         total_gain = series.sum()
-        total_pain = series.filter(series < 0).abs().sum()
+        total_pain = self._negative(series).abs().sum()
         try:
             return float(float(total_gain) / float(total_pain))
         except ZeroDivisionError:
