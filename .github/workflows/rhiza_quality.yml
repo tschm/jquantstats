@@ -23,6 +23,10 @@ name: "(RHIZA) QUALITY"
 permissions:
   contents: read
 
+concurrency:
+  group: quality-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
   schedule:
