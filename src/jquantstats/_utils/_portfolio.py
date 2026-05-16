@@ -173,7 +173,7 @@ class PortfolioUtils:
     def winsorise(self, window: int = 7, n_sigma: float = 3.0) -> pl.DataFrame:
         """Winsorise portfolio returns by clipping to within *n_sigma* rolling standard deviations.
 
-        See `winsorise` for full
+        See `DataUtils.winsorise` for full
         documentation.
 
         Args:
@@ -194,7 +194,7 @@ class PortfolioUtils:
     ) -> dict[Hashable, np.ndarray]:
         """Compute the exponentially weighted covariance matrix of portfolio returns.
 
-        See `exponential_cov` for full
+        See `DataUtils.exponential_cov` for full
         documentation.
 
         Args:
