@@ -7,10 +7,9 @@ visualisations for a Portfolio.
 
 from __future__ import annotations
 
-import math
 from collections.abc import Callable
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, TypeGuard
+from typing import TYPE_CHECKING, Any
 
 import plotly.graph_objects as go
 import plotly.io as pio
@@ -20,33 +19,14 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 if TYPE_CHECKING:
     from ._protocol import PortfolioLike
 
+from ._formatting import _fmt, _is_finite
+
 # templates/ lives one level above this subpackage (at src/jquantstats/templates/)
 _TEMPLATES_DIR = Path(__file__).parent.parent / "templates"
 _env = Environment(
     loader=FileSystemLoader(_TEMPLATES_DIR),
     autoescape=select_autoescape(["html"]),
 )
-
-
-# ── Formatting helpers ────────────────────────────────────────────────────────
-
-
-def _is_finite(v: Any) -> TypeGuard[int | float]:
-    """Return True when *v* is a real, finite number."""
-    if not isinstance(v, (int, float)):
-        return False
-    return math.isfinite(float(v))
-
-
-def _fmt(value: Any, fmt: str = ".4f", suffix: str = "") -> str:
-    """Format *value* for display in an HTML table cell.
-
-    Returns ``"N/A"`` for ``None``, ``NaN``, or non-finite values.
-    """
-    if not _is_finite(value):
-        return "N/A"
-    return f"{float(value):{fmt}}{suffix}"
-
 
 # ── Stats table ───────────────────────────────────────────────────────────────
 
