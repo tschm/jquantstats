@@ -20,6 +20,10 @@ name: "(RHIZA) MARIMO"
 permissions:
   contents: read
 
+concurrency:
+  group: marimo-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [ main, master ]
