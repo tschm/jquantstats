@@ -952,6 +952,26 @@ def test_columnwise_stat_supports_custom_data_attr():
     assert _CustomDataHost().metric() == {"asset": pytest.approx(2.0)}
 
 
+def test_to_frame_supports_custom_data_attr():
+    """to_frame supports an explicit data attribute name."""
+    from jquantstats._stats._core import to_frame
+
+    class _DataMap(dict[str, pl.Series]):
+        date_col = ["Date"]
+
+    class _CustomDataHost:
+        data = _DataMap({"asset": pl.Series("asset", [1.0, 2.0, 3.0])})
+        all = pl.DataFrame({"Date": [1, 2, 3], "asset": [1.0, 2.0, 3.0]})
+
+        @to_frame(data_attr="data")
+        def metric(self, series: pl.Series) -> pl.Expr:
+            return pl.lit(float(series.mean() or 0.0))
+
+    result = _CustomDataHost().metric()
+    assert result.columns == ["Date", "asset"]
+    assert result["asset"].to_list() == pytest.approx([2.0, 2.0, 2.0])
+
+
 def test_periods_per_year(stats):
     """periods_per_year returns a positive annualisation factor."""
     assert stats.periods_per_year > 0
