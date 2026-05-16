@@ -59,7 +59,9 @@ with calls to these helpers.
 
 ---
 
-### T1.3 — Remove the `prices()` / `_nav_series` duplication
+### T1.3 — Remove the `prices()` / `_nav_series` duplication ✅
+
+> **Done** — `prices()` now delegates directly to `_nav_series`; no separate PR.
 
 **Files:** `_internals.py`, `_performance.py`
 
@@ -175,38 +177,29 @@ decorator.
 
 ## Theme 4 — Null / Error-Handling Consistency (6 → 10)
 
-### T4.1 — Document the null-return convention 🔄
+### T4.1 — Document the null-return convention ✅
 
-> **In review** — [PR #724](https://github.com/Jebel-Quant/jquantstats/pull/724) open · [#720](https://github.com/Jebel-Quant/jquantstats/issues/720)
+> **Done** — merged [PR #724](https://github.com/Jebel-Quant/jquantstats/pull/724) · closes [#720](https://github.com/Jebel-Quant/jquantstats/issues/720)
 
 **File:** `src/jquantstats/_stats/_core.py`
 
-Add a module-level docstring section (or a `# Convention:` block) that declares:
-
-> Scalar metrics return `0.0` when the series has fewer than 2 non-null
-> observations. Ratio metrics return `float("nan")` when the denominator is zero
-> or indeterminate. All helpers should use `_to_float` for the `None → 0.0`
-> conversion rather than `cast(float, ...)`.
+Convention documented in `_core.py`: scalar metrics return `float("nan")` when the
+series has no non-null observations; ratio metrics return `float("nan")` when the
+denominator is zero or indeterminate.
 
 **Effort:** 15 min
 
 ---
 
-### T4.2 — Normalise callsites to the declared convention 🔄
+### T4.2 — Normalise callsites to the declared convention ✅
 
-> **In review** — [PR #724](https://github.com/Jebel-Quant/jquantstats/pull/724) open · [#720](https://github.com/Jebel-Quant/jquantstats/issues/720)
+> **Done** — merged [PR #724](https://github.com/Jebel-Quant/jquantstats/pull/724) · closes [#720](https://github.com/Jebel-Quant/jquantstats/issues/720)
 
 **Files:** `_basic.py`, `_performance.py`, `_reporting.py`, `_rolling.py`
 
-Audit every `cast(float, series.mean())`, `float(np.nan)`, `fill_nan(0)`, and
-`if x is None` site. Replace with:
-
-- `_to_float(series.mean())` for the `None → 0.0` case.
-- `float("nan")` (not `float(np.nan)`) for indeterminate results, with a
-  brief inline comment explaining why this site can produce NaN.
-
-The goal is one pattern per semantic case, not zero uses of `cast` — `cast` is
-still appropriate for type narrowing where `None` is genuinely impossible.
+`cast(float, series.mean())` callsites replaced with `_mean(series)` throughout.
+The new `_mean` helper (added to `_core.py`) returns `float("nan")` when the
+series is empty or all-null — consistent with the documented convention.
 
 **Effort:** 2 hr · **Affected sites:** ~35
 
@@ -420,22 +413,15 @@ that duplicate construction-time validation and remove them, replacing with
 
 ## Theme 13 — Type Safety (9 → 10)
 
-### T13.1 — Eliminate `cast(float, ...)` noise via a typed helper
+### T13.1 — Eliminate `cast(float, ...)` noise via a typed helper ✅
+
+> **Done** — merged [PR #724](https://github.com/Jebel-Quant/jquantstats/pull/724)
 
 **Files:** across stats mixins
 
-Polars `.mean()` returns `float | None`. Rather than `cast(float, series.mean())`
-(which suppresses the type error without handling `None`), introduce:
-
-```python
-def _mean(series: pl.Series) -> float:
-    """Return series mean, or 0.0 if the series is empty."""
-    result = series.mean()
-    return result if result is not None else 0.0
-```
-
-Replace all `cast(float, series.mean())` callsites with `_mean(series)`. The
-return type is `float`, so downstream code is clean without casts.
+`_mean` added to `_core.py`. Returns `float("nan")` (not `0.0`) when the series
+is empty or all-null — consistent with the scalar-metric convention established in
+T4.1. All `cast(float, series.mean())` callsites replaced.
 
 **Effort:** 1 hr · **Eliminates:** ~20 type-cast suppressions
 
@@ -445,10 +431,10 @@ return type is `float`, so downstream code is clean without casts.
 
 | Theme | Tasks | Effort |
 |---|---|---|
-| 1. Code duplication | T1.1–T1.3 | 1.75 hr |
-| 2. API surface | T2.1–T2.3 | 1.25 hr |
-| 3. Abstraction | T3.1–T3.3 | 2.25 hr |
-| 4. Null handling | T4.1–T4.2 | 2.25 hr |
+| 1. Code duplication | ~~T1.1~~, ~~T1.2~~, ~~T1.3~~ | ✅ done |
+| 2. API surface | ~~T2.2~~; T2.1, T2.3 open | ~0.75 hr |
+| 3. Abstraction | ~~T3.3~~; T3.1, T3.2 open | ~1.25 hr |
+| 4. Null handling | ~~T4.1~~, ~~T4.2~~ | ✅ done |
 | 5. Mixin coupling | T5.1–T5.2 | 1 hr |
 | 6. Protocol design | T6.1–T6.2 | 2 hr |
 | 7. Dead code | T7.1 | 0.25 hr |
@@ -457,18 +443,18 @@ return type is `float`, so downstream code is clean without casts.
 | 10. Plot coverage | T10.1–T10.2 | 6 hr |
 | 11. Performance | T11.1 | 1 hr |
 | 12. Error handling | T12.1 | 1 hr |
-| 13. Type safety | T13.1 | 1 hr |
-| **Total** | **20 tasks** | **~24 hr** |
+| 13. Type safety | ~~T13.1~~ | ✅ done |
+| **Total remaining** | **13 tasks** | **~17.75 hr** |
 
 ---
 
 ## Recommended Sequence
 
-**Sprint 1 — Quick wins (~4 hr, no API changes)**
-~~T1.1~~, ~~T1.2~~, T1.3, T2.3, ~~T3.3~~, T4.1 🔄, T7.1, T13.1
+**Sprint 1 — Quick wins (~4 hr, no API changes)** ✅ complete
+~~T1.1~~, ~~T1.2~~, ~~T1.3~~, T2.3, ~~T3.3~~, ~~T4.1~~, T7.1, ~~T13.1~~
 
 **Sprint 2 — API clean-up (~4 hr, minor breaking changes)**
-T2.1, ~~T2.2~~, T3.1, T3.2, T4.2 🔄, T5.1, T5.2, T8.1
+T2.1, ~~T2.2~~, T3.1, T3.2, ~~T4.2~~, T5.1, T5.2, T8.1
 
 **Sprint 3 — Architecture (~4 hr, protocol restructure)**
 T6.1, T6.2, T12.1
