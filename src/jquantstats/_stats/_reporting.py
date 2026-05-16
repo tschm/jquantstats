@@ -21,6 +21,12 @@ class _ReportingStatsMixin:
     Covers: periods per year, average drawdown, Calmar ratio, recovery factor,
     max drawdown duration, monthly win rate, worst-N periods, up/down capture
     ratios, annual breakdown, and summary statistics table.
+
+    Cross-mixin dependencies:
+        - _BasicStatsMixin: avg_return, avg_win, avg_loss, win_rate, profit_factor,
+          payoff_ratio, best, worst, volatility, skew, kurtosis, value_at_risk,
+          conditional_value_at_risk, exposure
+        - _RiskStatsMixin: sharpe, max_drawdown
     """
 
     _data: Data

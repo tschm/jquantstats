@@ -24,6 +24,9 @@ class _RiskStatsMixin:
     Covers: Sharpe ratio, Sortino ratio, adjusted Sortino, drawdown series,
     max drawdown, prices, R-squared, information ratio, and Greeks (alpha/beta).
 
+    Cross-mixin dependencies:
+        - _BasicStatsMixin: geometric_mean, autocorr_penalty
+
     **Concentration metrics (intentionally public, optional use)**
 
     ``hhi_positive`` and ``hhi_negative`` implement the
