@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, cast
 import numpy as np
 import polars as pl
 
-from ._core import _to_float, to_frame
+from ._core import _to_float
 from ._internals import _annualization_factor
 from ._performance import _PerformanceStatsMixin
 
@@ -120,33 +120,44 @@ class _RollingStatsMixin:
 
         return cast(pl.DataFrame, self.all).select([pl.col(name) for name in self._data.date_col] + cols)
 
-    @to_frame
     def rolling_sortino(
-        self, series: pl.Expr, rolling_period: int = 126, periods_per_year: int | float | None = None
-    ) -> pl.Expr:
+        self,
+        rolling_period: int = 126,
+        periods_per_year: int | float | None = None,
+    ) -> pl.DataFrame:
         """Calculate the rolling Sortino ratio.
 
         Args:
-            series (pl.Expr): The expression to calculate rolling Sortino ratio for.
-            rolling_period (int, optional): The rolling window size. Defaults to 126.
-            periods_per_year (int, optional): Number of periods per year. Defaults to 252.
+            rolling_period: Rolling window size. Defaults to 126.
+            periods_per_year: Periods per year for annualisation.
 
         Returns:
-            pl.Expr: The rolling Sortino ratio expression.
+            pl.DataFrame: Date column(s) plus one annualised rolling Sortino
+            column per asset.
+
+        Raises:
+            ValueError: If rolling_period is not a positive integer.
 
         """
+        if not isinstance(rolling_period, int) or rolling_period <= 0:
+            raise ValueError("rolling_period must be a positive integer")  # noqa: TRY003
         ppy = periods_per_year or self._data._periods_per_year
-
-        mean_ret = series.rolling_mean(window_size=rolling_period)
-
-        # Rolling downside deviation (squared negative returns averaged over window)
-        downside = series.map_elements(lambda x: x**2 if x < 0 else 0.0, return_dtype=pl.Float64).rolling_mean(
-            window_size=rolling_period
+        scale = _annualization_factor(ppy)
+        return cast(pl.DataFrame, self.all).select(
+            [pl.col(name) for name in self._data.date_col]
+            + [
+                (
+                    pl.col(col).rolling_mean(window_size=rolling_period)
+                    / pl.when(pl.col(col) < 0)
+                    .then(pl.col(col) ** 2)
+                    .otherwise(0.0)
+                    .rolling_mean(window_size=rolling_period)
+                    .sqrt()
+                    * scale
+                ).alias(col)
+                for col, _ in self._data.items()
+            ]
         )
-
-        # Avoid division by zero
-        sortino = mean_ret / downside.sqrt().fill_nan(0).fill_null(0)
-        return cast(pl.Expr, sortino * (ppy**0.5))
 
     def rolling_sharpe(
         self,
