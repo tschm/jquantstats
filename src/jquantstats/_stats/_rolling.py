@@ -143,21 +143,13 @@ class _RollingStatsMixin:
             raise ValueError("rolling_period must be a positive integer")  # noqa: TRY003
         ppy = periods_per_year or self._data._periods_per_year
         scale = _annualization_factor(ppy)
-        return cast(pl.DataFrame, self.all).select(
-            [pl.col(name) for name in self._data.date_col]
-            + [
-                (
-                    pl.col(col).rolling_mean(window_size=rolling_period)
-                    / pl.when(pl.col(col) < 0)
-                    .then(pl.col(col) ** 2)
-                    .otherwise(0.0)
-                    .rolling_mean(window_size=rolling_period)
-                    .sqrt()
-                    * scale
-                ).alias(col)
-                for col, _ in self._data.items()
-            ]
-        )
+        exprs: list[pl.Expr] = []
+        for col, _ in self._data.items():
+            mean_ret = pl.col(col).rolling_mean(window_size=rolling_period)
+            negative_squared = pl.when(pl.col(col) < 0).then(pl.col(col) ** 2).otherwise(0.0)
+            downside = negative_squared.rolling_mean(window_size=rolling_period)
+            exprs.append(((mean_ret / downside.sqrt()) * scale).alias(col))
+        return cast(pl.DataFrame, self.all).select([pl.col(name) for name in self._data.date_col] + exprs)
 
     def rolling_sharpe(
         self,
