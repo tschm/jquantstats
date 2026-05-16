@@ -23,6 +23,17 @@ class _PerformanceStatsMixin:
 
     Covers: Sharpe ratio, Sortino ratio, adjusted Sortino, drawdown series,
     max drawdown, prices, R-squared, information ratio, and Greeks (alpha/beta).
+
+    **Concentration metrics (intentionally public, optional use)**
+
+    ``hhi_positive`` and ``hhi_negative`` implement the
+    Herfindahl-Hirschman Index applied to the signed distribution of returns.
+    They measure *temporal* concentration of gains and losses respectively —
+    a value near 0 means returns are spread evenly across periods; a value
+    near 1 means a single period dominates.  These metrics are not included
+    in ``summary()`` by default because they are supplemental diagnostics
+    rather than standard risk-adjusted-return measures, but they are fully
+    supported as part of the public ``Stats`` API.
     """
 
     _data: Data
@@ -149,6 +160,8 @@ class _PerformanceStatsMixin:
         if var_bench_sr <= 0:
             return float("nan")  # pragma: no cover  # indeterminate: non-positive variance
         return float(norm.cdf((observed_sr - benchmark_sr) / np.sqrt(var_bench_sr)))
+
+    # ── Concentration metrics (HHI) ───────────────────────────────────────────
 
     @columnwise_stat
     def hhi_positive(self, series: pl.Series) -> float:

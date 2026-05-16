@@ -71,6 +71,10 @@ class Stats(_BasicStatsMixin, _PerformanceStatsMixin, _ReportingStatsMixin, _Rol
     - Win/loss metrics (win rate, profit factor, payoff ratio)
     - Rolling calculations (rolling volatility, rolling Sharpe)
     - Factor analysis (alpha, beta, R-squared)
+    - Concentration metrics (``hhi_positive``, ``hhi_negative``) — optional
+      Herfindahl-Hirschman Index diagnostics that quantify how concentrated
+      gains and losses are across time periods.  These are public API but are
+      not included in ``summary()`` by default.
 
     Metrics are organised into focused modules:
 
