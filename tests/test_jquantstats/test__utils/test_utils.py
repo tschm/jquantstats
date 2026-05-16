@@ -755,3 +755,59 @@ def test_winsorise_shift_prevents_self_normalisation():
     # The shifted version clips more aggressively (lower value) because the
     # outlier didn't inflate the std used for bounds
     assert clipped_shifted < clipped_no_shift
+
+
+# ─── PortfolioUtils.winsorise ─────────────────────────────────────────────────
+
+
+def test_portfolio_utils_winsorise_returns_dataframe(portfolio_pf):
+    """portfolio.utils.winsorise must return a DataFrame."""
+    result = portfolio_pf.utils.winsorise()
+    assert isinstance(result, pl.DataFrame)
+
+
+def test_portfolio_utils_winsorise_preserves_row_count(portfolio_pf):
+    """portfolio.utils.winsorise must preserve the row count."""
+    result = portfolio_pf.utils.winsorise(window=5, n_sigma=3.0)
+    assert result.height == portfolio_pf.returns.height
+
+
+def test_portfolio_utils_winsorise_preserves_columns(portfolio_pf):
+    """portfolio.utils.winsorise must include the asset column."""
+    result = portfolio_pf.utils.winsorise(window=5, n_sigma=3.0)
+    assert "returns" in result.columns
+
+
+# ─── PortfolioUtils.exponential_cov ──────────────────────────────────────────
+
+
+def test_portfolio_utils_exponential_cov_returns_dict(portfolio_pf):
+    """portfolio.utils.exponential_cov must return a dict."""
+    result = portfolio_pf.utils.exponential_cov(window=5)
+    assert isinstance(result, dict)
+
+
+def test_portfolio_utils_exponential_cov_values_are_arrays(portfolio_pf):
+    """Each value in exponential_cov result must be a numpy ndarray."""
+    import numpy as np
+
+    result = portfolio_pf.utils.exponential_cov(window=5)
+    for v in result.values():
+        assert isinstance(v, np.ndarray)
+
+
+def test_portfolio_utils_exponential_cov_square_matrices(portfolio_pf):
+    """Each covariance matrix must be square with size equal to asset count."""
+    result = portfolio_pf.utils.exponential_cov(window=5)
+    n_assets = len(portfolio_pf.assets)
+    for mat in result.values():
+        assert mat.shape == (n_assets, n_assets)
+
+
+def test_portfolio_utils_exponential_cov_is_symmetric(portfolio_pf):
+    """Each covariance matrix must be symmetric."""
+    import numpy as np
+
+    result = portfolio_pf.utils.exponential_cov(window=5)
+    for mat in result.values():
+        np.testing.assert_array_almost_equal(mat, mat.T)
