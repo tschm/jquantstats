@@ -82,7 +82,7 @@ def test_repr(plots):
 
 
 def test_montecarlo_plot_returns_figure_with_simulations(data):
-    """montecarlo returns a fan chart with one observed line per asset."""
+    """Montecarlo returns a fan chart with one observed line per asset."""
     n = 8
     fig = data.plots.montecarlo(n=n, period=30, title="Monte Carlo Fan", figsize=(920, 420))
 

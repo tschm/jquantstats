@@ -818,9 +818,9 @@ class DataPlots:
 
         """
         if n <= 0:
-            raise ValueError("n must be a positive integer")
+            raise ValueError("n must be a positive integer")  # noqa: TRY003
         if period <= 0:
-            raise ValueError("period must be a positive integer")
+            raise ValueError("period must be a positive integer")  # noqa: TRY003
 
         df = self._data.all
         date_col = df.columns[0]
@@ -910,16 +910,17 @@ class DataPlots:
 
         """
         if n <= 0:
-            raise ValueError("n must be a positive integer")
+            raise ValueError("n must be a positive integer")  # noqa: TRY003
         if period <= 0:
-            raise ValueError("period must be a positive integer")
+            raise ValueError("period must be a positive integer")  # noqa: TRY003
 
         metric_key = metric.strip().lower()
         if metric_key not in {"sharpe", "drawdown", "cagr"}:
-            raise ValueError("metric must be one of: sharpe, drawdown, cagr")
+            raise ValueError("metric must be one of: sharpe, drawdown, cagr")  # noqa: TRY003
         periods_per_year = 252.0
 
         def _metric_value(returns: np.ndarray) -> float:
+            """Compute the selected metric for a simulated return path."""
             if metric_key == "sharpe":
                 std = returns.std(ddof=1)
                 return float(math.sqrt(periods_per_year) * returns.mean() / std) if std > 0 else 0.0
