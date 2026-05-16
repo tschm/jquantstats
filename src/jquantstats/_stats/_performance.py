@@ -717,7 +717,8 @@ class _PerformanceStatsMixin:
         # Evaluate both series and benchmark as Series
         all_data = cast(pl.DataFrame, self.all)
         dframe = all_data.select([series, pl.col(benchmark_col).alias("benchmark")])
-        assert series.null_count() == 0, "null values should have been handled by Data.__post_init__"
+        strategy_col = dframe.columns[0]
+        assert dframe[strategy_col].null_count() == 0, "null values should have been handled by Data.__post_init__"
         assert dframe["benchmark"].null_count() == 0, "null values should have been handled by Data.__post_init__"
 
         matrix = dframe.to_numpy()
@@ -804,7 +805,8 @@ class _PerformanceStatsMixin:
         # Evaluate both series and benchmark as Series
         all_data = cast(pl.DataFrame, self.all)
         dframe = all_data.select([series, pl.col(benchmark_col).alias("benchmark")])
-        assert series.null_count() == 0, "null values should have been handled by Data.__post_init__"
+        strategy_col = dframe.columns[0]
+        assert dframe[strategy_col].null_count() == 0, "null values should have been handled by Data.__post_init__"
         assert dframe["benchmark"].null_count() == 0, "null values should have been handled by Data.__post_init__"
         matrix = dframe.to_numpy()
 
@@ -860,7 +862,8 @@ class _PerformanceStatsMixin:
 
         all_data = cast(pl.DataFrame, self.all)
         dframe = all_data.select([series, pl.col(benchmark_col).alias("_bench")])
-        assert series.null_count() == 0, "null values should have been handled by Data.__post_init__"
+        strategy_col = dframe.columns[0]
+        assert dframe[strategy_col].null_count() == 0, "null values should have been handled by Data.__post_init__"
         assert dframe["_bench"].null_count() == 0, "null values should have been handled by Data.__post_init__"
         matrix = dframe.to_numpy()
         strategy_np = matrix[:, 0]
