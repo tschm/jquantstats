@@ -1292,6 +1292,55 @@ def test_compare_round_vals(stats):
         assert all(round(v, 2) == v for v in rounded.to_list())
 
 
+def test_montecarlo_shape(stats):
+    """montecarlo returns one simulated terminal return per simulation and asset."""
+    np.random.seed(7)
+    result = stats.montecarlo(n=32, period=30)
+    assert isinstance(result, pl.DataFrame)
+    assert result.shape == (32, len(stats.assets))
+    assert result.columns == stats.assets
+
+
+def test_montecarlo_sharpe_shape(stats):
+    """montecarlo_sharpe returns one simulated Sharpe ratio per simulation and asset."""
+    np.random.seed(7)
+    result = stats.montecarlo_sharpe(n=32, period=30, periods_per_year=252)
+    assert result.shape == (32, len(stats.assets))
+    for col in result.columns:
+        assert np.isfinite(result[col].to_numpy()).all()
+
+
+def test_montecarlo_drawdown_range(stats):
+    """montecarlo_drawdown values are valid drawdowns in [-1, 0]."""
+    np.random.seed(7)
+    result = stats.montecarlo_drawdown(n=32, period=30)
+    assert result.shape == (32, len(stats.assets))
+    for col in result.columns:
+        assert (result[col] <= 0.0).all()
+        assert (result[col] >= -1.0).all()
+
+
+def test_montecarlo_cagr_shape(stats):
+    """montecarlo_cagr returns one simulated CAGR per simulation and asset."""
+    np.random.seed(7)
+    result = stats.montecarlo_cagr(n=32, period=30, periods_per_year=252)
+    assert result.shape == (32, len(stats.assets))
+    for col in result.columns:
+        assert np.isfinite(result[col].to_numpy()).all()
+
+
+def test_montecarlo_invalid_params(stats):
+    """Monte Carlo methods validate simulation counts and periods."""
+    with pytest.raises(ValueError, match="positive integer"):
+        stats.montecarlo(n=0, period=30)
+    with pytest.raises(ValueError, match="positive integer"):
+        stats.montecarlo(n=10, period=0)
+    with pytest.raises(ValueError, match="periods_per_year must be positive"):
+        stats.montecarlo_sharpe(periods_per_year=0)
+    with pytest.raises(ValueError, match="periods_per_year must be positive"):
+        stats.montecarlo_cagr(periods_per_year=0)
+
+
 # ── Edge-case coverage ────────────────────────────────────────────────────────
 
 

@@ -1,7 +1,7 @@
 """Statistical analysis tools for financial returns data.
 
 This module provides the `Stats` dataclass, which is the public-facing
-class that combines four mixin classes:
+class that combines five mixin classes:
 
 - `_BasicStatsMixin` — basic statistics,
   volatility, win/loss metrics, and risk metrics (VaR, Sharpe inputs, Kelly).
@@ -12,6 +12,8 @@ class that combines four mixin classes:
   summary.
 - `_RollingStatsMixin` — rolling-window
   time-series metrics (rolling Sharpe, Sortino, and volatility).
+- `_MonteCarloStatsMixin` — block-bootstrap Monte Carlo simulation distributions
+  for total return, Sharpe, max drawdown, and CAGR.
 
 Module-level helpers and the ``columnwise_stat`` / ``to_frame`` decorators are
 defined in `jquantstats._stats._core` and re-exported here for backwards
@@ -38,6 +40,7 @@ from ._internals import (
     _downside_deviation,
     _nav_series,
 )
+from ._montecarlo import _MonteCarloStatsMixin
 from ._performance import _RiskStatsMixin
 from ._reporting import _ReportingStatsMixin
 from ._rolling import _RollingStatsMixin
@@ -59,7 +62,7 @@ __all__ = [
 ]
 
 
-class Stats(_BasicStatsMixin, _RiskStatsMixin, _ReportingStatsMixin, _RollingStatsMixin):
+class Stats(_BasicStatsMixin, _RiskStatsMixin, _ReportingStatsMixin, _RollingStatsMixin, _MonteCarloStatsMixin):
     """Statistical analysis tools for financial returns data.
 
     Provides a comprehensive set of methods for calculating various financial
@@ -82,6 +85,7 @@ class Stats(_BasicStatsMixin, _RiskStatsMixin, _ReportingStatsMixin, _RollingSta
     - `_RiskStatsMixin`
     - `_ReportingStatsMixin`
     - `_RollingStatsMixin`
+    - `_MonteCarloStatsMixin`
 
     Attributes:
         all: A DataFrame combining all data (index, returns, benchmark) for
