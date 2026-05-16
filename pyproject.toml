@@ -48,8 +48,8 @@ dev = [
     "yfinance==1.3.0",
     "ipython==9.13.0",
     "quantstats==0.0.81",  # reference implementation used in test_quantstats.py for metric validation
-    "marimo>=0.13.15",
     "httpx>=0.28.1",
+    "marimo>=0.23.6",
 ]
 
 

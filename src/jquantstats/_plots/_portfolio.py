@@ -3,17 +3,10 @@
 This module defines the PortfolioPlots facade which renders common portfolio visuals
 such as snapshots, lagged performance curves, smoothed-holdings curves, and
 lead/lag information ratio bar charts. Designed for notebook use.
-
-Examples:
-    >>> import dataclasses
-    >>> from jquantstats._plots import PortfolioPlots
-    >>> dataclasses.is_dataclass(PortfolioPlots)
-    True
 """
 
 from __future__ import annotations
 
-import dataclasses
 from typing import TYPE_CHECKING
 
 import plotly.express as px
@@ -29,7 +22,6 @@ if TYPE_CHECKING:
 pio.renderers.default = "plotly_mimetype"
 
 
-@dataclasses.dataclass(frozen=True)
 class PortfolioPlots:
     """Facade for portfolio plots built with Plotly.
 
@@ -38,7 +30,10 @@ class PortfolioPlots:
     lagged performance, smoothed holdings, and lead/lag IR).
     """
 
-    portfolio: PortfolioLike
+    __slots__ = ("_portfolio",)
+
+    def __init__(self, portfolio: PortfolioLike) -> None:
+        self._portfolio = portfolio
 
     def lead_lag_ir_plot(self, start: int = -10, end: int = 19) -> go.Figure:
         """Plot Sharpe ratio (IR) across lead/lag variants of the portfolio.
@@ -65,7 +60,7 @@ class PortfolioPlots:
         y_vals: list[float] = []
 
         for n in lags:
-            pf = self.portfolio if n == 0 else self.portfolio.lag(n)
+            pf = self._portfolio if n == 0 else self._portfolio.lag(n)
             # Compute Sharpe on the portfolio's returns series
             sharpe_val = pf.stats.sharpe().get("returns", float("nan"))
             # Ensure a float (Stats returns mapping asset->value)
@@ -116,8 +111,8 @@ class PortfolioPlots:
         # --- Row 1: Cumulative Returns
         fig.add_trace(
             go.Scatter(
-                x=self.portfolio.nav_accumulated["date"],
-                y=self.portfolio.nav_accumulated["NAV_accumulated"],
+                x=self._portfolio.nav_accumulated["date"],
+                y=self._portfolio.nav_accumulated["NAV_accumulated"],
                 mode="lines",
                 name="NAV",
                 showlegend=False,
@@ -128,8 +123,8 @@ class PortfolioPlots:
 
         fig.add_trace(
             go.Scatter(
-                x=self.portfolio.tilt.nav_accumulated["date"],
-                y=self.portfolio.tilt.nav_accumulated["NAV_accumulated"],
+                x=self._portfolio.tilt.nav_accumulated["date"],
+                y=self._portfolio.tilt.nav_accumulated["NAV_accumulated"],
                 mode="lines",
                 name="Tilt",
                 showlegend=False,
@@ -140,8 +135,8 @@ class PortfolioPlots:
 
         fig.add_trace(
             go.Scatter(
-                x=self.portfolio.timing.nav_accumulated["date"],
-                y=self.portfolio.timing.nav_accumulated["NAV_accumulated"],
+                x=self._portfolio.timing.nav_accumulated["date"],
+                y=self._portfolio.timing.nav_accumulated["NAV_accumulated"],
                 mode="lines",
                 name="Timing",
                 showlegend=False,
@@ -151,8 +146,8 @@ class PortfolioPlots:
         )
 
         # Net-of-cost NAV overlay (only when a cost model is active)
-        if self.portfolio.cost_model.cost_per_unit > 0:
-            net_nav_df = self.portfolio.net_cost_nav
+        if self._portfolio.cost_model.cost_per_unit > 0:
+            net_nav_df = self._portfolio.net_cost_nav
             x_dates = net_nav_df["date"] if "date" in net_nav_df.columns else None
             fig.add_trace(
                 go.Scatter(
@@ -169,8 +164,8 @@ class PortfolioPlots:
 
         fig.add_trace(
             go.Scatter(
-                x=self.portfolio.drawdown["date"],
-                y=self.portfolio.drawdown["drawdown_pct"],
+                x=self._portfolio.drawdown["date"],
+                y=self._portfolio.drawdown["drawdown_pct"],
                 mode="lines",
                 fill="tozeroy",
                 name="Drawdown",
@@ -282,7 +277,7 @@ class PortfolioPlots:
 
         fig = go.Figure()
         for lag in lags:
-            pf = self.portfolio if lag == 0 else self.portfolio.lag(lag)
+            pf = self._portfolio if lag == 0 else self._portfolio.lag(lag)
             nav = pf.nav_accumulated
             fig.add_trace(
                 go.Scatter(
@@ -315,7 +310,7 @@ class PortfolioPlots:
         if not isinstance(window, int) or window <= 0:
             raise ValueError
 
-        rolling = self.portfolio.stats.rolling_sharpe(rolling_period=window)
+        rolling = self._portfolio.stats.rolling_sharpe(rolling_period=window)
 
         fig = go.Figure()
         date_col = rolling["date"] if "date" in rolling.columns else None
@@ -376,7 +371,7 @@ class PortfolioPlots:
         if not isinstance(window, int) or window <= 0:
             raise ValueError
 
-        rolling = self.portfolio.stats.rolling_volatility(rolling_period=window)
+        rolling = self._portfolio.stats.rolling_volatility(rolling_period=window)
 
         fig = go.Figure()
         date_col = rolling["date"] if "date" in rolling.columns else None
@@ -427,7 +422,7 @@ class PortfolioPlots:
         Returns:
             A Plotly Figure with one bar group per asset.
         """
-        breakdown = self.portfolio.stats.annual_breakdown()
+        breakdown = self._portfolio.stats.annual_breakdown()
 
         # Extract the sharpe row for each year
         sharpe_rows = breakdown.filter(pl.col("metric") == "sharpe")
@@ -471,7 +466,7 @@ class PortfolioPlots:
 
         Args:
             frame: Optional Polars DataFrame with at least the asset price
-                columns. If omitted, uses ``self.portfolio.prices``.
+                columns. If omitted, uses ``self._portfolio.prices``.
             name: Column name under which to include the portfolio profit.
             title: Plot title.
 
@@ -479,9 +474,9 @@ class PortfolioPlots:
             A Plotly Figure rendering the correlation matrix as a heatmap.
         """
         if frame is None:
-            frame = self.portfolio.prices
+            frame = self._portfolio.prices
 
-        corr = self.portfolio.correlation(frame, name=name)
+        corr = self._portfolio.correlation(frame, name=name)
 
         # Create an interactive heatmap
         fig = px.imshow(
@@ -516,7 +511,7 @@ class PortfolioPlots:
         Raises:
             ValueError: If the portfolio has no ``date`` column.
         """
-        monthly = self.portfolio.monthly
+        monthly = self._portfolio.monthly
 
         years = monthly["year"].unique().sort().to_list()
         month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -590,7 +585,7 @@ class PortfolioPlots:
 
         fig = go.Figure()
         for n in windows:
-            pf = self.portfolio if n == 0 else self.portfolio.smoothed_holding(n)
+            pf = self._portfolio if n == 0 else self._portfolio.smoothed_holding(n)
             nav = pf.nav_accumulated
             fig.add_trace(
                 go.Scatter(
@@ -624,7 +619,7 @@ class PortfolioPlots:
         Raises:
             ValueError: If ``max_bps`` is not a positive integer.
         """
-        impact = self.portfolio.trading_cost_impact(max_bps=max_bps)
+        impact = self._portfolio.trading_cost_impact(max_bps=max_bps)
 
         cost_vals = impact["cost_bps"].to_list()
         sharpe_vals = impact["sharpe"].to_list()

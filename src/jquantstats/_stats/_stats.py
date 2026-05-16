@@ -20,7 +20,6 @@ compatibility.
 
 from __future__ import annotations
 
-import dataclasses
 from typing import TYPE_CHECKING
 
 import polars as pl
@@ -58,7 +57,6 @@ __all__ = [
 ]
 
 
-@dataclasses.dataclass(frozen=True)
 class Stats(_BasicStatsMixin, _PerformanceStatsMixin, _ReportingStatsMixin, _RollingStatsMixin):
     """Statistical analysis tools for financial returns data.
 
@@ -80,18 +78,39 @@ class Stats(_BasicStatsMixin, _PerformanceStatsMixin, _ReportingStatsMixin, _Rol
     - `_RollingStatsMixin`
 
     Attributes:
-        data: The `Data` object containing returns
-            and benchmark data.
         all: A DataFrame combining all data (index, returns, benchmark) for
             easy column selection.
     """
 
-    data: Data
-    all: pl.DataFrame | None = None  # Default is None; will be set in __post_init__
-
-    def __post_init__(self) -> None:
-        object.__setattr__(self, "all", self.data.all)
+    def __init__(self, data: Data) -> None:
+        self._data = data
+        self.all: pl.DataFrame = data.all
 
     def __repr__(self) -> str:
         """Return a string representation of the Stats object."""
-        return f"Stats(assets={self.data.assets})"
+        return f"Stats(assets={self._data.assets})"
+
+    @property
+    def assets(self) -> list[str]:
+        """Asset column names (excludes benchmark and date)."""
+        return self._data.assets
+
+    @property
+    def returns(self) -> pl.DataFrame:
+        """Returns DataFrame (asset columns only, no benchmark)."""
+        return self._data.returns
+
+    @property
+    def benchmark(self) -> pl.DataFrame | None:
+        """Benchmark DataFrame, or None when no benchmark was provided."""
+        return self._data.benchmark
+
+    @property
+    def date_col(self) -> list[str]:
+        """Date column name(s) present in the index, or empty list."""
+        return self._data.date_col
+
+    @property
+    def index(self) -> pl.DataFrame:
+        """Index DataFrame (date or integer range)."""
+        return self._data.index

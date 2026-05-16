@@ -12,6 +12,9 @@ from ._core import _to_float, to_frame
 from ._internals import _annualization_factor
 from ._performance import _PerformanceStatsMixin
 
+if TYPE_CHECKING:
+    from ..data import Data
+
 # ── Rolling statistics mixin ─────────────────────────────────────────────────
 
 
@@ -19,13 +22,11 @@ class _RollingStatsMixin:
     """Mixin class providing rolling-window financial statistics methods.
 
     Separates rolling-window computations from the core point-in-time metrics
-    in `_core`.  The concrete
-    `Stats` dataclass inherits from both.
-
-    Attributes (provided by the concrete subclass):
-        data: The `Data` object.
-        all: Combined DataFrame for efficient column selection.
+    in `_core`.  The concrete `Stats` class inherits from both.
     """
+
+    _data: Data
+    all: pl.DataFrame
 
     if TYPE_CHECKING:
         from ._protocol import DataLike
@@ -58,15 +59,15 @@ class _RollingStatsMixin:
         if annualize:
             scale = _annualization_factor(periods)
             return cast(pl.DataFrame, self.all).select(
-                [pl.col(name) for name in self.data.date_col]
+                [pl.col(name) for name in self._data.date_col]
                 + [
                     ((1.0 + pl.col(col)).log(math.e).rolling_std(window_size=periods) * scale).alias(col)
-                    for col, _ in self.data.items()
+                    for col, _ in self._data.items()
                 ]
             )
         return {
             col: _to_float((1.0 + series.cast(pl.Float64)).log(math.e).cast(pl.Float64).std())
-            for col, series in self.data.items()
+            for col, series in self._data.items()
         }
 
     @staticmethod
@@ -109,7 +110,7 @@ class _RollingStatsMixin:
             raise ValueError("window must be a positive integer")  # noqa: TRY003
 
         cols = []
-        for col, series in self.data.items():
+        for col, series in self._data.items():
             prices = _PerformanceStatsMixin.prices(series)
             ranked = prices.rolling_map(
                 function=self._pct_rank_series,
@@ -117,7 +118,7 @@ class _RollingStatsMixin:
             ).alias(col)
             cols.append(ranked)
 
-        return cast(pl.DataFrame, self.all).select([pl.col(name) for name in self.data.date_col] + cols)
+        return cast(pl.DataFrame, self.all).select([pl.col(name) for name in self._data.date_col] + cols)
 
     @to_frame
     def rolling_sortino(
@@ -134,7 +135,7 @@ class _RollingStatsMixin:
             pl.Expr: The rolling Sortino ratio expression.
 
         """
-        ppy = periods_per_year or self.data._periods_per_year
+        ppy = periods_per_year or self._data._periods_per_year
 
         mean_ret = series.rolling_mean(window_size=rolling_period)
 
@@ -167,19 +168,19 @@ class _RollingStatsMixin:
 
         """
         actual_window = rolling_period
-        actual_periods = periods_per_year or self.data._periods_per_year
+        actual_periods = periods_per_year or self._data._periods_per_year
         if not isinstance(actual_window, int) or actual_window <= 0:
             raise ValueError("rolling_period must be a positive integer")  # noqa: TRY003
         scale = _annualization_factor(actual_periods)
         return cast(pl.DataFrame, self.all).select(
-            [pl.col(name) for name in self.data.date_col]
+            [pl.col(name) for name in self._data.date_col]
             + [
                 (
                     pl.col(col).rolling_mean(window_size=actual_window)
                     / pl.col(col).rolling_std(window_size=actual_window)
                     * scale
                 ).alias(col)
-                for col, _ in self.data.items()
+                for col, _ in self._data.items()
             ]
         )
 
@@ -211,18 +212,18 @@ class _RollingStatsMixin:
             AttributeError: If no benchmark data is attached.
             ValueError: If *rolling_period* is not a positive integer.
         """
-        if self.data.benchmark is None:
+        if self._data.benchmark is None:
             raise AttributeError("No benchmark data available")  # noqa: TRY003
         if not isinstance(rolling_period, int) or rolling_period <= 0:
             raise ValueError("rolling_period must be a positive integer")  # noqa: TRY003
 
-        ppy = periods_per_year or self.data._periods_per_year
+        ppy = periods_per_year or self._data._periods_per_year
         all_df = cast(pl.DataFrame, self.all)
-        bench_col = benchmark or self.data.benchmark.columns[0]
+        bench_col = benchmark or self._data.benchmark.columns[0]
 
         w = rolling_period
         exprs: list[pl.Expr] = []
-        for col, _ in self.data.items():
+        for col, _ in self._data.items():
             mean_x = pl.col(col).rolling_mean(window_size=w)
             mean_y = pl.col(bench_col).rolling_mean(window_size=w)
             mean_xy = (pl.col(col) * pl.col(bench_col)).rolling_mean(window_size=w)
@@ -238,7 +239,7 @@ class _RollingStatsMixin:
 
             exprs.extend([beta_expr, alpha_expr])
 
-        return all_df.select([pl.col(name) for name in self.data.date_col] + exprs)
+        return all_df.select([pl.col(name) for name in self._data.date_col] + exprs)
 
     def rolling_volatility(
         self,
@@ -263,13 +264,16 @@ class _RollingStatsMixin:
 
         """
         actual_window = rolling_period
-        actual_periods = periods_per_year or self.data._periods_per_year
+        actual_periods = periods_per_year or self._data._periods_per_year
         if not isinstance(actual_window, int) or actual_window <= 0:
             raise ValueError("rolling_period must be a positive integer")  # noqa: TRY003
         if not isinstance(actual_periods, int | float):
             raise TypeError
         factor = _annualization_factor(actual_periods) if annualize else 1.0
         return cast(pl.DataFrame, self.all).select(
-            [pl.col(name) for name in self.data.date_col]
-            + [(pl.col(col).rolling_std(window_size=actual_window) * factor).alias(col) for col, _ in self.data.items()]
+            [pl.col(name) for name in self._data.date_col]
+            + [
+                (pl.col(col).rolling_std(window_size=actual_window) * factor).alias(col)
+                for col, _ in self._data.items()
+            ]
         )

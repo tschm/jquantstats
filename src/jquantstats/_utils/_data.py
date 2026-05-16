@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import dataclasses
 import math
 from collections.abc import Callable, Hashable
 
@@ -25,43 +24,40 @@ _PERIOD_ALIASES: dict[str, str] = {
 }
 
 
-@dataclasses.dataclass(frozen=True)
 class DataUtils:
     """Utility transforms and conversions for financial returns data.
 
     Mirrors the public API of ``quantstats.utils`` but operates on Polars
     DataFrames and integrates with `Data` via the
     ``data.utils`` property.
-
-    Attributes:
-        data: Any object satisfying the `DataLike`
-            protocol — typically a `Data` instance.
-
     """
 
-    data: DataLike
+    __slots__ = ("_data",)
+
+    def __init__(self, data: DataLike) -> None:
+        self._data = data
 
     def __repr__(self) -> str:
         """Return a string representation of the DataUtils object."""
-        return f"DataUtils(assets={list(self.data.returns.columns)})"
+        return f"DataUtils(assets={list(self._data.returns.columns)})"
 
     # ── helpers ───────────────────────────────────────────────────────────────
 
     def _combined(self) -> pl.DataFrame:
         """Return index hstacked with returns (no benchmark)."""
-        return pl.concat([self.data.index, self.data.returns], how="horizontal")
+        return pl.concat([self._data.index, self._data.returns], how="horizontal")
 
     def _asset_cols(self) -> list[str]:
         """Return the asset column names from returns (excluding benchmark)."""
-        return list(self.data.returns.columns)
+        return list(self._data.returns.columns)
 
     def _require_temporal_index(self, method: str) -> str:
         """Raise MissingDateColumnError if the index is not temporal, else return date col name."""
-        date_cols = self.data.date_col
+        date_cols = self._data.date_col
         if not date_cols:
             raise MissingDateColumnError(method)  # pragma: no cover
         date_col = date_cols[0]
-        if not self.data.index[date_col].dtype.is_temporal():
+        if not self._data.index[date_col].dtype.is_temporal():
             raise MissingDateColumnError(method)
         return date_col
 
@@ -358,7 +354,7 @@ class DataUtils:
             for b in asset_cols[i:]
         ]
 
-        index_col = self.data.index.columns[0]
+        index_col = self._data.index.columns[0]
         pair_df = self._combined().with_columns(cov_exprs).drop(asset_cols)
         all_keys = pair_df[index_col].to_list()
         pair_arr = pair_df.drop(index_col).to_numpy()

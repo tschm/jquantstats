@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import dataclasses
 from collections.abc import Callable
 
 import polars as pl
@@ -13,30 +12,26 @@ from ._protocol import PortfolioLike
 __all__ = ["PortfolioUtils"]
 
 
-@dataclasses.dataclass(frozen=True)
 class PortfolioUtils:
     """Utility transforms and conversions for Portfolio objects.
 
     Exposes the same API as `DataUtils`
     but is initialised from a `Portfolio`
     and routes all calls through ``portfolio.data``.
-
-    Attributes:
-        portfolio: Any object satisfying the
-            `PortfolioLike` protocol —
-            typically a `Portfolio` instance.
-
     """
 
-    portfolio: PortfolioLike
+    __slots__ = ("_portfolio",)
+
+    def __init__(self, portfolio: PortfolioLike) -> None:
+        self._portfolio = portfolio
 
     def __repr__(self) -> str:
         """Return a string representation of the PortfolioUtils object."""
-        return f"PortfolioUtils(assets={self.portfolio.assets})"
+        return f"PortfolioUtils(assets={self._portfolio.assets})"
 
     def _du(self) -> DataUtils:
         """Return a DataUtils instance backed by this portfolio's data bridge."""
-        return DataUtils(self.portfolio.data)
+        return DataUtils(self._portfolio.data)
 
     # ── delegated API (mirrors DataUtils) ─────────────────────────────────────
 
