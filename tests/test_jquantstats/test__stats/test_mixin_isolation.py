@@ -13,7 +13,7 @@ class _IsolatedReportingStatsMixin(_ReportingStatsMixin):
 
 
 def test_reporting_mixin_rar_raises_attribute_error_for_missing_exposure_dependency():
-    """rar should clearly fail when reporting mixin is used without basic mixin methods."""
+    """Rar should clearly fail when reporting mixin is used without basic mixin methods."""
     isolated = _IsolatedReportingStatsMixin()
 
     with pytest.raises(AttributeError, match="exposure"):
