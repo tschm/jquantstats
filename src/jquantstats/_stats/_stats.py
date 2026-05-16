@@ -20,7 +20,6 @@ compatibility.
 
 from __future__ import annotations
 
-import dataclasses
 from typing import TYPE_CHECKING
 
 import polars as pl
@@ -58,7 +57,6 @@ __all__ = [
 ]
 
 
-@dataclasses.dataclass(frozen=True)
 class Stats(_BasicStatsMixin, _PerformanceStatsMixin, _ReportingStatsMixin, _RollingStatsMixin):
     """Statistical analysis tools for financial returns data.
 
@@ -80,18 +78,14 @@ class Stats(_BasicStatsMixin, _PerformanceStatsMixin, _ReportingStatsMixin, _Rol
     - `_RollingStatsMixin`
 
     Attributes:
-        data: The `Data` object containing returns
-            and benchmark data.
         all: A DataFrame combining all data (index, returns, benchmark) for
             easy column selection.
     """
 
-    data: Data
-    all: pl.DataFrame | None = None  # Default is None; will be set in __post_init__
-
-    def __post_init__(self) -> None:
-        object.__setattr__(self, "all", self.data.all)
+    def __init__(self, data: Data) -> None:
+        self._data = data
+        self.all: pl.DataFrame = data.all
 
     def __repr__(self) -> str:
         """Return a string representation of the Stats object."""
-        return f"Stats(assets={self.data.assets})"
+        return f"Stats(assets={self._data.assets})"

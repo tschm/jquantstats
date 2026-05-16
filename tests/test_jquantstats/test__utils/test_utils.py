@@ -601,7 +601,7 @@ def test_portfolio_utils_to_prices(portfolio_pf):
 def test_portfolio_utils_to_log_returns(portfolio_pf):
     """portfolio.utils.to_log_returns must return log-transformed returns."""
     log_rets = portfolio_pf.utils.to_log_returns()
-    simple_rets = portfolio_pf.utils._du().data.returns["returns"].to_list()
+    simple_rets = portfolio_pf.utils._du()._data.returns["returns"].to_list()
     log_list = log_rets["returns"].to_list()
     for s, log_r in zip(simple_rets, log_list, strict=False):
         assert log_r == pytest.approx(math.log(1.0 + s), rel=1e-9)
@@ -622,7 +622,7 @@ def test_portfolio_utils_group_returns(portfolio_pf):
 
 def test_portfolio_utils_to_excess_returns(portfolio_pf):
     """portfolio.utils.to_excess_returns must reduce returns relative to base."""
-    base_sum = float(portfolio_pf.utils._du().data.returns["returns"].sum())
+    base_sum = float(portfolio_pf.utils._du()._data.returns["returns"].sum())
     excess_sum = float(portfolio_pf.utils.to_excess_returns(rf=0.05)["returns"].sum())
     assert excess_sum < base_sum
 

@@ -151,7 +151,7 @@ class _BasicStatsMixin:
         compound = float((1.0 + clean).product())
         if compound <= 0:
             return float(np.nan)
-        exponent = (periods or self.data._periods_per_year) / n if annualize else (1.0 / n)
+        exponent = (periods or self._data._periods_per_year) / n if annualize else (1.0 / n)
         return float(compound**exponent) - 1.0
 
     # ── Volatility & risk ─────────────────────────────────────────────────────
@@ -172,7 +172,7 @@ class _BasicStatsMixin:
             float: The volatility value.
 
         """
-        raw_periods = periods or self.data._periods_per_year
+        raw_periods = periods or self._data._periods_per_year
 
         # Ensure it's numeric
         if not isinstance(raw_periods, int | float):
@@ -572,7 +572,7 @@ class _BasicStatsMixin:
 
         """
         result = {}
-        for col, series in self.data.items():
+        for col, series in self._data.items():
             threshold = cast(float, series.quantile(quantile, interpolation="linear"))
             result[col] = series.filter(series > threshold).drop_nulls()
         return result
@@ -589,7 +589,7 @@ class _BasicStatsMixin:
 
         """
         result = {}
-        for col, series in self.data.items():
+        for col, series in self._data.items():
             threshold = cast(float, series.quantile(quantile, interpolation="linear"))
             result[col] = series.filter(series < threshold)
         return result
@@ -798,7 +798,7 @@ class _BasicStatsMixin:
             msg = f"nlags must be non-negative, got {nlags}"
             raise ValueError(msg)
         result: dict[str, list[float]] = {"lag": list(range(nlags + 1))}
-        for col, series in self.data.items():
+        for col, series in self._data.items():
             acf_values: list[float] = [1.0]
             for k in range(1, nlags + 1):
                 acf_values.append(self._pearson_corr_shifted(series, k))

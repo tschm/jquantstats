@@ -90,7 +90,7 @@ class _ReportingStatsMixin:
         Returns:
             float: Estimated number of observations per calendar year.
         """
-        return self.data._periods_per_year
+        return self._data._periods_per_year
 
     @columnwise_stat
     def avg_drawdown(self, series: pl.Series) -> float:
@@ -135,7 +135,7 @@ class _ReportingStatsMixin:
         Returns:
             float: CAGR of excess returns.
         """
-        raw_periods = periods or self.data._periods_per_year
+        raw_periods = periods or self._data._periods_per_year
         n = len(series)
         if n == 0:
             return float("nan")  # pragma: no cover
@@ -189,21 +189,21 @@ class _ReportingStatsMixin:
             return float(_to_float((1.0 + s.cast(pl.Float64)).product()) ** (1.0 / n) - 1.0)
 
         if aggregate is None:
-            return {col: _geomean(series.drop_nulls()) for col, series in self.data.items()}
+            return {col: _geomean(series.drop_nulls()) for col, series in self._data.items()}
 
         if aggregate.lower() not in _freq_map:
             raise ValueError(f"aggregate must be one of {list(_freq_map)}, got {aggregate!r}")  # noqa: TRY003
 
         all_df = cast(pl.DataFrame, self.all)
-        date_col_name = self.data.date_col[0] if self.data.date_col else None
+        date_col_name = self._data.date_col[0] if self._data.date_col else None
         if date_col_name is None or not all_df[date_col_name].dtype.is_temporal():
-            return {col: _geomean(series.drop_nulls()) for col, series in self.data.items()}
+            return {col: _geomean(series.drop_nulls()) for col, series in self._data.items()}
 
         trunc = _freq_map[aggregate.lower()]
         agg_expr = ((1.0 + pl.col("ret")).product() - 1.0) if compounded else pl.col("ret").sum()
 
         result: dict[str, float] = {}
-        for col, series in self.data.items():
+        for col, series in self._data.items():
             df = (
                 pl.DataFrame({"date": all_df[date_col_name], "ret": series})
                 .drop_nulls()
@@ -242,7 +242,7 @@ class _ReportingStatsMixin:
         Returns:
             float: Calmar ratio, or ``nan`` if max drawdown is zero.
         """
-        raw_periods = periods or self.data._periods_per_year
+        raw_periods = periods or self._data._periods_per_year
         max_dd = _to_float(_drawdown_series(series).max())
         if max_dd <= 0:
             return float("nan")
@@ -284,10 +284,10 @@ class _ReportingStatsMixin:
             Returns 0 when there are no underwater periods.
         """
         all_df = cast(pl.DataFrame, self.all)
-        date_col_name = self.data.date_col[0] if self.data.date_col else None
+        date_col_name = self._data.date_col[0] if self._data.date_col else None
         has_date = date_col_name is not None and all_df[date_col_name].dtype.is_temporal()
         result: dict[str, float | int | None] = {}
-        for col, series in self.data.items():
+        for col, series in self._data.items():
             nav = 1.0 + series.cast(pl.Float64).cum_sum()
             hwm = nav.cum_max()
             in_dd = nav < hwm
@@ -328,12 +328,12 @@ class _ReportingStatsMixin:
             dict[str, float]: Monthly win rate in [0, 1] per asset.
         """
         all_df = cast(pl.DataFrame, self.all)
-        date_col_name = self.data.date_col[0] if self.data.date_col else None
+        date_col_name = self._data.date_col[0] if self._data.date_col else None
         if date_col_name is None or not all_df[date_col_name].dtype.is_temporal():
-            return {col: float("nan") for col, _ in self.data.items()}
+            return {col: float("nan") for col, _ in self._data.items()}
 
         result: dict[str, float] = {}
-        for col, _ in self.data.items():
+        for col, _ in self._data.items():
             df = (
                 all_df.select([date_col_name, col])
                 .drop_nulls()
@@ -375,7 +375,7 @@ class _ReportingStatsMixin:
 
         """
         all_df = cast(pl.DataFrame, self.all)
-        date_col_name = self.data.date_col[0]
+        date_col_name = self._data.date_col[0]
         month_names = {
             1: "JAN",
             2: "FEB",
@@ -393,7 +393,7 @@ class _ReportingStatsMixin:
         month_order = list(month_names.values())
 
         result: dict[str, pl.DataFrame] = {}
-        for col, series in self.data.items():
+        for col, series in self._data.items():
             df = pl.DataFrame({"date": all_df[date_col_name], "ret": series}).drop_nulls()
             df = df.with_columns(
                 [
@@ -453,7 +453,7 @@ class _ReportingStatsMixin:
 
         """
         all_df = cast(pl.DataFrame, self.all)
-        date_col_name = self.data.date_col[0]
+        date_col_name = self._data.date_col[0]
 
         def _agg(df: pl.DataFrame, group_col: str) -> pl.Series:
             """Aggregate returns within each group using product or sum."""
@@ -469,7 +469,7 @@ class _ReportingStatsMixin:
             return {"values": s.filter(mask).to_list(), "outliers": s.filter(~mask).to_list()}
 
         result: dict[str, dict[str, dict[str, list[float]]]] = {}
-        for col, series in self.data.items():
+        for col, series in self._data.items():
             df = pl.DataFrame({"date": all_df[date_col_name], "ret": series}).drop_nulls()
             df = df.with_columns(
                 [
@@ -515,12 +515,12 @@ class _ReportingStatsMixin:
             AttributeError: If no benchmark data is attached.
 
         """
-        if self.data.benchmark is None:
+        if self._data.benchmark is None:
             raise AttributeError("No benchmark data available")  # noqa: TRY003
 
         all_df = cast(pl.DataFrame, self.all)
-        date_col_name = self.data.date_col[0]
-        bench_col = self.data.benchmark.columns[0]
+        date_col_name = self._data.date_col[0]
+        bench_col = self._data.benchmark.columns[0]
 
         _freq_map = {"ME": "1mo", "QE": "3mo", "YE": "1y", "W": "1w"}
 
@@ -530,7 +530,7 @@ class _ReportingStatsMixin:
             return df.group_by(period_col).agg(expr.alias(val_col)).sort(period_col)
 
         result: dict[str, pl.DataFrame] = {}
-        for col in self.data.returns.columns:
+        for col in self._data.returns.columns:
             df = all_df.select(
                 [
                     pl.col(date_col_name),
@@ -592,7 +592,7 @@ class _ReportingStatsMixin:
             dict[str, list[float | None]]: Sorted worst returns per asset.
         """
         result: dict[str, list[float | None]] = {}
-        for col, series in self.data.items():
+        for col, series in self._data.items():
             nonnull = series.drop_nulls()
             worst: list[float | None] = nonnull.sort(descending=False).head(n).to_list()
             while len(worst) < n:
@@ -618,12 +618,12 @@ class _ReportingStatsMixin:
         up_mask = benchmark > 0
         bench_up = benchmark.filter(up_mask).drop_nulls()
         if bench_up.is_empty():
-            return {col: float("nan") for col, _ in self.data.items()}
+            return {col: float("nan") for col, _ in self._data.items()}
         bench_geom = float((bench_up + 1.0).product()) ** (1.0 / len(bench_up)) - 1.0
         if bench_geom == 0.0:  # pragma: no cover
-            return {col: float("nan") for col, _ in self.data.items()}
+            return {col: float("nan") for col, _ in self._data.items()}
         result: dict[str, float] = {}
-        for col, series in self.data.items():
+        for col, series in self._data.items():
             strat_up = series.filter(up_mask).drop_nulls()
             if strat_up.is_empty():
                 result[col] = float("nan")
@@ -647,12 +647,12 @@ class _ReportingStatsMixin:
         down_mask = benchmark < 0
         bench_down = benchmark.filter(down_mask).drop_nulls()
         if bench_down.is_empty():
-            return {col: float("nan") for col, _ in self.data.items()}
+            return {col: float("nan") for col, _ in self._data.items()}
         bench_geom = float((bench_down + 1.0).product()) ** (1.0 / len(bench_down)) - 1.0
         if bench_geom == 0.0:  # pragma: no cover
-            return {col: float("nan") for col, _ in self.data.items()}
+            return {col: float("nan") for col, _ in self._data.items()}
         result: dict[str, float] = {}
-        for col, series in self.data.items():
+        for col, series in self._data.items():
             strat_down = series.filter(down_mask).drop_nulls()
             if strat_down.is_empty():
                 result[col] = float("nan")
@@ -678,24 +678,24 @@ class _ReportingStatsMixin:
             ValueError: If the data has no date index.
         """
         all_df = cast(pl.DataFrame, self.all)
-        date_col_name = self.data.date_col[0] if self.data.date_col else None
+        date_col_name = self._data.date_col[0] if self._data.date_col else None
         has_temporal = date_col_name is not None and all_df[date_col_name].dtype.is_temporal()
 
         from ..data import Data
 
         if not has_temporal:
             # Integer-index fallback: group by chunks of ~_periods_per_year rows
-            chunk = round(self.data._periods_per_year)
+            chunk = round(self._data._periods_per_year)
             total = all_df.height
             frames_int: list[pl.DataFrame] = []
             for i, start in enumerate(range(0, total, chunk), start=1):
                 chunk_all = all_df.slice(start, chunk)
                 if chunk_all.height < max(5, chunk // 4):
                     continue
-                chunk_index = chunk_all.select(self.data.date_col)
-                chunk_returns = chunk_all.select(self.data.returns.columns)
+                chunk_index = chunk_all.select(self._data.date_col)
+                chunk_returns = chunk_all.select(self._data.returns.columns)
                 chunk_benchmark = (
-                    chunk_all.select(self.data.benchmark.columns) if self.data.benchmark is not None else None
+                    chunk_all.select(self._data.benchmark.columns) if self._data.benchmark is not None else None
                 )
                 chunk_data = Data(returns=chunk_returns, index=chunk_index, benchmark=chunk_benchmark)
                 chunk_summary = cast(Any, type(self))(chunk_data).summary()
@@ -717,15 +717,15 @@ class _ReportingStatsMixin:
             if year_all.height < 2:
                 continue
             year_index = year_all.select([date_col_name])
-            year_returns = year_all.select(self.data.returns.columns)
-            year_benchmark = year_all.select(self.data.benchmark.columns) if self.data.benchmark is not None else None
+            year_returns = year_all.select(self._data.returns.columns)
+            year_benchmark = year_all.select(self._data.benchmark.columns) if self._data.benchmark is not None else None
             year_data = Data(returns=year_returns, index=year_index, benchmark=year_benchmark)
             year_summary = cast(Any, type(self))(year_data).summary()
             year_summary = year_summary.with_columns(pl.lit(year).alias("year"))
             frames.append(year_summary)
 
         if not frames:
-            asset_cols = list(self.data.returns.columns)
+            asset_cols = list(self._data.returns.columns)
             schema: dict[str, type[pl.DataType]] = {
                 "year": pl.Int32,
                 "metric": pl.String,
@@ -746,7 +746,7 @@ class _ReportingStatsMixin:
             pl.DataFrame: A DataFrame with a ``metric`` column followed by one
             column per asset.
         """
-        assets = [col for col, _ in self.data.items()]
+        assets = [col for col, _ in self._data.items()]
 
         def _safe(fn: Any) -> dict[str, Any]:
             """Call *fn()* and return its result; return NaN for each asset on any exception."""

@@ -52,7 +52,7 @@ class _PerformanceStatsMixin:
             float: The Sharpe ratio value.
 
         """
-        periods = periods or self.data._periods_per_year
+        periods = periods or self._data._periods_per_year
 
         std_val = series.std(ddof=1)
         mean_val = series.mean()
@@ -105,7 +105,7 @@ class _PerformanceStatsMixin:
         # Formula: (1 + skew*SR/2 + (kurt-3)*SR²/4) / T
         base_variance = (1 + (float(skew_val) * sr) / 2 + ((float(kurt_val) - 3) / 4) * sr**2) / t
         # Annualize by scaling with the number of periods
-        periods = periods or self.data._periods_per_year
+        periods = periods or self._data._periods_per_year
         factor = periods or 1
         return float(base_variance * _annualization_factor(factor, sqrt=False))
 
@@ -227,7 +227,7 @@ class _PerformanceStatsMixin:
             float: The Sortino ratio value.
 
         """
-        periods = periods or self.data._periods_per_year
+        periods = periods or self._data._periods_per_year
         downside_deviation = _downside_deviation(series)
         mean_val = cast(float, series.mean())
         mean_f = mean_val if mean_val is not None else 0.0
@@ -274,7 +274,7 @@ class _PerformanceStatsMixin:
         if required_return <= -1:
             return float("nan")
 
-        periods = periods or self.data._periods_per_year
+        periods = periods or self._data._periods_per_year
 
         # Subtract per-period risk-free rate from returns when rf is non-zero.
         if rf != 0.0:
@@ -398,11 +398,11 @@ class _PerformanceStatsMixin:
             ``max_drawdown`` is a negative fraction (e.g. ``-0.2`` for 20%).
         """
         all_df = cast(pl.DataFrame, self.all)
-        date_col_name = self.data.date_col[0] if self.data.date_col else None
+        date_col_name = self._data.date_col[0] if self._data.date_col else None
         has_date = date_col_name is not None and all_df[date_col_name].dtype.is_temporal()
 
         result: dict[str, pl.DataFrame] = {}
-        for col, series in self.data.items():
+        for col, series in self._data.items():
             nav = _nav_series(series)
             hwm = nav.cum_max()
             in_dd = nav < hwm
@@ -622,7 +622,7 @@ class _PerformanceStatsMixin:
             base_fn = base
 
         result: dict[str, float] = {}
-        for col, series in self.data.items():
+        for col, series in self._data.items():
             base_val = base_fn(series)
             if np.isnan(base_val):
                 result[col] = float("nan")
@@ -697,10 +697,10 @@ class _PerformanceStatsMixin:
             AttributeError: If no benchmark data is available.
 
         """
-        if self.data.benchmark is None:
+        if self._data.benchmark is None:
             raise AttributeError("No benchmark data available")  # noqa: TRY003
 
-        benchmark_col = benchmark or self.data.benchmark.columns[0]
+        benchmark_col = benchmark or self._data.benchmark.columns[0]
 
         # Evaluate both series and benchmark as Series
         all_data = cast(pl.DataFrame, self.all)
@@ -753,9 +753,9 @@ class _PerformanceStatsMixin:
             float: The information ratio value.
 
         """
-        ppy = periods_per_year or self.data._periods_per_year
+        ppy = periods_per_year or self._data._periods_per_year
 
-        benchmark_data = cast(pl.DataFrame, self.data.benchmark)
+        benchmark_data = cast(pl.DataFrame, self._data.benchmark)
         benchmark_col = benchmark or benchmark_data.columns[0]
 
         active = series - benchmark_data[benchmark_col]
@@ -786,9 +786,9 @@ class _PerformanceStatsMixin:
             dict[str, float]: Dictionary containing alpha and beta values.
 
         """
-        ppy = periods_per_year or self.data._periods_per_year
+        ppy = periods_per_year or self._data._periods_per_year
 
-        benchmark_data = cast(pl.DataFrame, self.data.benchmark)
+        benchmark_data = cast(pl.DataFrame, self._data.benchmark)
         benchmark_col = benchmark or benchmark_data.columns[0]
 
         # Evaluate both series and benchmark as Series
@@ -841,12 +841,12 @@ class _PerformanceStatsMixin:
         Raises:
             AttributeError: If no benchmark data is attached.
         """
-        if self.data.benchmark is None:
+        if self._data.benchmark is None:
             raise AttributeError("No benchmark data available")  # noqa: TRY003
 
-        ppy = periods or self.data._periods_per_year
+        ppy = periods or self._data._periods_per_year
 
-        benchmark_data = self.data.benchmark
+        benchmark_data = self._data.benchmark
         benchmark_col = benchmark or benchmark_data.columns[0]
 
         all_data = cast(pl.DataFrame, self.all)

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import dataclasses
 import datetime
 import math
 from typing import TYPE_CHECKING, Any, cast
@@ -687,19 +686,17 @@ def _build_full_html(
 # ── Reports dataclass ─────────────────────────────────────────────────────────
 
 
-@dataclasses.dataclass(frozen=True)
 class Reports:
     """A class for generating financial reports from Data objects.
 
     This class provides methods for calculating and formatting various financial metrics
     into report-ready formats such as DataFrames.
-
-    Attributes:
-        data (DataLike): The financial data object to generate reports from.
-
     """
 
-    data: DataLike
+    __slots__ = ("_data",)
+
+    def __init__(self, data: DataLike) -> None:
+        self._data = data
 
     def metrics(
         self,
@@ -725,13 +722,13 @@ class Reports:
             leading ``"Metric"`` column with the metric label.
 
         """
-        s = self.data.stats
+        s = self._data.stats
         ppy = float(periods_per_year)
         is_full = mode.lower() == "full"
 
         rows: list[tuple[str, dict[str, Any]]] = []
 
-        all_df: pl.DataFrame | None = getattr(self.data, "all", None)
+        all_df: pl.DataFrame | None = getattr(self._data, "all", None)
         asset_cols: list[str] = []
         date_col: str | None = None
         has_dates = False
@@ -750,7 +747,7 @@ class Reports:
             _add_recent_returns_rows(rows, all_df, date_col, asset_cols, ppy, s)
 
         if is_full:
-            _add_full_mode_rows(rows, s, ppy, self.data, all_df, date_col, asset_cols)
+            _add_full_mode_rows(rows, s, ppy, self._data, all_df, date_col, asset_cols)
 
         return _build_metrics_df(rows)
 
@@ -782,7 +779,7 @@ class Reports:
         metrics_html = _metrics_table_html(metrics_df)
 
         # ── Period info for header ────────────────────────────────────────────
-        all_df: pl.DataFrame | None = getattr(self.data, "all", None)
+        all_df: pl.DataFrame | None = getattr(self._data, "all", None)
         period_info = ""
         if all_df is not None:
             date_col = all_df.columns[0]
@@ -793,10 +790,10 @@ class Reports:
                 period_info = f"{start_dt} → {end_dt} | {n:,} observations"
 
         # ── Drawdowns ─────────────────────────────────────────────────────────
-        drawdowns_html = _drawdowns_section_html(self.data, assets)
+        drawdowns_html = _drawdowns_section_html(self._data, assets)
 
         # ── Charts ────────────────────────────────────────────────────────────
-        plots = getattr(self.data, "plots", None)
+        plots = getattr(self._data, "plots", None)
         chart_parts: list[str] = []
         if plots is not None:
             _chart_methods = [

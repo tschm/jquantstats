@@ -33,10 +33,10 @@ def test_rolling(stats, method, kwargs, atol):
 
 def test_pct_rank(stats):
     """Verify pct_rank matches quantstats on AAPL prices."""
-    aapl_returns = stats.data.returns["AAPL"]
+    aapl_returns = stats._data.returns["AAPL"]
     aapl_prices = _PerformanceStatsMixin.prices(aapl_returns)
     aapl_prices_pd = aapl_prices.to_pandas()
-    aapl_prices_pd.index = stats.data.index["Date"].to_pandas()
+    aapl_prices_pd.index = stats._data.index["Date"].to_pandas()
 
     jqs_df = stats.pct_rank(window=60)
     qs_series = qs.stats.pct_rank(aapl_prices_pd, window=60)

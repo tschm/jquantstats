@@ -84,7 +84,7 @@ def columnwise_stat(func: Callable[..., Any]) -> Callable[..., dict[str, float]]
     @wraps(func)
     def wrapper(self: Any, *args: Any, **kwargs: Any) -> dict[str, float]:
         """Apply *func* to every column and return a ``{column: value}`` mapping."""
-        return {col: func(self, series, *args, **kwargs) for col, series in self.data.items()}
+        return {col: func(self, series, *args, **kwargs) for col, series in self._data.items()}
 
     return wrapper
 
@@ -104,8 +104,8 @@ def to_frame(func: Callable[..., Any]) -> Callable[..., pl.DataFrame]:
     def wrapper(self: Any, *args: Any, **kwargs: Any) -> pl.DataFrame:
         """Apply *func* per column and return the result as a Polars DataFrame."""
         return cast(pl.DataFrame, self.all).select(
-            [pl.col(name) for name in self.data.date_col]
-            + [func(self, series, *args, **kwargs).alias(col) for col, series in self.data.items()]
+            [pl.col(name) for name in self._data.date_col]
+            + [func(self, series, *args, **kwargs).alias(col) for col, series in self._data.items()]
         )
 
     return wrapper

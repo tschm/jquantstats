@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import dataclasses
 from typing import TYPE_CHECKING
 
 import plotly.express as px
@@ -312,7 +311,6 @@ def _plot_performance_dashboard(returns: pl.DataFrame, log_scale: bool = False) 
 # ── DataPlots ──────────────────────────────────────────────────────────────────
 
 
-@dataclasses.dataclass(frozen=True)
 class DataPlots:
     """Visualization tools for financial returns data.
 
@@ -325,17 +323,16 @@ class DataPlots:
 
     The class is designed to work with the _Data class and uses Plotly
     for creating interactive visualizations.
-
-    Attributes:
-        data: The _Data object containing returns and benchmark data to visualize.
-
     """
 
-    data: DataLike
+    __slots__ = ("_data",)
+
+    def __init__(self, data: DataLike) -> None:
+        self._data = data
 
     def __repr__(self) -> str:
         """Return a string representation of the DataPlots object."""
-        return f"DataPlots(assets={self.data.assets})"
+        return f"DataPlots(assets={self._data.assets})"
 
     def snapshot(self, title: str = "Portfolio Summary", log_scale: bool = False) -> go.Figure:
         """Create a comprehensive dashboard with multiple plots for portfolio analysis.
@@ -370,7 +367,7 @@ class DataPlots:
             >>> fig.show()  # doctest: +SKIP
 
         """
-        fig = _plot_performance_dashboard(returns=self.data.all, log_scale=log_scale)
+        fig = _plot_performance_dashboard(returns=self._data.all, log_scale=log_scale)
         return fig
 
     def returns(self, title: str = "Cumulative Returns", log_scale: bool = False) -> go.Figure:
@@ -387,7 +384,7 @@ class DataPlots:
             go.Figure: Interactive Plotly line chart.
 
         """
-        df = self.data.all
+        df = self._data.all
         date_col = df.columns[0]
         tickers = [c for c in df.columns if c != date_col]
         colors = _ticker_colors(tickers)
@@ -429,7 +426,7 @@ class DataPlots:
         """
         import math
 
-        df = self.data.all
+        df = self._data.all
         date_col = df.columns[0]
         tickers = [c for c in df.columns if c != date_col]
         colors = _ticker_colors(tickers)
@@ -468,7 +465,7 @@ class DataPlots:
             go.Figure: Interactive Plotly bar chart.
 
         """
-        df = self.data.all
+        df = self._data.all
         date_col = df.columns[0]
         tickers = [c for c in df.columns if c != date_col]
         colors = _ticker_colors(tickers)
@@ -510,7 +507,7 @@ class DataPlots:
             go.Figure: Interactive Plotly grouped bar chart.
 
         """
-        df = self.data.all
+        df = self._data.all
         date_col = df.columns[0]
         tickers = [c for c in df.columns if c != date_col]
         colors = _ticker_colors(tickers)
@@ -557,7 +554,7 @@ class DataPlots:
             go.Figure: Interactive Plotly bar chart.
 
         """
-        df = self.data.all
+        df = self._data.all
         date_col = df.columns[0]
         tickers = [c for c in df.columns if c != date_col]
         colors = _ticker_colors(tickers)
@@ -615,7 +612,7 @@ class DataPlots:
             go.Figure: Interactive Plotly heatmap.
 
         """
-        df = self.data.all
+        df = self._data.all
         date_col = df.columns[0]
         tickers = [c for c in df.columns if c != date_col]
         col = asset if asset in tickers else tickers[0]
@@ -684,7 +681,7 @@ class DataPlots:
             go.Figure: Interactive Plotly histogram figure.
 
         """
-        df = self.data.all
+        df = self._data.all
         date_col = df.columns[0]
         tickers = [c for c in df.columns if c != date_col]
         colors = _ticker_colors(tickers)
@@ -728,7 +725,7 @@ class DataPlots:
             go.Figure: Interactive Plotly figure with one subplot per asset.
 
         """
-        df = self.data.all
+        df = self._data.all
         date_col = df.columns[0]
         tickers = [c for c in df.columns if c != date_col]
         colors = _ticker_colors(tickers)
@@ -803,7 +800,7 @@ class DataPlots:
             go.Figure: Interactive Plotly filled-area chart.
 
         """
-        df = self.data.all
+        df = self._data.all
         date_col = df.columns[0]
         tickers = [c for c in df.columns if c != date_col]
         colors = _ticker_colors(tickers)
@@ -855,7 +852,7 @@ class DataPlots:
             go.Figure: Interactive Plotly figure.
 
         """
-        df = self.data.all
+        df = self._data.all
         date_col = df.columns[0]
         tickers = [c for c in df.columns if c != date_col]
         col = asset if asset in tickers else tickers[0]
@@ -922,7 +919,7 @@ class DataPlots:
             go.Figure: Interactive Plotly line chart.
 
         """
-        df = self.data.all
+        df = self._data.all
         date_col = df.columns[0]
         tickers = [c for c in df.columns if c != date_col]
         colors = _ticker_colors(tickers)
@@ -976,7 +973,7 @@ class DataPlots:
         """
         import math
 
-        df = self.data.all
+        df = self._data.all
         date_col = df.columns[0]
         tickers = [c for c in df.columns if c != date_col]
         colors = _ticker_colors(tickers)
@@ -1033,7 +1030,7 @@ class DataPlots:
         """
         import math
 
-        df = self.data.all
+        df = self._data.all
         date_col = df.columns[0]
         tickers = [c for c in df.columns if c != date_col]
         colors = _ticker_colors(tickers)
@@ -1093,7 +1090,7 @@ class DataPlots:
         """
         import math
 
-        df = self.data.all
+        df = self._data.all
         date_col = df.columns[0]
         tickers = [c for c in df.columns if c != date_col]
         colors = _ticker_colors(tickers)
@@ -1145,15 +1142,15 @@ class DataPlots:
             AttributeError: If no benchmark columns are present in the data.
 
         """
-        df = self.data.all
+        df = self._data.all
         date_col = df.columns[0]
 
-        benchmark_df = getattr(self.data, "benchmark", None)
+        benchmark_df = getattr(self._data, "benchmark", None)
         if benchmark_df is None:
             raise AttributeError("No benchmark data available")  # noqa: TRY003
 
         bench_col = benchmark_df.columns[0]
-        returns_df = getattr(self.data, "returns", None)
+        returns_df = getattr(self._data, "returns", None)
         assets = (
             list(returns_df.columns)
             if returns_df is not None

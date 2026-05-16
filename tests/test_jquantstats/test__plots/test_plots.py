@@ -77,7 +77,7 @@ def test_repr(plots):
     """Tests that DataPlots.__repr__ returns an informative string."""
     r = repr(plots)
     assert r.startswith("DataPlots(assets=")
-    for asset in plots.data.assets:
+    for asset in plots._data.assets:
         assert asset in r
 
 
