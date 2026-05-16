@@ -12,7 +12,7 @@ import polars as pl
 from plotly.subplots import make_subplots
 
 if TYPE_CHECKING:
-    from ._protocol import DataLike
+    from jquantstats._protocol import DataLike
 
 # ── Module-level styling helpers ──────────────────────────────────────────────
 

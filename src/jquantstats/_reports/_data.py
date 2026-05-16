@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, cast
 import polars as pl
 
 if TYPE_CHECKING:
-    from ._protocol import DataLike
+    from jquantstats._protocol import DataLike
 
 from ._formatting import _fmt, _is_finite
 
