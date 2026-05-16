@@ -208,9 +208,11 @@ class PortfolioUtils:
 
         Returns:
             Dictionary keyed by index value (date or integer) mapping to
-            a square symmetric ``numpy.ndarray`` of shape ``(n, n)``
-            where ``n`` is the number of assets.  Unavailable cells are
-            ``NaN``.
+            a square symmetric ``numpy.ndarray`` whose dimensions match
+            the return columns exposed by ``portfolio.data``. In this
+            facade that is typically only the portfolio-level ``returns``
+            column, so the matrices are usually ``(1, 1)`` even for
+            multi-asset portfolios. Unavailable cells are ``NaN``.
 
         """
         return self._du().exponential_cov(window=window, is_halflife=is_halflife, warmup=warmup)
