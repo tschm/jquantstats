@@ -1101,8 +1101,9 @@ def test_annual_breakdown_integer_indexed_all_sparse(integer_indexed_data):
     assert result.height == 0
 
 
-def test_annual_breakdown_skips_sparse_year(data_no_benchmark):
-    """annual_breakdown skips years with fewer than 2 rows."""
+@pytest.fixture
+def sparse_year_data():
+    """Data fixture with one sparse year and one valid year for annual_breakdown tests."""
     from datetime import date
 
     from jquantstats.data import Data
@@ -1110,14 +1111,12 @@ def test_annual_breakdown_skips_sparse_year(data_no_benchmark):
     dates = [date(2020, 12, 31), date(2021, 1, 2), date(2021, 1, 3)]
     returns = pl.DataFrame({"r": [0.01, -0.02, 0.03]})
     index = pl.DataFrame({"Date": pl.Series(dates, dtype=pl.Date)})
-    d = Data(returns=returns, index=index)
-    result = d.stats.annual_breakdown()
-    # 2020 has only 1 row → skipped; only 2021 appears
-    assert list(result["year"].unique().sort()) == [2021]
+    return Data(returns=returns, index=index)
 
 
-def test_annual_breakdown_empty_when_all_sparse():
-    """annual_breakdown returns empty DataFrame when every year has < 2 rows."""
+@pytest.fixture
+def all_sparse_years_data():
+    """Data fixture where every year is sparse for annual_breakdown tests."""
     from datetime import date
 
     from jquantstats.data import Data
@@ -1125,8 +1124,19 @@ def test_annual_breakdown_empty_when_all_sparse():
     dates = [date(2020, 6, 15), date(2021, 6, 15)]
     returns = pl.DataFrame({"r": [0.01, -0.02]})
     index = pl.DataFrame({"Date": pl.Series(dates, dtype=pl.Date)})
-    d = Data(returns=returns, index=index)
-    result = d.stats.annual_breakdown()
+    return Data(returns=returns, index=index)
+
+
+def test_annual_breakdown_skips_sparse_year(sparse_year_data):
+    """annual_breakdown skips years with fewer than 2 rows."""
+    result = sparse_year_data.stats.annual_breakdown()
+    # 2020 has only 1 row → skipped; only 2021 appears
+    assert list(result["year"].unique().sort()) == [2021]
+
+
+def test_annual_breakdown_empty_when_all_sparse(all_sparse_years_data):
+    """annual_breakdown returns empty DataFrame when every year has < 2 rows."""
+    result = all_sparse_years_data.stats.annual_breakdown()
     assert result.height == 0
     assert "year" in result.columns
 
@@ -1387,17 +1397,32 @@ def zero_bench_var_data():
     return Data.from_returns(returns=df, benchmark=bench)
 
 
-# ── geometric_mean edge cases ─────────────────────────────────────────────────
-
-
-def test_geometric_mean_compound_zero(flat_data):
-    """geometric_mean returns nan when compound product is zero (-100% return)."""
+@pytest.fixture
+def compound_zero_data():
+    """Data fixture with a -100% return period that forces compound product to zero."""
     from jquantstats import Data
 
     dates = pl.date_range(pl.date(2020, 1, 1), pl.date(2020, 1, 5), interval="1d", eager=True)
     df = pl.DataFrame({"Date": dates, "ret": pl.Series([0.1, 0.1, -1.0, 0.1, 0.1])})
-    d = Data.from_returns(returns=df)
-    result = d.stats.geometric_mean()
+    return Data.from_returns(returns=df)
+
+
+@pytest.fixture
+def short_autocorr_data():
+    """Data fixture with a short return series for large-lag autocorrelation tests."""
+    from jquantstats import Data
+
+    dates = pl.date_range(pl.date(2020, 1, 1), pl.date(2020, 1, 5), interval="1d", eager=True)
+    df = pl.DataFrame({"Date": dates, "ret": pl.Series([0.01, -0.02, 0.03, -0.01, 0.02])})
+    return Data.from_returns(returns=df)
+
+
+# ── geometric_mean edge cases ─────────────────────────────────────────────────
+
+
+def test_geometric_mean_compound_zero(compound_zero_data):
+    """geometric_mean returns nan when compound product is zero (-100% return)."""
+    result = compound_zero_data.stats.geometric_mean()
     assert np.isnan(result["ret"])
 
 
@@ -1437,14 +1462,9 @@ def test_outlier_loss_ratio_no_negative_returns(all_positive_data):
 # ── autocorr with large lag ───────────────────────────────────────────────────
 
 
-def test_autocorr_lag_beyond_series_length():
+def test_autocorr_lag_beyond_series_length(short_autocorr_data):
     """Autocorr returns nan when lag >= series length (empty paired after shift)."""
-    from jquantstats import Data
-
-    dates = pl.date_range(pl.date(2020, 1, 1), pl.date(2020, 1, 5), interval="1d", eager=True)
-    df = pl.DataFrame({"Date": dates, "ret": pl.Series([0.01, -0.02, 0.03, -0.01, 0.02])})
-    d = Data.from_returns(returns=df)
-    result = d.stats.autocorr(lag=100)
+    result = short_autocorr_data.stats.autocorr(lag=100)
     assert all(np.isnan(v) for v in result.values())
 
 
