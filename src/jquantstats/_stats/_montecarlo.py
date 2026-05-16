@@ -29,7 +29,7 @@ class _MonteCarloStatsMixin:
     def _validate_positive_integer(name: str, value: int) -> int:
         """Validate that *value* is a positive integer."""
         if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
-            raise ValueError(f"{name} must be a positive integer")
+            raise ValueError(f"{name} must be a positive integer")  # noqa: TRY003
         return value
 
     @staticmethod
@@ -49,7 +49,7 @@ class _MonteCarloStatsMixin:
         period = self._validate_positive_integer("period", period)
 
         result: dict[str, list[float]] = {}
-        block_size = max(1, int(round(period**0.5)))
+        block_size = max(1, round(period**0.5))
 
         for col, series in self._data.items():
             clean = series.cast(pl.Float64).drop_nulls().drop_nans()
@@ -80,9 +80,10 @@ class _MonteCarloStatsMixin:
         """Simulate the Sharpe-ratio distribution across block-bootstrap paths."""
         ppy = self._data._periods_per_year if periods_per_year is None else periods_per_year
         if ppy <= 0:
-            raise ValueError("periods_per_year must be positive")
+            raise ValueError("periods_per_year must be positive")  # noqa: TRY003
 
         def _sharpe(path: np.ndarray) -> float:
+            """Return the annualized Sharpe ratio for one sampled path."""
             if path.size < 2:
                 return float("nan")
             std = float(np.std(path, ddof=1))
@@ -96,6 +97,7 @@ class _MonteCarloStatsMixin:
         """Simulate the maximum-drawdown distribution across block-bootstrap paths."""
 
         def _max_drawdown(path: np.ndarray) -> float:
+            """Return the maximum drawdown for one sampled path."""
             if path.size == 0:
                 return float("nan")
             nav = np.cumprod(1.0 + path)
@@ -113,9 +115,10 @@ class _MonteCarloStatsMixin:
         """Simulate the CAGR distribution across block-bootstrap paths."""
         ppy = self._data._periods_per_year if periods_per_year is None else periods_per_year
         if ppy <= 0:
-            raise ValueError("periods_per_year must be positive")
+            raise ValueError("periods_per_year must be positive")  # noqa: TRY003
 
         def _cagr(path: np.ndarray) -> float:
+            """Return the annualized CAGR for one sampled path."""
             total = float(np.prod(1.0 + path))
             if total <= 0:
                 return float("nan")

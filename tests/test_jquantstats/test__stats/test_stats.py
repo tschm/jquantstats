@@ -1355,7 +1355,7 @@ def test_compare_round_vals(stats):
 
 
 def test_montecarlo_shape(stats):
-    """montecarlo returns one simulated terminal return per simulation and asset."""
+    """Montecarlo returns one simulated terminal return per simulation and asset."""
     np.random.seed(7)
     result = stats.montecarlo(n=32, period=30)
     assert isinstance(result, pl.DataFrame)
