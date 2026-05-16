@@ -1,6 +1,6 @@
 # jquantstats — Code Quality Report
 
-> Assessed: 2026-05-16 · `main` post-PR #727 · ~8 700 source lines · 780 tests
+> Assessed: 2026-05-16 · `main` post-`da3fd15` · ~8 700 source lines · 780 tests
 
 Scores are 1–10. **10 = no actionable improvements. 1 = immediate attention required.**
 
@@ -12,14 +12,14 @@ Scores are 1–10. **10 = no actionable improvements. 1 = immediate attention re
 |---|:---:|
 | Code duplication | 9 |
 | API surface & naming | 8 |
-| Abstraction & indirection | 8 |
+| Abstraction & indirection | 9 |
 | Null / error-handling consistency | 8 |
 | Mixin architecture & coupling | 8 |
 | Protocol design | 6 |
 | Test quality | 9 |
 | Documentation coverage | 10 |
 | Dead code | 8 |
-| **Overall** | **8.2** |
+| **Overall** | **8.3** |
 
 ---
 
@@ -74,18 +74,20 @@ rather than using the public `periods_per_year` property already exposed by
 
 ---
 
-## 3. Abstraction & Indirection — 8/10
+## 3. Abstraction & Indirection — 9/10
 
 **Strengths.** Facade classes (`DataUtils`, `PortfolioUtils`, `DataPlots`,
 `PortfolioPlots`, `Reports`) each have one responsibility: wrap a data or portfolio
 object and expose domain methods. `@columnwise_stat` and `@to_frame` are
 well-chosen abstractions that pay for themselves across 100+ methods.
 
-**Decorator internals are implicitly coupled to `self._data`.**
+~~**Decorator internals are implicitly coupled to `self._data`.**
 `columnwise_stat` (`_core.py:116`) and `to_frame` (`_core.py:136`) reach directly
 into `self._data` and `self._data.items()`. The coupling is invisible at the
-decorator call site and only discovered at runtime. Documenting the required
-interface — or accepting a `DataLike` argument — would make the contract explicit.
+decorator call site and only discovered at runtime.~~ **Documented** — both
+decorators now state the `self._data` / `self.all` preconditions explicitly in
+their docstrings (`da3fd15`) ✅. Stronger fix (enforce at decoration time) tracked
+in [#733](https://github.com/Jebel-Quant/jquantstats/issues/733).
 
 ~~**`_nav_series` is effectively reimplemented in `prices()`.**~~ **Fixed** — `prices()` now delegates to `_nav_series` directly ✅
 
@@ -111,19 +113,16 @@ indeterminate. `cast(float, series.mean())` calls replaced throughout.
 
 **Strengths.** Splitting ~2 500 lines of stats logic into four focused mixins
 (`_basic`, `_performance`, `_reporting`, `_rolling`) keeps each file manageable.
-`Stats` itself is only 116 lines.
-
-**Cross-mixin calls are invisible at the call site.**
-`_ReportingStatsMixin.rar()` calls `self.cagr()` (own mixin) and `self.exposure()`
-(from `_BasicStatsMixin`). This works only because `Stats` happens to inherit both,
-but nothing at the call site makes the cross-mixin dependency visible. A consumer
-attempting to use `_ReportingStatsMixin` in isolation would get a runtime error.
+`Stats` itself is only 116 lines. Cross-mixin dependencies on `_ReportingStatsMixin`
+are declared centrally via `TYPE_CHECKING` stubs, each annotated with their source
+mixin.
 
 **The "performance" mixin boundary is not intuitive.**
 `_PerformanceStatsMixin` spans Sharpe/Sortino ratios, drawdown metrics, Greeks,
 HHI, R-squared, and Kelly criterion — three distinct conceptual domains. The split
 between this mixin and `_ReportingStatsMixin` (CAGR, Calmar, recovery factor,
-`summary`) is not self-evident.
+`summary`) is not self-evident. Tracked in
+[#731](https://github.com/Jebel-Quant/jquantstats/issues/731).
 
 ~~**`rolling_sortino` is inconsistent with the other rolling methods.**~~ **Fixed** — merged [PR #723](https://github.com/Jebel-Quant/jquantstats/pull/723) ✅
 
@@ -153,6 +152,7 @@ remove ~150 lines and make the true dependency explicit.
 `_plots/_protocol.py`, `_reports/_protocol.py`, and `_utils/_protocol.py` each
 define a `DataLike` protocol with overlapping but slightly different attribute sets.
 A class implementing all three must manually verify compliance against each variant.
+Tracked in [#734](https://github.com/Jebel-Quant/jquantstats/issues/734).
 
 ---
 
@@ -204,11 +204,13 @@ No stale imports or unused variables were found anywhere in the source tree.
 | ~~3~~ | ~~Use existing filter helpers consistently in `_basic.py`~~ | ~~1 hr~~ | ✅ done |
 | ~~4~~ | ~~Standardise rolling methods to one implementation shape~~ | ~~1 hr~~ | ✅ done |
 | ~~5~~ | ~~Document + normalise null-return convention in `_core.py`~~ | ~~2 hr~~ | ✅ done |
-| 6 | Remove `ghpr`, `r2`, `win_loss_ratio` aliases | 30 min | removes 20 lines |
-| 7 | Replace `self._data._periods_per_year` with public property in rolling methods | 30 min | removes private boundary crossing |
-| 8 | Document decorator contract (`self._data` requirement) in `_core.py` | 30 min | readability |
-| 9 | Trim `StatsLike` to the ~12 methods `Reports` calls | 1 hr | removes 150 lines |
-| 10 | Unify the three `DataLike` protocol definitions | 1 hr | removes attribute-set divergence |
-| 11 | Clarify or remove `hhi_positive` / `hhi_negative` | 15 min | removes 60 lines |
+| ~~6~~ | ~~Document decorator contract (`self._data` requirement) in `_core.py`~~ | ~~30 min~~ | ✅ done |
+| 7 | Remove `ghpr`, `r2`, `win_loss_ratio` aliases ([#718](https://github.com/Jebel-Quant/jquantstats/issues/718)) | 30 min | removes 20 lines |
+| 8 | Replace `self._data._periods_per_year` with public property in rolling methods | 30 min | removes private boundary crossing |
+| 9 | Rename `_PerformanceStatsMixin` to clarify scope ([#731](https://github.com/Jebel-Quant/jquantstats/issues/731)) | 45 min | readability |
+| 10 | Enforce decorator contract at decoration time ([#733](https://github.com/Jebel-Quant/jquantstats/issues/733)) | 30 min | fail-fast on misuse |
+| 11 | Trim `StatsLike` to the ~12 methods `Reports` calls ([#719](https://github.com/Jebel-Quant/jquantstats/issues/719)) | 1 hr | removes 150 lines |
+| 12 | Unify the three `DataLike` protocol definitions ([#734](https://github.com/Jebel-Quant/jquantstats/issues/734)) | 1 hr | removes attribute-set divergence |
+| 13 | Clarify or remove `hhi_positive` / `hhi_negative` ([#722](https://github.com/Jebel-Quant/jquantstats/issues/722)) | 15 min | removes 60 lines |
 
-Items 6–11 together take roughly 4 hours and remove or consolidate ~230 lines.
+Items 7–13 together take roughly 4.5 hours and remove or consolidate ~230 lines.

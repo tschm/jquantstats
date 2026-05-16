@@ -132,21 +132,23 @@ on `_ReportingStatsMixin` and is inherited by `Stats`.
 
 ## Theme 3 — Abstraction & Indirection (7 → 10)
 
-### T3.1 — Make decorator coupling to `self._data` explicit
+### T3.1 — Make decorator coupling to `self._data` explicit ✅
+
+> **Done** — `da3fd15` (direct commit, no separate PR)
 
 **File:** `src/jquantstats/_stats/_core.py`
 
-The `@columnwise_stat` and `@to_frame` decorators silently require `self._data`
-and `self._data.items()`. Add an `assert hasattr(self, "_data")` guard at the top
-of each wrapper — or, better, check against the `DataLike` protocol and raise
-`TypeError` with a clear message if the decorated method is called on an
-incompatible object. Update the decorator docstrings to document the requirement.
+Both `columnwise_stat` and `to_frame` docstrings now state the `self._data` /
+`self.all` preconditions explicitly. Stronger enforcement (fail at decoration time)
+tracked in [#733](https://github.com/Jebel-Quant/jquantstats/issues/733).
 
 **Effort:** 30 min · **Closes:** silent runtime failure for out-of-context use
 
 ---
 
 ### T3.2 — Rename `_PerformanceStatsMixin` for clarity
+
+> **Issue** — [#731](https://github.com/Jebel-Quant/jquantstats/issues/731)
 
 **File:** `src/jquantstats/_stats/_performance.py` and all imports
 
@@ -433,7 +435,7 @@ T4.1. All `cast(float, series.mean())` callsites replaced.
 |---|---|---|
 | 1. Code duplication | ~~T1.1~~, ~~T1.2~~, ~~T1.3~~ | ✅ done |
 | 2. API surface | ~~T2.2~~; T2.1, T2.3 open | ~0.75 hr |
-| 3. Abstraction | ~~T3.3~~; T3.1, T3.2 open | ~1.25 hr |
+| 3. Abstraction | ~~T3.1~~, ~~T3.3~~; T3.2 open | ~0.75 hr |
 | 4. Null handling | ~~T4.1~~, ~~T4.2~~ | ✅ done |
 | 5. Mixin coupling | T5.1–T5.2 | 1 hr |
 | 6. Protocol design | T6.1–T6.2 | 2 hr |
@@ -444,7 +446,7 @@ T4.1. All `cast(float, series.mean())` callsites replaced.
 | 11. Performance | T11.1 | 1 hr |
 | 12. Error handling | T12.1 | 1 hr |
 | 13. Type safety | ~~T13.1~~ | ✅ done |
-| **Total remaining** | **13 tasks** | **~17.75 hr** |
+| **Total remaining** | **12 tasks** | **~17.25 hr** |
 
 ---
 
@@ -454,7 +456,7 @@ T4.1. All `cast(float, series.mean())` callsites replaced.
 ~~T1.1~~, ~~T1.2~~, ~~T1.3~~, T2.3, ~~T3.3~~, ~~T4.1~~, T7.1, ~~T13.1~~
 
 **Sprint 2 — API clean-up (~4 hr, minor breaking changes)**
-T2.1, ~~T2.2~~, T3.1, T3.2, ~~T4.2~~, T5.1, T5.2, T8.1
+T2.1, ~~T2.2~~, ~~T3.1~~, T3.2, ~~T4.2~~, T5.1, T5.2, T8.1
 
 **Sprint 3 — Architecture (~4 hr, protocol restructure)**
 T6.1, T6.2, T12.1
