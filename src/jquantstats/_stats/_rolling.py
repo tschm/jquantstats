@@ -135,18 +135,24 @@ class _RollingStatsMixin:
             pl.DataFrame: Date column(s) plus one annualised rolling Sortino
             column per asset.
 
+        Raises:
+            ValueError: If rolling_period is not a positive integer.
+
         """
+        actual_window = rolling_period
+        if not isinstance(actual_window, int) or actual_window <= 0:
+            raise ValueError("rolling_period must be a positive integer")  # noqa: TRY003
         ppy = periods_per_year or self._data._periods_per_year
         scale = _annualization_factor(ppy)
         return cast(pl.DataFrame, self.all).select(
             [pl.col(name) for name in self._data.date_col]
             + [
                 (
-                    pl.col(col).rolling_mean(window_size=rolling_period)
+                    pl.col(col).rolling_mean(window_size=actual_window)
                     / pl.when(pl.col(col) < 0)
                     .then(pl.col(col) ** 2)
                     .otherwise(0.0)
-                    .rolling_mean(window_size=rolling_period)
+                    .rolling_mean(window_size=actual_window)
                     .sqrt()
                     * scale
                 ).alias(col)

@@ -1154,6 +1154,14 @@ def test_rolling_volatility_invalid_window_raises(stats):
         stats.rolling_volatility(rolling_period=0)
 
 
+def test_rolling_sortino_invalid_window_raises(stats):
+    """rolling_sortino raises ValueError for non-positive rolling_period."""
+    with pytest.raises(ValueError, match="positive integer"):
+        stats.rolling_sortino(rolling_period=0)
+    with pytest.raises(ValueError, match="positive integer"):
+        stats.rolling_sortino(rolling_period=-1)
+
+
 def test_rolling_volatility_invalid_periods_type_raises(stats):
     """rolling_volatility raises TypeError for non-numeric periods_per_year."""
     with pytest.raises(TypeError):
