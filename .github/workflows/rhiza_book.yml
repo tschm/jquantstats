@@ -16,6 +16,10 @@
 
 name: "(RHIZA) BOOK"
 
+concurrency:
+  group: book-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches:
