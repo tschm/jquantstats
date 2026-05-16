@@ -81,6 +81,41 @@ def test_repr(plots):
         assert asset in r
 
 
+def test_montecarlo_plot_returns_figure_with_simulations(data):
+    """montecarlo returns a fan chart with one observed line per asset."""
+    n = 8
+    fig = data.plots.montecarlo(n=n, period=30, title="Monte Carlo Fan", figsize=(920, 420))
+
+    assert isinstance(fig, go.Figure)
+    n_assets = len(data.all.columns) - 1
+    assert len(fig.data) == (n + 1) * n_assets
+    assert sum(1 for trace in fig.data if "Observed" in (trace.name or "")) == n_assets
+    assert fig.layout.title.text == "Monte Carlo Fan"
+    assert fig.layout.width == 920
+    assert fig.layout.height == 420
+    assert fig.layout.xaxis.rangeselector is not None
+    _ = fig.to_dict()
+
+
+def test_montecarlo_distribution_returns_histograms_and_observed_lines(data):
+    """montecarlo_distribution renders one histogram and observed marker per asset."""
+    fig = data.plots.montecarlo_distribution(n=25, period=63, metric="sharpe")
+
+    assert isinstance(fig, go.Figure)
+    n_assets = len(data.all.columns) - 1
+    assert len(fig.data) == n_assets
+    assert all(isinstance(trace, go.Histogram) for trace in fig.data)
+    assert len(fig.layout.shapes) >= n_assets
+    assert fig.layout.xaxis.title.text == "Sharpe Ratio"
+    _ = fig.to_dict()
+
+
+def test_montecarlo_distribution_invalid_metric_raises(data):
+    """montecarlo_distribution rejects unsupported metric names."""
+    with pytest.raises(ValueError, match="metric"):
+        _ = data.plots.montecarlo_distribution(metric="not-a-metric")
+
+
 # ─── Portfolio.plots tests ────────────────────────────────────────────────────
 
 
