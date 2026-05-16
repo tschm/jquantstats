@@ -956,11 +956,11 @@ def test_to_frame_supports_custom_data_attr():
     """to_frame supports an explicit data attribute name."""
     from jquantstats._stats._core import to_frame
 
-    class _DataMap(dict[str, pl.Series]):
+    class _DataDictWithDateCol(dict[str, pl.Series]):
         date_col = ["Date"]
 
     class _CustomDataHost:
-        data = _DataMap({"asset": pl.Series("asset", [1.0, 2.0, 3.0])})
+        data = _DataDictWithDateCol({"asset": pl.Series("asset", [1.0, 2.0, 3.0])})
         all = pl.DataFrame({"Date": [1, 2, 3], "asset": [1.0, 2.0, 3.0]})
 
         @to_frame(data_attr="data")
