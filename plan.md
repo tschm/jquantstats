@@ -118,13 +118,15 @@ Add tests for both methods via the `portfolio_pf` fixture.
 
 ---
 
-### T2.3 — Use the public `periods_per_year` property in rolling methods
+### T2.3 — Use the public `periods_per_year` property in rolling methods ✅
+
+> **Done** — `1e989a5` (direct commit, no separate PR)
 
 **File:** `src/jquantstats/_stats/_rolling.py`
 
-Four methods write `periods_per_year or self._data._periods_per_year`. Change each
-to `periods_per_year or self.periods_per_year` — the public property already exists
-on `_ReportingStatsMixin` and is inherited by `Stats`.
+All four occurrences of `self._data._periods_per_year` in `rolling_sortino`,
+`rolling_sharpe`, `rolling_greeks`, and `rolling_volatility` replaced with
+`self.periods_per_year`.
 
 **Effort:** 15 min · **Closes:** private-attribute leakage
 
@@ -434,7 +436,7 @@ T4.1. All `cast(float, series.mean())` callsites replaced.
 | Theme | Tasks | Effort |
 |---|---|---|
 | 1. Code duplication | ~~T1.1~~, ~~T1.2~~, ~~T1.3~~ | ✅ done |
-| 2. API surface | ~~T2.2~~; T2.1, T2.3 open | ~0.75 hr |
+| 2. API surface | ~~T2.2~~, ~~T2.3~~; T2.1 open | ~0.5 hr |
 | 3. Abstraction | ~~T3.1~~, ~~T3.3~~; T3.2 open | ~0.75 hr |
 | 4. Null handling | ~~T4.1~~, ~~T4.2~~ | ✅ done |
 | 5. Mixin coupling | T5.1–T5.2 | 1 hr |
@@ -446,14 +448,14 @@ T4.1. All `cast(float, series.mean())` callsites replaced.
 | 11. Performance | T11.1 | 1 hr |
 | 12. Error handling | T12.1 | 1 hr |
 | 13. Type safety | ~~T13.1~~ | ✅ done |
-| **Total remaining** | **12 tasks** | **~17.25 hr** |
+| **Total remaining** | **11 tasks** | **~17.0 hr** |
 
 ---
 
 ## Recommended Sequence
 
 **Sprint 1 — Quick wins (~4 hr, no API changes)** ✅ complete
-~~T1.1~~, ~~T1.2~~, ~~T1.3~~, T2.3, ~~T3.3~~, ~~T4.1~~, T7.1, ~~T13.1~~
+~~T1.1~~, ~~T1.2~~, ~~T1.3~~, ~~T2.3~~, ~~T3.3~~, ~~T4.1~~, T7.1, ~~T13.1~~
 
 **Sprint 2 — API clean-up (~4 hr, minor breaking changes)**
 T2.1, ~~T2.2~~, ~~T3.1~~, T3.2, ~~T4.2~~, T5.1, T5.2, T8.1

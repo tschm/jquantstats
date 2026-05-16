@@ -1,6 +1,6 @@
 # jquantstats — Code Quality Report
 
-> Assessed: 2026-05-16 · `main` post-`da3fd15` · ~8 700 source lines · 780 tests
+> Assessed: 2026-05-16 · `main` post-`1e989a5` · ~8 700 source lines · 780 tests
 
 Scores are 1–10. **10 = no actionable improvements. 1 = immediate attention required.**
 
@@ -67,10 +67,10 @@ quantstats compatibility is explicitly required; otherwise remove.
 
 ~~**`PortfolioUtils` is missing two methods.**~~ **Fixed** — merged [PR #726](https://github.com/Jebel-Quant/jquantstats/pull/726) ✅
 
-**`_periods_per_year` accessed as a private attribute across class boundaries.**
+~~**`_periods_per_year` accessed as a private attribute across class boundaries.**
 Four rolling methods each write `periods_per_year or self._data._periods_per_year`
 rather than using the public `periods_per_year` property already exposed by
-`_ReportingStatsMixin` (`_reporting.py:89`).
+`_ReportingStatsMixin` (`_reporting.py:89`).~~ **Fixed** — `1e989a5` ✅
 
 ---
 
@@ -206,7 +206,7 @@ No stale imports or unused variables were found anywhere in the source tree.
 | ~~5~~ | ~~Document + normalise null-return convention in `_core.py`~~ | ~~2 hr~~ | ✅ done |
 | ~~6~~ | ~~Document decorator contract (`self._data` requirement) in `_core.py`~~ | ~~30 min~~ | ✅ done |
 | 7 | Remove `ghpr`, `r2`, `win_loss_ratio` aliases ([#718](https://github.com/Jebel-Quant/jquantstats/issues/718)) | 30 min | removes 20 lines |
-| 8 | Replace `self._data._periods_per_year` with public property in rolling methods | 30 min | removes private boundary crossing |
+| ~~8~~ | ~~Replace `self._data._periods_per_year` with public property in rolling methods~~ | ~~30 min~~ | ✅ done |
 | 9 | Rename `_PerformanceStatsMixin` to clarify scope ([#731](https://github.com/Jebel-Quant/jquantstats/issues/731)) | 45 min | readability |
 | 10 | Enforce decorator contract at decoration time ([#733](https://github.com/Jebel-Quant/jquantstats/issues/733)) | 30 min | fail-fast on misuse |
 | 11 | Trim `StatsLike` to the ~12 methods `Reports` calls ([#719](https://github.com/Jebel-Quant/jquantstats/issues/719)) | 1 hr | removes 150 lines |

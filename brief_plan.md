@@ -9,7 +9,7 @@
 | 5 | [Document + normalise null-return convention in `_core.py`](https://github.com/Jebel-Quant/jquantstats/issues/720) | 2 hr | correctness | ✅ merged [#724](https://github.com/Jebel-Quant/jquantstats/pull/724) |
 | 6 | Document decorator contract (`self._data` / `self.all` requirement) | 30 min | readability | ✅ done `da3fd15` |
 | 7 | [Remove `ghpr`, `r2`, `win_loss_ratio` aliases](https://github.com/Jebel-Quant/jquantstats/issues/718) | 30 min | removes 20 lines | not started |
-| 8 | Replace `self._data._periods_per_year` with public property | 30 min | removes private boundary crossing | not started |
+| 8 | Replace `self._data._periods_per_year` with public property | 30 min | removes private boundary crossing | ✅ done `1e989a5` |
 | 9 | [Rename `_PerformanceStatsMixin` to clarify scope](https://github.com/Jebel-Quant/jquantstats/issues/731) | 45 min | readability | not started |
 | 10 | [Enforce decorator contract at decoration time](https://github.com/Jebel-Quant/jquantstats/issues/733) | 30 min | fail-fast on misuse | not started |
 | 11 | [Trim `StatsLike` to the ~12 methods `Reports` calls](https://github.com/Jebel-Quant/jquantstats/issues/719) | 1 hr | removes 150 lines | not started |
