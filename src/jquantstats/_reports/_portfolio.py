@@ -210,13 +210,17 @@ class Report:
 
         report = portfolio.report
         html_str = report.to_html()
-        report.save("output/report.html")
+        report.to_html(path="output/report.html")
     """
 
     portfolio: PortfolioLike
 
-    def to_html(self, title: str = "JQuantStats Portfolio Report") -> str:
-        """Render a full HTML report as a string.
+    def to_html(
+        self,
+        title: str = "JQuantStats Portfolio Report",
+        path: str | Path | None = None,
+    ) -> str | Path:
+        """Render a full HTML report as a string or save it to a file.
 
         The document is self-contained: Plotly.js is loaded once from the
         CDN and all charts are embedded as ``<div>`` elements.  No external
@@ -224,9 +228,14 @@ class Report:
 
         Args:
             title: HTML ``<title>`` text and visible page heading.
+            path: When given, write the report to this path and return the
+                resolved `pathlib.Path`.  A ``.html`` suffix is appended
+                automatically when *path* has no file extension.  When
+                ``None`` (default) the HTML string is returned directly.
 
         Returns:
-            A complete HTML document as a `str`.
+            The HTML string when *path* is ``None``, otherwise the resolved
+            `pathlib.Path` of the written file.
         """
         pf = self.portfolio
 
@@ -299,7 +308,7 @@ class Report:
         # ── Assemble HTML ─────────────────────────────────────────────────────
         footer_date = end_date if has_date else ""
         template = _env.get_template("portfolio_report.html")
-        return template.render(
+        html = template.render(
             title=title,
             period_info=period_info,
             assets_list=assets_list,
@@ -318,22 +327,12 @@ class Report:
             container_max_width="1400px",
         )
 
-    def save(self, path: str | Path, title: str = "JQuantStats Portfolio Report") -> Path:
-        """Save the HTML report to a file.
+        if path is None:
+            return html
 
-        A ``.html`` suffix is appended automatically when *path* has no
-        file extension.
-
-        Args:
-            path: Destination file path.
-            title: HTML ``<title>`` text and visible page heading.
-
-        Returns:
-            The resolved `pathlib.Path` of the written file.
-        """
         p = Path(path)
         if not p.suffix:
             p = p.with_suffix(".html")
         p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(self.to_html(title=title), encoding="utf-8")
+        p.write_text(html, encoding="utf-8")
         return p

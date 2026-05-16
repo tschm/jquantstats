@@ -185,31 +185,31 @@ def test_to_html_contains_metric_values(multi_year_portfolio):
     assert "Win Rate" in html
 
 
-# ── save ─────────────────────────────────────────────────────────────────────
+# ── to_html with path ────────────────────────────────────────────────────────
 
 
-def test_save_writes_file(tmp_path: Path, multi_year_portfolio):
-    """save() writes the HTML file to the specified path."""
+def test_to_html_writes_file(tmp_path: Path, multi_year_portfolio):
+    """to_html(path=...) writes the HTML file to the specified path."""
     out = tmp_path / "report.html"
-    result = multi_year_portfolio.report.save(out)
+    result = multi_year_portfolio.report.to_html(path=out)
     assert result == out
     assert out.exists()
     content = out.read_text(encoding="utf-8")
     assert "<!DOCTYPE html>" in content
 
 
-def test_save_appends_html_extension_when_missing(tmp_path: Path, multi_year_portfolio):
-    """save() appends a .html extension when the path has no suffix."""
+def test_to_html_appends_html_extension_when_missing(tmp_path: Path, multi_year_portfolio):
+    """to_html(path=...) appends a .html extension when the path has no suffix."""
     out = tmp_path / "my_report"
-    result = multi_year_portfolio.report.save(out)
+    result = multi_year_portfolio.report.to_html(path=out)
     assert result.suffix == ".html"
     assert result.exists()
 
 
-def test_save_accepts_string_path(tmp_path: Path, multi_year_portfolio):
-    """save() accepts a plain string path and embeds the custom title."""
+def test_to_html_accepts_string_path(tmp_path: Path, multi_year_portfolio):
+    """to_html(path=...) accepts a plain string path and embeds the custom title."""
     out = str(tmp_path / "report2.html")
-    result = multi_year_portfolio.report.save(out, title="Saved Report")
+    result = multi_year_portfolio.report.to_html(title="Saved Report", path=out)
     assert result.exists()
     assert "Saved Report" in result.read_text(encoding="utf-8")
 
