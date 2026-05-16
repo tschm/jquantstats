@@ -264,7 +264,7 @@ class TestDrawdown:
     def test_drawdown_series_non_negative(self, stats: object) -> None:
         """All drawdown values are ≥ 0 (jquantstats uses positive-fraction convention)."""
         dd = stats.drawdown()  # type: ignore[attr-defined]
-        for col in stats._data.returns.columns:  # type: ignore[attr-defined]
+        for col in stats.assets:  # type: ignore[attr-defined]
             assert (dd[col] >= 0).all(), f"Negative drawdown value found in column {col!r}"
 
     def test_drawdown_details_structure(self, stats: object) -> None:
@@ -353,6 +353,6 @@ class TestEdgeCases:
         """
         result = stats.sharpe(periods=252)  # type: ignore[attr-defined]
         assert isinstance(result, dict)
-        assert len(result) == len(stats._data.assets)  # type: ignore[attr-defined]
+        assert len(result) == len(stats.assets)  # type: ignore[attr-defined]
         for val in result.values():
             assert np.isfinite(val)

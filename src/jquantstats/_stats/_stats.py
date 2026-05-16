@@ -89,3 +89,28 @@ class Stats(_BasicStatsMixin, _PerformanceStatsMixin, _ReportingStatsMixin, _Rol
     def __repr__(self) -> str:
         """Return a string representation of the Stats object."""
         return f"Stats(assets={self._data.assets})"
+
+    @property
+    def assets(self) -> list[str]:
+        """Asset column names (excludes benchmark and date)."""
+        return self._data.assets
+
+    @property
+    def returns(self) -> pl.DataFrame:
+        """Returns DataFrame (asset columns only, no benchmark)."""
+        return self._data.returns
+
+    @property
+    def benchmark(self) -> pl.DataFrame | None:
+        """Benchmark DataFrame, or None when no benchmark was provided."""
+        return self._data.benchmark
+
+    @property
+    def date_col(self) -> list[str]:
+        """Date column name(s) present in the index, or empty list."""
+        return self._data.date_col
+
+    @property
+    def index(self) -> pl.DataFrame:
+        """Index DataFrame (date or integer range)."""
+        return self._data.index

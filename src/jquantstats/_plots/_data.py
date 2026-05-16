@@ -330,6 +330,11 @@ class DataPlots:
     def __init__(self, data: DataLike) -> None:
         self._data = data
 
+    @property
+    def assets(self) -> list[str]:
+        """Asset column names from the underlying data."""
+        return self._data.assets
+
     def __repr__(self) -> str:
         """Return a string representation of the DataPlots object."""
         return f"DataPlots(assets={self._data.assets})"

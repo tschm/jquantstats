@@ -542,8 +542,8 @@ def test_sharpe_var(stats):
     kurt = stats.kurtosis()["META"]
     # Get unannualized Sharpe ratio
     sr = stats.sharpe(periods=1)["META"]
-    t_meta_not_nan = stats._data.returns["META"].drop_nulls().shape[0]
-    period = stats._data._periods_per_year
+    t_meta_not_nan = stats.returns["META"].drop_nulls().shape[0]
+    period = stats.periods_per_year
     # Expected base variance (unannualized)
     expected_base_var = (1 + (skew * sr) / 2 + ((kurt - 3) / 4) * sr**2) / t_meta_not_nan
     # Expected annualized variance
@@ -558,7 +558,7 @@ def test_prob_sharpe_ratio(stats):
     observed_sr = stats.sharpe(periods=1)["META"]
     skew = stats.skew()["META"]
     kurt = stats.kurtosis()["META"]
-    t_meta_not_nan = stats._data.returns["META"].drop_nulls().shape[0]
+    t_meta_not_nan = stats.returns["META"].drop_nulls().shape[0]
     benchmark_sr = 0.0
     var_bench_sr = (1 + (float(skew) * benchmark_sr) / 2 + ((float(kurt) - 3) / 4) * benchmark_sr**2) / t_meta_not_nan
     expected_prob_sr = norm.cdf((observed_sr - benchmark_sr) / np.sqrt(var_bench_sr))
@@ -803,15 +803,15 @@ def test_drawdowns(stats):
     assert dd.shape[0] == stats.all.shape[0]  # Same number of rows as input data
 
     # Check that all columns from returns and benchmark are present
-    for col in stats._data.returns.columns:
+    for col in stats.returns.columns:
         assert col in dd.columns
-    if stats._data.benchmark is not None:
-        for col in stats._data.benchmark.columns:
+    if stats.benchmark is not None:
+        for col in stats.benchmark.columns:
             assert col in dd.columns
 
     # Verify drawdown values are always non-negative (since they represent losses)
     for col in dd.columns:
-        if col not in stats._data.date_col:  # Skip date column
+        if col not in stats.date_col:  # Skip date column
             assert (dd[col] >= 0).all()
 
     # Test specific drawdown values for META
@@ -846,7 +846,7 @@ def test_drawdowns_edge_case(edge):
 
     # For constant zero returns, drawdowns should all be zero
     for col in dd.columns:
-        if col not in edge.stats._data.date_col:  # Skip date column
+        if col not in edge.stats.date_col:  # Skip date column
             assert (dd[col] == 0).all()
 
 
@@ -867,7 +867,7 @@ def test_max_drawdown(stats):
 
     # Verify structure
     assert isinstance(max_dd, dict)
-    assert set(max_dd.keys()) == set(stats._data.assets)
+    assert set(max_dd.keys()) == set(stats.assets)
 
     # Verify values for specific assets
     assert max_dd["META"] == pytest.approx(-0.76, abs=0.01)
@@ -875,7 +875,7 @@ def test_max_drawdown(stats):
 
     # Verify that max_drawdown returns the same values as the maximum of the drawdown series
     dd = stats.drawdown()
-    for col in stats._data.assets:
+    for col in stats.assets:
         assert max_dd[col] == pytest.approx(-dd[col].max(), abs=0.0001)
 
 
@@ -899,8 +899,7 @@ def test_to_float_timedelta():
 
 
 def test_periods_per_year(stats):
-    """periods_per_year property delegates to data._periods_per_year."""
-    assert stats.periods_per_year == stats._data._periods_per_year
+    """periods_per_year returns a positive annualisation factor."""
     assert stats.periods_per_year > 0
 
 
@@ -994,7 +993,7 @@ def test_worst_n_periods_padding(data_no_benchmark):
 
 def test_up_capture_basic(stats):
     """up_capture returns a dict with one entry per asset (including benchmark)."""
-    benchmark = stats._data.all["SPY -- Benchmark"]
+    benchmark = stats.all["SPY -- Benchmark"]
     result = stats.up_capture(benchmark)
     assert isinstance(result, dict)
     assert "META" in result
@@ -1029,7 +1028,7 @@ def test_up_capture_empty_strategy_up():
 
 def test_down_capture_basic(stats):
     """down_capture returns a dict with one entry per asset (including benchmark)."""
-    benchmark = stats._data.all["SPY -- Benchmark"]
+    benchmark = stats.all["SPY -- Benchmark"]
     result = stats.down_capture(benchmark)
     assert isinstance(result, dict)
     assert "META" in result
@@ -1197,7 +1196,7 @@ def test_repr(stats):
     """Tests that Stats.__repr__ returns an informative string."""
     r = repr(stats)
     assert r.startswith("Stats(assets=")
-    for asset in stats._data.assets:
+    for asset in stats.assets:
         assert asset in r
 
 
@@ -1256,7 +1255,7 @@ def test_distribution_structure(stats):
 def test_distribution_counts(stats):
     """Distribution daily count equals the number of non-null daily returns."""
     result = stats.distribution()
-    aapl_returns = stats._data.returns["AAPL"].drop_nulls()
+    aapl_returns = stats.returns["AAPL"].drop_nulls()
     daily = result["AAPL"]["Daily"]
     total = len(daily["values"]) + len(daily["outliers"])
     assert total == len(aapl_returns)
