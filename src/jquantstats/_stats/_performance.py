@@ -27,7 +27,7 @@ class _PerformanceStatsMixin:
     **Concentration metrics (intentionally public, optional use)**
 
     ``hhi_positive`` and ``hhi_negative`` implement the
-    Herfindahl–Hirschman Index applied to the signed distribution of returns.
+    Herfindahl-Hirschman Index applied to the signed distribution of returns.
     They measure *temporal* concentration of gains and losses respectively —
     a value near 0 means returns are spread evenly across periods; a value
     near 1 means a single period dominates.  These metrics are not included
