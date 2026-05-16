@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Hashable
 
+import numpy as np
 import polars as pl
 
 from ._data import DataUtils
@@ -168,3 +169,50 @@ class PortfolioUtils:
 
         """
         return self._du().exponential_stdev(window=window, is_halflife=is_halflife)
+
+    def winsorise(self, window: int = 7, n_sigma: float = 3.0) -> pl.DataFrame:
+        """Winsorise portfolio returns by clipping to within *n_sigma* rolling standard deviations.
+
+        See `DataUtils.winsorise` for full
+        documentation.
+
+        Args:
+            window: Rolling lookback for mean and standard deviation.
+                Defaults to ``7``.
+            n_sigma: Number of standard deviations for the clip bounds.
+                Defaults to ``3.0``.
+
+        Returns:
+            DataFrame with the same columns as the input returns, extreme
+            values clipped.
+
+        """
+        return self._du().winsorise(window=window, n_sigma=n_sigma)
+
+    def exponential_cov(
+        self, window: int = 30, is_halflife: bool = False, warmup: int = 0
+    ) -> dict[Hashable, np.ndarray]:
+        """Compute the exponentially weighted covariance matrix of portfolio returns.
+
+        See `DataUtils.exponential_cov` for full
+        documentation.
+
+        Args:
+            window: Span (default) or half-life (when *is_halflife* is
+                ``True``) of the exponential decay.  Defaults to ``30``.
+            is_halflife: When ``True`` *window* is interpreted as the
+                half-life; otherwise it is the EWMA span.  Defaults to
+                ``False``.
+            warmup: Minimum number of common observations required before
+                a pair's cell is non-NaN.  Defaults to ``0``.
+
+        Returns:
+            Dictionary keyed by index value (date or integer) mapping to
+            a square symmetric ``numpy.ndarray`` whose dimensions match
+            the return columns exposed by ``portfolio.data``. In this
+            facade that is typically only the portfolio-level ``returns``
+            column, so the matrices are usually ``(1, 1)`` even for
+            multi-asset portfolios. Unavailable cells are ``NaN``.
+
+        """
+        return self._du().exponential_cov(window=window, is_halflife=is_halflife, warmup=warmup)
