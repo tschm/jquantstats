@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 from ._formatting import _fmt, _is_finite
 
-# ── Formatting helpers ────────────────────────────────────────────────────────
+# ── Private helpers ───────────────────────────────────────────────────────────
 
 
 def _safe(fn: Any, *args: Any, **kwargs: Any) -> dict[str, float]:
