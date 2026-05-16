@@ -5,7 +5,7 @@ class that combines four mixin classes:
 
 - `_BasicStatsMixin` — basic statistics,
   volatility, win/loss metrics, and risk metrics (VaR, Sharpe inputs, Kelly).
-- `_PerformanceStatsMixin` — Sharpe,
+- `_RiskStatsMixin` — Sharpe,
   Sortino, drawdown, benchmark/factor analytics (R², alpha, beta).
 - `_ReportingStatsMixin` — temporal
   reporting, Calmar, recovery factor, capture ratios, annual breakdown, and
@@ -38,7 +38,7 @@ from ._internals import (
     _downside_deviation,
     _nav_series,
 )
-from ._performance import _PerformanceStatsMixin
+from ._performance import _RiskStatsMixin
 from ._reporting import _ReportingStatsMixin
 from ._rolling import _RollingStatsMixin
 
@@ -59,7 +59,7 @@ __all__ = [
 ]
 
 
-class Stats(_BasicStatsMixin, _PerformanceStatsMixin, _ReportingStatsMixin, _RollingStatsMixin):
+class Stats(_BasicStatsMixin, _RiskStatsMixin, _ReportingStatsMixin, _RollingStatsMixin):
     """Statistical analysis tools for financial returns data.
 
     Provides a comprehensive set of methods for calculating various financial
@@ -79,7 +79,7 @@ class Stats(_BasicStatsMixin, _PerformanceStatsMixin, _ReportingStatsMixin, _Rol
     Metrics are organised into focused modules:
 
     - `_BasicStatsMixin`
-    - `_PerformanceStatsMixin`
+    - `_RiskStatsMixin`
     - `_ReportingStatsMixin`
     - `_RollingStatsMixin`
 
