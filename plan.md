@@ -141,16 +141,16 @@ All four occurrences of `self._data._periods_per_year` in `rolling_sortino`,
 **File:** `src/jquantstats/_stats/_core.py`
 
 Both `columnwise_stat` and `to_frame` docstrings now state the `self._data` /
-`self.all` preconditions explicitly. Stronger enforcement (fail at decoration time)
-tracked in [#733](https://github.com/Jebel-Quant/jquantstats/issues/733).
+`self.all` preconditions explicitly. Both documentation and enforcement at
+decoration time are now complete — [PR #735](https://github.com/Jebel-Quant/jquantstats/pull/735) ✅
 
 **Effort:** 30 min · **Closes:** silent runtime failure for out-of-context use
 
 ---
 
-### T3.2 — Rename `_PerformanceStatsMixin` for clarity
+### T3.2 — Rename `_PerformanceStatsMixin` for clarity ✅
 
-> **Issue** — [#731](https://github.com/Jebel-Quant/jquantstats/issues/731)
+> **Done** — merged [PR #732](https://github.com/Jebel-Quant/jquantstats/pull/732) · closes [#731](https://github.com/Jebel-Quant/jquantstats/issues/731)
 
 **File:** `src/jquantstats/_stats/_performance.py` and all imports
 
@@ -211,7 +211,9 @@ series is empty or all-null — consistent with the documented convention.
 
 ## Theme 5 — Mixin Architecture & Coupling (7 → 10)
 
-### T5.1 — Document cross-mixin dependencies
+### T5.1 — Document cross-mixin dependencies ✅
+
+> **Done** — merged [PR #752](https://github.com/Jebel-Quant/jquantstats/pull/752)
 
 **Files:** `_reporting.py`, `_performance.py`
 
@@ -261,7 +263,9 @@ runtime and adds maintenance overhead for no static benefit.
 
 ---
 
-### T6.2 — Consolidate `DataLike` into one authoritative definition
+### T6.2 — Consolidate `DataLike` into one authoritative definition ✅
+
+> **Done** — merged [PR #736](https://github.com/Jebel-Quant/jquantstats/pull/736) · closes [#734](https://github.com/Jebel-Quant/jquantstats/issues/734)
 
 **Files:** `_plots/_protocol.py`, `_reports/_protocol.py`, `_utils/_protocol.py`
 
@@ -277,18 +281,14 @@ it independently.
 
 ## Theme 7 — Dead Code (8 → 10)
 
-### T7.1 — Clarify `hhi_positive` / `hhi_negative` intent
+### T7.1 — Clarify `hhi_positive` / `hhi_negative` intent ✅
+
+> **Done** — merged [PR #730](https://github.com/Jebel-Quant/jquantstats/pull/730) · closes [#722](https://github.com/Jebel-Quant/jquantstats/issues/722)
 
 **File:** `src/jquantstats/_stats/_performance.py:154`
 
 These methods are tested but never appear in `summary()`, any report template, or
-any public export. Choose one of:
-
-- **Include in `summary()`** — if they are considered production metrics, add them
-  to the metrics table.
-- **Export via `__all__`** — if they are intentionally public but optional, add a
-  comment explaining the use case.
-- **Remove** — if they are experimental dead-ends, delete them and their tests.
+any public export. Both are clarified as intentionally public optional metrics.
 
 **Effort:** 15 min
 
@@ -304,6 +304,8 @@ any public export. Choose one of:
 extract their inline setup into named sub-fixtures in `conftest.py` or into a
 `@pytest.fixture` scoped to the test class. Target: no test function exceeds 20
 lines of setup code.
+
+> **Partial** — [PR #711](https://github.com/Jebel-Quant/jquantstats/pull/711) extracted the `integer_indexed_data` sub-fixture ✅ (partial); further refactoring open in [PR #747](https://github.com/Jebel-Quant/jquantstats/pull/747)
 
 **Effort:** 1 hr · **Improves:** readability, future maintainability
 
@@ -373,7 +375,9 @@ Each plot should follow the existing Plotly pattern: return `go.Figure`, accept
 
 ## Theme 11 — Performance (8 → 10)
 
-### T11.1 — Rewrite `rolling_sortino` using native Polars expressions
+### T11.1 — Rewrite `rolling_sortino` using native Polars expressions ✅
+
+> **Done** — merged [PR #740](https://github.com/Jebel-Quant/jquantstats/pull/740)
 
 **File:** `src/jquantstats/_stats/_rolling.py:123`
 
@@ -437,34 +441,34 @@ T4.1. All `cast(float, series.mean())` callsites replaced.
 |---|---|---|
 | 1. Code duplication | ~~T1.1~~, ~~T1.2~~, ~~T1.3~~ | ✅ done |
 | 2. API surface | ~~T2.2~~, ~~T2.3~~; T2.1 open | ~0.5 hr |
-| 3. Abstraction | ~~T3.1~~, ~~T3.3~~; T3.2 open | ~0.75 hr |
+| 3. Abstraction | ~~T3.1~~, ~~T3.2~~, ~~T3.3~~ | ✅ done |
 | 4. Null handling | ~~T4.1~~, ~~T4.2~~ | ✅ done |
-| 5. Mixin coupling | T5.1–T5.2 | 1 hr |
-| 6. Protocol design | T6.1–T6.2 | 2 hr |
-| 7. Dead code | T7.1 | 0.25 hr |
-| 8. Test quality | T8.1 | 1 hr |
+| 5. Mixin coupling | ~~T5.1~~; T5.2 open | ~0.5 hr |
+| 6. Protocol design | ~~T6.2~~; T6.1 open | 1 hr |
+| 7. Dead code | ~~T7.1~~ | ✅ done |
+| 8. Test quality | T8.1 (partial) | ~0.75 hr |
 | 9. Monte Carlo stats | T9.1 | 3.5 hr |
 | 10. Plot coverage | T10.1–T10.2 | 6 hr |
-| 11. Performance | T11.1 | 1 hr |
+| 11. Performance | ~~T11.1~~ | ✅ done |
 | 12. Error handling | T12.1 | 1 hr |
 | 13. Type safety | ~~T13.1~~ | ✅ done |
-| **Total remaining** | **11 tasks** | **~17.0 hr** |
+| **Total remaining** | **7 tasks** | **~13.25 hr** |
 
 ---
 
 ## Recommended Sequence
 
 **Sprint 1 — Quick wins (~4 hr, no API changes)** ✅ complete
-~~T1.1~~, ~~T1.2~~, ~~T1.3~~, ~~T2.3~~, ~~T3.3~~, ~~T4.1~~, T7.1, ~~T13.1~~
+~~T1.1~~, ~~T1.2~~, ~~T1.3~~, ~~T2.3~~, ~~T3.3~~, ~~T4.1~~, ~~T7.1~~, ~~T13.1~~
 
 **Sprint 2 — API clean-up (~4 hr, minor breaking changes)**
-T2.1, ~~T2.2~~, ~~T3.1~~, T3.2, ~~T4.2~~, T5.1, T5.2, T8.1
+T2.1, ~~T2.2~~, ~~T3.1~~, ~~T3.2~~, ~~T4.2~~, ~~T5.1~~, T5.2, T8.1
 
 **Sprint 3 — Architecture (~4 hr, protocol restructure)**
-T6.1, T6.2, T12.1
+T6.1, ~~T6.2~~, T12.1
 
 **Sprint 4 — Feature parity (~8 hr, Monte Carlo)**
-T9.1, T10.1, T11.1
+T9.1, T10.1, ~~T11.1~~
 
 **Sprint 5 — Plot parity (~4 hr)**
 T10.2

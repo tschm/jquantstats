@@ -2,7 +2,7 @@
 
 > Assessed: 2026-05-16  
 > quantstats: `.venv/lib/python3.12/site-packages/quantstats/`  
-> jquantstats: `src/jquantstats/` (main, post-PR #709)  
+> jquantstats: `src/jquantstats/` (main, post-PR #752)  
 > Ratings are 1–10 where 10 = jquantstats is clearly superior, 5 = parity, 1 = quantstats is clearly superior.  
 > A score below 5 means jquantstats has a gap to close.
 
@@ -19,10 +19,10 @@
 | Plot coverage | 6 | Mixed |
 | Reports | 7 | jquantstats |
 | Error handling | 9 | jquantstats |
-| Performance | 8 | jquantstats |
+| Performance | 9 | jquantstats |
 | Type safety | 9 | jquantstats |
 | Test quality | 9 | jquantstats |
-| **Overall** | **8.0** | **jquantstats** |
+| **Overall** | **8.1** | **jquantstats** |
 
 ---
 
@@ -71,7 +71,7 @@ data.stats.rolling_sharpe()   # → pl.DataFrame (Date | AAPL | META)
 data.stats.monthly_returns()  # → pl.DataFrame
 ```
 
-**Gap:** The alias methods (`ghpr`, `r2`, `win_loss_ratio`) slightly pollute the surface. ~~The asymmetry in `rolling_sortino` (uses `@to_frame` + `pl.Expr`) vs the other three rolling methods (operate on `self.all` directly) is a minor inconsistency.~~ The `rolling_sortino` asymmetry has been **fixed** — merged [PR #723](https://github.com/Jebel-Quant/jquantstats/pull/723) ✅
+**Gap:** The alias methods (`ghpr`, `r2`, `win_loss_ratio`) slightly pollute the surface. ~~The asymmetry in `rolling_sortino` (uses `@to_frame` + `pl.Expr`) vs the other three rolling methods (operate on `self.all` directly) is a minor inconsistency.~~ The `rolling_sortino` asymmetry has been **fixed** — merged [PR #723](https://github.com/Jebel-Quant/jquantstats/pull/723) ✅. The decorator-contract enforcement gap has also been **closed** — merged [PR #735](https://github.com/Jebel-Quant/jquantstats/pull/735) ✅
 
 ---
 
@@ -102,7 +102,7 @@ data.stats.monthly_returns()  # → pl.DataFrame
 - **`implied_volatility`:** quantstats returns a scalar `float`; jquantstats returns a rolling `pl.DataFrame` when `annualize=True` or a `dict[str, float]` when `annualize=False`. The jquantstats version is more expressive.
 - **`downside_deviation` (used in Sortino):** quantstats divides by the count of negative returns; jquantstats divides by the total observation count (matching the Red Rock Capital paper). The two formulas agree only when all returns are negative.
 
-**Gap:** The missing Monte Carlo suite is a material gap. It is the most distinctive feature of quantstats with no counterpart in jquantstats.
+**Gap:** The missing Monte Carlo suite is a material gap. It is the most distinctive feature of quantstats with no counterpart in jquantstats. [PR #751](https://github.com/Jebel-Quant/jquantstats/pull/751) (open) proposes to add the Monte Carlo simulation suite.
 
 ---
 
@@ -112,7 +112,7 @@ data.stats.monthly_returns()  # → pl.DataFrame
 
 **jquantstats:** ~20 plot methods across `DataPlots` and `PortfolioPlots` via Plotly. Interactive (zoom, pan, hover, date range selectors). Portfolio-specific plots have no quantstats equivalent: `lead_lag_ir_plot`, `lagged_performance`, `smoothed_holdings`.
 
-**Gap:** jquantstats has fewer plots by count (~20 vs ~42) and is missing the Monte Carlo plots. The quality of each plot is higher (interactive Plotly vs static matplotlib), and the portfolio plots are a genuine addition, but the numerical gap is real.
+**Gap:** jquantstats has fewer plots by count (~20 vs ~42) and is missing the Monte Carlo plots. The quality of each plot is higher (interactive Plotly vs static matplotlib), and the portfolio plots are a genuine addition, but the numerical gap is real. [PR #749](https://github.com/Jebel-Quant/jquantstats/pull/749) (open) proposes to add Monte Carlo plots, and [PR #750](https://github.com/Jebel-Quant/jquantstats/pull/750) (open) proposes to add compare and rolling_beta plots.
 
 | Category | quantstats | jquantstats |
 |---|---|---|
@@ -148,13 +148,15 @@ data.stats.monthly_returns()  # → pl.DataFrame
 
 ---
 
-## 8. Performance — 8/10
+## 8. Performance — 9/10
 
 **quantstats:** pandas + NumPy + scipy. Performance is adequate for typical series lengths (daily returns, 5–20 years ≈ 1 250–5 000 rows). Large DataFrames with many assets can be slow due to pandas copy-on-write overhead and row-wise Python loops in some metrics.
 
 **jquantstats:** Polars (Apache Arrow columnar format) + scipy. Polars outperforms pandas by 5–50× for typical analytical queries, especially on multi-column DataFrames. The `columnwise_stat` decorator applies metrics per-column without Python-level loops.
 
-**Gap:** Benchmarks have not been run in this repo, so the 8/10 is inferred from the underlying library performance characteristics. One point deducted for `rolling_sortino` using `map_elements` (a Python-level UDF) — a known Polars performance antipattern and likely slower than an equivalent native Polars expression.
+~~One point deducted for `rolling_sortino` using `map_elements` (a Python-level UDF) — a known Polars performance antipattern and likely slower than an equivalent native Polars expression.~~ **Fixed** — `rolling_sortino` has been rewritten using native Polars expressions via [PR #740](https://github.com/Jebel-Quant/jquantstats/pull/740) ✅. Score raised from 8 → 9.
+
+**Gap:** Benchmarks have not been run in this repo, so the 9/10 is inferred from the underlying library performance characteristics. No known Polars antipatterns remain in the codebase.
 
 ---
 

@@ -1,6 +1,6 @@
 # jquantstats — Code Quality Report
 
-> Assessed: 2026-05-16 · `main` post-`1e989a5` · ~8 700 source lines · 780 tests
+> Assessed: 2026-05-16 · `main` post-PR #752 · ~9 900 source lines · ~820 tests
 
 Scores are 1–10. **10 = no actionable improvements. 1 = immediate attention required.**
 
@@ -12,14 +12,14 @@ Scores are 1–10. **10 = no actionable improvements. 1 = immediate attention re
 |---|:---:|
 | Code duplication | 9 |
 | API surface & naming | 8 |
-| Abstraction & indirection | 9 |
+| Abstraction & indirection | 10 |
 | Null / error-handling consistency | 8 |
-| Mixin architecture & coupling | 8 |
-| Protocol design | 6 |
+| Mixin architecture & coupling | 9 |
+| Protocol design | 7 |
 | Test quality | 9 |
 | Documentation coverage | 10 |
-| Dead code | 8 |
-| **Overall** | **8.3** |
+| Dead code | 10 |
+| **Overall** | **8.9** |
 
 ---
 
@@ -74,7 +74,7 @@ rather than using the public `periods_per_year` property already exposed by
 
 ---
 
-## 3. Abstraction & Indirection — 9/10
+## 3. Abstraction & Indirection — 10/10
 
 **Strengths.** Facade classes (`DataUtils`, `PortfolioUtils`, `DataPlots`,
 `PortfolioPlots`, `Reports`) each have one responsibility: wrap a data or portfolio
@@ -86,8 +86,8 @@ well-chosen abstractions that pay for themselves across 100+ methods.
 into `self._data` and `self._data.items()`. The coupling is invisible at the
 decorator call site and only discovered at runtime.~~ **Documented** — both
 decorators now state the `self._data` / `self.all` preconditions explicitly in
-their docstrings (`da3fd15`) ✅. Stronger fix (enforce at decoration time) tracked
-in [#733](https://github.com/Jebel-Quant/jquantstats/issues/733).
+their docstrings (`da3fd15`) ✅. Both documentation and enforcement at decoration
+time are now complete — merged [PR #735](https://github.com/Jebel-Quant/jquantstats/pull/735), closes [#733](https://github.com/Jebel-Quant/jquantstats/issues/733) ✅
 
 ~~**`_nav_series` is effectively reimplemented in `prices()`.**~~ **Fixed** — `prices()` now delegates to `_nav_series` directly ✅
 
@@ -109,7 +109,7 @@ indeterminate. `cast(float, series.mean())` calls replaced throughout.
 
 ---
 
-## 5. Mixin Architecture & Coupling — 8/10
+## 5. Mixin Architecture & Coupling — 9/10
 
 **Strengths.** Splitting ~2 500 lines of stats logic into four focused mixins
 (`_basic`, `_performance`, `_reporting`, `_rolling`) keeps each file manageable.
@@ -117,18 +117,21 @@ indeterminate. `cast(float, series.mean())` calls replaced throughout.
 are declared centrally via `TYPE_CHECKING` stubs, each annotated with their source
 mixin.
 
-**The "performance" mixin boundary is not intuitive.**
+~~**The "performance" mixin boundary is not intuitive.**
 `_PerformanceStatsMixin` spans Sharpe/Sortino ratios, drawdown metrics, Greeks,
 HHI, R-squared, and Kelly criterion — three distinct conceptual domains. The split
 between this mixin and `_ReportingStatsMixin` (CAGR, Calmar, recovery factor,
-`summary`) is not self-evident. Tracked in
-[#731](https://github.com/Jebel-Quant/jquantstats/issues/731).
+`summary`) is not self-evident.~~ **Fixed** — renamed to `_RiskStatsMixin` via
+[PR #732](https://github.com/Jebel-Quant/jquantstats/pull/732) ✅
+
+Cross-mixin method dependencies are additionally documented inline via
+[PR #752](https://github.com/Jebel-Quant/jquantstats/pull/752) ✅
 
 ~~**`rolling_sortino` is inconsistent with the other rolling methods.**~~ **Fixed** — merged [PR #723](https://github.com/Jebel-Quant/jquantstats/pull/723) ✅
 
 ---
 
-## 6. Protocol Design — 6/10
+## 6. Protocol Design — 7/10
 
 **Strengths.** Structural protocols (`StatsLike`, `DataLike`, `PlotsLike`,
 `PortfolioLike`) let consumers type-annotate without importing concrete classes,
@@ -148,11 +151,10 @@ in turn are used only inside `_reports`. The protocol is so broad that:
 Replacing it with a minimal protocol scoped to what `Reports` genuinely needs would
 remove ~150 lines and make the true dependency explicit.
 
-**`DataLike` is defined independently in three sub-packages.**
+~~**`DataLike` is defined independently in three sub-packages.**
 `_plots/_protocol.py`, `_reports/_protocol.py`, and `_utils/_protocol.py` each
 define a `DataLike` protocol with overlapping but slightly different attribute sets.
-A class implementing all three must manually verify compliance against each variant.
-Tracked in [#734](https://github.com/Jebel-Quant/jquantstats/issues/734).
+A class implementing all three must manually verify compliance against each variant.~~ **Fixed** — `DataLike` centralised at the package root, sub-package redefinitions removed via [PR #736](https://github.com/Jebel-Quant/jquantstats/pull/736) ✅
 
 ---
 
@@ -182,14 +184,16 @@ includes worked examples that function as doctests.
 
 ---
 
-## 9. Dead Code — 8/10
+## 9. Dead Code — 10/10
 
-**`hhi_positive` / `hhi_negative` are tested but unused downstream.**
+~~**`hhi_positive` / `hhi_negative` are tested but unused downstream.**
 `_performance.py:154` and `_performance.py:186` implement the Herfindahl–Hirschman
 Index for return concentration. Both have tests and docstrings, but neither appears
 in `summary()`, any report template, or any downstream method, and neither is
 exported via `__all__`. If they are exploratory, a comment saying so prevents
-confusion; otherwise they are removal candidates.
+confusion; otherwise they are removal candidates.~~ **Clarified** — both methods
+are intentionally public optional metrics, as documented via
+[PR #730](https://github.com/Jebel-Quant/jquantstats/pull/730) ✅
 
 No stale imports or unused variables were found anywhere in the source tree.
 
@@ -207,10 +211,10 @@ No stale imports or unused variables were found anywhere in the source tree.
 | ~~6~~ | ~~Document decorator contract (`self._data` requirement) in `_core.py`~~ | ~~30 min~~ | ✅ done |
 | 7 | Remove `ghpr`, `r2`, `win_loss_ratio` aliases ([#718](https://github.com/Jebel-Quant/jquantstats/issues/718)) | 30 min | removes 20 lines |
 | ~~8~~ | ~~Replace `self._data._periods_per_year` with public property in rolling methods~~ | ~~30 min~~ | ✅ done |
-| 9 | Rename `_PerformanceStatsMixin` to clarify scope ([#731](https://github.com/Jebel-Quant/jquantstats/issues/731)) | 45 min | readability |
-| 10 | Enforce decorator contract at decoration time ([#733](https://github.com/Jebel-Quant/jquantstats/issues/733)) | 30 min | fail-fast on misuse |
+| ~~9~~ | ~~Rename `_PerformanceStatsMixin` to clarify scope ([#731](https://github.com/Jebel-Quant/jquantstats/issues/731))~~ | ~~45 min~~ | ✅ merged [PR #732](https://github.com/Jebel-Quant/jquantstats/pull/732) |
+| ~~10~~ | ~~Enforce decorator contract at decoration time ([#733](https://github.com/Jebel-Quant/jquantstats/issues/733))~~ | ~~30 min~~ | ✅ merged [PR #735](https://github.com/Jebel-Quant/jquantstats/pull/735) |
 | 11 | Trim `StatsLike` to the ~12 methods `Reports` calls ([#719](https://github.com/Jebel-Quant/jquantstats/issues/719)) | 1 hr | removes 150 lines |
-| 12 | Unify the three `DataLike` protocol definitions ([#734](https://github.com/Jebel-Quant/jquantstats/issues/734)) | 1 hr | removes attribute-set divergence |
-| 13 | Clarify or remove `hhi_positive` / `hhi_negative` ([#722](https://github.com/Jebel-Quant/jquantstats/issues/722)) | 15 min | removes 60 lines |
+| ~~12~~ | ~~Unify the three `DataLike` protocol definitions ([#734](https://github.com/Jebel-Quant/jquantstats/issues/734))~~ | ~~1 hr~~ | ✅ merged [PR #736](https://github.com/Jebel-Quant/jquantstats/pull/736) |
+| ~~13~~ | ~~Clarify or remove `hhi_positive` / `hhi_negative` ([#722](https://github.com/Jebel-Quant/jquantstats/issues/722))~~ | ~~15 min~~ | ✅ merged [PR #730](https://github.com/Jebel-Quant/jquantstats/pull/730) |
 
-Items 7–13 together take roughly 4.5 hours and remove or consolidate ~230 lines.
+Items 7 and 11 remain open, taking roughly 1.5 hours to complete.

@@ -10,8 +10,8 @@
 | 6 | Document decorator contract (`self._data` / `self.all` requirement) | 30 min | readability | ✅ done `da3fd15` |
 | 7 | [Remove `ghpr`, `r2`, `win_loss_ratio` aliases](https://github.com/Jebel-Quant/jquantstats/issues/718) | 30 min | removes 20 lines | not started |
 | 8 | Replace `self._data._periods_per_year` with public property | 30 min | removes private boundary crossing | ✅ done `1e989a5` |
-| 9 | [Rename `_PerformanceStatsMixin` to clarify scope](https://github.com/Jebel-Quant/jquantstats/issues/731) | 45 min | readability | not started |
-| 10 | [Enforce decorator contract at decoration time](https://github.com/Jebel-Quant/jquantstats/issues/733) | 30 min | fail-fast on misuse | not started |
+| 9 | [Rename `_PerformanceStatsMixin` to clarify scope](https://github.com/Jebel-Quant/jquantstats/issues/731) | 45 min | readability | ✅ merged [#732](https://github.com/Jebel-Quant/jquantstats/pull/732) |
+| 10 | [Enforce decorator contract at decoration time](https://github.com/Jebel-Quant/jquantstats/issues/733) | 30 min | fail-fast on misuse | ✅ merged [#735](https://github.com/Jebel-Quant/jquantstats/pull/735), closes [#733](https://github.com/Jebel-Quant/jquantstats/issues/733) |
 | 11 | [Trim `StatsLike` to the ~12 methods `Reports` calls](https://github.com/Jebel-Quant/jquantstats/issues/719) | 1 hr | removes 150 lines | not started |
-| 12 | [Consolidate three `DataLike` protocol definitions](https://github.com/Jebel-Quant/jquantstats/issues/734) | 1 hr | removes attribute-set divergence | not started |
-| 13 | [Clarify or remove `hhi_positive` / `hhi_negative`](https://github.com/Jebel-Quant/jquantstats/issues/722) | 15 min | removes 60 lines | not started |
+| 12 | [Consolidate three `DataLike` protocol definitions](https://github.com/Jebel-Quant/jquantstats/issues/734) | 1 hr | removes attribute-set divergence | ✅ merged [#736](https://github.com/Jebel-Quant/jquantstats/pull/736) |
+| 13 | [Clarify or remove `hhi_positive` / `hhi_negative`](https://github.com/Jebel-Quant/jquantstats/issues/722) | 15 min | removes 60 lines | ✅ merged [#730](https://github.com/Jebel-Quant/jquantstats/pull/730) |
