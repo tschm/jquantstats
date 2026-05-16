@@ -7,9 +7,14 @@ from typing import Protocol, runtime_checkable
 import plotly.graph_objects as go
 import polars as pl
 
+from jquantstats._protocol import DataLike
+from jquantstats._protocol import StatsLike as BaseStatsLike
+
+__all__ = ["DataLike", "PlotsLike", "PortfolioLike", "StatsLike"]
+
 
 @runtime_checkable
-class StatsLike(Protocol):  # pragma: no cover
+class StatsLike(BaseStatsLike, Protocol):  # pragma: no cover
     """Structural interface for the statistics methods used by `Reports`."""
 
     def sharpe(self, periods: int | float | None = None) -> dict[str, float]:
@@ -218,25 +223,6 @@ class StatsLike(Protocol):  # pragma: no cover
 
     def summary(self) -> pl.DataFrame:
         """Full summary DataFrame (one row per metric, one column per asset)."""
-        ...
-
-
-@runtime_checkable
-class DataLike(Protocol):  # pragma: no cover
-    """Structural interface required by the `Reports` class.
-
-    Any object satisfying this protocol can be passed as ``data`` without a
-    concrete dependency on `Data`.
-    """
-
-    @property
-    def stats(self) -> StatsLike:
-        """Statistics facade."""
-        ...
-
-    @property
-    def all(self) -> pl.DataFrame:
-        """Combined DataFrame of date index and all return columns."""
         ...
 
 
