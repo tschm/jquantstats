@@ -15,10 +15,10 @@ from ._internals import _annualization_factor, _comp_return, _downside_deviation
 if TYPE_CHECKING:
     from ..data import Data
 
-# ── Performance statistics mixin ─────────────────────────────────────────────
+# ── Risk statistics mixin ────────────────────────────────────────────────────
 
 
-class _PerformanceStatsMixin:
+class _RiskStatsMixin:
     """Mixin providing performance, drawdown, and benchmark/factor metrics.
 
     Covers: Sharpe ratio, Sortino ratio, adjusted Sortino, drawdown series,
@@ -375,7 +375,7 @@ class _PerformanceStatsMixin:
         Returns:
             float: The maximum drawdown as a positive fraction (e.g. 0.2 for 20%).
         """
-        price = _PerformanceStatsMixin.prices(series)
+        price = _RiskStatsMixin.prices(series)
         peak = price.cum_max()
         drawdown = price / peak - 1
         dd_min = cast(float, drawdown.min())
@@ -392,7 +392,7 @@ class _PerformanceStatsMixin:
             float: The maximum drawdown value.
 
         """
-        return _PerformanceStatsMixin.max_drawdown_single_series(series)
+        return _RiskStatsMixin.max_drawdown_single_series(series)
 
     def drawdown_details(self) -> dict[str, pl.DataFrame]:
         """Return detailed statistics for each individual drawdown period.
@@ -639,7 +639,7 @@ class _PerformanceStatsMixin:
             if np.isnan(base_val):
                 result[col] = float("nan")
             else:
-                result[col] = _PerformanceStatsMixin._probabilistic_ratio_from_base(base_val, series)
+                result[col] = _RiskStatsMixin._probabilistic_ratio_from_base(base_val, series)
         return result
 
     def smart_sharpe(self, periods: int | float | None = None) -> dict[str, float]:

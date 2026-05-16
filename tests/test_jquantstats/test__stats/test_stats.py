@@ -1485,19 +1485,19 @@ def test_probabilistic_ratio_invalid_base_raises(stats):
 
 def test_probabilistic_ratio_from_base_small_n():
     """_probabilistic_ratio_from_base returns nan when n <= 1."""
-    from jquantstats._stats._performance import _PerformanceStatsMixin
+    from jquantstats._stats._performance import _RiskStatsMixin
 
-    result = _PerformanceStatsMixin._probabilistic_ratio_from_base(1.0, pl.Series([0.01]))
+    result = _RiskStatsMixin._probabilistic_ratio_from_base(1.0, pl.Series([0.01]))
     assert np.isnan(result)
 
 
 def test_probabilistic_ratio_from_base_negative_variance():
     """_probabilistic_ratio_from_base returns nan when computed variance <= 0."""
-    from jquantstats._stats._performance import _PerformanceStatsMixin
+    from jquantstats._stats._performance import _RiskStatsMixin
 
     # Series with extreme negative skew; base=-0.5 yields negative variance
     series = pl.Series([0.001] * 10 + [-100.0])
-    result = _PerformanceStatsMixin._probabilistic_ratio_from_base(-0.5, series)
+    result = _RiskStatsMixin._probabilistic_ratio_from_base(-0.5, series)
     assert np.isnan(result)
 
 
