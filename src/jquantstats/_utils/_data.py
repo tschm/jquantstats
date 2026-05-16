@@ -8,8 +8,9 @@ from collections.abc import Callable, Hashable
 import numpy as np
 import polars as pl
 
+from jquantstats._protocol import DataLike
+
 from ..exceptions import MissingDateColumnError
-from ._protocol import DataLike
 
 __all__ = ["DataUtils"]
 
