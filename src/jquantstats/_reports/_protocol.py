@@ -8,12 +8,13 @@ import plotly.graph_objects as go
 import polars as pl
 
 from jquantstats._protocol import DataLike
+from jquantstats._protocol import StatsLike as BaseStatsLike
 
 __all__ = ["DataLike", "PlotsLike", "PortfolioLike", "StatsLike"]
 
 
 @runtime_checkable
-class StatsLike(Protocol):  # pragma: no cover
+class StatsLike(BaseStatsLike, Protocol):  # pragma: no cover
     """Structural interface for the statistics methods used by `Reports`."""
 
     def sharpe(self, periods: int | float | None = None) -> dict[str, float]:

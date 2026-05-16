@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 import polars as pl
 
-if TYPE_CHECKING:
-    from jquantstats._reports._protocol import StatsLike
+
+class StatsLike(Protocol):  # pragma: no cover
+    """Base structural interface for statistics facades."""
+
+    ...
 
 
 @runtime_checkable
