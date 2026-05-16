@@ -7,25 +7,9 @@ from typing import Any, Protocol, runtime_checkable
 import polars as pl
 
 from jquantstats._cost_model import CostModel
+from jquantstats._protocol import DataLike
 
-
-@runtime_checkable
-class DataLike(Protocol):  # pragma: no cover
-    """Structural interface required by the `DataPlots` class.
-
-    Any object satisfying this protocol can be passed as ``data`` without a
-    concrete dependency on `Data`.
-    """
-
-    @property
-    def all(self) -> pl.DataFrame:
-        """Combined DataFrame of date index and returns columns."""
-        ...
-
-    @property
-    def assets(self) -> list[str]:
-        """Names of the asset return columns."""
-        ...
+__all__ = ["DataLike", "PortfolioLike"]
 
 
 @runtime_checkable
