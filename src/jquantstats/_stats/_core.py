@@ -93,7 +93,7 @@ def _mean(series: pl.Series) -> float:
         True
     """
     result = series.mean()
-    return result if result is not None else float("nan")
+    return float(cast(float, result)) if result is not None else float("nan")
 
 
 # ── Module-level decorators ──────────────────────────────────────────────────
