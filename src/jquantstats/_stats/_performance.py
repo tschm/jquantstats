@@ -718,8 +718,8 @@ class _RiskStatsMixin:
         all_data = cast(pl.DataFrame, self.all)
         dframe = all_data.select([series, pl.col(benchmark_col).alias("benchmark")])
         strategy_col = dframe.columns[0]
-        assert dframe[strategy_col].null_count() == 0, "null values should have been handled by Data.__post_init__"
-        assert dframe["benchmark"].null_count() == 0, "null values should have been handled by Data.__post_init__"
+        assert dframe[strategy_col].null_count() == 0, "null values should have been handled by Data.__post_init__"  # noqa: S101
+        assert dframe["benchmark"].null_count() == 0, "null values should have been handled by Data.__post_init__"  # noqa: S101
 
         matrix = dframe.to_numpy()
         # Get actual Series
@@ -806,8 +806,8 @@ class _RiskStatsMixin:
         all_data = cast(pl.DataFrame, self.all)
         dframe = all_data.select([series, pl.col(benchmark_col).alias("benchmark")])
         strategy_col = dframe.columns[0]
-        assert dframe[strategy_col].null_count() == 0, "null values should have been handled by Data.__post_init__"
-        assert dframe["benchmark"].null_count() == 0, "null values should have been handled by Data.__post_init__"
+        assert dframe[strategy_col].null_count() == 0, "null values should have been handled by Data.__post_init__"  # noqa: S101
+        assert dframe["benchmark"].null_count() == 0, "null values should have been handled by Data.__post_init__"  # noqa: S101
         matrix = dframe.to_numpy()
 
         # Get actual Series
@@ -863,8 +863,8 @@ class _RiskStatsMixin:
         all_data = cast(pl.DataFrame, self.all)
         dframe = all_data.select([series, pl.col(benchmark_col).alias("_bench")])
         strategy_col = dframe.columns[0]
-        assert dframe[strategy_col].null_count() == 0, "null values should have been handled by Data.__post_init__"
-        assert dframe["_bench"].null_count() == 0, "null values should have been handled by Data.__post_init__"
+        assert dframe[strategy_col].null_count() == 0, "null values should have been handled by Data.__post_init__"  # noqa: S101
+        assert dframe["_bench"].null_count() == 0, "null values should have been handled by Data.__post_init__"  # noqa: S101
         matrix = dframe.to_numpy()
         strategy_np = matrix[:, 0]
         benchmark_np = matrix[:, 1]
