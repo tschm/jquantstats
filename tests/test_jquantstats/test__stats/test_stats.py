@@ -910,6 +910,48 @@ def test_to_float_timedelta():
     assert _to_float(timedelta(seconds=42)) == 42.0
 
 
+def test_columnwise_stat_missing_data_attr_raises_descriptive_error():
+    """columnwise_stat raises a descriptive error when the configured data attribute is absent."""
+    from jquantstats._stats._core import columnwise_stat
+
+    class _MissingData:
+        @columnwise_stat
+        def metric(self, series: pl.Series) -> float:
+            return float(series.mean() or 0.0)
+
+    with pytest.raises(AttributeError, match="columnwise_stat requires host object to define '_data'"):
+        _MissingData().metric()
+
+
+def test_to_frame_missing_data_attr_raises_descriptive_error():
+    """to_frame raises a descriptive error when the configured data attribute is absent."""
+    from jquantstats._stats._core import to_frame
+
+    class _MissingData:
+        all = pl.DataFrame({"Date": [1]})
+
+        @to_frame
+        def metric(self, series: pl.Series) -> pl.Expr:
+            return pl.lit(float(series.mean() or 0.0))
+
+    with pytest.raises(AttributeError, match="to_frame requires host object to define '_data'"):
+        _MissingData().metric()
+
+
+def test_columnwise_stat_supports_custom_data_attr():
+    """columnwise_stat supports an explicit data attribute name."""
+    from jquantstats._stats._core import columnwise_stat
+
+    class _CustomDataHost:
+        data = {"asset": pl.Series("asset", [1.0, 2.0, 3.0])}
+
+        @columnwise_stat(data_attr="data")
+        def metric(self, series: pl.Series) -> float:
+            return float(series.mean() or 0.0)
+
+    assert _CustomDataHost().metric() == {"asset": pytest.approx(2.0)}
+
+
 def test_periods_per_year(stats):
     """periods_per_year returns a positive annualisation factor."""
     assert stats.periods_per_year > 0
