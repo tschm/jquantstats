@@ -3,17 +3,10 @@
 This module defines the Report facade which produces a self-contained HTML
 document containing all relevant performance numbers and interactive Plotly
 visualisations for a Portfolio.
-
-Examples:
-    >>> import dataclasses
-    >>> from jquantstats._reports import Report
-    >>> dataclasses.is_dataclass(Report)
-    True
 """
 
 from __future__ import annotations
 
-import dataclasses
 import math
 from collections.abc import Callable
 from pathlib import Path
@@ -198,7 +191,6 @@ def _figure_div(fig: go.Figure, include_plotlyjs: bool | str) -> str:
     )
 
 
-@dataclasses.dataclass(frozen=True)
 class Report:
     """Facade for generating HTML reports from a Portfolio.
 
@@ -213,7 +205,10 @@ class Report:
         report.to_html(path="output/report.html")
     """
 
-    portfolio: PortfolioLike
+    __slots__ = ("_portfolio",)
+
+    def __init__(self, portfolio: PortfolioLike) -> None:
+        self._portfolio = portfolio
 
     def to_html(
         self,
@@ -237,7 +232,7 @@ class Report:
             The HTML string when *path* is ``None``, otherwise the resolved
             `pathlib.Path` of the written file.
         """
-        pf = self.portfolio
+        pf = self._portfolio
 
         # ── Metadata ──────────────────────────────────────────────────────────
         has_date = "date" in pf.prices.columns

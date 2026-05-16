@@ -85,14 +85,6 @@ def test_report_is_accessible_via_portfolio_property(multi_year_portfolio):
     """Portfolio.report should return a Report instance."""
     r = multi_year_portfolio.report
     assert isinstance(r, Report)
-    assert r.portfolio is multi_year_portfolio
-
-
-def test_report_is_dataclass():
-    """Report is a dataclass as expected."""
-    import dataclasses
-
-    assert dataclasses.is_dataclass(Report)
 
 
 # ── to_html ───────────────────────────────────────────────────────────────────
