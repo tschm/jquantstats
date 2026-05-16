@@ -20,6 +20,18 @@ def stats(data):
     return data.stats
 
 
+@pytest.fixture
+def integer_indexed_data():
+    """Build a Data object with a simple integer index for a returns frame."""
+    from jquantstats.data import Data
+
+    def _build(returns: pl.DataFrame, idx_col: str = "idx") -> Data:
+        index = pl.DataFrame({idx_col: list(range(returns.height))})
+        return Data(returns=returns, index=index)
+
+    return _build
+
+
 def test_skew(stats):
     """Tests that the skew method calculates skewness correctly.
 
@@ -936,13 +948,10 @@ def test_max_drawdown_duration_with_date(stats):
         assert result[col] >= 0
 
 
-def test_max_drawdown_duration_integer_indexed(data_no_benchmark):
+def test_max_drawdown_duration_integer_indexed(data_no_benchmark, integer_indexed_data):
     """max_drawdown_duration uses period-count when index is non-temporal."""
-    from jquantstats.data import Data
-
     returns = data_no_benchmark.returns.head(20)
-    index = pl.DataFrame({"idx": list(range(20))})
-    int_data = Data(returns=returns, index=index)
+    int_data = integer_indexed_data(returns)
     result = int_data.stats.max_drawdown_duration()
     assert isinstance(result, dict)
     for col in result:
@@ -958,13 +967,10 @@ def test_monthly_win_rate_with_date(stats):
         assert 0.0 <= result[col] <= 1.0
 
 
-def test_monthly_win_rate_no_date(data_no_benchmark):
+def test_monthly_win_rate_no_date(data_no_benchmark, integer_indexed_data):
     """monthly_win_rate returns nan for non-temporal index data."""
-    from jquantstats.data import Data
-
     returns = data_no_benchmark.returns.head(10)
-    index = pl.DataFrame({"idx": list(range(10))})
-    int_data = Data(returns=returns, index=index)
+    int_data = integer_indexed_data(returns)
     result = int_data.stats.monthly_win_rate()
     for col in result:
         assert np.isnan(result[col])
@@ -980,13 +986,10 @@ def test_worst_n_periods(stats):
         assert vals == sorted(vals)
 
 
-def test_worst_n_periods_padding(data_no_benchmark):
+def test_worst_n_periods_padding(data_no_benchmark, integer_indexed_data):
     """worst_n_periods pads with None when series has fewer than n non-null values."""
-    from jquantstats.data import Data
-
     returns = pl.DataFrame({"r": [0.01, -0.02]})
-    index = pl.DataFrame({"idx": [0, 1]})
-    tiny_data = Data(returns=returns, index=index)
+    tiny_data = integer_indexed_data(returns)
     result = tiny_data.stats.worst_n_periods(n=5)
     assert result["r"][-1] is None
 
@@ -1000,27 +1003,21 @@ def test_up_capture_basic(stats):
     assert "AAPL" in result
 
 
-def test_up_capture_no_up_periods():
+def test_up_capture_no_up_periods(integer_indexed_data):
     """up_capture returns nan when benchmark has no positive periods."""
-    from jquantstats.data import Data
-
     returns = pl.DataFrame({"r": [-0.01, -0.02, -0.03, -0.01]})
-    index = pl.DataFrame({"idx": [0, 1, 2, 3]})
-    d = Data(returns=returns, index=index)
+    d = integer_indexed_data(returns)
     bench = pl.Series([-0.01, -0.02, -0.03, -0.01])
     result = d.stats.up_capture(bench)
     for col in result:
         assert np.isnan(result[col])
 
 
-def test_up_capture_empty_strategy_up():
+def test_up_capture_empty_strategy_up(integer_indexed_data):
     """up_capture returns nan for an asset with no returns during up-benchmark periods."""
-    from jquantstats.data import Data
-
     # strategy has all values where benchmark is positive are null
     returns = pl.DataFrame({"r": [None, 0.01, 0.02, 0.01]}, schema={"r": pl.Float64})
-    index = pl.DataFrame({"idx": [0, 1, 2, 3]})
-    d = Data(returns=returns, index=index)
+    d = integer_indexed_data(returns)
     bench = pl.Series([0.05, 0.0, 0.0, 0.0])  # only period 0 is up; strategy has null there
     result = d.stats.up_capture(bench)
     assert np.isnan(result["r"])
@@ -1035,26 +1032,20 @@ def test_down_capture_basic(stats):
     assert "AAPL" in result
 
 
-def test_down_capture_no_down_periods():
+def test_down_capture_no_down_periods(integer_indexed_data):
     """down_capture returns nan when benchmark has no negative periods."""
-    from jquantstats.data import Data
-
     returns = pl.DataFrame({"r": [0.01, 0.02, 0.03, 0.01]})
-    index = pl.DataFrame({"idx": [0, 1, 2, 3]})
-    d = Data(returns=returns, index=index)
+    d = integer_indexed_data(returns)
     bench = pl.Series([0.01, 0.02, 0.03, 0.01])
     result = d.stats.down_capture(bench)
     for col in result:
         assert np.isnan(result[col])
 
 
-def test_down_capture_empty_strategy_down():
+def test_down_capture_empty_strategy_down(integer_indexed_data):
     """down_capture returns nan for an asset with no returns during down-benchmark periods."""
-    from jquantstats.data import Data
-
     returns = pl.DataFrame({"r": [0.01, None, None, 0.01]}, schema={"r": pl.Float64})
-    index = pl.DataFrame({"idx": [0, 1, 2, 3]})
-    d = Data(returns=returns, index=index)
+    d = integer_indexed_data(returns)
     bench = pl.Series([0.0, -0.05, -0.03, 0.0])  # periods 1 and 2 are down; strategy has null there
     result = d.stats.down_capture(bench)
     assert np.isnan(result["r"])
@@ -1069,18 +1060,15 @@ def test_annual_breakdown_structure(stats):
     assert result.height > 0
 
 
-def test_annual_breakdown_integer_indexed(data_no_benchmark):
+def test_annual_breakdown_integer_indexed(data_no_benchmark, integer_indexed_data):
     """annual_breakdown groups by ~252-row chunks for integer-indexed data."""
     import numpy as np
-
-    from jquantstats.data import Data
 
     # 500 rows → 2 full chunks of 252
     n = 500
     rng = np.random.default_rng(42)
     returns = pl.DataFrame({"r": rng.normal(0.001, 0.01, n).tolist()})
-    index = pl.DataFrame({"idx": list(range(n))})
-    int_data = Data(returns=returns, index=index)
+    int_data = integer_indexed_data(returns)
     result = int_data.stats.annual_breakdown()
     assert result.height > 0, "expected non-empty result for 500-row integer-indexed data"
     assert "year" in result.columns
@@ -1090,31 +1078,25 @@ def test_annual_breakdown_integer_indexed(data_no_benchmark):
     assert years == [1, 2]
 
 
-def test_annual_breakdown_integer_indexed_sparse_chunk():
+def test_annual_breakdown_integer_indexed_sparse_chunk(integer_indexed_data):
     """annual_breakdown skips integer-index chunks that are too small."""
     import numpy as np
-
-    from jquantstats.data import Data
 
     # Only 260 rows: first chunk of 252 is full, remainder (8 rows) < max(5, 63) → skipped
     n = 260
     rng = np.random.default_rng(0)
     returns = pl.DataFrame({"r": rng.normal(0.001, 0.01, n).tolist()})
-    index = pl.DataFrame({"idx": list(range(n))})
-    int_data = Data(returns=returns, index=index)
+    int_data = integer_indexed_data(returns)
     result = int_data.stats.annual_breakdown()
     # Only year 1 survives; the 8-row tail is too sparse
     assert list(result["year"].unique().sort().to_list()) == [1]
 
 
-def test_annual_breakdown_integer_indexed_all_sparse():
+def test_annual_breakdown_integer_indexed_all_sparse(integer_indexed_data):
     """annual_breakdown returns empty DataFrame when all integer-index chunks are sparse."""
-    from jquantstats.data import Data
-
     # Only 3 rows, chunk=252 → 3 < max(5, 63) → skipped
     returns = pl.DataFrame({"r": [0.01, -0.02, 0.03]})
-    index = pl.DataFrame({"idx": [0, 1, 2]})
-    int_data = Data(returns=returns, index=index)
+    int_data = integer_indexed_data(returns)
     result = int_data.stats.annual_breakdown()
     assert result.height == 0
 
