@@ -125,7 +125,7 @@ def test_plot_rolling_beta_no_benchmark_raises(data_no_benchmark):
 
 
 def test_plot_compare_no_benchmark_raises(data_no_benchmark):
-    """compare raises AttributeError when no benchmark is attached."""
+    """Compare raises AttributeError when no benchmark is attached."""
     with pytest.raises(AttributeError):
         data_no_benchmark.plots.compare()
 
