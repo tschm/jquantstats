@@ -11,21 +11,9 @@ import polars as pl
 if TYPE_CHECKING:
     from ._protocol import DataLike
 
-# ── Formatting helpers ────────────────────────────────────────────────────────
+from ._formatting import _fmt, _is_finite
 
-
-def _is_finite(v: Any) -> bool:
-    """Return True when *v* is a real, finite number."""
-    if not isinstance(v, (int, float)):
-        return False
-    return math.isfinite(float(v))
-
-
-def _fmt(value: Any, fmt: str = ".4f", suffix: str = "") -> str:
-    """Format *value* for display; return ``"N/A"`` for non-finite values."""
-    if not _is_finite(value):
-        return "N/A"
-    return f"{float(value):{fmt}}{suffix}"
+# ── Private helpers ───────────────────────────────────────────────────────────
 
 
 def _safe(fn: Any, *args: Any, **kwargs: Any) -> dict[str, float]:
