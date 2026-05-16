@@ -104,6 +104,13 @@ def _apply_base_layout(
     return fig
 
 
+def _apply_figsize(fig: go.Figure, figsize: tuple[int, int] | None) -> go.Figure:
+    """Apply optional ``(width, height)`` figure size to Plotly layout."""
+    if figsize is not None:
+        fig.update_layout(width=figsize[0], height=figsize[1])
+    return fig
+
+
 def _compute_drawdown_periods(prices: list[float], n: int) -> list[dict]:
     """Identify the top *n* drawdown periods from a cumulative price series.
 
@@ -415,7 +422,63 @@ class DataPlots:
             fig.update_yaxes(type="log")
         return fig
 
-    def log_returns(self, title: str = "Log Returns") -> go.Figure:
+    def compare(self, title: str = "Comparison vs Benchmark", figsize: tuple[int, int] | None = None) -> go.Figure:
+        """Compare cumulative returns of each asset against the benchmark.
+
+        Args:
+            title: Chart title. Defaults to ``"Comparison vs Benchmark"``.
+            figsize: Optional ``(width, height)`` in pixels.
+
+        Returns:
+            go.Figure: Interactive Plotly line chart.
+
+        Raises:
+            AttributeError: If no benchmark data is available.
+
+        """
+        benchmark_df = getattr(self._data, "benchmark", None)
+        if benchmark_df is None:
+            raise AttributeError("No benchmark data available")  # noqa: TRY003
+
+        df = self._data.all
+        date_col = df.columns[0]
+        assets = list(self._data.returns.columns)
+        benchmarks = list(benchmark_df.columns)
+
+        series = assets + benchmarks
+        colors = _ticker_colors(series)
+        prices = df.with_columns([(1.0 + pl.col(col)).cum_prod().alias(col) for col in series])
+
+        fig = go.Figure()
+        for asset in assets:
+            fig.add_trace(
+                go.Scatter(
+                    x=prices[date_col],
+                    y=prices[asset],
+                    mode="lines",
+                    name=asset,
+                    line={"color": colors[asset], "width": 2},
+                    hovertemplate=f"<b>%{{x|%b %Y}}</b><br>{asset}: %{{y:.2f}}x",
+                )
+            )
+        for benchmark in benchmarks:
+            fig.add_trace(
+                go.Scatter(
+                    x=prices[date_col],
+                    y=prices[benchmark],
+                    mode="lines",
+                    name=benchmark,
+                    line={"color": colors[benchmark], "width": 2.5, "dash": "dash"},
+                    hovertemplate=f"<b>%{{x|%b %Y}}</b><br>{benchmark}: %{{y:.2f}}x",
+                )
+            )
+
+        _apply_base_layout(fig, title)
+        _apply_figsize(fig, figsize)
+        fig.update_yaxes(title_text="Cumulative Return", tickformat=".2f")
+        return fig
+
+    def log_returns(self, title: str = "Log Returns", figsize: tuple[int, int] | None = None) -> go.Figure:
         """Cumulative log returns over time.
 
         Plots ``log((1 + r).cumprod())`` — the natural log of the compounded
@@ -424,6 +487,7 @@ class DataPlots:
 
         Args:
             title: Chart title. Defaults to ``"Log Returns"``.
+            figsize: Optional ``(width, height)`` in pixels.
 
         Returns:
             go.Figure: Interactive Plotly line chart.
@@ -452,6 +516,7 @@ class DataPlots:
             )
 
         _apply_base_layout(fig, title)
+        _apply_figsize(fig, figsize)
         fig.update_yaxes(title_text="Log Return")
         return fig
 
@@ -1127,6 +1192,7 @@ class DataPlots:
         rolling_period: int = 126,
         rolling_period2: int | None = 252,
         title: str = "Rolling Beta",
+        figsize: tuple[int, int] | None = None,
     ) -> go.Figure:
         """Rolling beta versus the benchmark.
 
@@ -1139,6 +1205,7 @@ class DataPlots:
             rolling_period2: Optional second window size overlaid on the same
                 chart. Defaults to 252. Pass ``None`` to omit.
             title: Chart title. Defaults to ``"Rolling Beta"``.
+            figsize: Optional ``(width, height)`` in pixels.
 
         Returns:
             go.Figure: Interactive Plotly line chart.
@@ -1189,5 +1256,6 @@ class DataPlots:
 
         fig.add_hline(y=1, line_width=1, line_color="gray", line_dash="dash")
         _apply_base_layout(fig, title)
+        _apply_figsize(fig, figsize)
         fig.update_yaxes(title_text="Beta")
         return fig
