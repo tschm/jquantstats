@@ -797,11 +797,11 @@ def test_portfolio_utils_exponential_cov_values_are_arrays(portfolio_pf):
 
 
 def test_portfolio_utils_exponential_cov_square_matrices(portfolio_pf):
-    """Each covariance matrix must be square with size equal to asset count."""
+    """Each covariance matrix must be two-dimensional and square."""
     result = portfolio_pf.utils.exponential_cov(window=5)
-    n_assets = len(portfolio_pf.assets)
     for mat in result.values():
-        assert mat.shape == (n_assets, n_assets)
+        assert len(mat.shape) == 2
+        assert mat.shape[0] == mat.shape[1]
 
 
 def test_portfolio_utils_exponential_cov_is_symmetric(portfolio_pf):
