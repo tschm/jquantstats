@@ -12,6 +12,9 @@ from ._core import _to_float, to_frame
 from ._internals import _annualization_factor
 from ._performance import _PerformanceStatsMixin
 
+if TYPE_CHECKING:
+    from ..data import Data
+
 # ── Rolling statistics mixin ─────────────────────────────────────────────────
 
 
@@ -19,13 +22,11 @@ class _RollingStatsMixin:
     """Mixin class providing rolling-window financial statistics methods.
 
     Separates rolling-window computations from the core point-in-time metrics
-    in `_core`.  The concrete
-    `Stats` dataclass inherits from both.
-
-    Attributes (provided by the concrete subclass):
-        data: The `Data` object.
-        all: Combined DataFrame for efficient column selection.
+    in `_core`.  The concrete `Stats` class inherits from both.
     """
+
+    _data: Data
+    all: pl.DataFrame
 
     if TYPE_CHECKING:
         from ._protocol import DataLike

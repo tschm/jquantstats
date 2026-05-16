@@ -9,6 +9,9 @@ import polars as pl
 from ._core import _drawdown_series, _to_float, columnwise_stat
 from ._internals import _comp_return
 
+if TYPE_CHECKING:
+    from ..data import Data
+
 # ── Reporting statistics mixin ───────────────────────────────────────────────
 
 
@@ -18,11 +21,10 @@ class _ReportingStatsMixin:
     Covers: periods per year, average drawdown, Calmar ratio, recovery factor,
     max drawdown duration, monthly win rate, worst-N periods, up/down capture
     ratios, annual breakdown, and summary statistics table.
-
-    Attributes (provided by the concrete subclass):
-        data: The `Data` object.
-        all: Combined DataFrame for efficient column selection.
     """
+
+    _data: Data
+    all: pl.DataFrame
 
     if TYPE_CHECKING:
         from ._protocol import DataLike

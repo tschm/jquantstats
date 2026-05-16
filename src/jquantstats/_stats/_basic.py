@@ -13,6 +13,9 @@ from scipy.stats import norm
 from ._core import columnwise_stat
 from ._internals import _annualization_factor, _comp_return
 
+if TYPE_CHECKING:
+    from ..data import Data
+
 # ── Basic statistics mixin ───────────────────────────────────────────────────
 
 
@@ -22,11 +25,10 @@ class _BasicStatsMixin:
     Covers: basic statistics (skew, kurtosis, avg return/win/loss), volatility,
     win/loss metrics (payoff ratio, profit factor), and risk metrics (VaR, CVaR,
     win rate, kelly criterion, best/worst, exposure).
-
-    Attributes (provided by the concrete subclass):
-        data: The `Data` object.
-        all: Combined DataFrame for efficient column selection.
     """
+
+    _data: Data
+    all: pl.DataFrame
 
     if TYPE_CHECKING:
         from ._protocol import DataLike

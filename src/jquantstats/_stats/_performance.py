@@ -12,6 +12,9 @@ from scipy.stats import norm
 from ._core import _to_float, columnwise_stat, to_frame
 from ._internals import _annualization_factor, _comp_return, _downside_deviation, _nav_series
 
+if TYPE_CHECKING:
+    from ..data import Data
+
 # ── Performance statistics mixin ─────────────────────────────────────────────
 
 
@@ -20,11 +23,10 @@ class _PerformanceStatsMixin:
 
     Covers: Sharpe ratio, Sortino ratio, adjusted Sortino, drawdown series,
     max drawdown, prices, R-squared, information ratio, and Greeks (alpha/beta).
-
-    Attributes (provided by the concrete subclass):
-        data: The `Data` object.
-        all: Combined DataFrame for efficient column selection.
     """
+
+    _data: Data
+    all: pl.DataFrame
 
     if TYPE_CHECKING:
         from ._protocol import DataLike
