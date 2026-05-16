@@ -438,7 +438,7 @@ class DataPlots:
         """
         benchmark_df = getattr(self._data, "benchmark", None)
         if benchmark_df is None:
-            raise AttributeError("No benchmark data available")  # noqa: TRY003
+            raise AttributeError("compare() requires benchmark data to be set")  # noqa: TRY003
 
         df = self._data.all
         date_col = df.columns[0]

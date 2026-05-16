@@ -132,7 +132,7 @@ def test_plot_compare_no_benchmark_raises(data_no_benchmark):
 
 def test_plot_figsize_applied(data):
     """log_returns/compare/rolling_beta honor explicit figsize."""
-    figsize = (900, 420)
+    figsize = (900, 600)
     for method in ("log_returns", "compare", "rolling_beta"):
         fig = getattr(data.plots, method)(figsize=figsize)
         assert fig.layout.width == figsize[0]
