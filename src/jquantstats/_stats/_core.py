@@ -14,12 +14,12 @@ These building blocks are shared across the stats mixin modules
 
 Null-return convention
 ----------------------
-- **Scalar metrics** return ``0.0`` when the series has fewer than 2
-  non-null observations (use ``_mean`` for the ``None → 0.0`` conversion).
+- **Scalar metrics** return ``float("nan")`` when the series has no non-null
+  observations (use ``_mean`` for the ``None → nan`` conversion).
 - **Ratio metrics** return ``float("nan")`` when the denominator is zero
   or indeterminate.
-- Use ``_to_float`` (or ``_mean``) for the ``None → 0.0`` conversion
-  rather than ``cast(float, ...)``.
+- Use ``_mean`` for the ``None → nan`` conversion rather than
+  ``cast(float, ...)``.
 """
 
 from __future__ import annotations
@@ -78,21 +78,22 @@ def _to_float(value: Any) -> float:
 
 
 def _mean(series: pl.Series) -> float:
-    """Return series mean, or 0.0 if the series is empty or all-null.
+    """Return series mean, or ``float("nan")`` if the series is empty or all-null.
 
     Use this instead of ``cast(float, series.mean())`` to avoid ``None``
     leaking into arithmetic — consistent with the scalar-metric convention
-    that returns ``0.0`` when there are fewer than 2 non-null observations.
+    that returns ``float("nan")`` when there are no non-null observations.
 
     Examples:
         >>> import polars as pl
         >>> _mean(pl.Series([1.0, 3.0]))
         2.0
-        >>> _mean(pl.Series([], dtype=pl.Float64))
-        0.0
+        >>> import math
+        >>> math.isnan(_mean(pl.Series([], dtype=pl.Float64)))
+        True
     """
     result = series.mean()
-    return result if result is not None else 0.0
+    return result if result is not None else float("nan")
 
 
 # ── Module-level decorators ──────────────────────────────────────────────────

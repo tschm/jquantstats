@@ -49,12 +49,12 @@ class _BasicStatsMixin:
     @staticmethod
     def _mean_positive_expr(series: pl.Series) -> float:
         """Return the mean of all positive values in *series*, or NaN if none exist."""
-        return cast(float, _BasicStatsMixin._positive(series).mean())
+        return _mean(_BasicStatsMixin._positive(series))
 
     @staticmethod
     def _mean_negative_expr(series: pl.Series) -> float:
         """Return the mean of all negative values in *series*, or NaN if none exist."""
-        return cast(float, _BasicStatsMixin._negative(series).mean())
+        return _mean(_BasicStatsMixin._negative(series))
 
     # ── Basic statistics ──────────────────────────────────────────────────────
 
@@ -642,8 +642,8 @@ class _BasicStatsMixin:
 
         """
         negative_mean = self._mean_negative_expr(series)
-        if negative_mean is None or negative_mean == 0:
-            return float(np.nan)
+        if negative_mean == 0:
+            return float("nan")  # indeterminate: zero mean of negative returns
         quantile_val = cast(float, series.quantile(quantile, interpolation="linear"))
         return float(quantile_val / negative_mean)
 
