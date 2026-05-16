@@ -27,7 +27,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import timedelta
 from functools import wraps
-from typing import Any, cast
+from typing import Any, cast, overload
 
 import polars as pl
 
@@ -99,9 +99,19 @@ def _mean(series: pl.Series) -> float:
 # ── Module-level decorators ──────────────────────────────────────────────────
 
 
+@overload
+def columnwise_stat(func: Callable[..., Any], *, data_attr: str = ...) -> Callable[..., dict[str, float]]: ...
+
+
+@overload
+def columnwise_stat(
+    func: None = ..., *, data_attr: str = ...
+) -> Callable[[Callable[..., Any]], Callable[..., dict[str, float]]]: ...
+
+
 def columnwise_stat(
     func: Callable[..., Any] | None = None, *, data_attr: str = "_data"
-) -> Callable[..., dict[str, float]]:
+) -> Callable[..., dict[str, float]] | Callable[[Callable[..., Any]], Callable[..., dict[str, float]]]:
     """Apply a column-wise statistical function to all numeric columns.
 
     Args:
@@ -135,7 +145,19 @@ def columnwise_stat(
     return decorator(func)
 
 
-def to_frame(func: Callable[..., Any] | None = None, *, data_attr: str = "_data") -> Callable[..., pl.DataFrame]:
+@overload
+def to_frame(func: Callable[..., Any], *, data_attr: str = ...) -> Callable[..., pl.DataFrame]: ...
+
+
+@overload
+def to_frame(
+    func: None = ..., *, data_attr: str = ...
+) -> Callable[[Callable[..., Any]], Callable[..., pl.DataFrame]]: ...
+
+
+def to_frame(
+    func: Callable[..., Any] | None = None, *, data_attr: str = "_data"
+) -> Callable[..., pl.DataFrame] | Callable[[Callable[..., Any]], Callable[..., pl.DataFrame]]:
     """Apply per-column expressions and evaluates with .with_columns(...).
 
     Args:
