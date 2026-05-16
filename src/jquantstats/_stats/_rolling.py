@@ -10,7 +10,7 @@ import polars as pl
 
 from ._core import _to_float
 from ._internals import _annualization_factor
-from ._performance import _PerformanceStatsMixin
+from ._performance import _RiskStatsMixin
 
 if TYPE_CHECKING:
     from ..data import Data
@@ -111,7 +111,7 @@ class _RollingStatsMixin:
 
         cols = []
         for col, series in self._data.items():
-            prices = _PerformanceStatsMixin.prices(series)
+            prices = _RiskStatsMixin.prices(series)
             ranked = prices.rolling_map(
                 function=self._pct_rank_series,
                 window_size=window,
