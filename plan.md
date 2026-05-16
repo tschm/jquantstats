@@ -88,9 +88,9 @@ If quantstats name-compatibility is later required, re-introduce as
 
 ---
 
-### T2.2 — Complete the `PortfolioUtils` facade 🔄
+### T2.2 — Complete the `PortfolioUtils` facade ✅
 
-> **In review** — [PR #726](https://github.com/Jebel-Quant/jquantstats/pull/726) open · [#716](https://github.com/Jebel-Quant/jquantstats/issues/716)
+> **Done** — merged [PR #726](https://github.com/Jebel-Quant/jquantstats/pull/726) · closes [#716](https://github.com/Jebel-Quant/jquantstats/issues/716)
 
 **File:** `src/jquantstats/_utils/_portfolio.py`
 
@@ -157,9 +157,9 @@ any `TYPE_CHECKING` imports. This is a pure rename — no logic changes.
 
 ---
 
-### T3.3 — Standardise rolling method implementation shape 🔄
+### T3.3 — Standardise rolling method implementation shape ✅
 
-> **In review** — [PR #723](https://github.com/Jebel-Quant/jquantstats/pull/723) open · [#721](https://github.com/Jebel-Quant/jquantstats/issues/721)
+> **Done** — merged [PR #723](https://github.com/Jebel-Quant/jquantstats/pull/723) · closes [#721](https://github.com/Jebel-Quant/jquantstats/issues/721)
 
 **File:** `src/jquantstats/_stats/_rolling.py`
 
@@ -465,10 +465,10 @@ return type is `float`, so downstream code is clean without casts.
 ## Recommended Sequence
 
 **Sprint 1 — Quick wins (~4 hr, no API changes)**
-~~T1.1~~, ~~T1.2~~, T1.3, T2.3, T3.3 🔄, T4.1 🔄, T7.1, T13.1
+~~T1.1~~, ~~T1.2~~, T1.3, T2.3, ~~T3.3~~, T4.1 🔄, T7.1, T13.1
 
 **Sprint 2 — API clean-up (~4 hr, minor breaking changes)**
-T2.1, T2.2 🔄, T3.1, T3.2, T4.2 🔄, T5.1, T5.2, T8.1
+T2.1, ~~T2.2~~, T3.1, T3.2, T4.2 🔄, T5.1, T5.2, T8.1
 
 **Sprint 3 — Architecture (~4 hr, protocol restructure)**
 T6.1, T6.2, T12.1

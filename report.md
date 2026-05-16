@@ -65,11 +65,10 @@ cleanly hide the internal `_data` object.
 Each costs ~6 lines plus one entry in the `StatsLike` protocol. Keep them only if
 quantstats compatibility is explicitly required; otherwise remove.
 
-**`PortfolioUtils` is missing two methods.**
-`DataUtils` exposes 12 methods; `PortfolioUtils` delegates only 10. The two
+**`PortfolioUtils` is missing two methods.** ~~`DataUtils` exposes 12 methods; `PortfolioUtils` delegates only 10. The two
 omissions — `winsorise` (`_data.py:168`) and `exponential_cov` (`_data.py:296`)
 — mean a `Portfolio` user must reach into `.data.utils` directly, breaking the
-uniform-delegation design.
+uniform-delegation design.~~ **Fixed** — merged [PR #726](https://github.com/Jebel-Quant/jquantstats/pull/726) ✅
 
 **`_periods_per_year` accessed as a private attribute across class boundaries.**
 Four rolling methods each write `periods_per_year or self._data._periods_per_year`
@@ -140,12 +139,11 @@ HHI, R-squared, and Kelly criterion — three distinct conceptual domains. The s
 between this mixin and `_ReportingStatsMixin` (CAGR, Calmar, recovery factor,
 `summary`) is not self-evident.
 
-**`rolling_sortino` is inconsistent with the other rolling methods.**
-`rolling_sortino` (`_rolling.py:123`) is decorated with `@to_frame` and receives a
+**`rolling_sortino` is inconsistent with the other rolling methods.** ~~`rolling_sortino` (`_rolling.py:123`) is decorated with `@to_frame` and receives a
 `pl.Expr`; `rolling_sharpe`, `rolling_volatility`, and `rolling_greeks` operate on
 `self.all` directly and return a `pl.DataFrame`. A reader of the module sees four
 methods with what appears to be the same purpose but two different implementation
-shapes.
+shapes.~~ **Fixed** — merged [PR #723](https://github.com/Jebel-Quant/jquantstats/pull/723) ✅
 
 ---
 

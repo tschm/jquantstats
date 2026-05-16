@@ -71,7 +71,7 @@ data.stats.rolling_sharpe()   # → pl.DataFrame (Date | AAPL | META)
 data.stats.monthly_returns()  # → pl.DataFrame
 ```
 
-**Gap:** The alias methods (`ghpr`, `r2`, `win_loss_ratio`) slightly pollute the surface. The asymmetry in `rolling_sortino` (uses `@to_frame` + `pl.Expr`) vs the other three rolling methods (operate on `self.all` directly) is a minor inconsistency.
+**Gap:** The alias methods (`ghpr`, `r2`, `win_loss_ratio`) slightly pollute the surface. ~~The asymmetry in `rolling_sortino` (uses `@to_frame` + `pl.Expr`) vs the other three rolling methods (operate on `self.all` directly) is a minor inconsistency.~~ The `rolling_sortino` asymmetry has been **fixed** — merged [PR #723](https://github.com/Jebel-Quant/jquantstats/pull/723) ✅
 
 ---
 
