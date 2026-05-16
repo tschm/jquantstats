@@ -115,6 +115,7 @@ def columnwise_stat(
 
     def decorator(inner_func: Callable[..., Any]) -> Callable[..., dict[str, float]]:
         """Wrap *inner_func* to iterate over the configured data attribute columns."""
+
         @wraps(inner_func)
         def wrapper(self: Any, *args: Any, **kwargs: Any) -> dict[str, float]:
             """Apply *func* to every column and return a ``{column: value}`` mapping."""
@@ -134,9 +135,7 @@ def columnwise_stat(
     return decorator(func)
 
 
-def to_frame(
-    func: Callable[..., Any] | None = None, *, data_attr: str = "_data"
-) -> Callable[..., pl.DataFrame]:
+def to_frame(func: Callable[..., Any] | None = None, *, data_attr: str = "_data") -> Callable[..., pl.DataFrame]:
     """Apply per-column expressions and evaluates with .with_columns(...).
 
     Args:
@@ -150,6 +149,7 @@ def to_frame(
 
     def decorator(inner_func: Callable[..., Any]) -> Callable[..., pl.DataFrame]:
         """Wrap *inner_func* to build a per-column frame from the configured data attribute."""
+
         @wraps(inner_func)
         def wrapper(self: Any, *args: Any, **kwargs: Any) -> pl.DataFrame:
             """Apply *func* per column and return the result as a Polars DataFrame."""
