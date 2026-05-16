@@ -60,7 +60,7 @@ class _ReportingStatsMixin:
             """Defined on _BasicStatsMixin."""
 
         def sharpe(self) -> dict[str, float]:
-            """Defined on _PerformanceStatsMixin."""
+            """Defined on _RiskStatsMixin."""
 
         def skew(self) -> dict[str, float]:
             """Defined on _BasicStatsMixin."""
@@ -75,7 +75,7 @@ class _ReportingStatsMixin:
             """Defined on _BasicStatsMixin."""
 
         def max_drawdown(self) -> dict[str, float]:
-            """Defined on _PerformanceStatsMixin."""
+            """Defined on _RiskStatsMixin."""
 
         def cagr(self, periods: int | float | None = None) -> dict[str, float]:
             """Defined on _ReportingStatsMixin."""
