@@ -139,8 +139,7 @@ class _RollingStatsMixin:
             ValueError: If rolling_period is not a positive integer.
 
         """
-        actual_window = rolling_period
-        if not isinstance(actual_window, int) or actual_window <= 0:
+        if not isinstance(rolling_period, int) or rolling_period <= 0:
             raise ValueError("rolling_period must be a positive integer")  # noqa: TRY003
         ppy = periods_per_year or self._data._periods_per_year
         scale = _annualization_factor(ppy)
@@ -148,11 +147,11 @@ class _RollingStatsMixin:
             [pl.col(name) for name in self._data.date_col]
             + [
                 (
-                    pl.col(col).rolling_mean(window_size=actual_window)
+                    pl.col(col).rolling_mean(window_size=rolling_period)
                     / pl.when(pl.col(col) < 0)
                     .then(pl.col(col) ** 2)
                     .otherwise(0.0)
-                    .rolling_mean(window_size=actual_window)
+                    .rolling_mean(window_size=rolling_period)
                     .sqrt()
                     * scale
                 ).alias(col)
