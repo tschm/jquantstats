@@ -9,7 +9,7 @@ import numpy as np
 import polars as pl
 from scipy.stats import norm
 
-from ._core import _to_float, columnwise_stat, to_frame
+from ._core import _mean, _to_float, columnwise_stat, to_frame
 from ._internals import _annualization_factor, _comp_return, _downside_deviation, _nav_series
 
 if TYPE_CHECKING:
@@ -92,17 +92,17 @@ class _PerformanceStatsMixin:
 
         """
         t = series.count()
-        mean_val = cast(float, series.mean())
+        mean_val = _mean(series)
         std_val = cast(float, series.std(ddof=1))
-        if mean_val is None or std_val is None or std_val == 0:
-            return float(np.nan)
+        if std_val is None or std_val == 0:
+            return float("nan")  # indeterminate: zero or missing standard deviation
         sr = mean_val / std_val
 
         skew_val = series.skew(bias=False)
         kurt_val = series.kurtosis(bias=False)
 
         if skew_val is None or kurt_val is None:
-            return float(np.nan)
+            return float("nan")  # indeterminate: missing moments
         # Base variance calculation using unannualized Sharpe ratio
         # Formula: (1 + skew*SR/2 + (kurt-3)*SR²/4) / T
         base_variance = (1 + (float(skew_val) * sr) / 2 + ((float(kurt_val) - 3) / 4) * sr**2) / t
@@ -129,10 +129,10 @@ class _PerformanceStatsMixin:
         t = series.count()
 
         # Calculate observed unannualized Sharpe ratio
-        mean_val = cast(float, series.mean())
+        mean_val = _mean(series)
         std_val = cast(float, series.std(ddof=1))
-        if mean_val is None or std_val is None or std_val == 0:
-            return float(np.nan)
+        if std_val is None or std_val == 0:
+            return float("nan")  # indeterminate: zero or missing standard deviation
         # Unannualized observed Sharpe ratio
         observed_sr = mean_val / std_val
 
@@ -140,14 +140,14 @@ class _PerformanceStatsMixin:
         kurt_val = series.kurtosis(bias=False)
 
         if skew_val is None or kurt_val is None:
-            return float(np.nan)
+            return float("nan")  # indeterminate: missing moments
 
         benchmark_sr = 0.0
         # Calculate variance using unannualized benchmark Sharpe ratio
         var_bench_sr = (1 + (float(skew_val) * benchmark_sr) / 2 + ((float(kurt_val) - 3) / 4) * benchmark_sr**2) / t
 
         if var_bench_sr <= 0:
-            return float(np.nan)  # pragma: no cover
+            return float("nan")  # pragma: no cover  # indeterminate: non-positive variance
         return float(norm.cdf((observed_sr - benchmark_sr) / np.sqrt(var_bench_sr)))
 
     @columnwise_stat
@@ -178,7 +178,7 @@ class _PerformanceStatsMixin:
         """
         positive_returns = series.filter(series > 0).drop_nans()
         if positive_returns.len() <= 2:
-            return float(np.nan)
+            return float("nan")  # indeterminate: fewer than 3 positive returns
         weight = positive_returns / positive_returns.sum()
         return float((weight.len() * (weight**2).sum() - 1) / (weight.len() - 1))
 
@@ -210,7 +210,7 @@ class _PerformanceStatsMixin:
         """
         negative_returns = series.filter(series < 0).drop_nans()
         if negative_returns.len() <= 2:
-            return float(np.nan)
+            return float("nan")  # indeterminate: fewer than 3 negative returns
         weight = negative_returns / negative_returns.sum()
         return float((weight.len() * (weight**2).sum() - 1) / (weight.len() - 1))
 
@@ -231,15 +231,14 @@ class _PerformanceStatsMixin:
         """
         periods = periods or self._data._periods_per_year
         downside_deviation = _downside_deviation(series)
-        mean_val = cast(float, series.mean())
-        mean_f = mean_val if mean_val is not None else 0.0
+        mean_f = _mean(series)
         if downside_deviation == 0.0:
             if mean_f > 0:
                 return float("inf")
             elif mean_f < 0:  # pragma: no cover  # unreachable: no negatives ⟹ mean ≥ 0
                 return float("-inf")
             else:
-                return float("nan")
+                return float("nan")  # indeterminate: zero mean and zero downside deviation
         ratio = mean_f / downside_deviation
         return float(ratio * _annualization_factor(periods))
 
@@ -514,10 +513,10 @@ class _PerformanceStatsMixin:
         skew_val = series.skew(bias=False)
         kurt_val = series.kurtosis(bias=False)
         if skew_val is None or kurt_val is None or n <= 1:
-            return float(np.nan)
+            return float("nan")  # indeterminate: missing moments or insufficient data
         variance = (1 + 0.5 * base**2 - float(skew_val) * base + ((float(kurt_val) - 3) / 4) * base**2) / (n - 1)
         if variance <= 0:
-            return float(np.nan)
+            return float("nan")  # indeterminate: non-positive variance
         return float(norm.cdf(base / np.sqrt(variance)))
 
     @columnwise_stat
@@ -537,10 +536,9 @@ class _PerformanceStatsMixin:
 
         """
         downside_deviation = _downside_deviation(series)
-        mean_val = cast(float, series.mean())
-        mean_f = mean_val if mean_val is not None else 0.0
+        mean_f = _mean(series)
         if downside_deviation == 0.0:
-            return float(np.nan)
+            return float("nan")  # indeterminate: zero downside deviation
         base = float(mean_f / downside_deviation)
         return self._probabilistic_ratio_from_base(base, series)
 
@@ -562,10 +560,9 @@ class _PerformanceStatsMixin:
 
         """
         downside_deviation = _downside_deviation(series)
-        mean_val = cast(float, series.mean())
-        mean_f = mean_val if mean_val is not None else 0.0
+        mean_f = _mean(series)
         if downside_deviation == 0.0:
-            return float(np.nan)
+            return float("nan")  # indeterminate: zero downside deviation
         base = float(mean_f / downside_deviation) / np.sqrt(2)
         return self._probabilistic_ratio_from_base(base, series)
 
@@ -596,7 +593,7 @@ class _PerformanceStatsMixin:
 
         def _sharpe_base(s: pl.Series) -> float:
             """Return the per-period Sharpe ratio (mean / std, ddof=1) of *s*."""
-            mean_val = cast(float, s.mean())
+            mean_val = _mean(s)
             std_val = cast(float, s.std(ddof=1))
             if not std_val or std_val == 0:
                 return float("nan")
@@ -608,7 +605,7 @@ class _PerformanceStatsMixin:
             downside_dev = float(np.sqrt(downside_sum / s.count()))
             if downside_dev == 0.0:
                 return float("nan")
-            return _to_float(s.mean()) / downside_dev
+            return _mean(s) / downside_dev
 
         _builtin: dict[str, Callable[[pl.Series], float]] = {
             "sharpe": _sharpe_base,
@@ -762,11 +759,10 @@ class _PerformanceStatsMixin:
 
         active = series - benchmark_data[benchmark_col]
 
-        mean_val = cast(float, active.mean())
+        mean_f = _mean(active)
         std_val = cast(float, active.std())
 
         try:
-            mean_f = mean_val if mean_val is not None else 0.0
             std_f = std_val if std_val is not None else 1.0
             ir = mean_f / std_f
             return float(ir * (ppy**0.5) if annualise else ir)

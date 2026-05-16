@@ -10,7 +10,7 @@ import numpy as np
 import polars as pl
 from scipy.stats import norm
 
-from ._core import columnwise_stat
+from ._core import _mean, columnwise_stat
 from ._internals import _annualization_factor, _comp_return
 
 if TYPE_CHECKING:
@@ -49,12 +49,12 @@ class _BasicStatsMixin:
     @staticmethod
     def _mean_positive_expr(series: pl.Series) -> float:
         """Return the mean of all positive values in *series*, or NaN if none exist."""
-        return cast(float, _BasicStatsMixin._positive(series).mean())
+        return _mean(_BasicStatsMixin._positive(series))
 
     @staticmethod
     def _mean_negative_expr(series: pl.Series) -> float:
         """Return the mean of all negative values in *series*, or NaN if none exist."""
-        return cast(float, _BasicStatsMixin._negative(series).mean())
+        return _mean(_BasicStatsMixin._negative(series))
 
     # ── Basic statistics ──────────────────────────────────────────────────────
 
@@ -97,7 +97,7 @@ class _BasicStatsMixin:
             float: The average return value.
 
         """
-        return cast(float, series.filter(series.is_not_null() & (series != 0)).mean())
+        return _mean(series.filter(series.is_not_null() & (series != 0)))
 
     @columnwise_stat
     def avg_win(self, series: pl.Series) -> float:
@@ -159,10 +159,10 @@ class _BasicStatsMixin:
         clean = series.drop_nulls().cast(pl.Float64)
         n = clean.len()
         if n == 0:
-            return float(np.nan)
+            return float("nan")  # indeterminate: no observations
         compound = float((1.0 + clean).product())
         if compound <= 0:
-            return float(np.nan)
+            return float("nan")  # indeterminate: non-positive compound return
         exponent = (periods or self._data._periods_per_year) / n if annualize else (1.0 / n)
         return float(compound**exponent) - 1.0
 
@@ -238,16 +238,15 @@ class _BasicStatsMixin:
         wins = series.filter(series >= 0)
         losses = self._negative(series)
 
-        try:
-            win_mean = cast(float, wins.mean())
-            loss_mean = cast(float, losses.mean())
-            win_ratio = float(np.abs(win_mean / wins.count()))
-            loss_ratio = float(np.abs(loss_mean / losses.count()))
+        if wins.is_empty() or losses.is_empty():
+            return float("nan")  # indeterminate: no wins or no losses
 
-            return win_ratio / loss_ratio
+        win_mean = _mean(wins)
+        loss_mean = _mean(losses)
+        win_ratio = float(np.abs(win_mean / wins.count()))
+        loss_ratio = float(np.abs(loss_mean / losses.count()))
 
-        except TypeError:
-            return float(np.nan)
+        return win_ratio / loss_ratio
 
     @columnwise_stat
     def profit_factor(self, series: pl.Series) -> float:
@@ -286,9 +285,9 @@ class _BasicStatsMixin:
             float: The value at risk.
 
         """
-        mean_val = cast(float, series.mean())
+        mean_val = _mean(series)
         std_val = cast(float, series.std())
-        mu = mean_val if mean_val is not None else 0.0
+        mu = mean_val
         sigma *= std_val if std_val is not None else 0.0
 
         return float(norm.ppf(alpha, mu, sigma))
@@ -296,9 +295,9 @@ class _BasicStatsMixin:
     @columnwise_stat
     def _conditional_value_at_risk_impl(self, series: pl.Series, sigma: float = 1.0, alpha: float = 0.05) -> float:
         """Inner per-series implementation of conditional value-at-risk."""
-        mean_val = cast(float, series.mean())
+        mean_val = _mean(series)
         std_val = cast(float, series.std())
-        mu = mean_val if mean_val is not None else 0.0
+        mu = mean_val
         sigma *= std_val if std_val is not None else 0.0
 
         var = norm.ppf(alpha, mu, sigma)
@@ -307,7 +306,7 @@ class _BasicStatsMixin:
         # Cast to Any or pl.Series to suppress Ty error
         # Cast the mask to pl.Expr to satisfy type checker
         mask = cast(Iterable[bool], series < var)
-        return cast(float, series.filter(mask).mean())
+        return _mean(series.filter(mask))
 
     def conditional_value_at_risk(
         self, sigma: float = 1.0, confidence: float = 0.95, **kwargs: float
@@ -391,7 +390,7 @@ class _BasicStatsMixin:
         """
         comp = _comp_return(series)
         ui = self._ulcer_index_series(series)
-        return float(np.nan) if ui == 0 else (comp - rf) / ui
+        return float("nan") if ui == 0 else (comp - rf) / ui
 
     @columnwise_stat
     def serenity_index(self, series: pl.Series, rf: float = 0.0) -> float:
@@ -411,20 +410,20 @@ class _BasicStatsMixin:
         """
         std_val = cast(float, series.std())
         if not std_val:
-            return float(np.nan)
+            return float("nan")  # indeterminate: zero variance
 
         # Negate drawdowns to match quantstats sign convention (negative = below peak)
         dd_neg = -self._drawdown_with_baseline(series)
-        mu = cast(float, dd_neg.mean())
+        mu = _mean(dd_neg)
         sigma = cast(float, dd_neg.std())
         var_threshold = float(norm.ppf(0.05, mu, sigma))
         mask = cast(Iterable[bool], dd_neg < var_threshold)
-        cvar_val = cast(float, dd_neg.filter(mask).mean())
+        cvar_val = _mean(dd_neg.filter(mask))
 
         pitfall = -cvar_val / std_val
         ui = self._ulcer_index_series(series)
         denominator = ui * pitfall
-        return float(np.nan) if denominator == 0 else (float(series.sum()) - rf) / denominator
+        return float("nan") if denominator == 0 else (float(series.sum()) - rf) / denominator
 
     @columnwise_stat
     def win_rate(self, series: pl.Series) -> float:
@@ -546,7 +545,7 @@ class _BasicStatsMixin:
         upper = cast(float, series.quantile(cutoff, interpolation="linear"))
         lower = cast(float, series.quantile(1 - cutoff, interpolation="linear"))
         if upper is None or lower is None or lower == 0:
-            return float(np.nan)
+            return float("nan")  # indeterminate: zero or missing quantile
         return float(np.abs(upper / lower))
 
     def cpc_index(self) -> dict[str, float]:
@@ -621,9 +620,9 @@ class _BasicStatsMixin:
             float: Outlier win ratio.
 
         """
-        positive_mean = cast(float, series.filter(series >= 0).mean())
-        if positive_mean is None or positive_mean == 0:
-            return float(np.nan)
+        positive_mean = _mean(series.filter(series >= 0))
+        if positive_mean == 0:
+            return float("nan")  # indeterminate: zero mean of positive returns
         quantile_val = cast(float, series.quantile(quantile, interpolation="linear"))
         return float(quantile_val / positive_mean)
 
@@ -643,8 +642,8 @@ class _BasicStatsMixin:
 
         """
         negative_mean = self._mean_negative_expr(series)
-        if negative_mean is None or negative_mean == 0:
-            return float(np.nan)
+        if negative_mean == 0:
+            return float("nan")  # indeterminate: zero mean of negative returns
         quantile_val = cast(float, series.quantile(quantile, interpolation="linear"))
         return float(quantile_val / negative_mean)
 
@@ -666,7 +665,7 @@ class _BasicStatsMixin:
         try:
             return float(float(total_gain) / float(total_pain))
         except ZeroDivisionError:
-            return float(np.nan)
+            return float("nan")  # indeterminate: no losses (denominator is zero)
 
     @columnwise_stat
     def risk_return_ratio(self, series: pl.Series) -> float:
@@ -681,9 +680,9 @@ class _BasicStatsMixin:
             float: The risk return ratio value.
 
         """
-        mean_val = cast(float, series.mean())
+        mean_val = _mean(series)
         std_val = cast(float, series.std())
-        return (mean_val if mean_val is not None else 0.0) / (std_val if std_val is not None else 1.0)
+        return mean_val / (std_val if std_val is not None else 1.0)
 
     def kelly_criterion(self) -> dict[str, float]:
         """Calculate the optimal capital allocation per column.
