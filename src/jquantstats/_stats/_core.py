@@ -4,12 +4,22 @@ Provides:
 
 - `_drawdown_series` — drawdown series from a returns series.
 - `_to_float` — safe Polars aggregation result → Python float.
+- `_mean` — series mean with ``None → 0.0`` fallback.
 - `columnwise_stat` — decorator: apply a metric to every asset column.
 - `to_frame` — decorator: build a per-column Polars DataFrame result.
 
 These building blocks are shared across the stats mixin modules
 (`_basic`, `_performance`,
 `_reporting`, `_rolling`).
+
+Null-return convention
+----------------------
+- **Scalar metrics** return ``0.0`` when the series has fewer than 2
+  non-null observations (use ``_mean`` for the ``None → 0.0`` conversion).
+- **Ratio metrics** return ``float("nan")`` when the denominator is zero
+  or indeterminate.
+- Use ``_to_float`` (or ``_mean``) for the ``None → 0.0`` conversion
+  rather than ``cast(float, ...)``.
 """
 
 from __future__ import annotations
@@ -65,6 +75,24 @@ def _to_float(value: Any) -> float:
     if isinstance(value, timedelta):
         return value.total_seconds()
     return float(cast(float, value))
+
+
+def _mean(series: pl.Series) -> float:
+    """Return series mean, or 0.0 if the series is empty or all-null.
+
+    Use this instead of ``cast(float, series.mean())`` to avoid ``None``
+    leaking into arithmetic — consistent with the scalar-metric convention
+    that returns ``0.0`` when there are fewer than 2 non-null observations.
+
+    Examples:
+        >>> import polars as pl
+        >>> _mean(pl.Series([1.0, 3.0]))
+        2.0
+        >>> _mean(pl.Series([], dtype=pl.Float64))
+        0.0
+    """
+    result = series.mean()
+    return result if result is not None else 0.0
 
 
 # ── Module-level decorators ──────────────────────────────────────────────────

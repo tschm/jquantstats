@@ -27,6 +27,7 @@ import polars as pl
 from ._basic import _BasicStatsMixin
 from ._core import (
     _drawdown_series,
+    _mean,
     _to_float,
     columnwise_stat,
     to_frame,
@@ -50,6 +51,7 @@ __all__ = [
     "_comp_return",
     "_downside_deviation",
     "_drawdown_series",
+    "_mean",
     "_nav_series",
     "_to_float",
     "columnwise_stat",

@@ -144,8 +144,8 @@ class _RollingStatsMixin:
             window_size=rolling_period
         )
 
-        # Avoid division by zero
-        sortino = mean_ret / downside.sqrt().fill_nan(0).fill_null(0)
+        # Avoid division by zero; fill_null(0) handles the rolling warm-up period
+        sortino = mean_ret / downside.sqrt().fill_null(0)
         return cast(pl.Expr, sortino * (ppy**0.5))
 
     def rolling_sharpe(
