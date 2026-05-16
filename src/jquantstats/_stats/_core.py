@@ -27,7 +27,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import timedelta
 from functools import wraps
-from typing import Any, cast
+from typing import Any, cast, overload
 
 import polars as pl
 
@@ -99,42 +99,96 @@ def _mean(series: pl.Series) -> float:
 # ── Module-level decorators ──────────────────────────────────────────────────
 
 
-def columnwise_stat(func: Callable[..., Any]) -> Callable[..., dict[str, float]]:
+@overload
+def columnwise_stat(func: Callable[..., Any], *, data_attr: str = ...) -> Callable[..., dict[str, float]]: ...
+
+
+@overload
+def columnwise_stat(
+    func: None = ..., *, data_attr: str = ...
+) -> Callable[[Callable[..., Any]], Callable[..., dict[str, float]]]: ...
+
+
+def columnwise_stat(
+    func: Callable[..., Any] | None = None, *, data_attr: str = "_data"
+) -> Callable[..., dict[str, float]] | Callable[[Callable[..., Any]], Callable[..., dict[str, float]]]:
     """Apply a column-wise statistical function to all numeric columns.
 
     Args:
-        func (Callable): The function to decorate.
+        func (Callable | None): The function to decorate.
+        data_attr: Attribute name that holds the column-wise data object.
 
     Returns:
         Callable: The decorated function.
 
     """
 
-    @wraps(func)
-    def wrapper(self: Any, *args: Any, **kwargs: Any) -> dict[str, float]:
-        """Apply *func* to every column and return a ``{column: value}`` mapping."""
-        return {col: func(self, series, *args, **kwargs) for col, series in self._data.items()}
+    def decorator(inner_func: Callable[..., Any]) -> Callable[..., dict[str, float]]:
+        """Wrap *inner_func* to iterate over the configured data attribute columns."""
 
-    return wrapper
+        @wraps(inner_func)
+        def wrapper(self: Any, *args: Any, **kwargs: Any) -> dict[str, float]:
+            """Apply *func* to every column and return a ``{column: value}`` mapping."""
+            if not hasattr(self, data_attr):
+                msg = (
+                    f"columnwise_stat requires host object to define '{data_attr}' "
+                    f"(missing attribute on {type(self).__name__})."
+                )
+                raise AttributeError(msg)
+            data = getattr(self, data_attr)
+            return {col: inner_func(self, series, *args, **kwargs) for col, series in data.items()}
+
+        return wrapper
+
+    if func is None:
+        return decorator
+    return decorator(func)
 
 
-def to_frame(func: Callable[..., Any]) -> Callable[..., pl.DataFrame]:
+@overload
+def to_frame(func: Callable[..., Any], *, data_attr: str = ...) -> Callable[..., pl.DataFrame]: ...
+
+
+@overload
+def to_frame(
+    func: None = ..., *, data_attr: str = ...
+) -> Callable[[Callable[..., Any]], Callable[..., pl.DataFrame]]: ...
+
+
+def to_frame(
+    func: Callable[..., Any] | None = None, *, data_attr: str = "_data"
+) -> Callable[..., pl.DataFrame] | Callable[[Callable[..., Any]], Callable[..., pl.DataFrame]]:
     """Apply per-column expressions and evaluates with .with_columns(...).
 
     Args:
-        func (Callable): The function to decorate.
+        func (Callable | None): The function to decorate.
+        data_attr: Attribute name that holds the column-wise data object.
 
     Returns:
         Callable: The decorated function.
 
     """
 
-    @wraps(func)
-    def wrapper(self: Any, *args: Any, **kwargs: Any) -> pl.DataFrame:
-        """Apply *func* per column and return the result as a Polars DataFrame."""
-        return cast(pl.DataFrame, self.all).select(
-            [pl.col(name) for name in self._data.date_col]
-            + [func(self, series, *args, **kwargs).alias(col) for col, series in self._data.items()]
-        )
+    def decorator(inner_func: Callable[..., Any]) -> Callable[..., pl.DataFrame]:
+        """Wrap *inner_func* to build a per-column frame from the configured data attribute."""
 
-    return wrapper
+        @wraps(inner_func)
+        def wrapper(self: Any, *args: Any, **kwargs: Any) -> pl.DataFrame:
+            """Apply *func* per column and return the result as a Polars DataFrame."""
+            if not hasattr(self, data_attr):
+                msg = (
+                    f"to_frame requires host object to define '{data_attr}' "
+                    f"(missing attribute on {type(self).__name__})."
+                )
+                raise AttributeError(msg)
+            data = getattr(self, data_attr)
+            return cast(pl.DataFrame, self.all).select(
+                [pl.col(name) for name in data.date_col]
+                + [inner_func(self, series, *args, **kwargs).alias(col) for col, series in data.items()]
+            )
+
+        return wrapper
+
+    if func is None:
+        return decorator
+    return decorator(func)
