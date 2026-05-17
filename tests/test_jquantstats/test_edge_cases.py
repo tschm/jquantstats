@@ -394,6 +394,15 @@ def test_null_strategy_drop_removes_null_rows():
     assert data.returns["asset"].null_count() == 0
 
 
+def test_null_strategy_drop_handles_nulls_before_metric_execution():
+    """With null_strategy='drop', metrics receive null-free series from Data construction."""
+    returns = _make_returns_with_null()
+    data = Data.from_returns(returns=returns, null_strategy="drop")
+
+    result = data.stats.avg_return()
+    assert result["asset"] == pytest.approx((0.01 + 0.03 + 0.02) / 3)
+
+
 def test_null_strategy_forward_fill_fills_nulls():
     """null_strategy='forward_fill' fills each null with the previous non-null value."""
     returns = _make_returns_with_null()

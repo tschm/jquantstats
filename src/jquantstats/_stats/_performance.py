@@ -719,10 +719,7 @@ class _RiskStatsMixin:
 
         # Evaluate both series and benchmark as Series
         all_data = cast(pl.DataFrame, self.all)
-        dframe = all_data.select([series, pl.col(benchmark_col).alias("benchmark")])
-
-        # Drop nulls
-        dframe = dframe.drop_nulls()
+        dframe = all_data.select([series, pl.col(benchmark_col).alias("benchmark")]).drop_nulls()
 
         matrix = dframe.to_numpy()
         # Get actual Series
@@ -807,10 +804,7 @@ class _RiskStatsMixin:
 
         # Evaluate both series and benchmark as Series
         all_data = cast(pl.DataFrame, self.all)
-        dframe = all_data.select([series, pl.col(benchmark_col).alias("benchmark")])
-
-        # Drop nulls
-        dframe = dframe.drop_nulls()
+        dframe = all_data.select([series, pl.col(benchmark_col).alias("benchmark")]).drop_nulls()
         matrix = dframe.to_numpy()
 
         # Get actual Series

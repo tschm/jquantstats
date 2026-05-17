@@ -88,7 +88,7 @@ class _BasicStatsMixin:
 
     @columnwise_stat
     def avg_return(self, series: pl.Series) -> float:
-        """Calculate average return per non-zero, non-null value.
+        """Calculate average return per non-zero value.
 
         Args:
             series (pl.Series): The series to calculate average return for.
