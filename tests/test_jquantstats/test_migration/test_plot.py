@@ -177,6 +177,8 @@ def test_plot_monthly_returns_single_asset(data_single):
     fig = data_single.plots.monthly_returns()
     assert isinstance(fig, go.Figure)
     assert len(fig.data) > 0
+    colors = set(fig.data[0].marker.color)
+    assert colors <= {"#2ca02c", "#d62728"}
 
 
 def test_plot_daily_returns_single_asset(data_single):
@@ -184,3 +186,5 @@ def test_plot_daily_returns_single_asset(data_single):
     fig = data_single.plots.daily_returns()
     assert isinstance(fig, go.Figure)
     assert len(fig.data) > 0
+    colors = set(fig.data[0].marker.color)
+    assert colors <= {"#2ca02c", "#d62728"}
