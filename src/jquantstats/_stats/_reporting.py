@@ -117,6 +117,7 @@ class _ReportingStatsMixin:
         """
         dd = _drawdown_series(series)
         in_dd = dd.filter(dd > 0)
+        # A series that never falls below its high-water mark has an average drawdown of exactly 0.0.
         if in_dd.is_empty():
             return 0.0
         return -_to_float(in_dd.mean())
@@ -625,6 +626,7 @@ class _ReportingStatsMixin:
         """
         up_mask = benchmark > 0
         bench_up = benchmark.filter(up_mask).drop_nulls()
+        # A benchmark with no positive periods makes up-capture undefined for every asset.
         if bench_up.is_empty():
             return {col: float("nan") for col, _ in self._data.items()}
         bench_geom = float((bench_up + 1.0).product()) ** (1.0 / len(bench_up)) - 1.0
@@ -633,6 +635,7 @@ class _ReportingStatsMixin:
         result: dict[str, float] = {}
         for col, series in self._data.items():
             strat_up = series.filter(up_mask).drop_nulls()
+            # An asset may have no usable returns during the benchmark's up periods after null filtering.
             if strat_up.is_empty():
                 result[col] = float("nan")
             else:
@@ -654,6 +657,7 @@ class _ReportingStatsMixin:
         """
         down_mask = benchmark < 0
         bench_down = benchmark.filter(down_mask).drop_nulls()
+        # A benchmark with no negative periods makes down-capture undefined for every asset.
         if bench_down.is_empty():
             return {col: float("nan") for col, _ in self._data.items()}
         bench_geom = float((bench_down + 1.0).product()) ** (1.0 / len(bench_down)) - 1.0
@@ -662,6 +666,7 @@ class _ReportingStatsMixin:
         result: dict[str, float] = {}
         for col, series in self._data.items():
             strat_down = series.filter(down_mask).drop_nulls()
+            # An asset may have no usable returns during the benchmark's down periods after null filtering.
             if strat_down.is_empty():
                 result[col] = float("nan")
             else:
