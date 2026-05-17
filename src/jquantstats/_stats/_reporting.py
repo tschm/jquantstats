@@ -421,7 +421,11 @@ class _ReportingStatsMixin:
                 .agg(agg_expr.alias("ret"))
                 .with_columns(
                     pl.col("month_num")
-                    .map_elements(month_names.__getitem__, return_dtype=pl.String)
+                    .replace_strict(
+                        list(month_names.keys()),
+                        list(month_names.values()),
+                        return_dtype=pl.String,
+                    )
                     .alias("month_name")
                 )
                 .sort(["year", "month_num"])
