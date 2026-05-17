@@ -7,6 +7,7 @@ and that the protocol modules are importable.
 from __future__ import annotations
 
 from datetime import date
+import inspect
 
 import polars as pl
 import pytest
@@ -65,7 +66,7 @@ def test_portfolio_satisfies_reports_portfolio_like(simple_portfolio):
 
 def test_reports_stats_like_protocol_is_minimal():
     """Reports StatsLike only defines methods used by Report."""
-    protocol_methods = {name for name, value in ReportsStatsLike.__dict__.items() if callable(value) and not name.startswith("_")}
+    protocol_methods = {name for name, value in ReportsStatsLike.__dict__.items() if inspect.isfunction(value) and not name.startswith("_")}
     assert protocol_methods == {"summary"}
 
 
