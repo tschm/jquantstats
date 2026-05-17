@@ -18,3 +18,22 @@ def _fmt(value: Any, fmt: str = ".4f", suffix: str = "") -> str:
     if not _is_finite(value):
         return "N/A"
     return f"{float(value):{fmt}}{suffix}"
+
+
+def _plotly_div(fig: Any, include_plotlyjs: bool | str = False) -> str:
+    """Serialise a Plotly figure to a standalone HTML ``<div>``."""
+    import plotly.io as pio
+
+    return pio.to_html(fig, full_html=False, include_plotlyjs=include_plotlyjs)
+
+
+def _table_html(header_cells: str, body_html: str) -> str:
+    """Wrap pre-rendered table cells and body rows in the shared report table shell."""
+    return (
+        '<table class="stats-table">'
+        "<thead><tr>"
+        f'<th class="metric-header">Metric</th>{header_cells}'
+        "</tr></thead>"
+        f"<tbody>{body_html}</tbody>"
+        "</table>"
+    )

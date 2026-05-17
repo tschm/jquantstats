@@ -15,6 +15,8 @@ import plotly.io as pio
 import polars as pl
 from plotly.subplots import make_subplots
 
+from ._data import _apply_base_layout
+
 if TYPE_CHECKING:
     from ._protocol import PortfolioLike
 
@@ -177,33 +179,10 @@ class PortfolioPlots:
 
         fig.add_hline(y=0, line_width=1, line_color="gray", row=2, col=1)
 
-        # Layout
-        fig.update_layout(
-            title="Performance Dashboard",
-            height=1200,
-            hovermode="x unified",
-            plot_bgcolor="white",
-            legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
-            xaxis={
-                "rangeselector": {
-                    "buttons": [
-                        {"count": 6, "label": "6m", "step": "month", "stepmode": "backward"},
-                        {"count": 1, "label": "1y", "step": "year", "stepmode": "backward"},
-                        {"count": 3, "label": "3y", "step": "year", "stepmode": "backward"},
-                        {"step": "year", "stepmode": "todate", "label": "YTD"},
-                        {"step": "all", "label": "All"},
-                    ]
-                },
-                "rangeslider": {"visible": False},
-                "type": "date",
-            },
-        )
+        _apply_base_layout(fig, "Performance Dashboard", height=1200)
 
         fig.update_yaxes(title_text="NAV (accumulated)", row=1, col=1, tickformat=".2s")
         fig.update_yaxes(title_text="Drawdown", row=2, col=1, tickformat=".0%")
-
-        fig.update_xaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
-        fig.update_yaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
 
         if log_scale:
             fig.update_yaxes(type="log", row=1, col=1)
@@ -228,28 +207,8 @@ class PortfolioPlots:
             title: Chart title text.
             log_scale: If True, set the primary y-axis to logarithmic scale.
         """
-        fig.update_layout(
-            title=title,
-            hovermode="x unified",
-            plot_bgcolor="white",
-            legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
-            xaxis={
-                "rangeselector": {
-                    "buttons": [
-                        {"count": 6, "label": "6m", "step": "month", "stepmode": "backward"},
-                        {"count": 1, "label": "1y", "step": "year", "stepmode": "backward"},
-                        {"count": 3, "label": "3y", "step": "year", "stepmode": "backward"},
-                        {"step": "year", "stepmode": "todate", "label": "YTD"},
-                        {"step": "all", "label": "All"},
-                    ]
-                },
-                "rangeslider": {"visible": False},
-                "type": "date",
-            },
-        )
+        _apply_base_layout(fig, title)
         fig.update_yaxes(title_text="NAV (accumulated)")
-        fig.update_xaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
-        fig.update_yaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
 
         if log_scale:
             fig.update_yaxes(type="log")
@@ -329,28 +288,8 @@ class PortfolioPlots:
 
         fig.add_hline(y=0, line_width=1, line_dash="dash", line_color="gray")
 
-        fig.update_layout(
-            title=f"Rolling Sharpe Ratio ({window}-period window)",
-            hovermode="x unified",
-            plot_bgcolor="white",
-            legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
-            xaxis={
-                "rangeselector": {
-                    "buttons": [
-                        {"count": 6, "label": "6m", "step": "month", "stepmode": "backward"},
-                        {"count": 1, "label": "1y", "step": "year", "stepmode": "backward"},
-                        {"count": 3, "label": "3y", "step": "year", "stepmode": "backward"},
-                        {"step": "year", "stepmode": "todate", "label": "YTD"},
-                        {"step": "all", "label": "All"},
-                    ]
-                },
-                "rangeslider": {"visible": False},
-                "type": "date",
-            },
-        )
+        _apply_base_layout(fig, f"Rolling Sharpe Ratio ({window}-period window)")
         fig.update_yaxes(title_text="Sharpe ratio")
-        fig.update_xaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
-        fig.update_yaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
         return fig
 
     def rolling_volatility_plot(self, window: int = 63) -> go.Figure:
@@ -388,28 +327,8 @@ class PortfolioPlots:
                 )
             )
 
-        fig.update_layout(
-            title=f"Rolling Volatility ({window}-period window)",
-            hovermode="x unified",
-            plot_bgcolor="white",
-            legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
-            xaxis={
-                "rangeselector": {
-                    "buttons": [
-                        {"count": 6, "label": "6m", "step": "month", "stepmode": "backward"},
-                        {"count": 1, "label": "1y", "step": "year", "stepmode": "backward"},
-                        {"count": 3, "label": "3y", "step": "year", "stepmode": "backward"},
-                        {"step": "year", "stepmode": "todate", "label": "YTD"},
-                        {"step": "all", "label": "All"},
-                    ]
-                },
-                "rangeslider": {"visible": False},
-                "type": "date",
-            },
-        )
+        _apply_base_layout(fig, f"Rolling Volatility ({window}-period window)")
         fig.update_yaxes(title_text="Annualised volatility")
-        fig.update_xaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
-        fig.update_yaxes(showgrid=True, gridwidth=0.5, gridcolor="lightgrey")
         return fig
 
     def annual_sharpe_plot(self) -> go.Figure:
