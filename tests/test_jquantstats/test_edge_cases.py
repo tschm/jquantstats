@@ -1,5 +1,7 @@
 """Tests for edge cases in the jquantstats package."""
 
+from datetime import date
+
 import numpy as np
 import polars as pl
 import pytest
@@ -345,8 +347,6 @@ def test_partial_date_overlap_aligns_correctly():
 
 def test_information_ratio_drops_benchmark_null_pairs():
     """information_ratio() uses only rows where both strategy and benchmark are non-null."""
-    from datetime import date
-
     returns = pl.DataFrame(
         {
             "Date": [date(2023, 1, 1), date(2023, 1, 2), date(2023, 1, 3), date(2023, 1, 4)],

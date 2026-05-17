@@ -772,8 +772,8 @@ class _RiskStatsMixin:
 
         benchmark_col = benchmark or self._data.benchmark.columns[0]
         all_series = cast(pl.DataFrame, self.all)
-        non_null_pairs = pl.DataFrame({"strategy": series, "benchmark": all_series[benchmark_col]}).drop_nulls()
-        active = non_null_pairs["strategy"] - non_null_pairs["benchmark"]
+        valid_pairs = pl.DataFrame({"strategy": series, "benchmark": all_series[benchmark_col]}).drop_nulls()
+        active = valid_pairs["strategy"] - valid_pairs["benchmark"]
 
         mean_f = _mean(active)
         std_val = cast(float, active.std())
