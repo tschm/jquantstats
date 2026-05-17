@@ -65,6 +65,224 @@ def test_plot_snapshot_single_symbol_structure(returns, snapshot: SnapshotAssert
     assert figure_structure(fig) == snapshot
 
 
+# ─── Cumulative returns ───────────────────────────────────────────────────────
+
+
+def test_returns_structure(plots, snapshot: SnapshotAssertion):
+    """returns() figure structure should not change unexpectedly.
+
+    Asserts one Scatter trace per column (assets + benchmark) and title.
+    """
+    fig = plots.returns()
+    assert figure_structure(fig) == snapshot
+
+
+# ─── Comparison vs benchmark ─────────────────────────────────────────────────
+
+
+def test_compare_structure(plots, snapshot: SnapshotAssertion):
+    """compare() figure structure should not change unexpectedly.
+
+    Asserts the trace count (assets + benchmark as dashed line) is stable.
+    """
+    fig = plots.compare()
+    assert figure_structure(fig) == snapshot
+
+
+# ─── Log returns ─────────────────────────────────────────────────────────────
+
+
+def test_log_returns_structure(plots, snapshot: SnapshotAssertion):
+    """log_returns() figure structure should not change unexpectedly.
+
+    Asserts one Scatter trace per column and the expected title.
+    """
+    fig = plots.log_returns()
+    assert figure_structure(fig) == snapshot
+
+
+# ─── Daily returns ────────────────────────────────────────────────────────────
+
+
+def test_daily_returns_structure(plots, snapshot: SnapshotAssertion):
+    """daily_returns() figure structure should not change unexpectedly.
+
+    Asserts one Bar trace per column and the expected title.
+    """
+    fig = plots.daily_returns()
+    assert figure_structure(fig) == snapshot
+
+
+# ─── Yearly returns ───────────────────────────────────────────────────────────
+
+
+def test_yearly_returns_structure(plots, snapshot: SnapshotAssertion):
+    """yearly_returns() figure structure should not change unexpectedly.
+
+    Asserts one Bar trace per column (grouped bar) and the expected title.
+    """
+    fig = plots.yearly_returns()
+    assert figure_structure(fig) == snapshot
+
+
+# ─── Monthly returns ──────────────────────────────────────────────────────────
+
+
+def test_monthly_returns_structure(plots, snapshot: SnapshotAssertion):
+    """monthly_returns() figure structure should not change unexpectedly.
+
+    Asserts one Bar trace per column and the expected title.
+    """
+    fig = plots.monthly_returns()
+    assert figure_structure(fig) == snapshot
+
+
+# ─── Monthly heatmap ──────────────────────────────────────────────────────────
+
+
+def test_monthly_heatmap_structure(plots, snapshot: SnapshotAssertion):
+    """monthly_heatmap() figure structure should not change unexpectedly.
+
+    Asserts a single Heatmap trace with the expected title.
+    """
+    fig = plots.monthly_heatmap()
+    assert figure_structure(fig) == snapshot
+
+
+# ─── Return histogram ─────────────────────────────────────────────────────────
+
+
+def test_histogram_structure(plots, snapshot: SnapshotAssertion):
+    """histogram() figure structure should not change unexpectedly.
+
+    Asserts one Histogram trace per column and the expected title.
+    """
+    fig = plots.histogram()
+    assert figure_structure(fig) == snapshot
+
+
+# ─── Multi-period distribution ───────────────────────────────────────────────
+
+
+def test_distribution_structure(plots, snapshot: SnapshotAssertion):
+    """distribution() figure structure should not change unexpectedly.
+
+    Asserts 5 Box traces per asset (daily/weekly/monthly/quarterly/yearly)
+    and the expected title.
+    """
+    fig = plots.distribution()
+    assert figure_structure(fig) == snapshot
+
+
+# ─── Monte Carlo ─────────────────────────────────────────────────────────────
+
+
+def test_montecarlo_structure(plots, snapshot: SnapshotAssertion):
+    """montecarlo() figure structure should not change unexpectedly.
+
+    Uses a small n to keep the test fast while still exercising the trace layout.
+    """
+    fig = plots.montecarlo(n=10, period=50)
+    assert figure_structure(fig) == snapshot
+
+
+# ─── Monte Carlo distribution ────────────────────────────────────────────────
+
+
+def test_montecarlo_distribution_structure(plots, snapshot: SnapshotAssertion):
+    """montecarlo_distribution() figure structure should not change unexpectedly.
+
+    Asserts one Histogram trace per column plus vline annotations.
+    """
+    fig = plots.montecarlo_distribution(n=50, period=50)
+    assert figure_structure(fig) == snapshot
+
+
+# ─── Drawdown ────────────────────────────────────────────────────────────────
+
+
+def test_drawdown_structure(plots, snapshot: SnapshotAssertion):
+    """drawdown() figure structure should not change unexpectedly.
+
+    Asserts one filled Scatter trace per column and the expected title.
+    """
+    fig = plots.drawdown()
+    assert figure_structure(fig) == snapshot
+
+
+# ─── Top drawdown periods ────────────────────────────────────────────────────
+
+
+def test_drawdowns_periods_structure(plots, snapshot: SnapshotAssertion):
+    """drawdowns_periods() figure structure should not change unexpectedly.
+
+    Asserts the cumulative returns line trace and shaded vrect shapes.
+    """
+    fig = plots.drawdowns_periods(n=3)
+    assert figure_structure(fig) == snapshot
+
+
+# ─── Earnings (dollar equity curve) ─────────────────────────────────────────
+
+
+def test_earnings_structure(plots, snapshot: SnapshotAssertion):
+    """earnings() figure structure should not change unexpectedly.
+
+    Asserts one Scatter trace per column with the expected title.
+    """
+    fig = plots.earnings()
+    assert figure_structure(fig) == snapshot
+
+
+# ─── Rolling Sharpe (DataPlots) ──────────────────────────────────────────────
+
+
+def test_data_rolling_sharpe_structure(plots, snapshot: SnapshotAssertion):
+    """DataPlots.rolling_sharpe() figure structure should not change unexpectedly.
+
+    Asserts one Scatter trace per column and the expected title.
+    """
+    fig = plots.rolling_sharpe()
+    assert figure_structure(fig) == snapshot
+
+
+# ─── Rolling Sortino ─────────────────────────────────────────────────────────
+
+
+def test_rolling_sortino_structure(plots, snapshot: SnapshotAssertion):
+    """rolling_sortino() figure structure should not change unexpectedly.
+
+    Asserts one Scatter trace per column and the expected title.
+    """
+    fig = plots.rolling_sortino()
+    assert figure_structure(fig) == snapshot
+
+
+# ─── Rolling Volatility (DataPlots) ─────────────────────────────────────────
+
+
+def test_data_rolling_volatility_structure(plots, snapshot: SnapshotAssertion):
+    """DataPlots.rolling_volatility() figure structure should not change unexpectedly.
+
+    Asserts one Scatter trace per column and the expected title.
+    """
+    fig = plots.rolling_volatility()
+    assert figure_structure(fig) == snapshot
+
+
+# ─── Rolling Beta ────────────────────────────────────────────────────────────
+
+
+def test_rolling_beta_structure(plots, snapshot: SnapshotAssertion):
+    """rolling_beta() figure structure should not change unexpectedly.
+
+    Asserts two Scatter traces per return asset (one per default window)
+    and the expected title.
+    """
+    fig = plots.rolling_beta()
+    assert figure_structure(fig) == snapshot
+
+
 # ─── Extra fixture needed for rolling / multi-year plots ─────────────────────
 
 
