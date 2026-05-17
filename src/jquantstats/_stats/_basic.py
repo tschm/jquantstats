@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import math
-import warnings
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, cast
 
@@ -213,20 +212,6 @@ class _BasicStatsMixin:
         avg_win = self._mean_positive_expr(series)
         avg_loss = float(np.abs(self._mean_negative_expr(series)))
         return avg_win / avg_loss
-
-    def win_loss_ratio(self) -> dict[str, float]:
-        """Shorthand for payoff_ratio().
-
-        Returns:
-            dict[str, float]: Dictionary mapping asset names to win/loss ratios.
-
-        """
-        warnings.warn(
-            "`win_loss_ratio()` is deprecated and will be removed in a future release. Use `payoff_ratio()` instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.payoff_ratio()
 
     @columnwise_stat
     def profit_ratio(self, series: pl.Series) -> float:
@@ -564,7 +549,7 @@ class _BasicStatsMixin:
         """
         pf = self.profit_factor()
         wr = self.win_rate()
-        wlr = self.win_loss_ratio()
+        wlr = self.payoff_ratio()
         return {col: pf[col] * wr[col] * wlr[col] for col in pf}
 
     def common_sense_ratio(self) -> dict[str, float]:

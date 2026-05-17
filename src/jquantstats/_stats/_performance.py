@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import warnings
 from collections.abc import Callable
 from typing import TYPE_CHECKING, cast
 
@@ -327,22 +326,6 @@ class _RiskStatsMixin:
 
         """
         return (1.0 + series).cum_prod() - 1.0
-
-    def ghpr(self) -> dict[str, float]:
-        """Calculate the Geometric Holding Period Return.
-
-        Shorthand for geometric_mean() — the per-period geometric average return.
-
-        Returns:
-            dict[str, float]: Dictionary mapping asset names to GHPR values.
-
-        """
-        warnings.warn(
-            "`ghpr()` is deprecated and will be removed in a future release. Use `geometric_mean()` instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.geometric_mean()
 
     # ── Drawdown ──────────────────────────────────────────────────────────────
 
@@ -737,20 +720,6 @@ class _RiskStatsMixin:
         corr_matrix = np.corrcoef(strategy_np, benchmark_np)
         r = corr_matrix[0, 1]
         return float(r**2)
-
-    def r2(self) -> dict[str, float]:
-        """Shorthand for r_squared().
-
-        Returns:
-            dict[str, float]: Dictionary mapping asset names to R-squared values.
-
-        """
-        warnings.warn(
-            "`r2()` is deprecated and will be removed in a future release. Use `r_squared()` instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.r_squared()
 
     @columnwise_stat
     def information_ratio(

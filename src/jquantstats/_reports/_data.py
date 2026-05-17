@@ -233,7 +233,7 @@ def _add_full_mode_rows(
     rows.append(("Avg. Return", _pct(_safe(s.avg_return))))
     rows.append(("Avg. Win", _pct(_safe(s.avg_win))))
     rows.append(("Avg. Loss", _pct(_safe(s.avg_loss))))
-    rows.append(("Win/Loss Ratio", _safe(s.win_loss_ratio)))
+    rows.append(("Win/Loss Ratio", _safe(s.payoff_ratio)))
     rows.append(("Profit Ratio", _safe(s.profit_ratio)))
     rows.append(("Win Rate", _pct(_safe(s.win_rate))))
     rows.append(("Monthly Win Rate", _pct(_safe(s.monthly_win_rate))))
@@ -281,7 +281,7 @@ def _add_full_mode_rows(
     except Exception:  # noqa: S110
         pass  # nosec B110
 
-    rows.append(("R²", _safe(s.r2)))
+    rows.append(("R²", _safe(s.r_squared)))
     rows.append(("Treynor Ratio", _safe(s.treynor_ratio, periods=ppy)))
 
 
