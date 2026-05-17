@@ -229,6 +229,7 @@ class _BasicStatsMixin:
         wins = series.filter(series >= 0)
         losses = self._negative(series)
 
+        # Filtering can legitimately leave no wins or no losses for one-sided return series.
         if wins.is_empty() or losses.is_empty():
             return float("nan")  # indeterminate: no wins or no losses
 
@@ -750,6 +751,7 @@ class _BasicStatsMixin:
         """
         shifted = series.shift(lag)
         paired = pl.DataFrame({"x": series, "y": shifted}).drop_nulls()
+        # Large lags or null-only overlap can leave no aligned observations to correlate.
         if paired.is_empty():
             return float("nan")
         return float(np.corrcoef(paired["x"].to_numpy(), paired["y"].to_numpy())[0, 1])
