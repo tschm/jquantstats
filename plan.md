@@ -1,7 +1,7 @@
 # jquantstats — Plan to 10.0
 
 > Based on `report.md` (internal quality, current overall **9.9**) and `benchmark.md`
-> (vs quantstats, current overall **8.9**).
+> (vs quantstats, current overall **9.1**).
 >
 > Tasks are grouped by theme and ordered within each theme by effort × impact.
 > Each task carries an effort estimate, the source score it closes, and the target
@@ -366,11 +366,11 @@ one row per simulation). Mixin included in `Stats`.
 
 ---
 
-### T9.2 — Close edge-case metric coverage gaps vs quantstats
+### T9.2 — Close edge-case metric coverage gaps vs quantstats ✅
 
-**Issue:** [#763](https://github.com/Jebel-Quant/jquantstats/issues/763)
+> **Done** — merged [PR #766](https://github.com/Jebel-Quant/jquantstats/pull/766) · closes [#763](https://github.com/Jebel-Quant/jquantstats/issues/763)
 
-Audit quantstats `stats.py` against `jquantstats` to identify any remaining metrics present in quantstats but absent or subtly different in jquantstats. For each gap: implement the missing method or document the intentional divergence with a note in `benchmark.md`.
+Audit quantstats `stats.py` against `jquantstats` to identify any remaining metrics present in quantstats but absent or subtly different in jquantstats. For each gap: implement the missing method or document the intentional divergence with a note in `benchmark.md`. Migration tests for new metrics added via [PR #770](https://github.com/Jebel-Quant/jquantstats/pull/770) ✅.
 
 **Effort:** 2 hr · **Raises:** Stats coverage 9 → 10 vs quantstats
 
@@ -457,11 +457,11 @@ implementations on a 10-year daily series to confirm the speedup.
 
 ---
 
-### T11.2 — Run actual performance benchmarks and identify optimisation targets
+### T11.2 — Run actual performance benchmarks and identify optimisation targets ✅
 
-**Issue:** [#767](https://github.com/Jebel-Quant/jquantstats/issues/767)
+> **Done** — merged [PR #768](https://github.com/Jebel-Quant/jquantstats/pull/768) · closes [#767](https://github.com/Jebel-Quant/jquantstats/issues/767)
 
-The 9/10 performance score is inferred from Polars vs pandas library characteristics; no in-repo benchmarks verify it end-to-end. Add `pytest-benchmark` timing tests for the most computationally intensive methods (e.g. `rolling_sortino`, `sharpe` across a 50-asset frame, `summary`). If any method shows unexpected slowness, rewrite using native Polars expressions.
+The 9/10 performance score is inferred from Polars vs pandas library characteristics; no in-repo benchmarks verify it end-to-end. Add `pytest-benchmark` timing tests for the most computationally intensive methods (e.g. `rolling_sortino`, `sharpe` across a 50-asset frame, `summary`). If any method shows unexpected slowness, rewrite using native Polars expressions. Remaining `map_elements` / Python-loop antipatterns also eliminated.
 
 **Effort:** 2 hr · **Raises:** Performance 9 → 10
 
@@ -512,12 +512,12 @@ T4.1. All `cast(float, series.mean())` callsites replaced.
 | 6. Protocol design | ~~T6.1~~, ~~T6.2~~ | ✅ done |
 | 7. Dead code | ~~T7.1~~ | ✅ done |
 | 8. Test quality | ~~T8.1~~ | ✅ done |
-| 9. Monte Carlo stats | ~~T9.1~~; T9.2 open | ~2 hr |
+| 9. Monte Carlo stats | ~~T9.1~~, ~~T9.2~~ | ✅ done |
 | 10. Plot coverage | ~~T10.1~~, ~~T10.2~~, ~~T10.3~~ | ✅ done |
-| 11. Performance | ~~T11.1~~; T11.2 open | ~2 hr |
+| 11. Performance | ~~T11.1~~, ~~T11.2~~ | ✅ done |
 | 12. Error handling | ~~T12.1~~ | ✅ done |
 | 13. Type safety | ~~T13.1~~ | ✅ done |
-| **Total remaining** | **3 tasks** | **~4.5 hr** |
+| **Total remaining** | **1 task** | **~0.5 hr** |
 
 ---
 
@@ -538,7 +538,7 @@ T4.1. All `cast(float, series.mean())` callsites replaced.
 **Sprint 5 — Plot parity (~4 hr)** ✅ complete
 ~~T10.2~~
 
-**Sprint 6 — Path to 10.0 (~9–11 hr)**
-~~T1.4~~, T2.4, ~~T4.3~~, T9.2, ~~T10.3~~, T11.2
+**Sprint 6 — Path to 10.0 (~9–11 hr)** ✅ nearly complete
+~~T1.4~~, T2.4, ~~T4.3~~, ~~T9.2~~, ~~T10.3~~, ~~T11.2~~
 
-After Sprint 6 both the internal quality score and the benchmark score reach **10.0**.
+After T2.4 completes, the internal quality score reaches **10.0**. The benchmark score is already **9.1** (only the community-recognition gap remains, which is not addressable by code changes).

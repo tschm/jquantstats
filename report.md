@@ -1,6 +1,6 @@
 # jquantstats — Code Quality Report
 
-> Assessed: 2026-05-17 · `main` post-PR #765 · ~10 500 source lines · ~870 tests
+> Assessed: 2026-05-17 · `main` v0.9.0 post-PR #770 · ~10 500 source lines · ~900 tests
 
 Scores are 1–10. **10 = no actionable improvements. 1 = immediate attention required.**
 
@@ -153,7 +153,7 @@ A class implementing all three must manually verify compliance against each vari
 
 ## 7. Test Quality — 10/10
 
-~870 tests, 100% code and branch coverage. The suite is well-structured across
+~900 tests, 100% code and branch coverage. The suite is well-structured across
 concerns:
 
 - **Migration tests** — parametrized numeric comparison against quantstats with

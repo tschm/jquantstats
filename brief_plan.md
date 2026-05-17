@@ -18,6 +18,6 @@
 | 14 | [Remove deprecated alias methods `ghpr`, `r2`, `win_loss_ratio`](https://github.com/Jebel-Quant/jquantstats/issues/757) | 30 min | API surface 9 → 10 | not started |
 | 15 | [Audit and eliminate residual code duplication](https://github.com/Jebel-Quant/jquantstats/issues/758) | 1 hr | code duplication 9 → 10 | ✅ merged [#760](https://github.com/Jebel-Quant/jquantstats/pull/760) |
 | 16 | [Resolve remaining `is_empty()` post-filter guards in stats mixins](https://github.com/Jebel-Quant/jquantstats/issues/759) | 1 hr | null handling 9 → 10 | ✅ merged [#761](https://github.com/Jebel-Quant/jquantstats/pull/761) |
-| 17 | [Close edge-case metric coverage gaps vs quantstats](https://github.com/Jebel-Quant/jquantstats/issues/763) | 2 hr | stats coverage 9 → 10 | not started |
+| 17 | [Close edge-case metric coverage gaps vs quantstats](https://github.com/Jebel-Quant/jquantstats/issues/763) | 2 hr | stats coverage 9 → 10 | ✅ merged [#766](https://github.com/Jebel-Quant/jquantstats/pull/766) |
 | 18 | [Port remaining quantstats tearsheet plots to DataPlots](https://github.com/Jebel-Quant/jquantstats/issues/764) | 4–6 hr | plot coverage 8 → 10 | ✅ merged [#765](https://github.com/Jebel-Quant/jquantstats/pull/765) |
-| 19 | [Add end-to-end performance benchmarks and close optimisation gaps](https://github.com/Jebel-Quant/jquantstats/issues/767) | 2 hr | performance 9 → 10 | not started |
+| 19 | [Add end-to-end performance benchmarks and close optimisation gaps](https://github.com/Jebel-Quant/jquantstats/issues/767) | 2 hr | performance 9 → 10 | ✅ merged [#768](https://github.com/Jebel-Quant/jquantstats/pull/768) |

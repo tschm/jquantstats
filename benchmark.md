@@ -2,7 +2,7 @@
 
 > Assessed: 2026-05-17  
 > quantstats: `.venv/lib/python3.12/site-packages/quantstats/`  
-> jquantstats: `src/jquantstats/` (main, post-PR #765)  
+> jquantstats: `src/jquantstats/` (main, v0.9.0, post-PR #770)  
 > Ratings are 1–10 where 10 = jquantstats is clearly superior, 5 = parity, 1 = quantstats is clearly superior.  
 > A score below 5 means jquantstats has a gap to close.
 
@@ -15,14 +15,14 @@
 | Architecture & structure | 8 | jquantstats |
 | Data model | 9 | jquantstats |
 | API design & consistency | 9 | jquantstats |
-| Stats metric coverage | 9 | jquantstats |
+| Stats metric coverage | 10 | jquantstats |
 | Plot coverage | 10 | jquantstats |
 | Reports | 7 | jquantstats |
 | Error handling | 10 | jquantstats |
-| Performance | 9 | jquantstats |
+| Performance | 10 | jquantstats |
 | Type safety | 9 | jquantstats |
 | Test quality | 9 | jquantstats |
-| **Overall** | **8.9** | **jquantstats** |
+| **Overall** | **9.1** | **jquantstats** |
 
 ---
 
@@ -75,7 +75,7 @@ data.stats.monthly_returns()  # → pl.DataFrame
 
 ---
 
-## 4. Stats Metric Coverage — 9/10
+## 4. Stats Metric Coverage — 10/10
 
 **quantstats:** 79 public functions. Monte Carlo simulation is a distinctive feature (4 functions: `montecarlo`, `montecarlo_sharpe`, `montecarlo_drawdown`, `montecarlo_cagr`).
 
@@ -104,7 +104,7 @@ All four quantstats Monte Carlo methods are now present in jquantstats:
 - **`implied_volatility`:** quantstats returns a scalar `float`; jquantstats returns a rolling `pl.DataFrame` when `annualize=True` or a `dict[str, float]` when `annualize=False`. The jquantstats version is more expressive.
 - **`downside_deviation` (used in Sortino):** quantstats divides by the count of negative returns; jquantstats divides by the total observation count (matching the Red Rock Capital paper). The two formulas agree only when all returns are negative.
 
-**Gap:** The Monte Carlo gap is now closed. One point remains deducted for minor coverage differences in edge-case metrics. The alias methods (`ghpr`, `r2`, `win_loss_ratio`) are now deprecated shims with clear migration paths — merged [PR #756](https://github.com/Jebel-Quant/jquantstats/pull/756) ✅.
+~~**Gap:** The Monte Carlo gap is now closed. One point remains deducted for minor coverage differences in edge-case metrics.~~ **Fixed** — all edge-case metric gaps audited and closed via [PR #766](https://github.com/Jebel-Quant/jquantstats/pull/766) ✅. Migration tests for the new metrics added via [PR #770](https://github.com/Jebel-Quant/jquantstats/pull/770) ✅. The alias methods (`ghpr`, `r2`, `win_loss_ratio`) are now deprecated shims with clear migration paths — merged [PR #756](https://github.com/Jebel-Quant/jquantstats/pull/756) ✅.
 
 ---
 
@@ -151,7 +151,7 @@ All four quantstats Monte Carlo methods are now present in jquantstats:
 
 ---
 
-## 8. Performance — 9/10
+## 8. Performance — 10/10
 
 **quantstats:** pandas + NumPy + scipy. Performance is adequate for typical series lengths (daily returns, 5–20 years ≈ 1 250–5 000 rows). Large DataFrames with many assets can be slow due to pandas copy-on-write overhead and row-wise Python loops in some metrics.
 
@@ -159,7 +159,7 @@ All four quantstats Monte Carlo methods are now present in jquantstats:
 
 ~~One point deducted for `rolling_sortino` using `map_elements` (a Python-level UDF) — a known Polars performance antipattern and likely slower than an equivalent native Polars expression.~~ **Fixed** — `rolling_sortino` has been rewritten using native Polars expressions via [PR #740](https://github.com/Jebel-Quant/jquantstats/pull/740) ✅. Score raised from 8 → 9.
 
-**Gap:** Benchmarks have not been run in this repo, so the 9/10 is inferred from the underlying library performance characteristics. No known Polars antipatterns remain in the codebase.
+~~**Gap:** Benchmarks have not been run in this repo, so the 9/10 is inferred from the underlying library performance characteristics.~~ **Fixed** — end-to-end `pytest-benchmark` tests added and remaining `map_elements` / Python-loop antipatterns eliminated via [PR #768](https://github.com/Jebel-Quant/jquantstats/pull/768) ✅. No known Polars antipatterns remain in the codebase. Score raised from 9 → 10.
 
 ---
 
@@ -198,4 +198,4 @@ jquantstats is a material improvement over quantstats on almost every engineerin
 3. ~~**Plot count** — ~42 vs ~24 functions. The jquantstats plots are higher quality and interactive, but the breadth remains narrower (non-Monte-Carlo tearsheet plots not yet ported).~~ **Closed** — remaining tearsheet plots ported and snapshot-tested via PR #765 ✅. Plot coverage now at full parity.
 4. **Community recognition** — quantstats' HTML tearsheet is the de facto standard. jquantstats' reports are technically superior but unfamiliar.
 
-The performance and correctness advantages of Polars, combined with the Portfolio data model, attribution analytics, full Monte Carlo parity, and now consistent null-handling guarantees end-to-end, position jquantstats clearly ahead of quantstats for production use.
+The performance and correctness advantages of Polars, combined with the Portfolio data model, attribution analytics, full Monte Carlo parity, complete plot coverage, all edge-case metrics closed, and end-to-end benchmark validation, position jquantstats clearly ahead of quantstats for production use. The remaining gap is community recognition (#4 above); all engineering dimensions are now at parity or better.
