@@ -105,8 +105,8 @@ def cell_tail_header() -> None:
 @app.cell
 def cell_tail_metrics(data):
     """Compute tail risk metrics."""
-    var_5 = data.stats.value_at_risk(percentile=0.05)
-    cvar_5 = data.stats.conditional_value_at_risk(percentile=0.05)
+    var_5 = data.stats.value_at_risk(alpha=0.05)
+    cvar_5 = data.stats.conditional_value_at_risk(confidence=0.95)
     tail = data.stats.tail_ratio()
     serenity = data.stats.serenity_index()
     return (cvar_5, serenity, tail, var_5)
@@ -115,64 +115,63 @@ def cell_tail_metrics(data):
 @app.cell
 def cell_tail_table(var_5, cvar_5, tail, serenity, data) -> None:
     """Display tail risk table."""
-    rows = [
+    _rows = [
         {"Metric": "VaR (5%)", **{a: f"{var_5[a]:.4f}" for a in data.assets}},
         {"Metric": "CVaR (5%)", **{a: f"{cvar_5[a]:.4f}" for a in data.assets}},
         {"Metric": "Tail Ratio", **{a: f"{tail[a]:.3f}" for a in data.assets}},
         {"Metric": "Serenity Index", **{a: f"{serenity[a]:.3f}" for a in data.assets}},
     ]
-    mo.plain_text(str(pl.DataFrame(rows)))
+    mo.plain_text(str(pl.DataFrame(_rows)))
     return
 
 
 @app.cell
 def cell_var_chart(data):
     """Plot daily return distribution with VaR/CVaR annotations."""
-    var_5 = data.stats.value_at_risk(percentile=0.05)
-    cvar_5 = data.stats.conditional_value_at_risk(percentile=0.05)
+    _var_5 = data.stats.value_at_risk(alpha=0.05)
+    _cvar_5 = data.stats.conditional_value_at_risk(confidence=0.95)
 
-    fig = go.Figure()
-    all_df = data.all
-    all_df.columns[0]
+    fig_var = go.Figure()
+    _all_df = data.all
 
-    for asset in data.assets:
-        returns = all_df[asset].drop_nulls().cast(pl.Float64).to_list()
-        fig.add_trace(
+    for _asset in data.assets:
+        _returns = _all_df[_asset].drop_nulls().cast(pl.Float64).to_list()
+        fig_var.add_trace(
             go.Histogram(
-                x=returns,
-                name=asset,
+                x=_returns,
+                name=_asset,
                 opacity=0.6,
                 nbinsx=120,
                 histnorm="probability",
             )
         )
-        fig.add_vline(
-            x=var_5[asset],
+        fig_var.add_vline(
+            x=_var_5[_asset],
             line_dash="dash",
-            annotation_text=f"{asset} VaR",
+            annotation_text=f"{_asset} VaR",
             annotation_position="top right",
         )
-        fig.add_vline(
-            x=cvar_5[asset],
+        fig_var.add_vline(
+            x=_cvar_5[_asset],
             line_dash="dot",
-            annotation_text=f"{asset} CVaR",
+            annotation_text=f"{_asset} CVaR",
             annotation_position="top left",
         )
 
-    fig.update_layout(
+    fig_var.update_layout(
         title="Daily Return Distribution with VaR (dashed) and CVaR (dotted) at 5%",
         xaxis_title="Daily Return",
         yaxis_title="Probability",
         barmode="overlay",
         height=440,
     )
-    return (fig,)
+    return (fig_var,)
 
 
 @app.cell
-def cell_var_chart_show(fig) -> None:
+def cell_var_chart_show(fig_var) -> None:
     """Display VaR chart."""
-    fig
+    fig_var
     return
 
 
@@ -215,7 +214,7 @@ def cell_dd_metrics(data):
 @app.cell
 def cell_dd_table(max_dd, avg_dd, max_dur, ulcer, upi, recovery, calmar, data) -> None:
     """Display drawdown metrics table."""
-    rows = [
+    _rows = [
         {"Metric": "Max Drawdown", **{a: f"{max_dd[a]:.4f}" for a in data.assets}},
         {"Metric": "Avg Drawdown", **{a: f"{avg_dd[a]:.4f}" for a in data.assets}},
         {"Metric": "Max DD Duration (days)", **{a: f"{max_dur[a]:.0f}" for a in data.assets}},
@@ -224,7 +223,7 @@ def cell_dd_table(max_dd, avg_dd, max_dur, ulcer, upi, recovery, calmar, data) -
         {"Metric": "Recovery Factor", **{a: f"{recovery[a]:.3f}" for a in data.assets}},
         {"Metric": "Calmar Ratio", **{a: f"{calmar[a]:.3f}" for a in data.assets}},
     ]
-    mo.plain_text(str(pl.DataFrame(rows)))
+    mo.plain_text(str(pl.DataFrame(_rows)))
     return
 
 
@@ -235,13 +234,13 @@ def cell_worst_periods(data):
     worst = data.stats.worst_n_periods(n=5)
     # worst is {asset: [val1, val2, ...]} — reformat as a DataFrame
     max_len = max(len(v) for v in worst.values())
-    rows = []
+    _rows = []
     for i in range(max_len):
-        row = {"Rank": i + 1}
+        _row = {"Rank": i + 1}
         for asset, vals in worst.items():
-            row[asset] = f"{vals[i]:.4f}" if i < len(vals) else ""
-        rows.append(row)
-    worst_df = pl.DataFrame(rows)
+            _row[asset] = f"{vals[i]:.4f}" if i < len(vals) else ""
+        _rows.append(_row)
+    worst_df = pl.DataFrame(_rows)
     return (worst_df,)
 
 
@@ -289,7 +288,7 @@ def cell_winloss_metrics(data):
 @app.cell
 def cell_winloss_table(win_rate, monthly_win, payoff, profit_f, g2p, cpc, data) -> None:
     """Display win/loss metrics table."""
-    rows = [
+    _rows = [
         {"Metric": "Win Rate (daily)", **{a: f"{win_rate[a]:.3f}" for a in data.assets}},
         {"Metric": "Monthly Win Rate", **{a: f"{monthly_win[a]:.3f}" for a in data.assets}},
         {"Metric": "Payoff Ratio", **{a: f"{payoff[a]:.3f}" for a in data.assets}},
@@ -297,7 +296,7 @@ def cell_winloss_table(win_rate, monthly_win, payoff, profit_f, g2p, cpc, data) 
         {"Metric": "Gain-to-Pain", **{a: f"{g2p[a]:.3f}" for a in data.assets}},
         {"Metric": "CPC Index", **{a: f"{cpc[a]:.3f}" for a in data.assets}},
     ]
-    mo.plain_text(str(pl.DataFrame(rows)))
+    mo.plain_text(str(pl.DataFrame(_rows)))
     return
 
 
@@ -333,11 +332,11 @@ def cell_kelly_metrics(data):
 @app.cell
 def cell_kelly_table(kelly, ror, data) -> None:
     """Display Kelly / risk-of-ruin table."""
-    rows = [
+    _rows = [
         {"Metric": "Kelly Criterion", **{a: f"{kelly[a]:.4f}" for a in data.assets}},
         {"Metric": "Risk of Ruin", **{a: f"{ror[a]:.6f}" for a in data.assets}},
     ]
-    mo.plain_text(str(pl.DataFrame(rows)))
+    mo.plain_text(str(pl.DataFrame(_rows)))
     return
 
 
@@ -376,14 +375,14 @@ def cell_shape_metrics(data):
 @app.cell
 def cell_shape_table(skew, kurt, outlier_count, out_win, out_loss, data) -> None:
     """Display distribution shape table."""
-    rows = [
+    _rows = [
         {"Metric": "Skewness", **{a: f"{skew[a]:.4f}" for a in data.assets}},
         {"Metric": "Excess Kurtosis", **{a: f"{kurt[a]:.4f}" for a in data.assets}},
         {"Metric": "Outlier Count (>P95)", **{a: str(outlier_count[a]) for a in data.assets}},
         {"Metric": "Outlier Win Ratio", **{a: f"{out_win[a]:.4f}" for a in data.assets}},
         {"Metric": "Outlier Loss Ratio", **{a: f"{out_loss[a]:.4f}" for a in data.assets}},
     ]
-    mo.plain_text(str(pl.DataFrame(rows)))
+    mo.plain_text(str(pl.DataFrame(_rows)))
     return
 
 
@@ -426,7 +425,7 @@ def cell_acf_metrics(data):
 @app.cell
 def cell_acf_table(ac1, penalty, sharpe, smart_sharpe, sortino, smart_sortino, data) -> None:
     """Display autocorrelation metrics table."""
-    rows = [
+    _rows = [
         {"Metric": "Lag-1 Autocorrelation", **{a: f"{ac1[a]:.4f}" for a in data.assets}},
         {"Metric": "Autocorr Penalty", **{a: f"{penalty[a]:.4f}" for a in data.assets}},
         {"Metric": "Sharpe (standard)", **{a: f"{sharpe[a]:.4f}" for a in data.assets}},
@@ -434,7 +433,7 @@ def cell_acf_table(ac1, penalty, sharpe, smart_sharpe, sortino, smart_sortino, d
         {"Metric": "Sortino (standard)", **{a: f"{sortino[a]:.4f}" for a in data.assets}},
         {"Metric": "Smart Sortino", **{a: f"{smart_sortino[a]:.4f}" for a in data.assets}},
     ]
-    mo.plain_text(str(pl.DataFrame(rows)))
+    mo.plain_text(str(pl.DataFrame(_rows)))
     return
 
 
@@ -477,7 +476,7 @@ def cell_bench_metrics(data):
 @app.cell
 def cell_bench_table(greeks, up_cap, down_cap, ir, r2, data) -> None:
     """Display benchmark metrics table."""
-    rows = [
+    _rows = [
         {"Metric": "Alpha (ann.)", **{a: f"{greeks[a].get('alpha', float('nan')):.4f}" for a in data.assets}},
         {"Metric": "Beta", **{a: f"{greeks[a].get('beta', float('nan')):.4f}" for a in data.assets}},
         {"Metric": "R²", **{a: f"{r2[a]:.4f}" for a in data.assets}},
@@ -485,34 +484,34 @@ def cell_bench_table(greeks, up_cap, down_cap, ir, r2, data) -> None:
         {"Metric": "Up Capture", **{a: f"{up_cap[a]:.4f}" for a in data.assets}},
         {"Metric": "Down Capture", **{a: f"{down_cap[a]:.4f}" for a in data.assets}},
     ]
-    mo.plain_text(str(pl.DataFrame(rows)))
+    mo.plain_text(str(pl.DataFrame(_rows)))
     return
 
 
 @app.cell
 def cell_capture_chart(data, bench_series):
     """Plot up vs down capture scatter."""
-    up_cap = data.stats.up_capture(benchmark=bench_series)
-    down_cap = data.stats.down_capture(benchmark=bench_series)
+    _up_cap = data.stats.up_capture(benchmark=bench_series)
+    _down_cap = data.stats.down_capture(benchmark=bench_series)
 
-    fig = go.Figure()
-    for asset in data.assets:
-        fig.add_trace(
+    fig_cap = go.Figure()
+    for _asset in data.assets:
+        fig_cap.add_trace(
             go.Scatter(
-                x=[down_cap[asset]],
-                y=[up_cap[asset]],
+                x=[_down_cap[_asset]],
+                y=[_up_cap[_asset]],
                 mode="markers+text",
-                name=asset,
-                text=[asset],
+                name=_asset,
+                text=[_asset],
                 textposition="top center",
                 marker={"size": 14},
             )
         )
 
     # Diagonal: up = down capture (neutral)
-    lo = min(list(down_cap.values()) + list(up_cap.values())) * 0.9
-    hi = max(list(down_cap.values()) + list(up_cap.values())) * 1.1
-    fig.add_trace(
+    lo = min(list(_down_cap.values()) + list(_up_cap.values())) * 0.9
+    hi = max(list(_down_cap.values()) + list(_up_cap.values())) * 1.1
+    fig_cap.add_trace(
         go.Scatter(
             x=[lo, hi],
             y=[lo, hi],
@@ -523,19 +522,19 @@ def cell_capture_chart(data, bench_series):
         )
     )
 
-    fig.update_layout(
+    fig_cap.update_layout(
         title="Up vs Down Capture vs SPY<br><sup>Above the diagonal = better relative performance</sup>",
         xaxis_title="Down Capture Ratio",
         yaxis_title="Up Capture Ratio",
         height=440,
     )
-    return (fig,)
+    return (fig_cap,)
 
 
 @app.cell
-def cell_capture_chart_show(fig) -> None:
+def cell_capture_chart_show(fig_cap) -> None:
     """Display capture ratio chart."""
-    fig
+    fig_cap
     return
 
 

@@ -164,20 +164,20 @@ def cell_nav_comparison(pf_cash, pf_unit, pf_risk):
     """Plot NAV curves for all three portfolios."""
     fig = go.Figure()
 
-    for label, pf in [
+    for _label, _pf in [
         ("from_cash_position", pf_cash),
         ("from_position", pf_unit),
         ("from_risk_position", pf_risk),
     ]:
-        nav = pf.nav_accumulated
-        date_col = nav.columns[0]
-        nav_col = "NAV_accumulated"
+        _nav = _pf.nav_accumulated
+        _date_col = _nav.columns[0]
+        _nav_col = "NAV_accumulated"
         fig.add_trace(
             go.Scatter(
-                x=nav[date_col].to_list(),
-                y=nav[nav_col].to_list(),
+                x=_nav[_date_col].to_list(),
+                y=_nav[_nav_col].to_list(),
                 mode="lines",
-                name=label,
+                name=_label,
             )
         )
 
@@ -200,24 +200,24 @@ def cell_nav_comparison_show(fig) -> None:
 @app.cell
 def cell_constructor_stats(pf_cash, pf_unit, pf_risk) -> None:
     """Compare Sharpe and max drawdown across the three portfolios."""
-    rows = []
-    for label, pf in [
+    _rows = []
+    for _label, _pf in [
         ("from_cash_position", pf_cash),
         ("from_position", pf_unit),
         ("from_risk_position", pf_risk),
     ]:
-        sharpe = pf.stats.sharpe()
-        max_dd = pf.stats.max_drawdown()
-        cagr = pf.stats.cagr()
-        rows.append(
+        _sharpe = _pf.stats.sharpe()
+        _max_dd = _pf.stats.max_drawdown()
+        _cagr = _pf.stats.cagr()
+        _rows.append(
             {
-                "Constructor": label,
-                "Sharpe": round(next(iter(sharpe.values())), 3),
-                "Max Drawdown": round(next(iter(max_dd.values())), 4),
-                "CAGR": round(next(iter(cagr.values())), 4),
+                "Constructor": _label,
+                "Sharpe": round(next(iter(_sharpe.values())), 3),
+                "Max Drawdown": round(next(iter(_max_dd.values())), 4),
+                "CAGR": round(next(iter(_cagr.values())), 4),
             }
         )
-    mo.plain_text(str(pl.DataFrame(rows)))
+    mo.plain_text(str(pl.DataFrame(_rows)))
     return
 
 
@@ -256,27 +256,27 @@ def cell_attribution(pf_cash):
 @app.cell
 def cell_attribution_chart(decomp) -> None:
     """Plot tilt/timing NAV decomposition."""
-    fig = go.Figure()
-    date_col = decomp.columns[0]
+    _fig = go.Figure()
+    _date_col = decomp.columns[0]
 
-    for col in ["portfolio", "tilt", "timing"]:
-        if col in decomp.columns:
-            fig.add_trace(
+    for _col in ["portfolio", "tilt", "timing"]:
+        if _col in decomp.columns:
+            _fig.add_trace(
                 go.Scatter(
-                    x=decomp[date_col].to_list(),
-                    y=decomp[col].to_list(),
+                    x=decomp[_date_col].to_list(),
+                    y=decomp[_col].to_list(),
                     mode="lines",
-                    name=col.capitalize(),
+                    name=_col.capitalize(),
                 )
             )
 
-    fig.update_layout(
+    _fig.update_layout(
         title="Tilt / Timing Attribution — Cumulative NAV",
         xaxis_title="Date",
         yaxis_title="Cumulative NAV ($)",
         height=440,
     )
-    fig
+    _fig
     return
 
 
@@ -302,7 +302,7 @@ def cell_turnover_header() -> None:
 def cell_turnover(pf_cash):
     """Compute turnover statistics."""
     to_summary = pf_cash.turnover_summary()
-    to_daily = pf_cash.turnover()
+    to_daily = pf_cash.turnover
     return (to_daily, to_summary)
 
 
@@ -317,25 +317,25 @@ def cell_turnover_summary(to_summary) -> None:
 @app.cell
 def cell_turnover_chart(to_daily) -> None:
     """Plot daily turnover."""
-    date_col = to_daily.columns[0]
-    fig = go.Figure()
-    for col in to_daily.columns[1:]:
-        fig.add_trace(
+    _date_col = to_daily.columns[0]
+    _fig = go.Figure()
+    for _col in to_daily.columns[1:]:
+        _fig.add_trace(
             go.Scatter(
-                x=to_daily[date_col].to_list(),
-                y=to_daily[col].to_list(),
+                x=to_daily[_date_col].to_list(),
+                y=to_daily[_col].to_list(),
                 mode="lines",
-                name=col,
+                name=_col,
                 opacity=0.7,
             )
         )
-    fig.update_layout(
+    _fig.update_layout(
         title="Daily Turnover per Asset",
         xaxis_title="Date",
         yaxis_title="Turnover ($ change in position)",
         height=400,
     )
-    fig
+    _fig
     return
 
 

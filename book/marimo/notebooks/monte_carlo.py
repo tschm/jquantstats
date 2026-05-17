@@ -245,14 +245,14 @@ def cell_percentile_table(mc_sharpe, mc_dd, mc_cagr, data) -> None:
     """Build and display percentile summary table."""
     quantiles = [0.05, 0.25, 0.50, 0.75, 0.95]
     rows = []
-    for asset in data.assets:
-        sharpe_q = mc_sharpe[asset].quantile(quantiles, interpolation="linear")
-        dd_q = mc_dd[asset].quantile(quantiles, interpolation="linear")
-        cagr_q = mc_cagr[asset].quantile(quantiles, interpolation="linear")
+    for _asset in data.assets:
+        sharpe_q = mc_sharpe[_asset].quantile(quantiles, interpolation="linear")
+        dd_q = mc_dd[_asset].quantile(quantiles, interpolation="linear")
+        cagr_q = mc_cagr[_asset].quantile(quantiles, interpolation="linear")
         for i, q in enumerate(quantiles):
             rows.append(
                 {
-                    "Asset": asset,
+                    "Asset": _asset,
                     "Percentile": f"P{int(q * 100):02d}",
                     "Sharpe": round(float(sharpe_q[i]), 3),
                     "Max Drawdown (%)": round(float(dd_q[i]) * 100, 2),
@@ -288,17 +288,17 @@ def cell_horizon_header() -> None:
 @app.cell
 def cell_horizon_chart(data):
     """Build horizon-sensitivity chart for Sharpe IQR."""
-    horizons = {"63-day (Qtr)": 63, "126-day (6mo)": 126, "252-day (1yr)": 252}
+    _horizons = {"63-day (Qtr)": 63, "126-day (6mo)": 126, "252-day (1yr)": 252}
     fig = go.Figure()
 
-    for label, period in horizons.items():
-        mc = data.stats.montecarlo_sharpe(n=500, period=period)
-        for asset in data.assets:
-            s = mc[asset]
+    for _label, _period in _horizons.items():
+        _mc = data.stats.montecarlo_sharpe(n=500, period=_period)
+        for _asset in data.assets:
+            _s = _mc[_asset]
             fig.add_trace(
                 go.Box(
-                    y=s.to_list(),
-                    name=f"{asset} / {label}",
+                    y=_s.to_list(),
+                    name=f"{_asset} / {_label}",
                     boxmean=True,
                 )
             )
