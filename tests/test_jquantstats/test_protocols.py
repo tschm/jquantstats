@@ -65,9 +65,8 @@ def test_portfolio_satisfies_reports_portfolio_like(simple_portfolio):
 
 def test_reports_stats_like_protocol_is_minimal():
     """Reports StatsLike only defines methods used by Report."""
-    assert "summary" in ReportsStatsLike.__dict__
-    assert "sharpe" not in ReportsStatsLike.__dict__
-    assert "drawdown_details" not in ReportsStatsLike.__dict__
+    public_members = {name for name in ReportsStatsLike.__dict__ if not name.startswith("_")}
+    assert public_members == {"summary"}
 
 
 def test_non_data_does_not_satisfy_stats_protocol():
