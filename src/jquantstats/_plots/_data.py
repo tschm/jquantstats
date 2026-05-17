@@ -113,6 +113,14 @@ def _apply_figsize(fig: go.Figure, figsize: tuple[int, int] | None) -> go.Figure
     return fig
 
 
+def _bar_colors(values: list[float | None], positive_color: str, single_asset: bool = False) -> list[str]:
+    """Return the shared positive/negative bar colors for a series of values."""
+    if single_asset:
+        return ["#2ca02c" if v is not None and v > 0 else "#d62728" for v in values]
+    negative_color = _hex_to_rgba(positive_color, alpha=0.4)
+    return [positive_color if v is not None and v > 0 else negative_color for v in values]
+
+
 def _compute_drawdown_periods(prices: list[float], n: int) -> list[dict]:
     """Identify the top *n* drawdown periods from a cumulative price series.
 
@@ -164,22 +172,6 @@ def _plot_performance_dashboard(returns: pl.DataFrame, log_scale: bool = False) 
         A Plotly Figure containing cumulative returns, drawdowns, and monthly returns panels.
 
     """
-
-    def hex_to_rgba(hex_color: str, alpha: float = 0.5) -> str:
-        """Convert a hex colour string to an RGBA CSS string.
-
-        Args:
-            hex_color: A hex colour string (with or without a leading ``#``).
-            alpha: Opacity in the range [0, 1]. Defaults to 0.5.
-
-        Returns:
-            An RGBA CSS string suitable for use in Plotly colour arguments.
-
-        """
-        hex_color = hex_color.lstrip("#")
-        r, g, b = tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
-        return f"rgba({r}, {g}, {b}, {alpha})"
-
     # Get the date column name from the first column of the DataFrame
     date_col = returns.columns[0]
 
@@ -189,9 +181,8 @@ def _plot_performance_dashboard(returns: pl.DataFrame, log_scale: bool = False) 
     # Calculate cumulative returns (prices)
     prices = returns.with_columns([((1 + pl.col(ticker)).cum_prod()).alias(f"{ticker}_price") for ticker in tickers])
 
-    palette = px.colors.qualitative.Plotly
-    colors = {ticker: palette[i % len(palette)] for i, ticker in enumerate(tickers)}
-    colors.update({f"{ticker}_light": hex_to_rgba(colors[ticker]) for ticker in tickers})
+    colors = _ticker_colors(tickers)
+    colors.update({f"{ticker}_light": _hex_to_rgba(colors[ticker]) for ticker in tickers})
 
     # Resample to monthly returns
     monthly_returns = returns.group_by_dynamic(
@@ -282,27 +273,7 @@ def _plot_performance_dashboard(returns: pl.DataFrame, log_scale: bool = False) 
             col=1,
         )
 
-    # Layout
-    fig.update_layout(
-        title=f"{' vs '.join(tickers)} Performance Dashboard",
-        height=1200,
-        hovermode="x unified",
-        plot_bgcolor="white",
-        legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
-        xaxis={
-            "rangeselector": {
-                "buttons": [
-                    {"count": 6, "label": "6m", "step": "month", "stepmode": "backward"},
-                    {"count": 1, "label": "1y", "step": "year", "stepmode": "backward"},
-                    {"count": 3, "label": "3y", "step": "year", "stepmode": "backward"},
-                    {"step": "year", "stepmode": "todate", "label": "YTD"},
-                    {"step": "all", "label": "All"},
-                ]
-            },
-            "rangeslider": {"visible": False},
-            "type": "date",
-        },
-    )
+    _apply_base_layout(fig, f"{' vs '.join(tickers)} Performance Dashboard", height=1200)
 
     fig.update_yaxes(title_text="Cumulative Return", row=1, col=1, tickformat=".2f")
     fig.update_yaxes(title_text="Drawdown", row=2, col=1, tickformat=".0%")
@@ -546,12 +517,7 @@ class DataPlots:
         fig = go.Figure()
         for ticker in tickers:
             values = df[ticker].to_list()
-            if single:
-                bar_colors = ["#2ca02c" if v is not None and v > 0 else "#d62728" for v in values]
-            else:
-                pos_color = colors[ticker]
-                neg_color = _hex_to_rgba(pos_color, alpha=0.4)
-                bar_colors = [pos_color if v is not None and v > 0 else neg_color for v in values]
+            bar_colors = _bar_colors(values, colors[ticker], single_asset=single)
 
             fig.add_trace(
                 go.Bar(
@@ -641,12 +607,7 @@ class DataPlots:
         fig = go.Figure()
         for ticker in tickers:
             values = monthly[ticker].to_list()
-            if single:
-                bar_colors = ["#2ca02c" if v is not None and v > 0 else "#d62728" for v in values]
-            else:
-                pos_color = colors[ticker]
-                neg_color = _hex_to_rgba(pos_color, alpha=0.4)
-                bar_colors = [pos_color if v is not None and v > 0 else neg_color for v in values]
+            bar_colors = _bar_colors(values, colors[ticker], single_asset=single)
 
             fig.add_trace(
                 go.Bar(
@@ -939,8 +900,7 @@ class DataPlots:
 
         _apply_base_layout(fig, title)
         fig.update_yaxes(title_text="Cumulative Return", tickformat=".2f")
-        if figsize is not None:
-            fig.update_layout(width=figsize[0], height=figsize[1])
+        _apply_figsize(fig, figsize)
         return fig
 
     def montecarlo_distribution(
@@ -1037,8 +997,7 @@ class DataPlots:
         fig.update_layout(barmode="overlay")
         fig.update_xaxes(title_text=metric_title)
         fig.update_yaxes(title_text="Count")
-        if figsize is not None:
-            fig.update_layout(width=figsize[0], height=figsize[1])
+        _apply_figsize(fig, figsize)
         return fig
 
     def drawdown(self, title: str = "Drawdowns") -> go.Figure:

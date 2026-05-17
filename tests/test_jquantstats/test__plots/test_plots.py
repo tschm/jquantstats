@@ -304,6 +304,7 @@ def test_rolling_sharpe_plot_returns_figure_with_traces(long_portfolio):
     for trace in fig.data:
         assert isinstance(trace, go.Scatter)
     assert "Rolling Sharpe" in fig.layout.title.text
+    assert fig.layout.xaxis.rangeselector is not None
     _ = fig.to_dict()
 
 
@@ -326,6 +327,7 @@ def test_rolling_volatility_plot_returns_figure_with_traces(long_portfolio):
     for trace in fig.data:
         assert isinstance(trace, go.Scatter)
     assert "Rolling Volatility" in fig.layout.title.text
+    assert fig.layout.xaxis.rangeselector is not None
     _ = fig.to_dict()
 
 

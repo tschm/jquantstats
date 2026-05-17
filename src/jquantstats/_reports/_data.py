@@ -11,7 +11,7 @@ import polars as pl
 if TYPE_CHECKING:
     from jquantstats._protocol import DataLike
 
-from ._formatting import _fmt, _is_finite
+from ._formatting import _fmt, _is_finite, _plotly_div, _table_html
 
 # ── Private helpers ───────────────────────────────────────────────────────────
 
@@ -509,14 +509,7 @@ def _metrics_table_html(df: pl.DataFrame) -> str:
             cells = "".join(f'<td class="metric-value">{_fmt(vals.get(a), ".4f")}</td>' for a in assets)
         parts.append(f'<tr><td class="metric-name">{label}</td>{cells}</tr>\n')
 
-    return (
-        '<table class="stats-table">'
-        "<thead><tr>"
-        f'<th class="metric-header">Metric</th>{header_cells}'
-        "</tr></thead>"
-        f"<tbody>{''.join(parts)}</tbody>"
-        "</table>"
-    )
+    return _table_html(header_cells, "".join(parts))
 
 
 def _drawdowns_section_html(data: Any, assets: list[str]) -> str:
@@ -581,13 +574,7 @@ def _try_plotly_div(fig: Any, include_cdn: bool = False) -> str:
 
     """
     try:
-        import plotly.io as pio
-
-        return pio.to_html(
-            fig,
-            full_html=False,
-            include_plotlyjs="cdn" if include_cdn else False,
-        )
+        return _plotly_div(fig, include_plotlyjs="cdn" if include_cdn else False)
     except Exception:
         return ""
 
