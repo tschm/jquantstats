@@ -114,9 +114,6 @@ decomp = pf.tilt_timing_decomp  # DataFrame: portfolio | tilt | timing NAVs side
 turnover         = pf.turnover           # daily one-way turnover as fraction of AUM
 turnover_weekly  = pf.turnover_weekly    # weekly aggregate (or 5-period rolling sum)
 turnover_summary = pf.turnover_summary() # mean_daily, mean_weekly, turnover_std
-turnover         = pf.turnover           # daily one-way turnover as fraction of AUM
-turnover_weekly  = pf.turnover_weekly    # weekly aggregate (or 5-period rolling sum)
-turnover_summary = pf.turnover_summary() # mean_daily, mean_weekly, turnover_std
 ```
 
 ### Cost Modeling
@@ -331,7 +328,7 @@ with configurable windows.
 - Turnover analytics via `turnover`, `turnover_weekly`, `turnover_summary()`
 - Cost modeling via `CostModel.per_unit()` / `CostModel.turnover_bps()`
 - Cost-impact sweep via `trading_cost_impact(max_bps)`
-- Position smoothing via `smoothed_holding(window)`
+- Position smoothing via `smoothed_holding(n)`
 - Risk-position entry via `from_risk_position()` with EWMA de-volatization
 
 **Interactive Visualizations** — all charts are Plotly (zoom, pan, hover tooltips,
@@ -372,7 +369,7 @@ If you use jQuantStats in academic work or research reports, please cite it usin
   author    = {Schmelzer, Thomas},
   title     = {jQuantStats: Portfolio Analytics for Quants},
   url       = {https://github.com/jebel-quant/jquantstats},
-  version   = {0.4.0},
+  version   = {0.9.0},
   year      = {2026},
   license   = {MIT}
 }
