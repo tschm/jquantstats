@@ -181,21 +181,6 @@ def test_payoff_ratio(stats):
     assert result["META"] == pytest.approx(1.0383990517002815)
 
 
-def test_win_loss_ratio(stats):
-    """Tests that the win_loss_ratio method calculates win/loss ratio correctly.
-
-    Args:
-        stats: The stats fixture containing a Stats object.
-
-    Verifies:
-        The win/loss ratio value for META matches the expected value.
-
-    """
-    with pytest.warns(DeprecationWarning, match="win_loss_ratio"):
-        result = stats.win_loss_ratio()
-    assert result["META"] == pytest.approx(1.0383990517002815)
-
-
 def test_profit_ratio(stats):
     """Tests that the profit_ratio method calculates profit ratio correctly.
 
@@ -286,10 +271,13 @@ def test_comp(stats):
     assert result["META"] == pytest.approx(13.382664235863414)
 
 
-def test_ghpr(stats):
-    """Tests that ghpr returns the same value as geometric_mean."""
-    with pytest.warns(DeprecationWarning, match="ghpr"):
-        assert stats.ghpr() == stats.geometric_mean()
+def test_geometric_mean(stats):
+    """Tests that geometric_mean matches the compounded-return identity."""
+    result = stats.geometric_mean()
+    comp = stats.comp()["META"]
+    n = stats.all["META"].drop_nulls().len()
+    expected = (1 + comp) ** (1 / n) - 1
+    assert result["META"] == pytest.approx(expected)
 
 
 def test_compsum(stats):
@@ -781,22 +769,6 @@ def test_r_squared(stats):
     result = stats.r_squared()
     print(result)
     # assert 0 <= result <= 1  # R-squared should be between 0 and 1
-
-
-def test_r2(stats):
-    """Tests that the r2 method is an alias for r_squared.
-
-    Args:
-        stats: The stats fixture containing a Stats object.
-
-    Verifies:
-        The r2 method returns the same result as the r_squared method.
-
-    """
-    with pytest.warns(DeprecationWarning, match="r2"):
-        result = stats.r2()
-    expected = stats.r_squared()
-    assert result == expected
 
 
 def test_drawdowns(stats):

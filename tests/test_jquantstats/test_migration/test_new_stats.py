@@ -11,13 +11,12 @@ def aligned(pandas_frame):
     return pandas_frame[["AAPL", "SPY -- Benchmark"]].dropna()
 
 
-# ── r2 (alias for r_squared) ──────────────────────────────────────────────────
+# ── r_squared ─────────────────────────────────────────────────────────────────
 
 
-def test_r2_alias(stats, aligned):
-    """r2() is an alias for r_squared() and matches quantstats."""
-    with pytest.warns(DeprecationWarning, match="r2"):
-        x = stats.r2()
+def test_r_squared(stats, aligned):
+    """r_squared() matches quantstats."""
+    x = stats.r_squared()
     y = qs.stats.r2(aligned["AAPL"], aligned["SPY -- Benchmark"])
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
 
