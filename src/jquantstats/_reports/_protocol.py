@@ -13,7 +13,7 @@ __all__ = ["DataLike", "PlotsLike", "PortfolioLike", "StatsLike"]
 
 
 class StatsLike(Protocol):  # pragma: no cover
-    """Structural interface for the statistics methods used by `Reports`."""
+    """Structural interface for the statistics methods used by `Report`."""
 
     def summary(self) -> pl.DataFrame:
         """Full summary DataFrame (one row per metric, one column per asset)."""
