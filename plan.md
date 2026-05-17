@@ -370,6 +370,8 @@ one row per simulation). Mixin included in `Stats`.
 
 ### T9.2 — Close edge-case metric coverage gaps vs quantstats
 
+**Issue:** [#763](https://github.com/Jebel-Quant/jquantstats/issues/763)
+
 Audit quantstats `stats.py` against `jquantstats` to identify any remaining metrics present in quantstats but absent or subtly different in jquantstats. For each gap: implement the missing method or document the intentional divergence with a note in `benchmark.md`.
 
 **Effort:** 2 hr · **Raises:** Stats coverage 9 → 10 vs quantstats
@@ -419,6 +421,8 @@ Each plot follows the existing Plotly pattern: returns `go.Figure`, accepts
 
 ### T10.3 — Port remaining quantstats tearsheet plots
 
+**Issue:** [#764](https://github.com/Jebel-Quant/jquantstats/issues/764)
+
 Audit `quantstats/_plotting/wrappers.py` for the ~18 plots present in quantstats but not yet in `DataPlots`. Implement each following the existing Plotly pattern (`go.Figure`, `title`/`figsize` kwargs, date range selector). Priority order: plots that appear in the default `html()` tearsheet first.
 
 **Effort:** 4–6 hr · **Raises:** Plot coverage 8 → 10 vs quantstats
@@ -456,6 +460,8 @@ implementations on a 10-year daily series to confirm the speedup.
 ---
 
 ### T11.2 — Run actual performance benchmarks and identify optimisation targets
+
+**Issue:** [#767](https://github.com/Jebel-Quant/jquantstats/issues/767)
 
 The 9/10 performance score is inferred from Polars vs pandas library characteristics; no in-repo benchmarks verify it end-to-end. Add `pytest-benchmark` timing tests for the most computationally intensive methods (e.g. `rolling_sortino`, `sharpe` across a 50-asset frame, `summary`). If any method shows unexpected slowness, rewrite using native Polars expressions.
 
