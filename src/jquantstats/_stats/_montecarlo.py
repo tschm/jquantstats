@@ -105,7 +105,7 @@ class _MonteCarloStatsMixin:
 
         """
         paths = self._simulate_distribution(n=n, period=period)
-        result = {col: (np.prod(1.0 + arr, axis=1) - 1.0).tolist() for col, arr in paths.items()}
+        result = {col: np.prod(1.0 + arr, axis=1) - 1.0 for col, arr in paths.items()}
         return pl.DataFrame(result)
 
     def montecarlo_sharpe(
@@ -132,13 +132,12 @@ class _MonteCarloStatsMixin:
             raise ValueError("periods_per_year must be positive")  # noqa: TRY003
         scale = math.sqrt(ppy)
         paths = self._simulate_distribution(n=n, period=period)
-        result: dict[str, list[float]] = {}
+        result: dict[str, np.ndarray] = {}
         for col, arr in paths.items():
             means = arr.mean(axis=1)
             stds = arr.std(axis=1, ddof=1)
             with np.errstate(invalid="ignore", divide="ignore"):
-                sims = np.where(stds == 0.0, np.nan, means / stds * scale)
-            result[col] = sims.tolist()
+                result[col] = np.where(stds == 0.0, np.nan, means / stds * scale)
         return pl.DataFrame(result)
 
     def montecarlo_drawdown(self, n: int = 1000, period: int = 252) -> pl.DataFrame:
@@ -154,11 +153,11 @@ class _MonteCarloStatsMixin:
 
         """
         paths = self._simulate_distribution(n=n, period=period)
-        result: dict[str, list[float]] = {}
+        result: dict[str, np.ndarray] = {}
         for col, arr in paths.items():
             nav = np.cumprod(1.0 + arr, axis=1)
             hwm = np.maximum.accumulate(nav, axis=1)
-            result[col] = np.min(nav / hwm - 1.0, axis=1).tolist()
+            result[col] = np.min(nav / hwm - 1.0, axis=1)
         return pl.DataFrame(result)
 
     def montecarlo_cagr(
@@ -185,10 +184,9 @@ class _MonteCarloStatsMixin:
             raise ValueError("periods_per_year must be positive")  # noqa: TRY003
         years = period / ppy
         paths = self._simulate_distribution(n=n, period=period)
-        result: dict[str, list[float]] = {}
+        result: dict[str, np.ndarray] = {}
         for col, arr in paths.items():
             totals = np.prod(1.0 + arr, axis=1)
             with np.errstate(invalid="ignore"):
-                sims = np.where(totals > 0, totals ** (1.0 / years) - 1.0, np.nan)
-            result[col] = sims.tolist()
+                result[col] = np.where(totals > 0, totals ** (1.0 / years) - 1.0, np.nan)
         return pl.DataFrame(result)
