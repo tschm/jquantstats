@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Callable
 from typing import TYPE_CHECKING, cast
 
@@ -336,6 +337,12 @@ class _RiskStatsMixin:
             dict[str, float]: Dictionary mapping asset names to GHPR values.
 
         """
+        warnings.warn(
+            "`ghpr()` is deprecated and will be removed in a future release. "
+            "Use `geometric_mean()` instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self.geometric_mean()
 
     # ── Drawdown ──────────────────────────────────────────────────────────────
@@ -738,6 +745,12 @@ class _RiskStatsMixin:
             dict[str, float]: Dictionary mapping asset names to R-squared values.
 
         """
+        warnings.warn(
+            "`r2()` is deprecated and will be removed in a future release. "
+            "Use `r_squared()` instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self.r_squared()
 
     @columnwise_stat

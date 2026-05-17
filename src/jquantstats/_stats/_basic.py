@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import warnings
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, cast
 
@@ -220,6 +221,12 @@ class _BasicStatsMixin:
             dict[str, float]: Dictionary mapping asset names to win/loss ratios.
 
         """
+        warnings.warn(
+            "`win_loss_ratio()` is deprecated and will be removed in a future release. "
+            "Use `payoff_ratio()` instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self.payoff_ratio()
 
     @columnwise_stat
