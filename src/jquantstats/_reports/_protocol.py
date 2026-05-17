@@ -8,6 +8,7 @@ import plotly.graph_objects as go
 import polars as pl
 
 from jquantstats._protocol import DataLike
+
 __all__ = ["DataLike", "PlotsLike", "PortfolioLike", "StatsLike"]
 
 
