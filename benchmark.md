@@ -53,7 +53,7 @@ No concept of a data container or session object. Benchmark is passed as an argu
 
 ---
 
-## 3. API Design & Consistency — 8/10
+## 3. API Design & Consistency — 9/10
 
 **quantstats:** Free-function API. Return types are inconsistent: most metrics return `float`, some return `pd.Series`, others return `pd.DataFrame`. No enforced contract.
 

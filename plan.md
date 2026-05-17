@@ -73,8 +73,6 @@ that `prices()` is the public entry point for consumers.
 
 ---
 
-## Theme 1 — Code Duplication (7 → 9 → 10)
-
 ### T1.4 — Eliminate residual code duplication
 
 **Issue:** [#758](https://github.com/Jebel-Quant/jquantstats/issues/758)

@@ -213,5 +213,8 @@ No stale imports or unused variables were found anywhere in the source tree.
 | ~~11~~ | ~~Trim `StatsLike` to the ~12 methods `Reports` calls ([#719](https://github.com/Jebel-Quant/jquantstats/issues/719))~~ | ~~1 hr~~ | ✅ merged [PR #755](https://github.com/Jebel-Quant/jquantstats/pull/755) |
 | ~~12~~ | ~~Unify the three `DataLike` protocol definitions ([#734](https://github.com/Jebel-Quant/jquantstats/issues/734))~~ | ~~1 hr~~ | ✅ merged [PR #736](https://github.com/Jebel-Quant/jquantstats/pull/736) |
 | ~~13~~ | ~~Clarify or remove `hhi_positive` / `hhi_negative` ([#722](https://github.com/Jebel-Quant/jquantstats/issues/722))~~ | ~~15 min~~ | ✅ merged [PR #730](https://github.com/Jebel-Quant/jquantstats/pull/730) |
+| 14 | Remove deprecated alias methods `ghpr`, `r2`, `win_loss_ratio` ([#757](https://github.com/Jebel-Quant/jquantstats/issues/757)) | 30 min | API surface 9 → 10 |
+| 15 | Audit and eliminate residual code duplication ([#758](https://github.com/Jebel-Quant/jquantstats/issues/758)) | 1 hr | code duplication 9 → 10 |
+| 16 | Resolve remaining `is_empty()` post-filter guards ([#759](https://github.com/Jebel-Quant/jquantstats/issues/759)) | 1 hr | null handling 9 → 10 |
 
-All items resolved. No open recommendations.
+Items 14–16 are open (Sprint 6). Completion raises the internal quality score from **9.7 → 10.0**.
