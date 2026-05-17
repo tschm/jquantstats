@@ -765,12 +765,15 @@ class _RiskStatsMixin:
             float: The information ratio value.
 
         """
+        if self._data.benchmark is None:
+            raise AttributeError("No benchmark data available")  # noqa: TRY003
+
         ppy = periods_per_year or self._data._periods_per_year
 
-        benchmark_data = cast(pl.DataFrame, self._data.benchmark)
-        benchmark_col = benchmark or benchmark_data.columns[0]
-
-        active = series - benchmark_data[benchmark_col]
+        benchmark_col = benchmark or self._data.benchmark.columns[0]
+        all_data = cast(pl.DataFrame, self.all)
+        paired = pl.DataFrame({"strategy": series, "benchmark": all_data[benchmark_col]}).drop_nulls()
+        active = paired["strategy"] - paired["benchmark"]
 
         mean_f = _mean(active)
         std_val = cast(float, active.std())

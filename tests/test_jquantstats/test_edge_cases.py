@@ -65,6 +65,12 @@ def test_r_squared_no_benchmark(data_no_benchmark):
         data_no_benchmark.stats.r_squared()
 
 
+def test_information_ratio_no_benchmark(data_no_benchmark):
+    """information_ratio() raises a clear AttributeError when no benchmark is attached."""
+    with pytest.raises(AttributeError, match="No benchmark data available"):
+        data_no_benchmark.stats.information_ratio()
+
+
 def test_non_overlapping_dates():
     """Tests that Data.from_returns raises a ValueError when returns and benchmark have non-overlapping dates.
 
@@ -335,6 +341,32 @@ def test_partial_date_overlap_aligns_correctly():
     assert data.benchmark is not None
     assert data.benchmark.shape[0] == 6
     assert data.index.shape[0] == 6
+
+
+def test_information_ratio_drops_benchmark_null_pairs():
+    """information_ratio() uses only rows where both strategy and benchmark are non-null."""
+    from datetime import date
+
+    returns = pl.DataFrame(
+        {
+            "Date": [date(2023, 1, 1), date(2023, 1, 2), date(2023, 1, 3), date(2023, 1, 4)],
+            "asset": [None, 0.10, 0.20, 0.30],
+        }
+    )
+    benchmark = pl.DataFrame(
+        {
+            "Date": returns["Date"],
+            "bench": [0.01, None, 0.05, 0.10],
+        }
+    )
+
+    data = Data.from_returns(returns=returns, benchmark=benchmark)
+    result = data.stats.information_ratio(periods_per_year=1, annualise=False)
+
+    active = pl.Series([0.15, 0.20])
+    expected = float(active.mean() / active.std())
+
+    assert result["asset"] == pytest.approx(expected)
 
 
 # ── null_strategy parameter ───────────────────────────────────────────────────
