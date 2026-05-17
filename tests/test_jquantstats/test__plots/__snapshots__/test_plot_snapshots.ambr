@@ -17,6 +17,32 @@
     ]),
   })
 # ---
+# name: test_compare_structure
+  dict({
+    'layout': dict({
+      'hovermode': 'x unified',
+      'plot_bgcolor': 'white',
+      'subplot_titles': list([
+      ]),
+      'title': 'Comparison vs Benchmark',
+    }),
+    'num_traces': 3,
+    'traces': list([
+      dict({
+        'name': 'AAPL',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'META',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'SPY -- Benchmark',
+        'type': 'Scatter',
+      }),
+    ]),
+  })
+# ---
 # name: test_correlation_heatmap_structure
   dict({
     'layout': dict({
@@ -31,6 +57,260 @@
       dict({
         'name': '0',
         'type': 'Heatmap',
+      }),
+    ]),
+  })
+# ---
+# name: test_daily_returns_structure
+  dict({
+    'layout': dict({
+      'hovermode': 'x unified',
+      'plot_bgcolor': 'white',
+      'subplot_titles': list([
+      ]),
+      'title': 'Daily Returns',
+    }),
+    'num_traces': 3,
+    'traces': list([
+      dict({
+        'name': 'AAPL',
+        'type': 'Bar',
+      }),
+      dict({
+        'name': 'META',
+        'type': 'Bar',
+      }),
+      dict({
+        'name': 'SPY -- Benchmark',
+        'type': 'Bar',
+      }),
+    ]),
+  })
+# ---
+# name: test_data_rolling_sharpe_structure
+  dict({
+    'layout': dict({
+      'hovermode': 'x unified',
+      'plot_bgcolor': 'white',
+      'subplot_titles': list([
+      ]),
+      'title': 'Rolling Sharpe Ratio',
+    }),
+    'num_traces': 3,
+    'traces': list([
+      dict({
+        'name': 'AAPL',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'META',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'SPY -- Benchmark',
+        'type': 'Scatter',
+      }),
+    ]),
+  })
+# ---
+# name: test_data_rolling_volatility_structure
+  dict({
+    'layout': dict({
+      'hovermode': 'x unified',
+      'plot_bgcolor': 'white',
+      'subplot_titles': list([
+      ]),
+      'title': 'Rolling Volatility',
+    }),
+    'num_traces': 3,
+    'traces': list([
+      dict({
+        'name': 'AAPL',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'META',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'SPY -- Benchmark',
+        'type': 'Scatter',
+      }),
+    ]),
+  })
+# ---
+# name: test_distribution_structure
+  dict({
+    'layout': dict({
+      'hovermode': None,
+      'plot_bgcolor': 'white',
+      'subplot_titles': list([
+        'AAPL',
+        'META',
+        'SPY -- Benchmark',
+      ]),
+      'title': 'Return Distribution by Period',
+    }),
+    'num_traces': 15,
+    'traces': list([
+      dict({
+        'name': 'Daily',
+        'type': 'Box',
+      }),
+      dict({
+        'name': 'Weekly',
+        'type': 'Box',
+      }),
+      dict({
+        'name': 'Monthly',
+        'type': 'Box',
+      }),
+      dict({
+        'name': 'Quarterly',
+        'type': 'Box',
+      }),
+      dict({
+        'name': 'Yearly',
+        'type': 'Box',
+      }),
+      dict({
+        'name': 'Daily',
+        'type': 'Box',
+      }),
+      dict({
+        'name': 'Weekly',
+        'type': 'Box',
+      }),
+      dict({
+        'name': 'Monthly',
+        'type': 'Box',
+      }),
+      dict({
+        'name': 'Quarterly',
+        'type': 'Box',
+      }),
+      dict({
+        'name': 'Yearly',
+        'type': 'Box',
+      }),
+      dict({
+        'name': 'Daily',
+        'type': 'Box',
+      }),
+      dict({
+        'name': 'Weekly',
+        'type': 'Box',
+      }),
+      dict({
+        'name': 'Monthly',
+        'type': 'Box',
+      }),
+      dict({
+        'name': 'Quarterly',
+        'type': 'Box',
+      }),
+      dict({
+        'name': 'Yearly',
+        'type': 'Box',
+      }),
+    ]),
+  })
+# ---
+# name: test_drawdown_structure
+  dict({
+    'layout': dict({
+      'hovermode': 'x unified',
+      'plot_bgcolor': 'white',
+      'subplot_titles': list([
+      ]),
+      'title': 'Drawdowns',
+    }),
+    'num_traces': 3,
+    'traces': list([
+      dict({
+        'name': 'AAPL',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'META',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'SPY -- Benchmark',
+        'type': 'Scatter',
+      }),
+    ]),
+  })
+# ---
+# name: test_drawdowns_periods_structure
+  dict({
+    'layout': dict({
+      'hovermode': 'x unified',
+      'plot_bgcolor': 'white',
+      'subplot_titles': list([
+        '#1 -81.8%',
+        '#2 -78.1%',
+        '#3 -60.9%',
+      ]),
+      'title': 'Top Drawdown Periods — AAPL',
+    }),
+    'num_traces': 1,
+    'traces': list([
+      dict({
+        'name': 'AAPL',
+        'type': 'Scatter',
+      }),
+    ]),
+  })
+# ---
+# name: test_earnings_structure
+  dict({
+    'layout': dict({
+      'hovermode': 'x unified',
+      'plot_bgcolor': 'white',
+      'subplot_titles': list([
+      ]),
+      'title': 'Portfolio Earnings',
+    }),
+    'num_traces': 3,
+    'traces': list([
+      dict({
+        'name': 'AAPL',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'META',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'SPY -- Benchmark',
+        'type': 'Scatter',
+      }),
+    ]),
+  })
+# ---
+# name: test_histogram_structure
+  dict({
+    'layout': dict({
+      'hovermode': 'x unified',
+      'plot_bgcolor': 'white',
+      'subplot_titles': list([
+      ]),
+      'title': 'Returns Distribution',
+    }),
+    'num_traces': 3,
+    'traces': list([
+      dict({
+        'name': 'AAPL',
+        'type': 'Histogram',
+      }),
+      dict({
+        'name': 'META',
+        'type': 'Histogram',
+      }),
+      dict({
+        'name': 'SPY -- Benchmark',
+        'type': 'Histogram',
       }),
     ]),
   })
@@ -87,6 +367,225 @@
     ]),
   })
 # ---
+# name: test_log_returns_structure
+  dict({
+    'layout': dict({
+      'hovermode': 'x unified',
+      'plot_bgcolor': 'white',
+      'subplot_titles': list([
+      ]),
+      'title': 'Log Returns',
+    }),
+    'num_traces': 3,
+    'traces': list([
+      dict({
+        'name': 'AAPL',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'META',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'SPY -- Benchmark',
+        'type': 'Scatter',
+      }),
+    ]),
+  })
+# ---
+# name: test_montecarlo_distribution_structure
+  dict({
+    'layout': dict({
+      'hovermode': 'x unified',
+      'plot_bgcolor': 'white',
+      'subplot_titles': list([
+        'AAPL observed',
+        'META observed',
+        'SPY -- Benchmark observed',
+      ]),
+      'title': 'Monte Carlo Distribution',
+    }),
+    'num_traces': 3,
+    'traces': list([
+      dict({
+        'name': 'AAPL',
+        'type': 'Histogram',
+      }),
+      dict({
+        'name': 'META',
+        'type': 'Histogram',
+      }),
+      dict({
+        'name': 'SPY -- Benchmark',
+        'type': 'Histogram',
+      }),
+    ]),
+  })
+# ---
+# name: test_montecarlo_structure
+  dict({
+    'layout': dict({
+      'hovermode': 'x unified',
+      'plot_bgcolor': 'white',
+      'subplot_titles': list([
+      ]),
+      'title': 'Monte Carlo Simulation',
+    }),
+    'num_traces': 33,
+    'traces': list([
+      dict({
+        'name': 'AAPL Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'AAPL Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'AAPL Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'AAPL Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'AAPL Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'AAPL Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'AAPL Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'AAPL Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'AAPL Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'AAPL Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'AAPL Observed',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'META Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'META Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'META Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'META Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'META Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'META Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'META Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'META Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'META Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'META Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'META Observed',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'SPY -- Benchmark Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'SPY -- Benchmark Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'SPY -- Benchmark Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'SPY -- Benchmark Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'SPY -- Benchmark Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'SPY -- Benchmark Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'SPY -- Benchmark Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'SPY -- Benchmark Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'SPY -- Benchmark Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'SPY -- Benchmark Sim',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'SPY -- Benchmark Observed',
+        'type': 'Scatter',
+      }),
+    ]),
+  })
+# ---
+# name: test_monthly_heatmap_structure
+  dict({
+    'layout': dict({
+      'hovermode': None,
+      'plot_bgcolor': 'white',
+      'subplot_titles': list([
+      ]),
+      'title': 'Monthly Returns Heatmap — AAPL',
+    }),
+    'num_traces': 1,
+    'traces': list([
+      dict({
+        'name': None,
+        'type': 'Heatmap',
+      }),
+    ]),
+  })
+# ---
 # name: test_monthly_returns_heatmap_structure
   dict({
     'layout': dict({
@@ -101,6 +600,32 @@
       dict({
         'name': None,
         'type': 'Heatmap',
+      }),
+    ]),
+  })
+# ---
+# name: test_monthly_returns_structure
+  dict({
+    'layout': dict({
+      'hovermode': 'x unified',
+      'plot_bgcolor': 'white',
+      'subplot_titles': list([
+      ]),
+      'title': 'Monthly Returns',
+    }),
+    'num_traces': 3,
+    'traces': list([
+      dict({
+        'name': 'AAPL',
+        'type': 'Bar',
+      }),
+      dict({
+        'name': 'META',
+        'type': 'Bar',
+      }),
+      dict({
+        'name': 'SPY -- Benchmark',
+        'type': 'Bar',
       }),
     ]),
   })
@@ -240,6 +765,62 @@
     ]),
   })
 # ---
+# name: test_returns_structure
+  dict({
+    'layout': dict({
+      'hovermode': 'x unified',
+      'plot_bgcolor': 'white',
+      'subplot_titles': list([
+      ]),
+      'title': 'Cumulative Returns',
+    }),
+    'num_traces': 3,
+    'traces': list([
+      dict({
+        'name': 'AAPL',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'META',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'SPY -- Benchmark',
+        'type': 'Scatter',
+      }),
+    ]),
+  })
+# ---
+# name: test_rolling_beta_structure
+  dict({
+    'layout': dict({
+      'hovermode': 'x unified',
+      'plot_bgcolor': 'white',
+      'subplot_titles': list([
+      ]),
+      'title': 'Rolling Beta',
+    }),
+    'num_traces': 4,
+    'traces': list([
+      dict({
+        'name': 'AAPL (126d)',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'AAPL (252d)',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'META (126d)',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'META (252d)',
+        'type': 'Scatter',
+      }),
+    ]),
+  })
+# ---
 # name: test_rolling_sharpe_plot_structure
   dict({
     'layout': dict({
@@ -253,6 +834,32 @@
     'traces': list([
       dict({
         'name': 'returns',
+        'type': 'Scatter',
+      }),
+    ]),
+  })
+# ---
+# name: test_rolling_sortino_structure
+  dict({
+    'layout': dict({
+      'hovermode': 'x unified',
+      'plot_bgcolor': 'white',
+      'subplot_titles': list([
+      ]),
+      'title': 'Rolling Sortino Ratio',
+    }),
+    'num_traces': 3,
+    'traces': list([
+      dict({
+        'name': 'AAPL',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'META',
+        'type': 'Scatter',
+      }),
+      dict({
+        'name': 'SPY -- Benchmark',
         'type': 'Scatter',
       }),
     ]),
@@ -370,6 +977,32 @@
       dict({
         'name': 'Drawdown',
         'type': 'Scatter',
+      }),
+    ]),
+  })
+# ---
+# name: test_yearly_returns_structure
+  dict({
+    'layout': dict({
+      'hovermode': 'x unified',
+      'plot_bgcolor': 'white',
+      'subplot_titles': list([
+      ]),
+      'title': 'Yearly Returns',
+    }),
+    'num_traces': 3,
+    'traces': list([
+      dict({
+        'name': 'AAPL',
+        'type': 'Bar',
+      }),
+      dict({
+        'name': 'META',
+        'type': 'Bar',
+      }),
+      dict({
+        'name': 'SPY -- Benchmark',
+        'type': 'Bar',
       }),
     ]),
   })
