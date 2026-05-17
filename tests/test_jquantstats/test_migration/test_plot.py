@@ -11,6 +11,7 @@ import pytest
         ("snapshot", {"log_scale": True}),
         ("returns", {}),
         ("returns", {"log_scale": True}),
+        ("compare", {}),
         ("log_returns", {}),
         ("daily_returns", {}),
         ("yearly_returns", {}),
@@ -49,6 +50,7 @@ def test_plot_returns_figure(data, method, kwargs):
     ("method", "kwargs"),
     [
         ("returns", {}),
+        ("compare", {}),
         ("log_returns", {}),
         ("daily_returns", {}),
         ("drawdown", {}),
@@ -66,6 +68,7 @@ def test_plot_includes_benchmark_trace(data, method, kwargs):
     [
         ("snapshot", {}),
         ("returns", {}),
+        ("compare", {}),
         ("log_returns", {}),
         ("daily_returns", {}),
         ("yearly_returns", {}),
@@ -119,6 +122,21 @@ def test_plot_rolling_beta_no_benchmark_raises(data_no_benchmark):
     """rolling_beta raises AttributeError when no benchmark is attached."""
     with pytest.raises(AttributeError):
         data_no_benchmark.plots.rolling_beta()
+
+
+def test_plot_compare_no_benchmark_raises(data_no_benchmark):
+    """Compare raises AttributeError when no benchmark is attached."""
+    with pytest.raises(AttributeError):
+        data_no_benchmark.plots.compare()
+
+
+def test_plot_figsize_applied(data):
+    """log_returns/compare/rolling_beta honor explicit figsize."""
+    figsize = (900, 600)
+    for method in ("log_returns", "compare", "rolling_beta"):
+        fig = getattr(data.plots, method)(figsize=figsize)
+        assert fig.layout.width == figsize[0]
+        assert fig.layout.height == figsize[1]
 
 
 # ── Single-asset path (covers bar_colors = green/red branch) ─────────────────
