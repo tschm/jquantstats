@@ -97,8 +97,7 @@ class _BasicStatsMixin:
             float: The average return value.
 
         """
-        assert series.null_count() == 0, "null values should have been handled by Data.__post_init__"  # noqa: S101
-        return _mean(series.filter(series != 0))
+        return _mean(series.filter(series.is_not_null() & (series != 0)))
 
     @columnwise_stat
     def avg_win(self, series: pl.Series) -> float:

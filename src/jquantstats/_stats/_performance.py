@@ -719,10 +719,7 @@ class _RiskStatsMixin:
 
         # Evaluate both series and benchmark as Series
         all_data = cast(pl.DataFrame, self.all)
-        dframe = all_data.select([series, pl.col(benchmark_col).alias("benchmark")])
-        strategy_col = dframe.columns[0]
-        assert dframe[strategy_col].null_count() == 0, "null values should have been handled by Data.__post_init__"  # noqa: S101
-        assert dframe["benchmark"].null_count() == 0, "null values should have been handled by Data.__post_init__"  # noqa: S101
+        dframe = all_data.select([series, pl.col(benchmark_col).alias("benchmark")]).drop_nulls()
 
         matrix = dframe.to_numpy()
         # Get actual Series
@@ -807,10 +804,7 @@ class _RiskStatsMixin:
 
         # Evaluate both series and benchmark as Series
         all_data = cast(pl.DataFrame, self.all)
-        dframe = all_data.select([series, pl.col(benchmark_col).alias("benchmark")])
-        strategy_col = dframe.columns[0]
-        assert dframe[strategy_col].null_count() == 0, "null values should have been handled by Data.__post_init__"  # noqa: S101
-        assert dframe["benchmark"].null_count() == 0, "null values should have been handled by Data.__post_init__"  # noqa: S101
+        dframe = all_data.select([series, pl.col(benchmark_col).alias("benchmark")]).drop_nulls()
         matrix = dframe.to_numpy()
 
         # Get actual Series
@@ -864,10 +858,7 @@ class _RiskStatsMixin:
         benchmark_col = benchmark or benchmark_data.columns[0]
 
         all_data = cast(pl.DataFrame, self.all)
-        dframe = all_data.select([series, pl.col(benchmark_col).alias("_bench")])
-        strategy_col = dframe.columns[0]
-        assert dframe[strategy_col].null_count() == 0, "null values should have been handled by Data.__post_init__"  # noqa: S101
-        assert dframe["_bench"].null_count() == 0, "null values should have been handled by Data.__post_init__"  # noqa: S101
+        dframe = all_data.select([series, pl.col(benchmark_col).alias("_bench")]).drop_nulls()
         matrix = dframe.to_numpy()
         strategy_np = matrix[:, 0]
         benchmark_np = matrix[:, 1]
