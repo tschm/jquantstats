@@ -1,7 +1,7 @@
 # jquantstats — Plan to 10.0
 
-> Based on `report.md` (internal quality, current overall **7.4**) and `benchmark.md`
-> (vs quantstats, current overall **8.0**).
+> Based on `report.md` (internal quality, current overall **9.7**) and `benchmark.md`
+> (vs quantstats, current overall **8.7**).
 >
 > Tasks are grouped by theme and ordered within each theme by effort × impact.
 > Each task carries an effort estimate, the source score it closes, and the target
@@ -9,7 +9,7 @@
 
 ---
 
-## Theme 1 — Code Duplication (7 → 10)
+## Theme 1 — Code Duplication (7 → 9)
 
 ### T1.1 — Extract shared report formatting helpers ✅
 
@@ -73,7 +73,7 @@ that `prices()` is the public entry point for consumers.
 
 ---
 
-## Theme 2 — API Surface & Naming (7 → 10)
+## Theme 2 — API Surface & Naming (7 → 9)
 
 ### T2.1 — Remove alias methods ✅
 
@@ -131,7 +131,7 @@ All four occurrences of `self._data._periods_per_year` in `rolling_sortino`,
 
 ---
 
-## Theme 3 — Abstraction & Indirection (7 → 10)
+## Theme 3 — Abstraction & Indirection (7 → 10) ✅
 
 ### T3.1 — Make decorator coupling to `self._data` explicit ✅
 
@@ -178,7 +178,7 @@ decorator.
 
 ---
 
-## Theme 4 — Null / Error-Handling Consistency (6 → 10)
+## Theme 4 — Null / Error-Handling Consistency (6 → 9)
 
 ### T4.1 — Document the null-return convention ✅
 
@@ -208,7 +208,7 @@ series is empty or all-null — consistent with the documented convention.
 
 ---
 
-## Theme 5 — Mixin Architecture & Coupling (7 → 10)
+## Theme 5 — Mixin Architecture & Coupling (7 → 10) ✅
 
 ### T5.1 — Document cross-mixin dependencies ✅
 
@@ -246,7 +246,7 @@ message, confirming the dependency is known and expected rather than an accident
 
 ---
 
-## Theme 6 — Protocol Design (6 → 10)
+## Theme 6 — Protocol Design (6 → 10) ✅
 
 ### T6.1 — Trim `StatsLike` to its actual consumers ✅
 
@@ -278,7 +278,7 @@ it independently.
 
 ---
 
-## Theme 7 — Dead Code (8 → 10)
+## Theme 7 — Dead Code (8 → 10) ✅
 
 ### T7.1 — Clarify `hhi_positive` / `hhi_negative` intent ✅
 
@@ -293,7 +293,7 @@ any public export. Both are clarified as intentionally public optional metrics.
 
 ---
 
-## Theme 8 — Test Quality (9 → 10)
+## Theme 8 — Test Quality (9 → 10) ✅
 
 ### T8.1 — Refactor large test functions in `test_stats.py` ✅
 
@@ -310,7 +310,7 @@ lines of setup code.
 
 ---
 
-## Theme 9 — Stats Coverage (7 → 10 vs quantstats)
+## Theme 9 — Stats Coverage (7 → 9 vs quantstats)
 
 ### T9.1 — Implement Monte Carlo simulation suite ✅
 
@@ -334,7 +334,7 @@ one row per simulation). Mixin included in `Stats`.
 
 ---
 
-## Theme 10 — Plot Coverage (6 → 10 vs quantstats)
+## Theme 10 — Plot Coverage (6 → 8 vs quantstats)
 
 ### T10.1 — Add Monte Carlo plots ✅
 
@@ -375,7 +375,7 @@ Each plot follows the existing Plotly pattern: returns `go.Figure`, accepts
 
 ---
 
-## Theme 11 — Performance (8 → 10)
+## Theme 11 — Performance (8 → 9)
 
 ### T11.1 — Rewrite `rolling_sortino` using native Polars expressions ✅
 
@@ -405,7 +405,7 @@ implementations on a 10-year daily series to confirm the speedup.
 
 ---
 
-## Theme 12 — Error Handling (9 → 10)
+## Theme 12 — Error Handling (9 → 10) ✅
 
 ### T12.1 — Carry null-handling guarantees through to computation ✅
 
@@ -422,7 +422,7 @@ frames (legitimate, not duplicates of the construction invariant).
 
 ---
 
-## Theme 13 — Type Safety (9 → 10)
+## Theme 13 — Type Safety (9 → 10) ✅
 
 ### T13.1 — Eliminate `cast(float, ...)` noise via a typed helper ✅
 
