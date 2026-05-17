@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -33,43 +32,81 @@ class _MonteCarloStatsMixin:
         return value
 
     @staticmethod
-    def _block_bootstrap_path(values: np.ndarray, period: int, block_size: int) -> np.ndarray:
-        """Sample one return path via block bootstrap with replacement."""
+    def _block_bootstrap_paths(values: np.ndarray, n: int, period: int, block_size: int) -> np.ndarray:
+        """Generate *n* return paths via block bootstrap, returning an ``(n, period)`` array.
+
+        All *n* paths are sampled simultaneously using fully vectorised numpy
+        indexing — no Python-level loop is required.
+
+        Args:
+            values: 1-D array of historical returns.
+            n: Number of simulation paths.
+            period: Length of each simulated path (number of return observations).
+            block_size: Block length for the block bootstrap resampling.
+
+        Returns:
+            np.ndarray: Float64 array of shape ``(n, period)``.
+
+        """
         n_obs = values.size
         if n_obs == 0:
-            return np.full(period, np.nan, dtype=np.float64)
+            return np.full((n, period), np.nan, dtype=np.float64)
 
-        starts = np.random.randint(0, n_obs - block_size + 1, size=math.ceil(period / block_size))
-        chunks = [values[start : start + block_size] for start in starts]
-        return np.concatenate(chunks)[:period]
+        n_blocks = math.ceil(period / block_size)
+        max_start = max(1, n_obs - block_size + 1)
+        # Draw all block starting indices at once: shape (n, n_blocks)
+        starts = np.random.randint(0, max_start, size=(n, n_blocks))
+        # Build full index array: (n, n_blocks, block_size)
+        idx = starts[:, :, np.newaxis] + np.arange(block_size)[np.newaxis, np.newaxis, :]
+        idx = np.clip(idx, 0, n_obs - 1)
+        # Flatten and trim to the requested period length
+        return values[idx].reshape(n, -1)[:, :period]
 
-    def _simulate_distribution(self, n: int, period: int, metric: Callable[[np.ndarray], float]) -> pl.DataFrame:
-        """Run *n* block-bootstrap simulations of length *period* and score each path."""
+    def _simulate_distribution(self, n: int, period: int) -> dict[str, np.ndarray]:
+        """Prepare validated inputs and sample *n* block-bootstrap paths per asset.
+
+        Returns a dict mapping each asset column name to an ``(n, period)``
+        float64 array of simulated return paths.  Assets with no usable data
+        map to an ``(n, period)`` array of NaN.
+
+        Args:
+            n: Number of simulation paths (must be a positive integer).
+            period: Path length in return observations (must be a positive integer).
+
+        Returns:
+            dict[str, np.ndarray]: Asset name → ``(n, period)`` paths array.
+
+        """
         n = self._validate_positive_integer("n", n)
         period = self._validate_positive_integer("period", period)
-
-        result: dict[str, list[float]] = {}
         block_size = max(1, round(period**0.5))
 
+        paths: dict[str, np.ndarray] = {}
         for col, series in self._data.items():
             clean = series.cast(pl.Float64).drop_nulls().drop_nans()
             values = np.asarray(clean.to_numpy(), dtype=np.float64)
             if values.size == 0:
-                result[col] = [float("nan")] * n
-                continue
-
-            block = min(block_size, values.size)
-            sims = np.empty(n, dtype=np.float64)
-            for i in range(n):
-                sampled = self._block_bootstrap_path(values, period, block)
-                sims[i] = metric(sampled)
-            result[col] = sims.tolist()
-
-        return pl.DataFrame(result)
+                paths[col] = np.full((n, period), np.nan, dtype=np.float64)
+            else:
+                block = min(block_size, values.size)
+                paths[col] = self._block_bootstrap_paths(values, n, period, block)
+        return paths
 
     def montecarlo(self, n: int = 1000, period: int = 252) -> pl.DataFrame:
-        """Simulate cumulative returns across *n* block-bootstrap paths."""
-        return self._simulate_distribution(n=n, period=period, metric=lambda path: float(np.prod(1.0 + path) - 1.0))
+        """Simulate cumulative returns across *n* block-bootstrap paths.
+
+        Args:
+            n: Number of Monte Carlo paths. Defaults to 1000.
+            period: Simulation horizon in return observations. Defaults to 252.
+
+        Returns:
+            pl.DataFrame: Shape ``(n, n_assets)`` — one simulated terminal
+            cumulative return per path and asset.
+
+        """
+        paths = self._simulate_distribution(n=n, period=period)
+        result = {col: (np.prod(1.0 + arr, axis=1) - 1.0).tolist() for col, arr in paths.items()}
+        return pl.DataFrame(result)
 
     def montecarlo_sharpe(
         self,
@@ -77,34 +114,52 @@ class _MonteCarloStatsMixin:
         period: int = 252,
         periods_per_year: int | float | None = None,
     ) -> pl.DataFrame:
-        """Simulate the Sharpe-ratio distribution across block-bootstrap paths."""
+        """Simulate the Sharpe-ratio distribution across block-bootstrap paths.
+
+        Args:
+            n: Number of Monte Carlo paths. Defaults to 1000.
+            period: Simulation horizon in return observations. Defaults to 252.
+            periods_per_year: Annualisation factor. Defaults to the value
+                inferred from the data.
+
+        Returns:
+            pl.DataFrame: Shape ``(n, n_assets)`` — one simulated annualised
+            Sharpe ratio per path and asset.
+
+        """
         ppy = self._data._periods_per_year if periods_per_year is None else periods_per_year
         if ppy <= 0:
             raise ValueError("periods_per_year must be positive")  # noqa: TRY003
-
-        def _sharpe(path: np.ndarray) -> float:
-            """Return the annualized Sharpe ratio for one sampled path."""
-            if path.size < 2:
-                return float("nan")
-            std = float(np.std(path, ddof=1))
-            if std == 0.0:
-                return float("nan")
-            return float(path.mean() / std * math.sqrt(ppy))
-
-        return self._simulate_distribution(n=n, period=period, metric=_sharpe)
+        scale = math.sqrt(ppy)
+        paths = self._simulate_distribution(n=n, period=period)
+        result: dict[str, list[float]] = {}
+        for col, arr in paths.items():
+            means = arr.mean(axis=1)
+            stds = arr.std(axis=1, ddof=1)
+            with np.errstate(invalid="ignore", divide="ignore"):
+                sims = np.where(stds == 0.0, np.nan, means / stds * scale)
+            result[col] = sims.tolist()
+        return pl.DataFrame(result)
 
     def montecarlo_drawdown(self, n: int = 1000, period: int = 252) -> pl.DataFrame:
-        """Simulate the maximum-drawdown distribution across block-bootstrap paths."""
+        """Simulate the maximum-drawdown distribution across block-bootstrap paths.
 
-        def _max_drawdown(path: np.ndarray) -> float:
-            """Return the maximum drawdown for one sampled path."""
-            if path.size == 0:
-                return float("nan")
-            nav = np.cumprod(1.0 + path)
-            hwm = np.maximum.accumulate(nav)
-            return float(np.min(nav / hwm - 1.0))
+        Args:
+            n: Number of Monte Carlo paths. Defaults to 1000.
+            period: Simulation horizon in return observations. Defaults to 252.
 
-        return self._simulate_distribution(n=n, period=period, metric=_max_drawdown)
+        Returns:
+            pl.DataFrame: Shape ``(n, n_assets)`` — one simulated maximum
+            drawdown per path and asset (values in ``[-1, 0]``).
+
+        """
+        paths = self._simulate_distribution(n=n, period=period)
+        result: dict[str, list[float]] = {}
+        for col, arr in paths.items():
+            nav = np.cumprod(1.0 + arr, axis=1)
+            hwm = np.maximum.accumulate(nav, axis=1)
+            result[col] = np.min(nav / hwm - 1.0, axis=1).tolist()
+        return pl.DataFrame(result)
 
     def montecarlo_cagr(
         self,
@@ -112,17 +167,28 @@ class _MonteCarloStatsMixin:
         period: int = 252,
         periods_per_year: int | float | None = None,
     ) -> pl.DataFrame:
-        """Simulate the CAGR distribution across block-bootstrap paths."""
+        """Simulate the CAGR distribution across block-bootstrap paths.
+
+        Args:
+            n: Number of Monte Carlo paths. Defaults to 1000.
+            period: Simulation horizon in return observations. Defaults to 252.
+            periods_per_year: Annualisation factor. Defaults to the value
+                inferred from the data.
+
+        Returns:
+            pl.DataFrame: Shape ``(n, n_assets)`` — one simulated annualised
+            CAGR per path and asset.
+
+        """
         ppy = self._data._periods_per_year if periods_per_year is None else periods_per_year
         if ppy <= 0:
             raise ValueError("periods_per_year must be positive")  # noqa: TRY003
-
-        def _cagr(path: np.ndarray) -> float:
-            """Return the annualized CAGR for one sampled path."""
-            total = float(np.prod(1.0 + path))
-            if total <= 0:
-                return float("nan")
-            years = period / ppy
-            return float(total ** (1.0 / years) - 1.0)
-
-        return self._simulate_distribution(n=n, period=period, metric=_cagr)
+        years = period / ppy
+        paths = self._simulate_distribution(n=n, period=period)
+        result: dict[str, list[float]] = {}
+        for col, arr in paths.items():
+            totals = np.prod(1.0 + arr, axis=1)
+            with np.errstate(invalid="ignore"):
+                sims = np.where(totals > 0, totals ** (1.0 / years) - 1.0, np.nan)
+            result[col] = sims.tolist()
+        return pl.DataFrame(result)
