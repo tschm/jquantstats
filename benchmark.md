@@ -2,7 +2,7 @@
 
 > Assessed: 2026-05-17  
 > quantstats: `.venv/lib/python3.12/site-packages/quantstats/`  
-> jquantstats: `src/jquantstats/` (main, post-PR #756)  
+> jquantstats: `src/jquantstats/` (main, post-PR #765)  
 > Ratings are 1–10 where 10 = jquantstats is clearly superior, 5 = parity, 1 = quantstats is clearly superior.  
 > A score below 5 means jquantstats has a gap to close.
 
@@ -16,13 +16,13 @@
 | Data model | 9 | jquantstats |
 | API design & consistency | 9 | jquantstats |
 | Stats metric coverage | 9 | jquantstats |
-| Plot coverage | 8 | jquantstats |
+| Plot coverage | 10 | jquantstats |
 | Reports | 7 | jquantstats |
 | Error handling | 10 | jquantstats |
 | Performance | 9 | jquantstats |
 | Type safety | 9 | jquantstats |
 | Test quality | 9 | jquantstats |
-| **Overall** | **8.7** | **jquantstats** |
+| **Overall** | **8.9** | **jquantstats** |
 
 ---
 
@@ -108,13 +108,13 @@ All four quantstats Monte Carlo methods are now present in jquantstats:
 
 ---
 
-## 5. Plot Coverage — 8/10
+## 5. Plot Coverage — 10/10
 
 **quantstats:** ~42 plot functions via matplotlib. All output static images. Coverage includes Monte Carlo plots (`montecarlo`, `montecarlo_distribution`) and `compare` plots.
 
-**jquantstats:** ~24 plot methods across `DataPlots` and `PortfolioPlots` via Plotly. Interactive (zoom, pan, hover, date range selectors). Portfolio-specific plots have no quantstats equivalent: `lead_lag_ir_plot`, `lagged_performance`, `smoothed_holdings`.
+**jquantstats:** Full plot coverage across `DataPlots` and `PortfolioPlots` via Plotly. Interactive (zoom, pan, hover, date range selectors). Portfolio-specific plots have no quantstats equivalent: `lead_lag_ir_plot`, `lagged_performance`, `smoothed_holdings`. All plots pinned with snapshot tests via [PR #765](https://github.com/Jebel-Quant/jquantstats/pull/765) ✅.
 
-**Gap:** jquantstats has fewer plots by raw count (~24 vs ~42), but each plot is meaningfully higher quality (interactive Plotly vs static matplotlib). Monte Carlo plots (`montecarlo`, `montecarlo_distribution`) added via [PR #749](https://github.com/Jebel-Quant/jquantstats/pull/749) ✅; `compare` and rolling_beta figsize parity added via [PR #750](https://github.com/Jebel-Quant/jquantstats/pull/750) ✅.
+~~**Gap:** jquantstats has fewer plots by raw count (~24 vs ~42), but each plot is meaningfully higher quality (interactive Plotly vs static matplotlib).~~ **Fixed** — Monte Carlo plots (`montecarlo`, `montecarlo_distribution`) added via [PR #749](https://github.com/Jebel-Quant/jquantstats/pull/749) ✅; `compare` and rolling_beta figsize parity added via [PR #750](https://github.com/Jebel-Quant/jquantstats/pull/750) ✅; remaining tearsheet plots ported and snapshot-tested via [PR #765](https://github.com/Jebel-Quant/jquantstats/pull/765) ✅. Plot coverage is now at parity with quantstats on all tearsheet categories.
 
 | Category | quantstats | jquantstats |
 |---|---|---|
@@ -195,7 +195,7 @@ jquantstats is a material improvement over quantstats on almost every engineerin
 
 1. ~~**Monte Carlo simulation** — 4 functions with no jquantstats equivalent.~~ **Closed** — `_MonteCarloStatsMixin` adds all four methods via PR #751 ✅
 2. ~~**Monte Carlo plots** — `montecarlo`, `montecarlo_distribution` missing.~~ **Closed** — added via PR #749 ✅
-3. **Plot count** — ~42 vs ~24 functions. The jquantstats plots are higher quality and interactive, but the breadth remains narrower (non-Monte-Carlo tearsheet plots not yet ported).
+3. ~~**Plot count** — ~42 vs ~24 functions. The jquantstats plots are higher quality and interactive, but the breadth remains narrower (non-Monte-Carlo tearsheet plots not yet ported).~~ **Closed** — remaining tearsheet plots ported and snapshot-tested via PR #765 ✅. Plot coverage now at full parity.
 4. **Community recognition** — quantstats' HTML tearsheet is the de facto standard. jquantstats' reports are technically superior but unfamiliar.
 
 The performance and correctness advantages of Polars, combined with the Portfolio data model, attribution analytics, full Monte Carlo parity, and now consistent null-handling guarantees end-to-end, position jquantstats clearly ahead of quantstats for production use.

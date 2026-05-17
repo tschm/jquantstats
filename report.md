@@ -1,6 +1,6 @@
 # jquantstats — Code Quality Report
 
-> Assessed: 2026-05-17 · `main` post-PR #756 · ~10 500 source lines · ~870 tests
+> Assessed: 2026-05-17 · `main` post-PR #765 · ~10 500 source lines · ~870 tests
 
 Scores are 1–10. **10 = no actionable improvements. 1 = immediate attention required.**
 
@@ -10,20 +10,20 @@ Scores are 1–10. **10 = no actionable improvements. 1 = immediate attention re
 
 | Category | Score |
 |---|:---:|
-| Code duplication | 9 |
+| Code duplication | 10 |
 | API surface & naming | 9 |
 | Abstraction & indirection | 10 |
-| Null / error-handling consistency | 9 |
+| Null / error-handling consistency | 10 |
 | Mixin architecture & coupling | 10 |
 | Protocol design | 10 |
 | Test quality | 10 |
 | Documentation coverage | 10 |
 | Dead code | 10 |
-| **Overall** | **9.7** |
+| **Overall** | **9.9** |
 
 ---
 
-## 1. Code Duplication — 9/10
+## 1. Code Duplication — 10/10
 
 **Strengths.** `_internals.py` centralises the four core computational helpers
 (`_comp_return`, `_nav_series`, `_annualization_factor`, `_downside_deviation`)
@@ -31,19 +31,13 @@ that would otherwise be copy-pasted across all four stats mixins. The
 `@columnwise_stat` and `@to_frame` decorators in `_core.py` eliminate ~120 lines
 of per-column iteration boilerplate.
 
-~~**`_is_finite` / `_fmt` defined twice.**
-`_reports/_data.py:17` and `_reports/_portfolio.py:34` each define the same two
-private formatting helpers. The bodies are identical; only the return annotation
-differs (`bool` vs `TypeGuard[int | float]`). Extracting both to
-`_reports/_formatting.py` removes ~30 lines.~~ **Fixed** — merged [PR #727](https://github.com/Jebel-Quant/jquantstats/pull/727) ✅
+~~**`_is_finite` / `_fmt` defined twice.**~~ **Fixed** — merged [PR #727](https://github.com/Jebel-Quant/jquantstats/pull/727) ✅
 
-~~**Positive/negative filter chains repeated inline.**
-`_basic.py` already has `_mean_positive_expr` / `_mean_negative_expr` helpers
-(lines 41–47), but `payoff_ratio` (line 202), `profit_ratio` (line 215), and
-several others re-inline `series.filter(series > 0).mean()` rather than calling
-them. The pattern appears ~12 times in `_basic.py` alone. Introducing
-`_positive_values` / `_negative_values` series-filter companions and using them
-consistently would collapse ~30 lines of duplication.~~ **Fixed** — merged [PR #725](https://github.com/Jebel-Quant/jquantstats/pull/725) ✅
+~~**Positive/negative filter chains repeated inline.**~~ **Fixed** — merged [PR #725](https://github.com/Jebel-Quant/jquantstats/pull/725) ✅
+
+~~**Residual duplication in reports, stats, and plot helpers.**~~ **Fixed** — merged [PR #760](https://github.com/Jebel-Quant/jquantstats/pull/760) ✅
+
+Remaining patterns audited and consolidated. No duplicated block of 3+ lines remains without a shared helper.
 
 ---
 
@@ -89,7 +83,7 @@ time are now complete — merged [PR #735](https://github.com/Jebel-Quant/jquant
 
 ---
 
-## 4. Null / Error-Handling Consistency — 9/10
+## 4. Null / Error-Handling Consistency — 10/10
 
 **Strengths.** `Data.__post_init__` enforces a declared null strategy (`raise`,
 `drop`, `forward_fill`) at construction time. Domain-specific exceptions
@@ -107,8 +101,9 @@ indeterminate. `cast(float, series.mean())` calls replaced throughout.
 
 Defensive `is_empty()` / `null_count()` checks that duplicated `Data.__post_init__`
 guarantees removed. Benchmark-aware null handling in `information_ratio` additionally
-refined. Remaining `is_empty()` checks are post-filter guards on derived frames and
-are intentional.
+refined. Remaining `is_empty()` checks documented as legitimate post-filter guards — merged [PR #761](https://github.com/Jebel-Quant/jquantstats/pull/761) ✅
+
+Every guard is now either removed (redundant) or annotated with a one-line comment explaining why it survives construction-time validation.
 
 ---
 
@@ -214,7 +209,7 @@ No stale imports or unused variables were found anywhere in the source tree.
 | ~~12~~ | ~~Unify the three `DataLike` protocol definitions ([#734](https://github.com/Jebel-Quant/jquantstats/issues/734))~~ | ~~1 hr~~ | ✅ merged [PR #736](https://github.com/Jebel-Quant/jquantstats/pull/736) |
 | ~~13~~ | ~~Clarify or remove `hhi_positive` / `hhi_negative` ([#722](https://github.com/Jebel-Quant/jquantstats/issues/722))~~ | ~~15 min~~ | ✅ merged [PR #730](https://github.com/Jebel-Quant/jquantstats/pull/730) |
 | 14 | Remove deprecated alias methods `ghpr`, `r2`, `win_loss_ratio` ([#757](https://github.com/Jebel-Quant/jquantstats/issues/757)) | 30 min | API surface 9 → 10 |
-| 15 | Audit and eliminate residual code duplication ([#758](https://github.com/Jebel-Quant/jquantstats/issues/758)) | 1 hr | code duplication 9 → 10 |
-| 16 | Resolve remaining `is_empty()` post-filter guards ([#759](https://github.com/Jebel-Quant/jquantstats/issues/759)) | 1 hr | null handling 9 → 10 |
+| ~~15~~ | ~~Audit and eliminate residual code duplication ([#758](https://github.com/Jebel-Quant/jquantstats/issues/758))~~ | ~~1 hr~~ | ✅ merged [PR #760](https://github.com/Jebel-Quant/jquantstats/pull/760) |
+| ~~16~~ | ~~Resolve remaining `is_empty()` post-filter guards ([#759](https://github.com/Jebel-Quant/jquantstats/issues/759))~~ | ~~1 hr~~ | ✅ merged [PR #761](https://github.com/Jebel-Quant/jquantstats/pull/761) |
 
-Items 14–16 are open (Sprint 6). Completion raises the internal quality score from **9.7 → 10.0**.
+Item 14 remains open (Sprint 6). Completion raises the internal quality score from **9.9 → 10.0**.

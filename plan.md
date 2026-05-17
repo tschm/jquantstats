@@ -1,7 +1,7 @@
 # jquantstats — Plan to 10.0
 
-> Based on `report.md` (internal quality, current overall **9.7**) and `benchmark.md`
-> (vs quantstats, current overall **8.7**).
+> Based on `report.md` (internal quality, current overall **9.9**) and `benchmark.md`
+> (vs quantstats, current overall **8.9**).
 >
 > Tasks are grouped by theme and ordered within each theme by effort × impact.
 > Each task carries an effort estimate, the source score it closes, and the target
@@ -73,9 +73,9 @@ that `prices()` is the public entry point for consumers.
 
 ---
 
-### T1.4 — Eliminate residual code duplication
+### T1.4 — Eliminate residual code duplication ✅
 
-**Issue:** [#758](https://github.com/Jebel-Quant/jquantstats/issues/758)
+> **Done** — merged [PR #760](https://github.com/Jebel-Quant/jquantstats/pull/760) · closes [#758](https://github.com/Jebel-Quant/jquantstats/issues/758)
 
 Audit the current source tree for any duplication introduced since T1.1–T1.3. Check `_stats/` for patterns not yet covered by `_positive`/`_negative`/`_mean`, and `_reports/` and `_plots/` for repeated figure-construction or rendering logic. Extract shared helpers where a block of 3+ lines appears in more than one location.
 
@@ -228,9 +228,9 @@ series is empty or all-null — consistent with the documented convention.
 
 ---
 
-### T4.3 — Resolve remaining `is_empty()` post-filter guards
+### T4.3 — Resolve remaining `is_empty()` post-filter guards ✅
 
-**Issue:** [#759](https://github.com/Jebel-Quant/jquantstats/issues/759)
+> **Done** — merged [PR #761](https://github.com/Jebel-Quant/jquantstats/pull/761) · closes [#759](https://github.com/Jebel-Quant/jquantstats/issues/759)
 
 For each remaining guard in `_basic.py` and `_performance.py`, determine whether it is a legitimate post-filter check or a duplicate of the construction-time invariant. Legitimate guards get a one-line comment and a `float("nan")` return; redundant guards get replaced with an `assert`.
 
@@ -417,11 +417,11 @@ Each plot follows the existing Plotly pattern: returns `go.Figure`, accepts
 
 ---
 
-### T10.3 — Port remaining quantstats tearsheet plots
+### T10.3 — Port remaining quantstats tearsheet plots ✅
 
-**Issue:** [#764](https://github.com/Jebel-Quant/jquantstats/issues/764)
+> **Done** — merged [PR #765](https://github.com/Jebel-Quant/jquantstats/pull/765) · closes [#764](https://github.com/Jebel-Quant/jquantstats/issues/764)
 
-Audit `quantstats/_plotting/wrappers.py` for the ~18 plots present in quantstats but not yet in `DataPlots`. Implement each following the existing Plotly pattern (`go.Figure`, `title`/`figsize` kwargs, date range selector). Priority order: plots that appear in the default `html()` tearsheet first.
+Audit `quantstats/_plotting/wrappers.py` for the ~18 plots present in quantstats but not yet in `DataPlots`. Implement each following the existing Plotly pattern (`go.Figure`, `title`/`figsize` kwargs, date range selector). Priority order: plots that appear in the default `html()` tearsheet first. All plots pinned with snapshot tests.
 
 **Effort:** 4–6 hr · **Raises:** Plot coverage 8 → 10 vs quantstats
 
@@ -504,20 +504,20 @@ T4.1. All `cast(float, series.mean())` callsites replaced.
 
 | Theme | Tasks | Effort |
 |---|---|---|
-| 1. Code duplication | ~~T1.1~~, ~~T1.2~~, ~~T1.3~~; T1.4 open | ~1 hr |
+| 1. Code duplication | ~~T1.1~~, ~~T1.2~~, ~~T1.3~~, ~~T1.4~~ | ✅ done |
 | 2. API surface | ~~T2.1~~, ~~T2.2~~, ~~T2.3~~; T2.4 open | ~0.5 hr |
 | 3. Abstraction | ~~T3.1~~, ~~T3.2~~, ~~T3.3~~ | ✅ done |
-| 4. Null handling | ~~T4.1~~, ~~T4.2~~; T4.3 open | ~1 hr |
+| 4. Null handling | ~~T4.1~~, ~~T4.2~~, ~~T4.3~~ | ✅ done |
 | 5. Mixin coupling | ~~T5.1~~, ~~T5.2~~ | ✅ done |
 | 6. Protocol design | ~~T6.1~~, ~~T6.2~~ | ✅ done |
 | 7. Dead code | ~~T7.1~~ | ✅ done |
 | 8. Test quality | ~~T8.1~~ | ✅ done |
 | 9. Monte Carlo stats | ~~T9.1~~; T9.2 open | ~2 hr |
-| 10. Plot coverage | ~~T10.1~~, ~~T10.2~~; T10.3 open | ~4–6 hr |
+| 10. Plot coverage | ~~T10.1~~, ~~T10.2~~, ~~T10.3~~ | ✅ done |
 | 11. Performance | ~~T11.1~~; T11.2 open | ~2 hr |
 | 12. Error handling | ~~T12.1~~ | ✅ done |
 | 13. Type safety | ~~T13.1~~ | ✅ done |
-| **Total remaining** | **6 tasks** | **~9–11 hr** |
+| **Total remaining** | **3 tasks** | **~4.5 hr** |
 
 ---
 
@@ -539,6 +539,6 @@ T4.1. All `cast(float, series.mean())` callsites replaced.
 ~~T10.2~~
 
 **Sprint 6 — Path to 10.0 (~9–11 hr)**
-T1.4, T2.4, T4.3, T9.2, T10.3, T11.2
+~~T1.4~~, T2.4, ~~T4.3~~, T9.2, ~~T10.3~~, T11.2
 
 After Sprint 6 both the internal quality score and the benchmark score reach **10.0**.
