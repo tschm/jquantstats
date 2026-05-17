@@ -75,18 +75,17 @@ that `prices()` is the public entry point for consumers.
 
 ## Theme 2 — API Surface & Naming (7 → 10)
 
-### T2.1 — Remove alias methods
+### T2.1 — Remove alias methods ✅
+
+> **Done** — merged [PR #756](https://github.com/Jebel-Quant/jquantstats/pull/756) · closes [#718](https://github.com/Jebel-Quant/jquantstats/issues/718)
 
 **File:** `src/jquantstats/_stats/_performance.py`, `_basic.py`
 
-Delete `ghpr()` (`_performance.py:315`), `r2()` (`_performance.py:724`), and
-`win_loss_ratio()` (`_basic.py:206`). Remove their entries from `StatsLike`.
-Add a one-line migration note to `CHANGELOG.md` under a `Deprecated` heading.
+`ghpr()`, `r2()`, and `win_loss_ratio()` converted to `@deprecated` shims that emit
+`DeprecationWarning` and delegate to their canonical counterparts. Migration note added
+to `CHANGELOG.md`.
 
-If quantstats name-compatibility is later required, re-introduce as
-`@deprecated` shims rather than silent aliases.
-
-**Effort:** 30 min · **Removes:** ~20 lines + 3 protocol stubs
+**Effort:** 30 min · **Removes:** silent alias surface
 
 ---
 
@@ -249,19 +248,17 @@ message, confirming the dependency is known and expected rather than an accident
 
 ## Theme 6 — Protocol Design (6 → 10)
 
-### T6.1 — Trim `StatsLike` to its actual consumers
+### T6.1 — Trim `StatsLike` to its actual consumers ✅
+
+> **Done** — merged [PR #755](https://github.com/Jebel-Quant/jquantstats/pull/755) · closes [#719](https://github.com/Jebel-Quant/jquantstats/issues/719)
 
 **File:** `src/jquantstats/_reports/_protocol.py`
 
-Grep for every `StatsLike` method called inside `_reports/`. Replace the 66-stub
-protocol with a minimal version covering only those methods. Expected reduction:
-66 stubs → ~12 stubs, ~150 lines removed.
+`StatsLike` trimmed from 66 stubs (~210 lines) to the ~12 methods `Reports` actually
+calls. `@runtime_checkable` retained only where an `isinstance` check exists. Protocol
+surface now matches the true consumer boundary.
 
-Remove `@runtime_checkable` from `StatsLike` unless an `isinstance` check against
-it exists somewhere in non-test code — `@runtime_checkable` is only useful at
-runtime and adds maintenance overhead for no static benefit.
-
-**Effort:** 1 hr · **Removes:** ~150 lines
+**Effort:** 1 hr · **Removed:** ~150 lines
 
 ---
 
@@ -410,15 +407,16 @@ implementations on a 10-year daily series to confirm the speedup.
 
 ## Theme 12 — Error Handling (9 → 10)
 
-### T12.1 — Carry null-handling guarantees through to computation
+### T12.1 — Carry null-handling guarantees through to computation ✅
+
+> **Done** — merged [PR #739](https://github.com/Jebel-Quant/jquantstats/pull/739), refined in [PR #754](https://github.com/Jebel-Quant/jquantstats/pull/754)
 
 **Files:** `_basic.py`, `_performance.py`
 
-After `Data.__post_init__` enforces the null strategy, individual metrics should
-not need defensive null checks for values that the strategy already guarantees are
-absent. Audit for guards of the form `if series.is_empty() or series.null_count() > 0`
-that duplicate construction-time validation and remove them, replacing with
-`assert`s that document the invariant for maintainers.
+Redundant null guards that duplicated `Data.__post_init__` construction-time validation
+removed across the stats mixins. Benchmark-aware null handling in `information_ratio`
+additionally refined. Remaining `is_empty()` checks are post-filter guards on derived
+frames (legitimate, not duplicates of the construction invariant).
 
 **Effort:** 1 hr
 
@@ -445,19 +443,19 @@ T4.1. All `cast(float, series.mean())` callsites replaced.
 | Theme | Tasks | Effort |
 |---|---|---|
 | 1. Code duplication | ~~T1.1~~, ~~T1.2~~, ~~T1.3~~ | ✅ done |
-| 2. API surface | ~~T2.2~~, ~~T2.3~~; T2.1 open | ~0.5 hr |
+| 2. API surface | ~~T2.1~~, ~~T2.2~~, ~~T2.3~~ | ✅ done |
 | 3. Abstraction | ~~T3.1~~, ~~T3.2~~, ~~T3.3~~ | ✅ done |
 | 4. Null handling | ~~T4.1~~, ~~T4.2~~ | ✅ done |
 | 5. Mixin coupling | ~~T5.1~~, ~~T5.2~~ | ✅ done |
-| 6. Protocol design | ~~T6.2~~; T6.1 open | 1 hr |
+| 6. Protocol design | ~~T6.1~~, ~~T6.2~~ | ✅ done |
 | 7. Dead code | ~~T7.1~~ | ✅ done |
 | 8. Test quality | ~~T8.1~~ | ✅ done |
 | 9. Monte Carlo stats | ~~T9.1~~ | ✅ done |
 | 10. Plot coverage | ~~T10.1~~, ~~T10.2~~ | ✅ done |
 | 11. Performance | ~~T11.1~~ | ✅ done |
-| 12. Error handling | T12.1 | 1 hr |
+| 12. Error handling | ~~T12.1~~ | ✅ done |
 | 13. Type safety | ~~T13.1~~ | ✅ done |
-| **Total remaining** | **3 tasks** | **~2.5 hr** |
+| **Total remaining** | **0 tasks** | **✅ complete** |
 
 ---
 
@@ -469,8 +467,8 @@ T4.1. All `cast(float, series.mean())` callsites replaced.
 **Sprint 2 — API clean-up (~4 hr, minor breaking changes)** ✅ nearly complete
 T2.1 (open), ~~T2.2~~, ~~T3.1~~, ~~T3.2~~, ~~T4.2~~, ~~T5.1~~, ~~T5.2~~, ~~T8.1~~
 
-**Sprint 3 — Architecture (~4 hr, protocol restructure)**
-T6.1, ~~T6.2~~, T12.1
+**Sprint 3 — Architecture (~4 hr, protocol restructure)** ✅ complete
+~~T6.1~~, ~~T6.2~~, ~~T12.1~~
 
 **Sprint 4 — Feature parity (~8 hr, Monte Carlo)** ✅ complete
 ~~T9.1~~, ~~T10.1~~, ~~T11.1~~
@@ -478,5 +476,4 @@ T6.1, ~~T6.2~~, T12.1
 **Sprint 5 — Plot parity (~4 hr)** ✅ complete
 ~~T10.2~~
 
-After Sprint 3 the internal quality score reaches **10.0**.
-After Sprint 5 the benchmark score reaches **10.0**.
+All sprints complete. Internal quality and benchmark targets achieved.

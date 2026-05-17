@@ -2,7 +2,7 @@
 
 > Assessed: 2026-05-17  
 > quantstats: `.venv/lib/python3.12/site-packages/quantstats/`  
-> jquantstats: `src/jquantstats/` (main, post-PR #749)  
+> jquantstats: `src/jquantstats/` (main, post-PR #756)  
 > Ratings are 1–10 where 10 = jquantstats is clearly superior, 5 = parity, 1 = quantstats is clearly superior.  
 > A score below 5 means jquantstats has a gap to close.
 
@@ -14,15 +14,15 @@
 |---|---|---|
 | Architecture & structure | 8 | jquantstats |
 | Data model | 9 | jquantstats |
-| API design & consistency | 8 | jquantstats |
+| API design & consistency | 9 | jquantstats |
 | Stats metric coverage | 9 | jquantstats |
 | Plot coverage | 8 | jquantstats |
 | Reports | 7 | jquantstats |
-| Error handling | 9 | jquantstats |
+| Error handling | 10 | jquantstats |
 | Performance | 9 | jquantstats |
 | Type safety | 9 | jquantstats |
 | Test quality | 9 | jquantstats |
-| **Overall** | **8.5** | **jquantstats** |
+| **Overall** | **8.7** | **jquantstats** |
 
 ---
 
@@ -71,7 +71,7 @@ data.stats.rolling_sharpe()   # → pl.DataFrame (Date | AAPL | META)
 data.stats.monthly_returns()  # → pl.DataFrame
 ```
 
-**Gap:** The alias methods (`ghpr`, `r2`, `win_loss_ratio`) slightly pollute the surface. ~~The asymmetry in `rolling_sortino` (uses `@to_frame` + `pl.Expr`) vs the other three rolling methods (operate on `self.all` directly) is a minor inconsistency.~~ The `rolling_sortino` asymmetry has been **fixed** — merged [PR #723](https://github.com/Jebel-Quant/jquantstats/pull/723) ✅. The decorator-contract enforcement gap has also been **closed** — merged [PR #735](https://github.com/Jebel-Quant/jquantstats/pull/735) ✅
+**Gap:** ~~The alias methods (`ghpr`, `r2`, `win_loss_ratio`) slightly pollute the surface.~~ **Fixed** — merged [PR #756](https://github.com/Jebel-Quant/jquantstats/pull/756) ✅ — all three converted to `DeprecationWarning` shims. ~~The asymmetry in `rolling_sortino` (uses `@to_frame` + `pl.Expr`) vs the other three rolling methods (operate on `self.all` directly) is a minor inconsistency.~~ The `rolling_sortino` asymmetry has been **fixed** — merged [PR #723](https://github.com/Jebel-Quant/jquantstats/pull/723) ✅. The decorator-contract enforcement gap has also been **closed** — merged [PR #735](https://github.com/Jebel-Quant/jquantstats/pull/735) ✅
 
 ---
 
@@ -104,7 +104,7 @@ All four quantstats Monte Carlo methods are now present in jquantstats:
 - **`implied_volatility`:** quantstats returns a scalar `float`; jquantstats returns a rolling `pl.DataFrame` when `annualize=True` or a `dict[str, float]` when `annualize=False`. The jquantstats version is more expressive.
 - **`downside_deviation` (used in Sortino):** quantstats divides by the count of negative returns; jquantstats divides by the total observation count (matching the Red Rock Capital paper). The two formulas agree only when all returns are negative.
 
-**Gap:** The Monte Carlo gap is now closed. Two points remain deducted for minor coverage differences in edge-case metrics and the alias methods (`ghpr`, `r2`, `win_loss_ratio`) that add surface without value.
+**Gap:** The Monte Carlo gap is now closed. One point remains deducted for minor coverage differences in edge-case metrics. The alias methods (`ghpr`, `r2`, `win_loss_ratio`) are now deprecated shims with clear migration paths — merged [PR #756](https://github.com/Jebel-Quant/jquantstats/pull/756) ✅.
 
 ---
 
@@ -141,13 +141,13 @@ All four quantstats Monte Carlo methods are now present in jquantstats:
 
 ---
 
-## 7. Error Handling — 9/10
+## 7. Error Handling — 10/10
 
 **quantstats:** 5 exception types (`QuantStatsError`, `DataValidationError`, `CalculationError`, `PlottingError`, `BenchmarkError`). Basic validation on input type and emptiness. NaN propagation is largely silent.
 
 **jquantstats:** 8+ domain-specific exceptions that map to exact failure modes (`MissingDateColumnError`, `NullsInReturnsError`, `RowCountMismatchError`, `NonPositiveAumError`, etc.). Three explicit null strategies force the caller to declare intent. Alignment validation between assets and benchmark is enforced at construction time, not at computation time.
 
-**Gap:** jquantstats is substantially stronger here. The only point deducted is that the null-handling inconsistency within the stats mixins means the validation guarantees at construction time are not fully carried through to computation.
+~~**Gap:** The only point deducted is that the null-handling inconsistency within the stats mixins means the validation guarantees at construction time are not fully carried through to computation.~~ **Fixed** — redundant null guards removed via [PR #739](https://github.com/Jebel-Quant/jquantstats/pull/739), benchmark-aware null handling refined via [PR #754](https://github.com/Jebel-Quant/jquantstats/pull/754) ✅. Construction-time guarantees now carry through to computation consistently.
 
 ---
 
@@ -198,4 +198,4 @@ jquantstats is a material improvement over quantstats on almost every engineerin
 3. **Plot count** — ~42 vs ~24 functions. The jquantstats plots are higher quality and interactive, but the breadth remains narrower (non-Monte-Carlo tearsheet plots not yet ported).
 4. **Community recognition** — quantstats' HTML tearsheet is the de facto standard. jquantstats' reports are technically superior but unfamiliar.
 
-The performance and correctness advantages of Polars, combined with the Portfolio data model, attribution analytics, and now full Monte Carlo parity, position jquantstats clearly ahead of quantstats for production use.
+The performance and correctness advantages of Polars, combined with the Portfolio data model, attribution analytics, full Monte Carlo parity, and now consistent null-handling guarantees end-to-end, position jquantstats clearly ahead of quantstats for production use.
