@@ -59,17 +59,16 @@ def _build_multi_asset_data() -> Data:
     dates: list[datetime.date] = []
     d = start
     while len(dates) < N_ROWS:
-        if d.weekday() < 5:  # Mon–Fri
+        if d.weekday() < 5:  # Mon-Fri
             dates.append(d)
         d += datetime.timedelta(days=1)
 
     asset_names = [f"A{i}" for i in range(1, N_ASSETS + 1)]
     returns_data: dict[str, list[float]] = {
-        name: rng.normal(loc=DAILY_MEAN_RETURN, scale=DAILY_VOLATILITY, size=N_ROWS).tolist()
-        for name in asset_names
+        name: rng.normal(loc=DAILY_MEAN_RETURN, scale=DAILY_VOLATILITY, size=N_ROWS).tolist() for name in asset_names
     }
     returns_data["Date"] = dates  # type: ignore[assignment]
-    df = pl.DataFrame(returns_data).select(["Date"] + asset_names)
+    df = pl.DataFrame(returns_data).select(["Date", *asset_names])
     return Data.from_returns(returns=df)
 
 
