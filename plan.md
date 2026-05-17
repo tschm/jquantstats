@@ -233,7 +233,9 @@ changing behaviour.
 
 ---
 
-### T5.2 — Add a cross-mixin integration test
+### T5.2 — Add a cross-mixin integration test ✅
+
+> **Done** — merged [PR #748](https://github.com/Jebel-Quant/jquantstats/pull/748)
 
 **File:** `tests/test_jquantstats/test__stats/test_mixin_isolation.py` (new)
 
@@ -296,7 +298,9 @@ any public export. Both are clarified as intentionally public optional metrics.
 
 ## Theme 8 — Test Quality (9 → 10)
 
-### T8.1 — Refactor large test functions in `test_stats.py`
+### T8.1 — Refactor large test functions in `test_stats.py` ✅
+
+> **Done** — [PR #711](https://github.com/Jebel-Quant/jquantstats/pull/711) extracted `integer_indexed_data` sub-fixture; [PR #747](https://github.com/Jebel-Quant/jquantstats/pull/747) completed the broader sub-fixture extraction ✅
 
 **File:** `tests/test_jquantstats/test__stats/test_stats.py`
 
@@ -305,19 +309,19 @@ extract their inline setup into named sub-fixtures in `conftest.py` or into a
 `@pytest.fixture` scoped to the test class. Target: no test function exceeds 20
 lines of setup code.
 
-> **Partial** — [PR #711](https://github.com/Jebel-Quant/jquantstats/pull/711) extracted the `integer_indexed_data` sub-fixture ✅ (partial); further refactoring open in [PR #747](https://github.com/Jebel-Quant/jquantstats/pull/747)
-
 **Effort:** 1 hr · **Improves:** readability, future maintainability
 
 ---
 
 ## Theme 9 — Stats Coverage (7 → 10 vs quantstats)
 
-### T9.1 — Implement Monte Carlo simulation suite
+### T9.1 — Implement Monte Carlo simulation suite ✅
+
+> **Done** — merged [PR #751](https://github.com/Jebel-Quant/jquantstats/pull/751)
 
 **File:** `src/jquantstats/_stats/_montecarlo.py` (new), exposed via `Stats`
 
-Implement the four Monte Carlo methods present in quantstats:
+All four Monte Carlo methods implemented as `_MonteCarloStatsMixin`:
 
 | Method | Description |
 |---|---|
@@ -326,11 +330,8 @@ Implement the four Monte Carlo methods present in quantstats:
 | `montecarlo_drawdown(n, period)` | Distribution of simulated max drawdowns |
 | `montecarlo_cagr(n, period, periods_per_year)` | Distribution of simulated CAGRs |
 
-Each method should return a `pl.DataFrame` (one column per asset, one row per
-simulation). The simulation baseline is block bootstrap with replacement, matching
-quantstats' approach, so migration tests can verify numeric equivalence.
-
-Add a `_MonteCarloStatsMixin` and include it in `Stats`.
+Block bootstrap with replacement. Returns `pl.DataFrame` (one column per asset,
+one row per simulation). Mixin included in `Stats`.
 
 **Effort:** 3–4 hr · **Closes:** biggest functional gap vs quantstats
 
@@ -338,23 +339,27 @@ Add a `_MonteCarloStatsMixin` and include it in `Stats`.
 
 ## Theme 10 — Plot Coverage (6 → 10 vs quantstats)
 
-### T10.1 — Add Monte Carlo plots
+### T10.1 — Add Monte Carlo plots ✅
+
+> **Done** — merged [PR #749](https://github.com/Jebel-Quant/jquantstats/pull/749)
 
 **File:** `src/jquantstats/_plots/_data.py`
 
-Add two plot methods to `DataPlots`:
+Two plot methods added to `DataPlots`:
 
 - `montecarlo(n, period)` — fan chart of simulated return paths
 - `montecarlo_distribution(n, period, metric)` — histogram of simulated metric
   (Sharpe, drawdown, CAGR) distribution with observed value marked
 
-Both should return `go.Figure` (Plotly), consistent with the existing plot API.
+Both return `go.Figure` (Plotly), consistent with the existing plot API.
 
 **Effort:** 2 hr · **Depends on:** T9.1
 
 ---
 
-### T10.2 — Close remaining plot gaps vs quantstats
+### T10.2 — Close remaining plot gaps vs quantstats ✅
+
+> **Done** — merged [PR #750](https://github.com/Jebel-Quant/jquantstats/pull/750)
 
 Audit `quantstats/_plotting/wrappers.py` against `DataPlots` / `PortfolioPlots`
 and implement the missing plots. Priority order based on usage frequency in
@@ -362,12 +367,12 @@ quantstats tearsheets:
 
 | Plot | Notes |
 |---|---|
-| `log_returns` (cumulative, log scale) | May already exist — verify |
-| `compare(benchmark)` | Overlay of asset vs benchmark cumulative returns |
-| `rolling_beta` | Rolling beta vs benchmark |
+| `log_returns` (cumulative, log scale) | Already existed — `figsize` parity added |
+| `compare(benchmark)` | Added — overlay of asset vs benchmark cumulative returns |
+| `rolling_beta` | Already existed — `figsize` parity added |
 
-Each plot should follow the existing Plotly pattern: return `go.Figure`, accept
-`title` and `figsize` kwargs, include a date range selector.
+Each plot follows the existing Plotly pattern: returns `go.Figure`, accepts
+`title` and `figsize` kwargs, includes a date range selector.
 
 **Effort:** 2–3 hr per plot
 
@@ -443,16 +448,16 @@ T4.1. All `cast(float, series.mean())` callsites replaced.
 | 2. API surface | ~~T2.2~~, ~~T2.3~~; T2.1 open | ~0.5 hr |
 | 3. Abstraction | ~~T3.1~~, ~~T3.2~~, ~~T3.3~~ | ✅ done |
 | 4. Null handling | ~~T4.1~~, ~~T4.2~~ | ✅ done |
-| 5. Mixin coupling | ~~T5.1~~; T5.2 open | ~0.5 hr |
+| 5. Mixin coupling | ~~T5.1~~, ~~T5.2~~ | ✅ done |
 | 6. Protocol design | ~~T6.2~~; T6.1 open | 1 hr |
 | 7. Dead code | ~~T7.1~~ | ✅ done |
-| 8. Test quality | T8.1 (partial) | ~0.75 hr |
-| 9. Monte Carlo stats | T9.1 | 3.5 hr |
-| 10. Plot coverage | T10.1–T10.2 | 6 hr |
+| 8. Test quality | ~~T8.1~~ | ✅ done |
+| 9. Monte Carlo stats | ~~T9.1~~ | ✅ done |
+| 10. Plot coverage | ~~T10.1~~, ~~T10.2~~ | ✅ done |
 | 11. Performance | ~~T11.1~~ | ✅ done |
 | 12. Error handling | T12.1 | 1 hr |
 | 13. Type safety | ~~T13.1~~ | ✅ done |
-| **Total remaining** | **7 tasks** | **~13.25 hr** |
+| **Total remaining** | **3 tasks** | **~2.5 hr** |
 
 ---
 
@@ -461,17 +466,17 @@ T4.1. All `cast(float, series.mean())` callsites replaced.
 **Sprint 1 — Quick wins (~4 hr, no API changes)** ✅ complete
 ~~T1.1~~, ~~T1.2~~, ~~T1.3~~, ~~T2.3~~, ~~T3.3~~, ~~T4.1~~, ~~T7.1~~, ~~T13.1~~
 
-**Sprint 2 — API clean-up (~4 hr, minor breaking changes)**
-T2.1, ~~T2.2~~, ~~T3.1~~, ~~T3.2~~, ~~T4.2~~, ~~T5.1~~, T5.2, T8.1
+**Sprint 2 — API clean-up (~4 hr, minor breaking changes)** ✅ nearly complete
+T2.1 (open), ~~T2.2~~, ~~T3.1~~, ~~T3.2~~, ~~T4.2~~, ~~T5.1~~, ~~T5.2~~, ~~T8.1~~
 
 **Sprint 3 — Architecture (~4 hr, protocol restructure)**
 T6.1, ~~T6.2~~, T12.1
 
-**Sprint 4 — Feature parity (~8 hr, Monte Carlo)**
-T9.1, T10.1, ~~T11.1~~
+**Sprint 4 — Feature parity (~8 hr, Monte Carlo)** ✅ complete
+~~T9.1~~, ~~T10.1~~, ~~T11.1~~
 
-**Sprint 5 — Plot parity (~4 hr)**
-T10.2
+**Sprint 5 — Plot parity (~4 hr)** ✅ complete
+~~T10.2~~
 
 After Sprint 3 the internal quality score reaches **10.0**.
 After Sprint 5 the benchmark score reaches **10.0**.

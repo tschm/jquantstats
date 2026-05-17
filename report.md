@@ -1,6 +1,6 @@
 # jquantstats — Code Quality Report
 
-> Assessed: 2026-05-16 · `main` post-PR #752 · ~9 900 source lines · ~820 tests
+> Assessed: 2026-05-17 · `main` post-PR #749 · ~10 500 source lines · ~870 tests
 
 Scores are 1–10. **10 = no actionable improvements. 1 = immediate attention required.**
 
@@ -14,12 +14,12 @@ Scores are 1–10. **10 = no actionable improvements. 1 = immediate attention re
 | API surface & naming | 8 |
 | Abstraction & indirection | 10 |
 | Null / error-handling consistency | 8 |
-| Mixin architecture & coupling | 9 |
+| Mixin architecture & coupling | 10 |
 | Protocol design | 7 |
-| Test quality | 9 |
+| Test quality | 10 |
 | Documentation coverage | 10 |
 | Dead code | 10 |
-| **Overall** | **8.9** |
+| **Overall** | **9.1** |
 
 ---
 
@@ -109,7 +109,7 @@ indeterminate. `cast(float, series.mean())` calls replaced throughout.
 
 ---
 
-## 5. Mixin Architecture & Coupling — 9/10
+## 5. Mixin Architecture & Coupling — 10/10
 
 **Strengths.** Splitting ~2 500 lines of stats logic into four focused mixins
 (`_basic`, `_performance`, `_reporting`, `_rolling`) keeps each file manageable.
@@ -126,6 +126,8 @@ between this mixin and `_ReportingStatsMixin` (CAGR, Calmar, recovery factor,
 
 Cross-mixin method dependencies are additionally documented inline via
 [PR #752](https://github.com/Jebel-Quant/jquantstats/pull/752) ✅
+
+A cross-mixin isolation test confirming `_ReportingStatsMixin.rar()` raises `AttributeError` when called without `_BasicStatsMixin` is in place via [PR #748](https://github.com/Jebel-Quant/jquantstats/pull/748) ✅
 
 ~~**`rolling_sortino` is inconsistent with the other rolling methods.**~~ **Fixed** — merged [PR #723](https://github.com/Jebel-Quant/jquantstats/pull/723) ✅
 
@@ -158,9 +160,9 @@ A class implementing all three must manually verify compliance against each vari
 
 ---
 
-## 7. Test Quality — 9/10
+## 7. Test Quality — 10/10
 
-780 tests, 100% code and branch coverage. The suite is well-structured across
+~870 tests, 100% code and branch coverage. The suite is well-structured across
 concerns:
 
 - **Migration tests** — parametrized numeric comparison against quantstats with
@@ -169,10 +171,9 @@ concerns:
 - **Property-based tests** — `hypothesis`-driven invariant checking.
 - **Snapshot tests** — 13 plot snapshots pinned with `syrupy`.
 - **API contract tests** — assert public interface stability across versions.
+- **Benchmark tests** — `pytest-benchmark` timing comparison for `rolling_sortino` native vs legacy.
 
-Minor: `test_stats.py` is 1 775 lines with some 30–40-line test functions that
-inline their own fixture setup. Extracting reusable sub-fixtures would reduce
-duplication without adding abstraction.
+~~Minor: `test_stats.py` is 1 775 lines with some 30–40-line test functions that inline their own fixture setup.~~ **Fixed** — reusable sub-fixtures extracted across two PRs ([#711](https://github.com/Jebel-Quant/jquantstats/pull/711), [#747](https://github.com/Jebel-Quant/jquantstats/pull/747)) ✅
 
 ---
 

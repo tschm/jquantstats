@@ -1,8 +1,8 @@
 # jquantstats vs quantstats — Benchmark Comparison
 
-> Assessed: 2026-05-16  
+> Assessed: 2026-05-17  
 > quantstats: `.venv/lib/python3.12/site-packages/quantstats/`  
-> jquantstats: `src/jquantstats/` (main, post-PR #752)  
+> jquantstats: `src/jquantstats/` (main, post-PR #749)  
 > Ratings are 1–10 where 10 = jquantstats is clearly superior, 5 = parity, 1 = quantstats is clearly superior.  
 > A score below 5 means jquantstats has a gap to close.
 
@@ -15,14 +15,14 @@
 | Architecture & structure | 8 | jquantstats |
 | Data model | 9 | jquantstats |
 | API design & consistency | 8 | jquantstats |
-| Stats metric coverage | 7 | jquantstats |
-| Plot coverage | 6 | Mixed |
+| Stats metric coverage | 9 | jquantstats |
+| Plot coverage | 8 | jquantstats |
 | Reports | 7 | jquantstats |
 | Error handling | 9 | jquantstats |
 | Performance | 9 | jquantstats |
 | Type safety | 9 | jquantstats |
 | Test quality | 9 | jquantstats |
-| **Overall** | **8.1** | **jquantstats** |
+| **Overall** | **8.5** | **jquantstats** |
 
 ---
 
@@ -75,11 +75,11 @@ data.stats.monthly_returns()  # → pl.DataFrame
 
 ---
 
-## 4. Stats Metric Coverage — 7/10
+## 4. Stats Metric Coverage — 9/10
 
-**quantstats:** 79 public functions. Monte Carlo simulation is a distinctive feature (4 functions: `montecarlo`, `montecarlo_sharpe`, `montecarlo_drawdown`, `montecarlo_cagr`) with no equivalent in jquantstats.
+**quantstats:** 79 public functions. Monte Carlo simulation is a distinctive feature (4 functions: `montecarlo`, `montecarlo_sharpe`, `montecarlo_drawdown`, `montecarlo_cagr`).
 
-**jquantstats:** 100+ methods across four mixins. Several metrics are absent from quantstats:
+**jquantstats:** 100+ methods across five mixins (including `_MonteCarloStatsMixin` added via [PR #751](https://github.com/Jebel-Quant/jquantstats/pull/751) ✅). Several metrics are absent from quantstats:
 
 | Only in jquantstats | Description |
 |---|---|
@@ -90,29 +90,31 @@ data.stats.monthly_returns()  # → pl.DataFrame
 | `annual_breakdown` | Year-by-year return and drawdown table |
 | `summary` | Single-call comprehensive metrics DataFrame |
 
-| Only in quantstats | Description |
+All four quantstats Monte Carlo methods are now present in jquantstats:
+
+| Method | Status |
 |---|---|
-| `montecarlo` | Monte Carlo return simulation |
-| `montecarlo_sharpe` | Sharpe ratio distribution via simulation |
-| `montecarlo_drawdown` | Drawdown distribution via simulation |
-| `montecarlo_cagr` | CAGR distribution via simulation |
+| `montecarlo` | ✅ added via PR #751 |
+| `montecarlo_sharpe` | ✅ added via PR #751 |
+| `montecarlo_drawdown` | ✅ added via PR #751 |
+| `montecarlo_cagr` | ✅ added via PR #751 |
 
 **Implementation differences for shared metrics:**
 
 - **`implied_volatility`:** quantstats returns a scalar `float`; jquantstats returns a rolling `pl.DataFrame` when `annualize=True` or a `dict[str, float]` when `annualize=False`. The jquantstats version is more expressive.
 - **`downside_deviation` (used in Sortino):** quantstats divides by the count of negative returns; jquantstats divides by the total observation count (matching the Red Rock Capital paper). The two formulas agree only when all returns are negative.
 
-**Gap:** The missing Monte Carlo suite is a material gap. It is the most distinctive feature of quantstats with no counterpart in jquantstats. [PR #751](https://github.com/Jebel-Quant/jquantstats/pull/751) (open) proposes to add the Monte Carlo simulation suite.
+**Gap:** The Monte Carlo gap is now closed. Two points remain deducted for minor coverage differences in edge-case metrics and the alias methods (`ghpr`, `r2`, `win_loss_ratio`) that add surface without value.
 
 ---
 
-## 5. Plot Coverage — 6/10
+## 5. Plot Coverage — 8/10
 
-**quantstats:** ~42 plot functions via matplotlib. All output static images. Coverage includes Monte Carlo plots (`montecarlo`, `montecarlo_distribution`) and `compare` plots not yet in jquantstats.
+**quantstats:** ~42 plot functions via matplotlib. All output static images. Coverage includes Monte Carlo plots (`montecarlo`, `montecarlo_distribution`) and `compare` plots.
 
-**jquantstats:** ~20 plot methods across `DataPlots` and `PortfolioPlots` via Plotly. Interactive (zoom, pan, hover, date range selectors). Portfolio-specific plots have no quantstats equivalent: `lead_lag_ir_plot`, `lagged_performance`, `smoothed_holdings`.
+**jquantstats:** ~24 plot methods across `DataPlots` and `PortfolioPlots` via Plotly. Interactive (zoom, pan, hover, date range selectors). Portfolio-specific plots have no quantstats equivalent: `lead_lag_ir_plot`, `lagged_performance`, `smoothed_holdings`.
 
-**Gap:** jquantstats has fewer plots by count (~20 vs ~42) and is missing the Monte Carlo plots. The quality of each plot is higher (interactive Plotly vs static matplotlib), and the portfolio plots are a genuine addition, but the numerical gap is real. [PR #749](https://github.com/Jebel-Quant/jquantstats/pull/749) (open) proposes to add Monte Carlo plots, and [PR #750](https://github.com/Jebel-Quant/jquantstats/pull/750) (open) proposes to add compare and rolling_beta plots.
+**Gap:** jquantstats has fewer plots by raw count (~24 vs ~42), but each plot is meaningfully higher quality (interactive Plotly vs static matplotlib). Monte Carlo plots (`montecarlo`, `montecarlo_distribution`) added via [PR #749](https://github.com/Jebel-Quant/jquantstats/pull/749) ✅; `compare` and rolling_beta figsize parity added via [PR #750](https://github.com/Jebel-Quant/jquantstats/pull/750) ✅.
 
 | Category | quantstats | jquantstats |
 |---|---|---|
@@ -121,7 +123,8 @@ data.stats.monthly_returns()  # → pl.DataFrame
 | Drawdown | ✓ drawdown, drawdowns_periods | ✓ same |
 | Rolling | ✓ rolling_volatility, rolling_sharpe, rolling_sortino, rolling_beta | ✓ same |
 | Distribution | ✓ distribution, histogram | ✓ same |
-| Monte Carlo | ✓ montecarlo, montecarlo_distribution | ✗ |
+| Compare | ✓ compare | ✓ compare (added PR #750) |
+| Monte Carlo | ✓ montecarlo, montecarlo_distribution | ✓ same (added PR #749) |
 | Portfolio-specific | ✗ | ✓ lead_lag_ir, lagged_performance, smoothed_holdings |
 | Interactivity | ✗ (static) | ✓ (Plotly) |
 | Date range selector | ✗ | ✓ |
@@ -174,7 +177,7 @@ data.stats.monthly_returns()  # → pl.DataFrame
 
 **quantstats:** No test suite is distributed with the package. The upstream repository may have tests but they are not installed and not observable here.
 
-**jquantstats:** 780 tests across 34+ test files. 100% code coverage. Includes:
+**jquantstats:** ~870 tests across 40+ test files. 100% code coverage. Includes:
 
 - **Migration tests** (`test_migration/`) — numeric comparison against quantstats itself with `atol=1e-6`
 - **Edge case tests** — empty series, all-NaN, single-observation, zero-variance inputs
@@ -188,10 +191,11 @@ data.stats.monthly_returns()  # → pl.DataFrame
 
 ## Strategic Summary
 
-jquantstats is a material improvement over quantstats on almost every engineering dimension: type safety, data model, error handling, API consistency, and test quality. The two areas where quantstats still leads are:
+jquantstats is a material improvement over quantstats on almost every engineering dimension: type safety, data model, error handling, API consistency, and test quality. The analytical capability gap is now largely closed:
 
-1. **Monte Carlo simulation** — 4 functions with no jquantstats equivalent. This is an analytical capability gap, not a quality gap.
-2. **Plot count** — ~42 vs ~20 functions. The jquantstats plots are higher quality and interactive, but the breadth is narrower.
-3. **Community recognition** — quantstats' HTML tearsheet is the de facto standard. jquantstats' reports are technically superior but unfamiliar.
+1. ~~**Monte Carlo simulation** — 4 functions with no jquantstats equivalent.~~ **Closed** — `_MonteCarloStatsMixin` adds all four methods via PR #751 ✅
+2. ~~**Monte Carlo plots** — `montecarlo`, `montecarlo_distribution` missing.~~ **Closed** — added via PR #749 ✅
+3. **Plot count** — ~42 vs ~24 functions. The jquantstats plots are higher quality and interactive, but the breadth remains narrower (non-Monte-Carlo tearsheet plots not yet ported).
+4. **Community recognition** — quantstats' HTML tearsheet is the de facto standard. jquantstats' reports are technically superior but unfamiliar.
 
-The performance and correctness advantages of Polars, combined with the Portfolio data model and attribution analytics, position jquantstats well above quantstats for production use. The main work remaining to close the gap entirely is the Monte Carlo suite.
+The performance and correctness advantages of Polars, combined with the Portfolio data model, attribution analytics, and now full Monte Carlo parity, position jquantstats clearly ahead of quantstats for production use.
