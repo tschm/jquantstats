@@ -242,12 +242,7 @@ data = jqs.Data.from_returns(returns=returns_pl, benchmark=benchmark_pl)
 
 #### QuantStats functions with no jquantstats equivalent
 
-| QuantStats | Notes |
-|---|---|
-| `qs.stats.montecarlo(r)` | Monte Carlo simulations not currently implemented |
-| `qs.stats.montecarlo_sharpe(r)` | |
-| `qs.stats.montecarlo_drawdown(r)` | |
-| `qs.stats.montecarlo_cagr(r)` | |
+None currently.
 
 #### jquantstats-only stats methods
 
