@@ -271,7 +271,7 @@ def test_comp(stats):
     assert result["META"] == pytest.approx(13.382664235863414)
 
 
-def test_geometric_mean(stats):
+def test_geometric_mean_compound_identity(stats):
     """Tests that geometric_mean matches the compounded-return identity."""
     result = stats.geometric_mean()
     comp = stats.comp()["META"]
