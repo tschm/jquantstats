@@ -338,8 +338,7 @@ class _RiskStatsMixin:
 
         """
         warnings.warn(
-            "`ghpr()` is deprecated and will be removed in a future release. "
-            "Use `geometric_mean()` instead.",
+            "`ghpr()` is deprecated and will be removed in a future release. Use `geometric_mean()` instead.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -746,8 +745,7 @@ class _RiskStatsMixin:
 
         """
         warnings.warn(
-            "`r2()` is deprecated and will be removed in a future release. "
-            "Use `r_squared()` instead.",
+            "`r2()` is deprecated and will be removed in a future release. Use `r_squared()` instead.",
             DeprecationWarning,
             stacklevel=2,
         )

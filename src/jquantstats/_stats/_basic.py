@@ -222,8 +222,7 @@ class _BasicStatsMixin:
 
         """
         warnings.warn(
-            "`win_loss_ratio()` is deprecated and will be removed in a future release. "
-            "Use `payoff_ratio()` instead.",
+            "`win_loss_ratio()` is deprecated and will be removed in a future release. Use `payoff_ratio()` instead.",
             DeprecationWarning,
             stacklevel=2,
         )
