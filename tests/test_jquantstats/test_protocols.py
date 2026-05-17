@@ -17,6 +17,7 @@ from jquantstats._plots._protocol import PortfolioLike as PlotsPortfolioLike
 from jquantstats._protocol import DataLike as RootDataLike
 from jquantstats._reports._protocol import DataLike as ReportsDataLike
 from jquantstats._reports._protocol import PortfolioLike as ReportsPortfolioLike
+from jquantstats._reports._protocol import StatsLike as ReportsStatsLike
 from jquantstats._stats._protocol import DataLike as StatsDataLike
 from jquantstats._utils._protocol import DataLike as UtilsDataLike
 
@@ -60,6 +61,12 @@ def test_portfolio_satisfies_plots_portfolio_like(simple_portfolio):
 def test_portfolio_satisfies_reports_portfolio_like(simple_portfolio):
     """Portfolio satisfies the ReportsPortfolioLike protocol."""
     assert isinstance(simple_portfolio, ReportsPortfolioLike)
+
+
+def test_reports_stats_like_protocol_is_minimal():
+    """Reports StatsLike only defines methods used by Report."""
+    public_members = {name for name in ReportsStatsLike.__dict__ if not name.startswith("_")}
+    assert public_members == {"summary"}
 
 
 def test_non_data_does_not_satisfy_stats_protocol():
