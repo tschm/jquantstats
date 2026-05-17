@@ -446,6 +446,7 @@ class _RiskStatsMixin:
 
             dd_frame = frame.filter(pl.col("in_dd"))
 
+            # A monotonic NAV has no underwater rows, so drawdown_details should return an empty typed frame.
             if dd_frame.is_empty():
                 result[col] = pl.DataFrame(
                     {
