@@ -421,21 +421,6 @@ def test_worst_n_periods_returns_dict(stats):
     assert "AAPL" in result
 
 
-# ── deprecation warnings ──────────────────────────────────────────────────────
-
-
-def test_win_loss_ratio_deprecated(stats):
-    """win_loss_ratio() emits DeprecationWarning directing users to payoff_ratio()."""
-    with pytest.warns(DeprecationWarning, match="payoff_ratio"):
-        stats.win_loss_ratio()
-
-
-def test_ghpr_deprecated(stats):
-    """ghpr() emits DeprecationWarning directing users to geometric_mean()."""
-    with pytest.warns(DeprecationWarning, match="geometric_mean"):
-        stats.ghpr()
-
-
 # ── drawdown_details additional column coverage ───────────────────────────────
 # start-date and max_drawdown comparisons are in the tests above;
 # these tests cover valley, duration, and recovery_duration.
