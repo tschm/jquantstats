@@ -12,14 +12,13 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import plotly.graph_objects as go
-import plotly.io as pio
 import polars as pl
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 if TYPE_CHECKING:
     from ._protocol import PortfolioLike
 
-from ._formatting import _fmt, _is_finite
+from ._formatting import _fmt, _is_finite, _plotly_div, _table_html
 
 # templates/ lives one level above this subpackage (at src/jquantstats/templates/)
 _TEMPLATES_DIR = Path(__file__).parent.parent / "templates"
@@ -139,14 +138,7 @@ def _stats_table_html(summary: pl.DataFrame) -> str:
             rows_html_parts.append(f'<tr><td class="metric-name">{label}</td>{cells}</tr>\n')
 
     rows_html = "".join(rows_html_parts)
-    return (
-        '<table class="stats-table">'
-        "<thead><tr>"
-        f'<th class="metric-header">Metric</th>{header_cells}'
-        "</tr></thead>"
-        f"<tbody>{rows_html}</tbody>"
-        "</table>"
-    )
+    return _table_html(header_cells, rows_html)
 
 
 # ── Report dataclass ──────────────────────────────────────────────────────────
@@ -164,11 +156,7 @@ def _figure_div(fig: go.Figure, include_plotlyjs: bool | str) -> str:
     Returns:
         HTML string (not a full page).
     """
-    return pio.to_html(
-        fig,
-        full_html=False,
-        include_plotlyjs=include_plotlyjs,
-    )
+    return _plotly_div(fig, include_plotlyjs=include_plotlyjs)
 
 
 class Report:

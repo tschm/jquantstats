@@ -202,7 +202,7 @@ data = jqs.Data.from_returns(returns=returns_pl, benchmark=benchmark_pl)
 | `qs.stats.profit_factor(r)` | `data.stats.profit_factor()` | |
 | `qs.stats.profit_ratio(r)` | `data.stats.profit_ratio()` | |
 | `qs.stats.payoff_ratio(r)` | `data.stats.payoff_ratio()` | |
-| `qs.stats.win_loss_ratio(r)` | `data.stats.win_loss_ratio()` | |
+| `qs.stats.win_loss_ratio(r)` | `data.stats.payoff_ratio()` | `win_loss_ratio()` is deprecated in jquantstats; use `payoff_ratio()` |
 | `qs.stats.gain_to_pain_ratio(r)` | `data.stats.gain_to_pain_ratio()` | |
 | `qs.stats.risk_return_ratio(r)` | `data.stats.risk_return_ratio()` | |
 | `qs.stats.cpc_index(r)` | `data.stats.cpc_index()` | |
@@ -221,18 +221,27 @@ data = jqs.Data.from_returns(returns=returns_pl, benchmark=benchmark_pl)
 | `qs.stats.serenity_index(r)` | `data.stats.serenity_index()` | |
 | `qs.stats.information_ratio(r, benchmark=b)` | `data.stats.information_ratio()` | jquantstats annualises; see note below |
 | `qs.stats.r_squared(r, benchmark=b)` | `data.stats.r_squared()` | |
+| `qs.stats.r2(r, benchmark=b)` | `data.stats.r_squared()` | `r2` is a QuantStats alias; use `r_squared()` |
 | `qs.stats.greeks(r, benchmark=b)` | `data.stats.greeks()` | |
 | `qs.stats.probabilistic_sharpe_ratio(r)` | `data.stats.probabilistic_sharpe_ratio()` | |
 | `qs.stats.probabilistic_sortino_ratio(r)` | `data.stats.probabilistic_sortino_ratio()` | |
 | `qs.stats.probabilistic_adjusted_sortino_ratio(r)` | `data.stats.probabilistic_adjusted_sortino_ratio()` | |
+| `qs.stats.probabilistic_ratio(r)` | `data.stats.probabilistic_ratio()` | |
 | `qs.stats.geometric_mean(r)` | `data.stats.geometric_mean()` | |
-| `qs.stats.ghpr(r)` | `data.stats.ghpr()` | |
+| `qs.stats.ghpr(r)` | `data.stats.geometric_mean()` | `ghpr` is a QuantStats alias for geometric mean |
 | `qs.stats.expected_return(r)` | `data.stats.expected_return()` | |
+| `qs.stats.comp(r)` | `data.stats.comp()` | Total compounded return |
+| `qs.stats.compsum(r)` | `data.stats.compsum()` | Rolling compounded returns series |
+| `qs.stats.distribution(r)` | `data.stats.distribution()` | Return distribution by period (daily/weekly/monthly/quarterly/yearly) |
 | `qs.stats.outliers(r)` | `data.stats.outliers()` | |
 | `qs.stats.remove_outliers(r)` | `data.stats.remove_outliers()` | |
 | `qs.stats.drawdown_details(r)` | `data.stats.drawdown_details()` | |
 | `qs.stats.monthly_returns(r)` | `data.stats.monthly_returns()` | |
 | `qs.stats.compare(r, benchmark=b)` | `data.stats.compare()` | |
+| `qs.stats.montecarlo(r)` | `data.stats.montecarlo()` | Block-bootstrap Monte Carlo simulation |
+| `qs.stats.montecarlo_sharpe(r)` | `data.stats.montecarlo_sharpe()` | Monte Carlo Sharpe distribution |
+| `qs.stats.montecarlo_drawdown(r)` | `data.stats.montecarlo_drawdown()` | Monte Carlo max drawdown distribution |
+| `qs.stats.montecarlo_cagr(r)` | `data.stats.montecarlo_cagr()` | Monte Carlo CAGR distribution |
 | `qs.stats.rolling_sharpe(r)` | `data.stats.rolling_sharpe()` | |
 | `qs.stats.rolling_sortino(r)` | `data.stats.rolling_sortino()` | |
 | `qs.stats.rolling_volatility(r)` | `data.stats.rolling_volatility()` | |
@@ -242,7 +251,19 @@ data = jqs.Data.from_returns(returns=returns_pl, benchmark=benchmark_pl)
 
 #### QuantStats functions with no jquantstats equivalent
 
-None currently.
+The following QuantStats functions are intentionally not exposed as public
+methods in jquantstats.  Each is either a shorthand alias for a canonical
+method or a utility that is subsumed by a richer jquantstats API.  See the
+[QuantStats Parity Benchmark](benchmark.md) for full rationale.
+
+| QuantStats | Rationale |
+|---|---|
+| `qs.stats.cvar(r)` | Alias for `conditional_value_at_risk()` — jquantstats uses full names only |
+| `qs.stats.var(r)` | Alias for `value_at_risk()` — jquantstats uses full names only |
+| `qs.stats.ror(r)` | Alias for `risk_of_ruin()` — jquantstats uses full names only |
+| `qs.stats.upi(r)` | Alias for `ulcer_performance_index()` — jquantstats uses full names only |
+| `qs.stats.expected_shortfall(r)` | Alias for `conditional_value_at_risk()` — jquantstats uses the canonical CVaR term |
+| `qs.stats.to_drawdown_series(r)` | Covered by `data.stats.drawdown()` (series) and `data.stats.drawdown_details()` (episode table) |
 
 #### jquantstats-only stats methods
 
@@ -270,12 +291,24 @@ These methods have **no QuantStats equivalent** and are unique to jquantstats.
 | QuantStats | jquantstats |
 |---|---|
 | `qs.plots.snapshot(r)` | `data.plots.snapshot()` |
-| `qs.plots.drawdown(r)` | `data.plots.drawdown()` |
 | `qs.plots.returns(r)` | `data.plots.returns()` |
+| `qs.plots.log_returns(r)` | `data.plots.log_returns()` |
+| `qs.plots.daily_returns(r)` | `data.plots.daily_returns()` |
+| `qs.plots.yearly_returns(r)` | `data.plots.yearly_returns()` |
+| `qs.plots.monthly_returns(r)` | `data.plots.monthly_returns()` |
 | `qs.plots.monthly_heatmap(r)` | `data.plots.monthly_heatmap()` |
+| `qs.plots.histogram(r)` | `data.plots.histogram()` |
 | `qs.plots.distribution(r)` | `data.plots.distribution()` |
+| `qs.plots.drawdown(r)` | `data.plots.drawdown()` |
+| `qs.plots.drawdowns_periods(r)` | `data.plots.drawdowns_periods()` |
+| `qs.plots.earnings(r)` | `data.plots.earnings()` |
 | `qs.plots.rolling_sharpe(r)` | `data.plots.rolling_sharpe()` |
+| `qs.plots.rolling_sortino(r)` | `data.plots.rolling_sortino()` |
 | `qs.plots.rolling_volatility(r)` | `data.plots.rolling_volatility()` |
+| `qs.plots.rolling_beta(r, benchmark=b)` | `data.plots.rolling_beta()` |
+| `qs.plots.montecarlo(r)` | `data.plots.montecarlo()` |
+| `qs.plots.montecarlo_distribution(r)` | `data.plots.montecarlo_distribution()` |
+| — | `data.plots.compare()` |
 
 All `data.plots.*` methods return an interactive **Plotly figure** instead
 of a static matplotlib figure.
@@ -358,6 +391,34 @@ data = jqs.Data.from_returns(returns=returns_pl, null_strategy="raise")
 ```
 
 The default (`null_strategy=None`) passes nulls through unchanged.
+
+### `conditional_value_at_risk` — alpha vs confidence
+
+QuantStats uses a `confidence` parameter (e.g. `confidence=0.95` for the 95%
+CVaR).  jquantstats uses `alpha = 1 − confidence` (e.g. `alpha=0.05`).
+Both refer to the same loss quantile; only the parameter name differs.
+
+```python
+# QuantStats — confidence level
+qs.stats.conditional_value_at_risk(r, confidence=0.95)
+
+# jquantstats — alpha (tail probability)
+data.stats.conditional_value_at_risk(alpha=0.05)   # equivalent
+```
+
+### `information_ratio` — annualisation
+
+QuantStats returns a non-annualised (raw) information ratio.  jquantstats
+**annualises by default** using `periods_per_year` inferred from the data.
+This makes the jquantstats value roughly `√252` times larger for daily data.
+
+```python
+# QuantStats — raw (not annualised)
+qs.stats.information_ratio(r, benchmark=b)
+
+# jquantstats — annualised (default)
+data.stats.information_ratio()
+```
 
 ### No top-level functions
 
