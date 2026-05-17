@@ -291,12 +291,24 @@ These methods have **no QuantStats equivalent** and are unique to jquantstats.
 | QuantStats | jquantstats |
 |---|---|
 | `qs.plots.snapshot(r)` | `data.plots.snapshot()` |
-| `qs.plots.drawdown(r)` | `data.plots.drawdown()` |
 | `qs.plots.returns(r)` | `data.plots.returns()` |
+| `qs.plots.log_returns(r)` | `data.plots.log_returns()` |
+| `qs.plots.daily_returns(r)` | `data.plots.daily_returns()` |
+| `qs.plots.yearly_returns(r)` | `data.plots.yearly_returns()` |
+| `qs.plots.monthly_returns(r)` | `data.plots.monthly_returns()` |
 | `qs.plots.monthly_heatmap(r)` | `data.plots.monthly_heatmap()` |
+| `qs.plots.histogram(r)` | `data.plots.histogram()` |
 | `qs.plots.distribution(r)` | `data.plots.distribution()` |
+| `qs.plots.drawdown(r)` | `data.plots.drawdown()` |
+| `qs.plots.drawdowns_periods(r)` | `data.plots.drawdowns_periods()` |
+| `qs.plots.earnings(r)` | `data.plots.earnings()` |
 | `qs.plots.rolling_sharpe(r)` | `data.plots.rolling_sharpe()` |
+| `qs.plots.rolling_sortino(r)` | `data.plots.rolling_sortino()` |
 | `qs.plots.rolling_volatility(r)` | `data.plots.rolling_volatility()` |
+| `qs.plots.rolling_beta(r, benchmark=b)` | `data.plots.rolling_beta()` |
+| `qs.plots.montecarlo(r)` | `data.plots.montecarlo()` |
+| `qs.plots.montecarlo_distribution(r)` | `data.plots.montecarlo_distribution()` |
+| — | `data.plots.compare()` |
 
 All `data.plots.*` methods return an interactive **Plotly figure** instead
 of a static matplotlib figure.
