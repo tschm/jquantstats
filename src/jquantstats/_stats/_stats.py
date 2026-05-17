@@ -22,6 +22,7 @@ compatibility.
 
 from __future__ import annotations
 
+import warnings
 from typing import TYPE_CHECKING
 
 import polars as pl
@@ -124,3 +125,21 @@ class Stats(_BasicStatsMixin, _RiskStatsMixin, _ReportingStatsMixin, _RollingSta
     def index(self) -> pl.DataFrame:
         """Index DataFrame (date or integer range)."""
         return self._data.index
+
+    def win_loss_ratio(self, **kwargs) -> dict[str, float]:
+        """Deprecated alias for payoff_ratio()."""
+        warnings.warn(
+            "win_loss_ratio() is deprecated; use payoff_ratio() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.payoff_ratio(**kwargs)
+
+    def ghpr(self, **kwargs) -> dict[str, float]:
+        """Deprecated alias for geometric_mean()."""
+        warnings.warn(
+            "ghpr() is deprecated; use geometric_mean() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.geometric_mean(**kwargs)
