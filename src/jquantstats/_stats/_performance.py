@@ -771,9 +771,9 @@ class _RiskStatsMixin:
         ppy = periods_per_year or self._data._periods_per_year
 
         benchmark_col = benchmark or self._data.benchmark.columns[0]
-        all_data = cast(pl.DataFrame, self.all)
-        aligned_data = pl.DataFrame({"strategy": series, "benchmark": all_data[benchmark_col]}).drop_nulls()
-        active = aligned_data["strategy"] - aligned_data["benchmark"]
+        all_series = cast(pl.DataFrame, self.all)
+        non_null_pairs = pl.DataFrame({"strategy": series, "benchmark": all_series[benchmark_col]}).drop_nulls()
+        active = non_null_pairs["strategy"] - non_null_pairs["benchmark"]
 
         mean_f = _mean(active)
         std_val = cast(float, active.std())
