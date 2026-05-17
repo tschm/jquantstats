@@ -9,7 +9,7 @@
 
 ---
 
-## Theme 1 — Code Duplication (7 → 9)
+## Theme 1 — Code Duplication (7 → 9 → 10)
 
 ### T1.1 — Extract shared report formatting helpers ✅
 
@@ -73,7 +73,19 @@ that `prices()` is the public entry point for consumers.
 
 ---
 
-## Theme 2 — API Surface & Naming (7 → 9)
+## Theme 1 — Code Duplication (7 → 9 → 10)
+
+### T1.4 — Eliminate residual code duplication
+
+**Issue:** [#758](https://github.com/Jebel-Quant/jquantstats/issues/758)
+
+Audit the current source tree for any duplication introduced since T1.1–T1.3. Check `_stats/` for patterns not yet covered by `_positive`/`_negative`/`_mean`, and `_reports/` and `_plots/` for repeated figure-construction or rendering logic. Extract shared helpers where a block of 3+ lines appears in more than one location.
+
+**Effort:** 1 hr · **Raises:** Code duplication 9 → 10
+
+---
+
+## Theme 2 — API Surface & Naming (7 → 9 → 10)
 
 ### T2.1 — Remove alias methods ✅
 
@@ -131,6 +143,16 @@ All four occurrences of `self._data._periods_per_year` in `rolling_sortino`,
 
 ---
 
+### T2.4 — Delete deprecated alias methods
+
+**Issue:** [#757](https://github.com/Jebel-Quant/jquantstats/issues/757)
+
+Remove `ghpr()`, `r2()`, and `win_loss_ratio()` from the stats mixins entirely. Remove their stubs from `StatsLike`. Update any tests that reference the deprecated names to use the canonical methods. Add a `Removed` entry to `CHANGELOG.md`.
+
+**Effort:** 30 min · **Raises:** API surface & naming 9 → 10
+
+---
+
 ## Theme 3 — Abstraction & Indirection (7 → 10) ✅
 
 ### T3.1 — Make decorator coupling to `self._data` explicit ✅
@@ -178,7 +200,7 @@ decorator.
 
 ---
 
-## Theme 4 — Null / Error-Handling Consistency (6 → 9)
+## Theme 4 — Null / Error-Handling Consistency (6 → 9 → 10)
 
 ### T4.1 — Document the null-return convention ✅
 
@@ -205,6 +227,18 @@ The new `_mean` helper (added to `_core.py`) returns `float("nan")` when the
 series is empty or all-null — consistent with the documented convention.
 
 **Effort:** 2 hr · **Affected sites:** ~35
+
+---
+
+### T4.3 — Resolve remaining `is_empty()` post-filter guards
+
+**Issue:** [#759](https://github.com/Jebel-Quant/jquantstats/issues/759)
+
+For each remaining guard in `_basic.py` and `_performance.py`, determine whether it is a legitimate post-filter check or a duplicate of the construction-time invariant. Legitimate guards get a one-line comment and a `float("nan")` return; redundant guards get replaced with an `assert`.
+
+**Known locations:** `_basic.py` ~241 (`wins/losses`), `_basic.py` ~762 (`paired`), `_performance.py` ~443 (`dd_frame`).
+
+**Effort:** 1 hr · **Raises:** Null / error-handling consistency 9 → 10
 
 ---
 
@@ -310,7 +344,7 @@ lines of setup code.
 
 ---
 
-## Theme 9 — Stats Coverage (7 → 9 vs quantstats)
+## Theme 9 — Stats Coverage (7 → 9 → 10 vs quantstats)
 
 ### T9.1 — Implement Monte Carlo simulation suite ✅
 
@@ -334,7 +368,15 @@ one row per simulation). Mixin included in `Stats`.
 
 ---
 
-## Theme 10 — Plot Coverage (6 → 8 vs quantstats)
+### T9.2 — Close edge-case metric coverage gaps vs quantstats
+
+Audit quantstats `stats.py` against `jquantstats` to identify any remaining metrics present in quantstats but absent or subtly different in jquantstats. For each gap: implement the missing method or document the intentional divergence with a note in `benchmark.md`.
+
+**Effort:** 2 hr · **Raises:** Stats coverage 9 → 10 vs quantstats
+
+---
+
+## Theme 10 — Plot Coverage (6 → 8 → 10 vs quantstats)
 
 ### T10.1 — Add Monte Carlo plots ✅
 
@@ -375,7 +417,15 @@ Each plot follows the existing Plotly pattern: returns `go.Figure`, accepts
 
 ---
 
-## Theme 11 — Performance (8 → 9)
+### T10.3 — Port remaining quantstats tearsheet plots
+
+Audit `quantstats/_plotting/wrappers.py` for the ~18 plots present in quantstats but not yet in `DataPlots`. Implement each following the existing Plotly pattern (`go.Figure`, `title`/`figsize` kwargs, date range selector). Priority order: plots that appear in the default `html()` tearsheet first.
+
+**Effort:** 4–6 hr · **Raises:** Plot coverage 8 → 10 vs quantstats
+
+---
+
+## Theme 11 — Performance (8 → 9 → 10)
 
 ### T11.1 — Rewrite `rolling_sortino` using native Polars expressions ✅
 
@@ -402,6 +452,14 @@ Add a benchmark test (`pytest-benchmark`) comparing the old and new
 implementations on a 10-year daily series to confirm the speedup.
 
 **Effort:** 1 hr · **Closes:** known Polars UDF antipattern
+
+---
+
+### T11.2 — Run actual performance benchmarks and identify optimisation targets
+
+The 9/10 performance score is inferred from Polars vs pandas library characteristics; no in-repo benchmarks verify it end-to-end. Add `pytest-benchmark` timing tests for the most computationally intensive methods (e.g. `rolling_sortino`, `sharpe` across a 50-asset frame, `summary`). If any method shows unexpected slowness, rewrite using native Polars expressions.
+
+**Effort:** 2 hr · **Raises:** Performance 9 → 10
 
 ---
 
@@ -442,20 +500,20 @@ T4.1. All `cast(float, series.mean())` callsites replaced.
 
 | Theme | Tasks | Effort |
 |---|---|---|
-| 1. Code duplication | ~~T1.1~~, ~~T1.2~~, ~~T1.3~~ | ✅ done |
-| 2. API surface | ~~T2.1~~, ~~T2.2~~, ~~T2.3~~ | ✅ done |
+| 1. Code duplication | ~~T1.1~~, ~~T1.2~~, ~~T1.3~~; T1.4 open | ~1 hr |
+| 2. API surface | ~~T2.1~~, ~~T2.2~~, ~~T2.3~~; T2.4 open | ~0.5 hr |
 | 3. Abstraction | ~~T3.1~~, ~~T3.2~~, ~~T3.3~~ | ✅ done |
-| 4. Null handling | ~~T4.1~~, ~~T4.2~~ | ✅ done |
+| 4. Null handling | ~~T4.1~~, ~~T4.2~~; T4.3 open | ~1 hr |
 | 5. Mixin coupling | ~~T5.1~~, ~~T5.2~~ | ✅ done |
 | 6. Protocol design | ~~T6.1~~, ~~T6.2~~ | ✅ done |
 | 7. Dead code | ~~T7.1~~ | ✅ done |
 | 8. Test quality | ~~T8.1~~ | ✅ done |
-| 9. Monte Carlo stats | ~~T9.1~~ | ✅ done |
-| 10. Plot coverage | ~~T10.1~~, ~~T10.2~~ | ✅ done |
-| 11. Performance | ~~T11.1~~ | ✅ done |
+| 9. Monte Carlo stats | ~~T9.1~~; T9.2 open | ~2 hr |
+| 10. Plot coverage | ~~T10.1~~, ~~T10.2~~; T10.3 open | ~4–6 hr |
+| 11. Performance | ~~T11.1~~; T11.2 open | ~2 hr |
 | 12. Error handling | ~~T12.1~~ | ✅ done |
 | 13. Type safety | ~~T13.1~~ | ✅ done |
-| **Total remaining** | **0 tasks** | **✅ complete** |
+| **Total remaining** | **6 tasks** | **~9–11 hr** |
 
 ---
 
@@ -464,8 +522,8 @@ T4.1. All `cast(float, series.mean())` callsites replaced.
 **Sprint 1 — Quick wins (~4 hr, no API changes)** ✅ complete
 ~~T1.1~~, ~~T1.2~~, ~~T1.3~~, ~~T2.3~~, ~~T3.3~~, ~~T4.1~~, ~~T7.1~~, ~~T13.1~~
 
-**Sprint 2 — API clean-up (~4 hr, minor breaking changes)** ✅ nearly complete
-T2.1 (open), ~~T2.2~~, ~~T3.1~~, ~~T3.2~~, ~~T4.2~~, ~~T5.1~~, ~~T5.2~~, ~~T8.1~~
+**Sprint 2 — API clean-up (~4 hr, minor breaking changes)** ✅ complete
+~~T2.1~~, ~~T2.2~~, ~~T3.1~~, ~~T3.2~~, ~~T4.2~~, ~~T5.1~~, ~~T5.2~~, ~~T8.1~~
 
 **Sprint 3 — Architecture (~4 hr, protocol restructure)** ✅ complete
 ~~T6.1~~, ~~T6.2~~, ~~T12.1~~
@@ -476,4 +534,7 @@ T2.1 (open), ~~T2.2~~, ~~T3.1~~, ~~T3.2~~, ~~T4.2~~, ~~T5.1~~, ~~T5.2~~, ~~T8.1~
 **Sprint 5 — Plot parity (~4 hr)** ✅ complete
 ~~T10.2~~
 
-All sprints complete. Internal quality and benchmark targets achieved.
+**Sprint 6 — Path to 10.0 (~9–11 hr)**
+T1.4, T2.4, T4.3, T9.2, T10.3, T11.2
+
+After Sprint 6 both the internal quality score and the benchmark score reach **10.0**.
