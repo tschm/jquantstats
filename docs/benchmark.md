@@ -2,56 +2,79 @@
 icon: material/chart-bar
 ---
 
-# Plot coverage benchmark
+# QuantStats Parity Benchmark
 
-This page tracks parity between the **jquantstats** `DataPlots` API and the
-reference implementation in
-[quantstats `_plotting/wrappers.py`](https://github.com/ranaroussi/quantstats).
-
-**Plot coverage score: 10 / 10** ✅
+This document tracks the feature parity between **jquantstats** and
+[QuantStats](https://github.com/ranaroussi/quantstats), with a score out of 10
+for each major category.  Gaps are either **closed** (method implemented) or
+**documented** (intentional divergence noted below).
 
 ---
 
-## DataPlots method coverage
+## Coverage scores
 
-All plots that appear in the quantstats default HTML tearsheet (`qs.reports.html()`)
-are implemented in `DataPlots`.
+| Category | Score | Notes |
+|---|---|---|
+| Stats metrics | **10 / 10** | All public QuantStats stats functions covered or documented as intentional divergences |
+| Monte Carlo | **10 / 10** | `montecarlo`, `montecarlo_sharpe`, `montecarlo_drawdown`, `montecarlo_cagr` (closed in #751) |
+| Rolling metrics | **10 / 10** | `rolling_sharpe`, `rolling_sortino`, `rolling_volatility`, `rolling_greeks` |
+| Plot types | **10 / 10** | All QuantStats plot types covered with interactive Plotly equivalents |
+| Reports | **10 / 10** | HTML tearsheet, metrics table, and summary report |
 
-| quantstats | jquantstats | In default tearsheet |
-|---|---|:---:|
-| `qs.plots.snapshot(r)` | `data.plots.snapshot()` | ✅ |
-| `qs.plots.returns(r)` | `data.plots.returns()` | ✅ |
-| `qs.plots.log_returns(r)` | `data.plots.log_returns()` | ✅ |
-| `qs.plots.daily_returns(r)` | `data.plots.daily_returns()` | ✅ |
-| `qs.plots.yearly_returns(r)` | `data.plots.yearly_returns()` | ✅ |
-| `qs.plots.monthly_returns(r)` | `data.plots.monthly_returns()` | ✅ |
-| `qs.plots.monthly_heatmap(r)` | `data.plots.monthly_heatmap()` | ✅ |
-| `qs.plots.histogram(r)` | `data.plots.histogram()` | ✅ |
-| `qs.plots.distribution(r)` | `data.plots.distribution()` | ✅ |
-| `qs.plots.drawdown(r)` | `data.plots.drawdown()` | ✅ |
-| `qs.plots.drawdowns_periods(r)` | `data.plots.drawdowns_periods()` | ✅ |
-| `qs.plots.earnings(r)` | `data.plots.earnings()` | — |
-| `qs.plots.rolling_sharpe(r)` | `data.plots.rolling_sharpe()` | ✅ |
-| `qs.plots.rolling_sortino(r)` | `data.plots.rolling_sortino()` | ✅ |
-| `qs.plots.rolling_volatility(r)` | `data.plots.rolling_volatility()` | ✅ |
-| `qs.plots.rolling_beta(r, benchmark=b)` | `data.plots.rolling_beta()` | ✅ |
-| `qs.plots.montecarlo(r)` | `data.plots.montecarlo()` | — |
-| `qs.plots.montecarlo_distribution(r)` | `data.plots.montecarlo_distribution()` | — |
-| — | `data.plots.compare()` | — |
+---
 
-## Improvements over quantstats
+## Stats metric coverage — intentional divergences
 
-- All plots return interactive **Plotly figures** instead of static matplotlib figures.
-- Every method accepts `title` and (where applicable) `figsize` keyword arguments.
-- Charts include a **date range selector** for quick zoom to 6m / 1y / 3y / YTD / All.
-- `data.plots.compare()` — cumulative return comparison vs benchmark — has no
-  direct quantstats counterpart.
+The following six public functions exist in `quantstats.stats` but are not
+present as public methods on `data.stats`.  Each is an intentional design
+decision, documented here so no gap goes unrecorded.
 
-## Snapshot test coverage
+### Shorthand aliases not carried over
 
-Every `DataPlots` method listed above is guarded by at least one
-[syrupy](https://github.com/syrupy-project/syrupy) snapshot test in
-`tests/test_jquantstats/test__plots/test_plot_snapshots.py`.  The snapshot
-captures the structural fingerprint of the figure (trace types, names, and key
-layout properties) without storing raw data arrays, so tests remain stable
-across data changes while still catching structural regressions.
+QuantStats exposes several short alias functions alongside their canonical
+counterparts.  jquantstats deliberately uses **full names only**, consistent
+with its deprecation of earlier aliases (`ghpr()`, `r2()`, `win_loss_ratio()`
+were deprecated in favour of `geometric_mean()`, `r_squared()`, and
+`payoff_ratio()` respectively).
+
+| QuantStats shorthand | Canonical equivalent in jquantstats | Rationale |
+|---|---|---|
+| `qs.stats.cvar(r)` | `data.stats.conditional_value_at_risk()` | Prefer unambiguous full name |
+| `qs.stats.var(r)` | `data.stats.value_at_risk()` | Prefer unambiguous full name; `var` is also a common Python built-in pattern |
+| `qs.stats.ror(r)` | `data.stats.risk_of_ruin()` | Prefer unambiguous full name |
+| `qs.stats.upi(r)` | `data.stats.ulcer_performance_index()` | Prefer unambiguous full name |
+| `qs.stats.expected_shortfall(r)` | `data.stats.conditional_value_at_risk()` | Alias for CVaR; jquantstats uses the canonical term |
+
+### `to_drawdown_series` — covered by richer API
+
+`qs.stats.to_drawdown_series(returns)` converts a return series to a
+drawdown series.  jquantstats provides equivalent — and richer —
+functionality through two methods:
+
+- **`data.stats.drawdown()`** — returns a `pl.DataFrame` with the per-period
+  drawdown from the running high-water mark, one column per asset.
+- **`data.stats.drawdown_details()`** — returns a full episode table
+  (start date, end date, max drawdown, duration) for every drawdown period.
+
+A bare drawdown series is therefore available as
+`data.stats.drawdown()["asset_col"]`; the standalone conversion utility is
+not needed.
+
+---
+
+## Behavioural notes
+
+### `downside_deviation` convention
+
+jquantstats and QuantStats both use the Red Rock Capital Sortino paper
+convention: the downside semi-deviation is the root-mean-square of
+**strictly negative** returns divided by the **total** observation count
+(not only the negative count).  The implementations are aligned.
+
+### `information_ratio` annualisation
+
+jquantstats **annualises** the information ratio by default
+(`annualize=True`), whereas QuantStats returns a raw (non-annualised) ratio.
+The jquantstats value can be reproduced without annualisation by reading the
+intermediate active-return statistics; the difference is documented in the
+[Migration guide](MIGRATION.md#statistics).
