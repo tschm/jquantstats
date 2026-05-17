@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Deprecated
+
+- Alias stats methods `ghpr()`, `r2()`, and `win_loss_ratio()` are now deprecated; use `geometric_mean()`, `r_squared()`, and `payoff_ratio()` instead.
+
 ## [0.5.0] - 2026-03-29
 
 ### Added

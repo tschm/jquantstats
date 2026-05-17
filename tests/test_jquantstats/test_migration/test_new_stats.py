@@ -16,7 +16,8 @@ def aligned(pandas_frame):
 
 def test_r2_alias(stats, aligned):
     """r2() is an alias for r_squared() and matches quantstats."""
-    x = stats.r2()
+    with pytest.warns(DeprecationWarning, match="r2"):
+        x = stats.r2()
     y = qs.stats.r2(aligned["AAPL"], aligned["SPY -- Benchmark"])
     assert x["AAPL"] == pytest.approx(y, abs=1e-6)
 

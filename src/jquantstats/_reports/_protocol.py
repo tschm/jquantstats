@@ -146,7 +146,7 @@ class StatsLike(BaseStatsLike, Protocol):  # pragma: no cover
         ...
 
     def win_loss_ratio(self) -> dict[str, float]:
-        """Win/loss ratio per asset."""
+        """Deprecated alias for `payoff_ratio()`."""
         ...
 
     def win_rate(self) -> dict[str, float]:
@@ -210,7 +210,7 @@ class StatsLike(BaseStatsLike, Protocol):  # pragma: no cover
         ...
 
     def r2(self) -> dict[str, float]:
-        """R-squared per asset versus benchmark."""
+        """Deprecated alias for `r_squared()`."""
         ...
 
     def treynor_ratio(self, periods: int | float | None = None) -> dict[str, float]:
