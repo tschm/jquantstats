@@ -196,8 +196,12 @@ class _ReportingStatsMixin:
                 return float("nan")
             return float(_to_float((1.0 + s.cast(pl.Float64)).product()) ** (1.0 / n) - 1.0)
 
-        if aggregate is None:
+        def _raw_expected_returns() -> dict[str, float]:
+            """Return the geometric mean of each raw return series."""
             return {col: _geomean(series.drop_nulls()) for col, series in self._data.items()}
+
+        if aggregate is None:
+            return _raw_expected_returns()
 
         if aggregate.lower() not in _freq_map:
             raise ValueError(f"aggregate must be one of {list(_freq_map)}, got {aggregate!r}")  # noqa: TRY003
@@ -205,7 +209,7 @@ class _ReportingStatsMixin:
         all_df = cast(pl.DataFrame, self.all)
         date_col_name = self._data.date_col[0] if self._data.date_col else None
         if date_col_name is None or not all_df[date_col_name].dtype.is_temporal():
-            return {col: _geomean(series.drop_nulls()) for col, series in self._data.items()}
+            return _raw_expected_returns()
 
         trunc = _freq_map[aggregate.lower()]
         agg_expr = ((1.0 + pl.col("ret")).product() - 1.0) if compounded else pl.col("ret").sum()
