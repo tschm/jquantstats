@@ -191,7 +191,8 @@ def test_win_loss_ratio(stats):
         The win/loss ratio value for META matches the expected value.
 
     """
-    result = stats.win_loss_ratio()
+    with pytest.warns(DeprecationWarning, match="win_loss_ratio"):
+        result = stats.win_loss_ratio()
     assert result["META"] == pytest.approx(1.0383990517002815)
 
 
@@ -287,7 +288,8 @@ def test_comp(stats):
 
 def test_ghpr(stats):
     """Tests that ghpr returns the same value as geometric_mean."""
-    assert stats.ghpr() == stats.geometric_mean()
+    with pytest.warns(DeprecationWarning, match="ghpr"):
+        assert stats.ghpr() == stats.geometric_mean()
 
 
 def test_compsum(stats):
@@ -791,7 +793,8 @@ def test_r2(stats):
         The r2 method returns the same result as the r_squared method.
 
     """
-    result = stats.r2()
+    with pytest.warns(DeprecationWarning, match="r2"):
+        result = stats.r2()
     expected = stats.r_squared()
     assert result == expected
 
